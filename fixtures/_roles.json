@@ -1,0 +1,22 @@
+{
+  "roles": [
+    {
+      "code": "narrator",
+      "name": "Narrator",
+      "speaker": "arestovich",
+      "description": "Calm narration voice used for scene-setting lines."
+    },
+    {
+      "code": "voldemort",
+      "name": "Voldemort",
+      "speaker": "zhirinovsky",
+      "description": "Cold, sharp, and menacing -- never raises his voice."
+    },
+    {
+      "code": "harry",
+      "name": "Harry",
+      "speaker": "",
+      "description": "Defiant but tired. No preset assigned yet -- shows the (no speaker) state."
+    }
+  ]
+}

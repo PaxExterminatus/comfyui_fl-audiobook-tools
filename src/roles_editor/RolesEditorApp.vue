@@ -7,10 +7,18 @@
 // Edits save straight back to _roles.json (debounced), the single source
 // of truth Script Library's "script" output resolves role codes against
 // (see nodes/script_library.py resolve_roles).
-import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
+//
+// Built from PrimeVue's own structural components (Dialog, Card, Message)
+// rather than hand-rolled overlay/panel/card markup -- Dialog alone
+// already handles the backdrop, ESC-to-close, click-outside-to-close, and
+// its own close button, none of which this file needs to reimplement or
+// fight with custom CSS.
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
+import Dialog from "primevue/dialog";
+import Card from "primevue/card";
+import Message from "primevue/message";
 import Dropdown from "primevue/dropdown";
 import Textarea from "primevue/textarea";
-import Button from "primevue/button";
 import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -24,6 +32,7 @@ const POLL_MS = 3000;
 const EDIT_QUIET_MS = 1500;
 
 const fullPath = joinPath(props.root, "_roles.json");
+const visible = ref(true);
 const roles = ref([]);
 const presets = ref([]);
 const status = ref("");
@@ -164,10 +173,10 @@ async function loadFromDisk({ isPoll = false } = {}) {
         lastSavedText = data.content;
         if (!isPoll) setStatus(`Loaded ${roles.value.length} role(s)`);
         // The nextTick call alone can catch the textareas mid-layout (e.g.
-        // right as this whole overlay is still settling into its final
-        // size) and measure an inflated scrollHeight that never gets
-        // recalculated afterward -- one more pass on the next animation
-        // frame re-measures once layout has actually settled.
+        // right as this dialog is still settling into its final size) and
+        // measure an inflated scrollHeight that never gets recalculated
+        // afterward -- one more pass on the next animation frame
+        // re-measures once layout has actually settled.
         nextTick(() => {
             autoGrowAll();
             requestAnimationFrame(autoGrowAll);
@@ -186,20 +195,17 @@ function close() {
     // closing while still focused in a freshly-typed field).
     roles.value.forEach((role) => notifyIfSpeakerChanged(role));
     if (pollTimer) clearInterval(pollTimer);
-    document.removeEventListener("keydown", onKeydown);
     props.onClose();
 }
 
-function onKeydown(e) {
-    if (e.key === "Escape") close();
-}
-
-function onOverlayMousedown(e) {
-    if (e.target === e.currentTarget) close();
-}
+// Dialog owns ESC-to-close, click-outside-to-close (dismissable-mask),
+// and its own header close button -- all of them just flip v-model:visible
+// to false, which lands here regardless of which one triggered it.
+watch(visible, (v) => {
+    if (!v) close();
+});
 
 onMounted(async () => {
-    document.addEventListener("keydown", onKeydown);
     loadPresets();
     await loadFromDisk();
     pollTimer = setInterval(() => loadFromDisk({ isPoll: true }), POLL_MS);
@@ -207,37 +213,39 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     if (pollTimer) clearInterval(pollTimer);
-    document.removeEventListener("keydown", onKeydown);
 });
 </script>
 
 <template>
-    <div class="roles-overlay" @mousedown="onOverlayMousedown">
-        <div class="roles-panel">
-            <div class="roles-header">
-                <div class="roles-title">Roles</div>
-                <div class="roles-status">{{ status }}</div>
-                <Button icon="pi pi-times" text rounded severity="secondary" aria-label="Close" @click="close" />
-            </div>
-            <div class="roles-list">
-                <div v-if="!roles.length" class="roles-empty">(no roles found)</div>
-                <div v-for="role in roles" :key="role.code" class="role-card">
-                    <div class="role-row">
-                        <span class="role-code" :title="'Role code (read-only here -- renaming would orphan script lines that already use it)'">{{ role.code }}</span>
-                        <span class="role-name">{{ role.name }}</span>
-                        <Dropdown
-                            v-model="role.speaker"
-                            :options="presets"
-                            editable
-                            filter
-                            placeholder="Speaker preset"
-                            class="role-speaker"
-                            title="Real CosyVoice preset this role resolves to"
-                            @input="scheduleSave()"
-                            @change="onSpeakerCommitted(role)"
-                            @blur="notifyIfSpeakerChanged(role)"
-                        />
-                    </div>
+    <Dialog
+        v-model:visible="visible"
+        modal
+        dismissable-mask
+        header="Roles"
+        :style="{ width: '80vw', maxWidth: '820px' }"
+    >
+        <Message v-if="status" severity="secondary" :closable="false" class="roles-status">{{ status }}</Message>
+        <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>
+
+        <div class="roles-list">
+            <Card v-for="role in roles" :key="role.code" class="role-card">
+                <template #title>
+                    <span class="role-code" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
+                    <span class="role-name">{{ role.name }}</span>
+                </template>
+                <template #content>
+                    <Dropdown
+                        v-model="role.speaker"
+                        :options="presets"
+                        editable
+                        filter
+                        placeholder="Speaker preset"
+                        title="Real CosyVoice preset this role resolves to"
+                        class="role-speaker"
+                        @input="scheduleSave()"
+                        @change="onSpeakerCommitted(role)"
+                        @blur="notifyIfSpeakerChanged(role)"
+                    />
                     <Textarea
                         v-model="role.description"
                         :ref="(el) => setTextareaRef(role.code, el)"
@@ -246,115 +254,47 @@ onBeforeUnmount(() => {
                         class="role-description"
                         @input="scheduleSave(); autoGrow(textareaEls.get(role.code))"
                     />
-                </div>
-            </div>
+                </template>
+            </Card>
         </div>
-    </div>
+    </Dialog>
 </template>
 
 <style scoped>
-.roles-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 10000;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 6vh;
-}
-.roles-panel {
-    width: 80vw;
-    max-width: 820px;
-    height: 88vh;
-    background: #1b1b1f;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-}
-.roles-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    flex: 0 0 auto;
-}
-.roles-title {
-    font-weight: 600;
-    font-size: 14px;
-    flex: 1;
-    color: #eee;
-}
+/* Pure layout for the list of Cards -- nothing here overrides a PrimeVue
+   component's own internal styling (padding/background/border-radius all
+   still come from the theme via Card itself). */
 .roles-status {
-    font-size: 11px;
-    color: #999;
-    flex: 0 0 auto;
+    margin: 0 0 10px;
 }
 .roles-list {
-    flex: 1;
+    max-height: 74vh;
     overflow-y: auto;
-    padding: 10px 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-}
-.roles-empty {
-    color: #888;
-    font-size: 12px;
-    text-align: center;
-    padding: 20px;
+    gap: 10px;
 }
 .role-card {
     flex: 0 0 auto;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.role-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
 .role-code {
-    flex: 0 0 130px;
-    font-size: 11.5px;
-    font-weight: 600;
     font-family: monospace;
-    color: #ccc;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin-right: 8px;
 }
 .role-name {
-    flex: 1 1 180px;
-    min-width: 0;
-    font-size: 11.5px;
-    color: #ddd;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 0.85em;
+    font-weight: 400;
+    opacity: 0.75;
 }
+/* Card's #content slot stacks the Dropdown above the Textarea by default
+   (block flow) -- this is the one place a bit of spacing/width is needed
+   between them, not an override of either component's own look. */
 .role-speaker {
-    flex: 0 0 240px;
-}
-/* PrimeVue's Textarea puts the class passed via `class=` directly on the
-   <textarea> element itself (no wrapper), so this targets it directly --
-   not a :deep() descendant selector, which would never match here. An
-   explicit width matters more than usual: PrimeVue's autoResize measures
-   scrollHeight to set the inline height, and an unconstrained-width
-   textarea intrinsically sizing to its default ~20-column width makes
-   that measurement wrap the text across many lines, wildly inflating the
-   computed height. */
-.role-description {
-    flex: 0 0 auto;
+    display: block;
     width: 100%;
-    font-size: 11px;
+    margin-bottom: 8px;
+}
+.role-description {
+    width: 100%;
 }
 </style>

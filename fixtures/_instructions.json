@@ -1,0 +1,7 @@
+{
+  "instructions": [
+    { "role": "narrator", "text": "calm, neutral tone", "note": "Default narration delivery." },
+    { "role": "voldemort", "text": "Angry and sharp", "note": "Used for confrontational lines." },
+    { "role": "harry", "text": "Defiant", "note": "" }
+  ]
+}

@@ -28,7 +28,7 @@ import "primeicons/primeicons.css";
 // unversioned filename with no build hash), so an update to this addon
 // would otherwise show a stale, possibly broken UI until the user
 // happens to hard-refresh ComfyUI's page.
-const STYLE_VERSION = 3;
+const STYLE_VERSION = 4;
 
 let stylesLinked = false;
 function ensureStylesLinked() {

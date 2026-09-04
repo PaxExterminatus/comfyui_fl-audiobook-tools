@@ -93,6 +93,49 @@ MyPlay/                          <- Script Library's folder_path
             <script>_00001_.flac            <- final stitched track (Save Audio, or "✅ Done")
 ```
 
+## Frontend development
+
+The line/roles editors are being migrated from hand-written vanilla JS to
+Vue 3 + PrimeVue 3 (`roles_editor.js` is the pilot so far), built with
+Vite in library mode straight into `web/`, replacing the hand-written file
+of the same name -- end users never need Node.js, only whoever's
+developing this addon.
+
+```bash
+npm install
+npm run dev     # rebuilds web/*.js on save -- refresh ComfyUI's tab to see changes
+npm run build   # one-off production build
+```
+
+### Developing the UI without ComfyUI running
+
+`npm run dev:ui` starts a real Vite dev server (HMR, no rebuild-and-
+refresh needed) serving `dev-ui/index.html` directly in a plain browser
+tab -- `dev-ui/mock-api.js` stands in for the aiohttp backend
+(`nodes/script_editor.py` / `nodes/script_library.py`'s routes), seeded
+from the JSON/text files under `fixtures/`. Edits made in the UI are kept
+in memory for that dev-server session (not written back to the fixture
+files); restart the server to reset to the fixtures' on-disk content.
+
+```bash
+npm run dev:ui   # http://localhost:5173 -- opens the Roles Editor immediately
+```
+
+### Tests
+
+Vitest + `@vue/test-utils`, `happy-dom` for the DOM environment:
+
+```bash
+npm test         # run once
+npm run test:watch
+```
+
+`src/__tests__/` covers the pure helpers in `web/fl_common.js`;
+`src/roles_editor/__tests__/` mounts `RolesEditorApp.vue` with a mocked
+`fetch` and drives it through the DOM (edit a field, expect a save;
+change the speaker, expect the project-wide stale-scan; click the
+dialog's own close button, expect `onClose`).
+
 ## License
 
 MIT.

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" class="dark-theme">
+    <head>
+        <meta charset="UTF-8" />
+        <title>FL Audiobook Tools -- standalone UI dev</title>
+        <style>
+            /* Rough stand-in for the dark canvas the real editors float
+               over inside ComfyUI, so a Dialog's own backdrop/contrast
+               looks roughly like it will in-app. */
+            body {
+                margin: 0;
+                min-height: 100vh;
+                background: #18181b;
+                font-family: -apple-system, "Inter var", sans-serif;
+            }
+            #dev-toolbar {
+                position: fixed;
+                top: 12px;
+                left: 12px;
+                z-index: 20000;
+                display: flex;
+                gap: 8px;
+            }
+            #dev-toolbar button {
+                background: #2a2a2e;
+                color: #eee;
+                border: 1px solid #444;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 12px;
+                cursor: pointer;
+            }
+            #dev-toolbar button:hover {
+                background: #3a3a3e;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="dev-toolbar">
+            <button id="open-roles">Open Roles Editor</button>
+        </div>
+        <script type="module" src="./main.js"></script>
+    </body>
+</html>

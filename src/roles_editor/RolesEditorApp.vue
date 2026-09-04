@@ -163,7 +163,15 @@ async function loadFromDisk({ isPoll = false } = {}) {
         });
         lastSavedText = data.content;
         if (!isPoll) setStatus(`Loaded ${roles.value.length} role(s)`);
-        nextTick(autoGrowAll);
+        // The nextTick call alone can catch the textareas mid-layout (e.g.
+        // right as this whole overlay is still settling into its final
+        // size) and measure an inflated scrollHeight that never gets
+        // recalculated afterward -- one more pass on the next animation
+        // frame re-measures once layout has actually settled.
+        nextTick(() => {
+            autoGrowAll();
+            requestAnimationFrame(autoGrowAll);
+        });
     } catch (e) {
         setStatus(`Read failed: ${e}`);
     }

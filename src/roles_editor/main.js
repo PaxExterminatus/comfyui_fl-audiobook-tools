@@ -22,11 +22,19 @@ import "primevue/resources/themes/lara-dark-teal/theme.css";
 import "primevue/resources/primevue.min.css";
 import "primeicons/primeicons.css";
 
+// Bump this any time the built CSS could have changed (a new build of
+// this or any other Vue-migrated editor sharing style.css) -- without a
+// version on the URL, browsers cache style.css indefinitely (it's an
+// unversioned filename with no build hash), so an update to this addon
+// would otherwise show a stale, possibly broken UI until the user
+// happens to hard-refresh ComfyUI's page.
+const STYLE_VERSION = 3;
+
 let stylesLinked = false;
 function ensureStylesLinked() {
     if (stylesLinked) return;
     stylesLinked = true;
-    const href = new URL(/* @vite-ignore */ "./style.css", import.meta.url).href;
+    const href = new URL(/* @vite-ignore */ `./style.css?v=${STYLE_VERSION}`, import.meta.url).href;
     if (document.querySelector(`link[href="${href}"]`)) return;
     const link = document.createElement("link");
     link.rel = "stylesheet";

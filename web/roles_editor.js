@@ -9811,7 +9811,9 @@ const Bd = (t, e) => {
         }
         r.value = Array.isArray(z.roles) ? z.roles : [], r.value.forEach((Y) => {
           Y.code && u.set(Y.code, Y.speaker);
-        }), o = S.content, A || f(`Loaded ${r.value.length} role(s)`), vi(v);
+        }), o = S.content, A || f(`Loaded ${r.value.length} role(s)`), vi(() => {
+          v(), requestAnimationFrame(v);
+        });
       } catch (D) {
         f(`Read failed: ${D}`);
       }
@@ -9886,22 +9888,22 @@ const Bd = (t, e) => {
       ])
     ], 32));
   }
-}, ep = /* @__PURE__ */ Bd(Xd, [["__scopeId", "data-v-55b9358d"]]);
+}, ep = /* @__PURE__ */ Bd(Xd, [["__scopeId", "data-v-7c4214f5"]]), tp = 3;
 let Ks = !1;
-function tp() {
+function np() {
   if (Ks) return;
   Ks = !0;
   const t = new URL(
     /* @vite-ignore */
-    "./style.css",
+    `./style.css?v=${tp}`,
     import.meta.url
   ).href;
   if (document.querySelector(`link[href="${t}"]`)) return;
   const e = document.createElement("link");
   e.rel = "stylesheet", e.href = t, document.head.appendChild(e);
 }
-function rp({ root: t, suffix: e = "_speakers.txt" }) {
-  tp();
+function ip({ root: t, suffix: e = "_speakers.txt" }) {
+  np();
   const n = document.createElement("div");
   document.body.appendChild(n);
   const r = Xu(ep, {
@@ -9914,5 +9916,5 @@ function rp({ root: t, suffix: e = "_speakers.txt" }) {
   r.use(Vc, { ripple: !0 }), r.mount(n);
 }
 export {
-  rp as openRolesEditor
+  ip as openRolesEditor
 };

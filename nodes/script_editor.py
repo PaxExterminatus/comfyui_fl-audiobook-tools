@@ -42,7 +42,16 @@ if _HAS_SERVER:
         if not os.path.isfile(path):
             return web.json_response({"exists": False, "content": "", "mtime": None})
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            # utf-8-sig transparently strips a leading BOM if one is
+            # present (and behaves exactly like plain utf-8 otherwise) --
+            # several common Windows tools (PowerShell's `Set-Content
+            # -Encoding utf8`, Notepad, ...) write UTF-8 WITH a BOM, which
+            # a plain "utf-8" read would hand back as a literal U+FEFF
+            # character at the start of `content` -- silently breaking
+            # JSON.parse() for _roles.json/_instructions.json with a
+            # confusing "unexpected token" error nowhere near the real
+            # (nonexistent) problem.
+            with open(path, "r", encoding="utf-8-sig") as f:
                 content = f.read()
             return web.json_response({
                 "exists": True,

@@ -1,0 +1,17 @@
+[project]
+name = "comfyui_fl-audiobook-tools"
+description = "Script/act project management, a full-screen per-line script editor with per-line voicing and re-voice tracking, and a roles editor -- built for scripting/producing multi-line, multi-character audio dramas and audiobooks with FL-CosyVoice3."
+version = "0.1.0"
+license = "MIT"
+dependencies = [
+    "torch",
+    "soundfile",
+    "numpy",
+]
+
+[project.urls]
+Repository = "https://github.com/<your-github-username>/comfyui_fl-audiobook-tools"
+
+[tool.comfy]
+PublisherId = "<your-publisher-id>"
+DisplayName = "FL CosyVoice3 Audiobook Tools"

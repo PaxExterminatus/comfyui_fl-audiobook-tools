@@ -19,9 +19,11 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import Dialog from "primevue/dialog";
 import Card from "primevue/card";
+import Button from "primevue/button";
 import Message from "primevue/message";
 import Dropdown from "primevue/dropdown";
 import Textarea from "primevue/textarea";
+import { usePanelWidth } from "../shared/panel_width.js";
 import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -39,6 +41,11 @@ const visible = ref(true);
 const roles = ref([]);
 const presets = ref([]);
 const status = ref("");
+const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
+    storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
+    defaultWidth: 1200,
+    presets: [900, 1200],
+});
 
 let lastSavedText = null;
 let lastLocalEditAt = 0;
@@ -225,9 +232,26 @@ onBeforeUnmount(() => {
     <Dialog
         v-model:visible="visible"
         modal
-        header="Roles"
+        :style="{ width: panelWidthCss }"
         class="roles-dialog"
     >
+        <template #header>
+            <div class="header-row">
+                <div class="dialog-title">Roles</div>
+                <div class="width-row">
+                    <Button
+                        v-for="px in widthPresets"
+                        :key="px"
+                        :label="String(px)"
+                        text size="small"
+                        :title="`Set editor width to ${px}px (capped to the window's width)`"
+                        @click="setPanelWidth(px)"
+                    />
+                    <Button label="100%" text size="small" title="Use the full available window width" @click="setPanelWidth('full')" />
+                </div>
+            </div>
+        </template>
+
         <Message v-if="status" severity="secondary" :closable="false" class="roles-status">{{ status }}</Message>
         <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>
 
@@ -267,10 +291,22 @@ onBeforeUnmount(() => {
 <style scoped>
 /* Pure layout for the grid of Cards -- nothing here overrides a PrimeVue
    component's own internal styling (padding/background/border-radius all
-   still come from the theme via Card itself). */
-.roles-dialog {
-    width: 90vw;
-    max-width: 1200px;
+   still come from the theme via Card itself). Width itself is dynamic
+   (see panelWidthCss) -- the 900/1200/100% buttons in the header. */
+.header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+.dialog-title {
+    font-weight: 600;
+    flex: 1;
+}
+.width-row {
+    display: flex;
+    gap: 3px;
+    flex: 0 0 auto;
 }
 .roles-status {
     margin: 0 0 10px;

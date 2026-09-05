@@ -40,6 +40,7 @@ describe("RolesEditorApp", () => {
         global.fetch = originalFetch;
         vi.useRealTimers();
         document.body.innerHTML = "";
+        localStorage.clear();
     });
 
     async function mountApp(overrides = {}) {
@@ -61,6 +62,26 @@ describe("RolesEditorApp", () => {
     it("loads and renders roles from the backend", async () => {
         const { wrapper } = await mountApp();
         expect(document.body.textContent).toContain("Narrator");
+        wrapper.unmount();
+    });
+
+    it("resizes via the width preset buttons and persists the choice, same system as the Line Editor", async () => {
+        // PrimeVue's Dialog merges its own internal positioning style with
+        // the `:style` prop we pass in a way happy-dom doesn't reproduce
+        // (confirmed working live in a real browser -- width visibly
+        // changes and the merged inline style shows the new value) --
+        // asserting against localStorage instead verifies the actual logic
+        // this component owns (usePanelWidth's setWidth), rather than
+        // PrimeVue's own internal DOM merging.
+        const { wrapper } = await mountApp();
+
+        const btn900 = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "900");
+        btn900.click();
+        expect(localStorage.getItem("FL_CosyVoice3.RolesEditor.widthPx")).toBe("900");
+
+        const btnFull = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "100%");
+        btnFull.click();
+        expect(localStorage.getItem("FL_CosyVoice3.RolesEditor.widthPx")).toBe("full");
         wrapper.unmount();
     });
 

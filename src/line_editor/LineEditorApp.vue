@@ -13,6 +13,7 @@ import InputText from "primevue/inputtext";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import PickPanel from "./PickPanel.vue";
+import { usePanelWidth } from "../shared/panel_width.js";
 import {
     joinPath, stripSuffixAndExt, dirOf, markRoleStale,
     SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
@@ -30,12 +31,9 @@ const props = defineProps({
 const SAVE_DEBOUNCE_MS = 600;
 const POLL_MS = 3000;
 const EDIT_QUIET_MS = 1500;
-const DEFAULT_PANEL_WIDTH = 1600;
-const WIDTH_PRESETS = [1280, 1600];
 const DEFAULT_TEXT_FONT_SIZE = 11.5;
 const MIN_TEXT_FONT_SIZE = 9;
 const MAX_TEXT_FONT_SIZE = 22;
-const LS_WIDTH_KEY = "FL_CosyVoice3.LineEditor.widthPx";
 const LS_FONT_KEY = "FL_CosyVoice3.LineEditor.textFontSizePx";
 
 function loadNum(key, fallback) {
@@ -48,22 +46,6 @@ function loadNum(key, fallback) {
 }
 function saveNum(key, value) {
     try { localStorage.setItem(key, String(value)); } catch (e) { /* noop */ }
-}
-function loadWidthPref() {
-    try {
-        const raw = localStorage.getItem(LS_WIDTH_KEY);
-        if (raw === "full") return "full";
-        const v = parseFloat(raw);
-        return Number.isFinite(v) ? v : DEFAULT_PANEL_WIDTH;
-    } catch (e) {
-        return DEFAULT_PANEL_WIDTH;
-    }
-}
-function saveWidthPref(value) {
-    try { localStorage.setItem(LS_WIDTH_KEY, String(value)); } catch (e) { /* noop */ }
-}
-function widthCss(value) {
-    return value === "full" ? "94vw" : `min(94vw, ${value}px)`;
 }
 
 function parseLine(line) {
@@ -131,7 +113,11 @@ const presets = ref([]);
 const readyScripts = ref([]);
 const scriptList = ref([]);
 const status = ref("");
-const panelWidthPref = ref(loadWidthPref());
+const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
+    storageKey: "FL_CosyVoice3.LineEditor.widthPx",
+    defaultWidth: 1600,
+    presets: [1280, 1600],
+});
 const textFontSizePx = ref(loadNum(LS_FONT_KEY, DEFAULT_TEXT_FONT_SIZE));
 const rawTimingLines = ref(null);
 const activeTimingIdx = ref(-1);
@@ -174,15 +160,8 @@ const allRowsVoiced = computed(() => {
     const nm = rows.value.filter((r) => !r.malformed);
     return nm.length > 0 && nm.every((r) => r.status === "voiced");
 });
-const panelWidthCss = computed(() => widthCss(panelWidthPref.value));
-
 function setStatus(text) {
     status.value = text;
-}
-
-function setPanelWidth(value) {
-    panelWidthPref.value = value;
-    saveWidthPref(value);
 }
 
 // Resolves a role CODE (or a raw preset typed directly) to the real .pt
@@ -1083,7 +1062,7 @@ onBeforeUnmount(() => {
                 <div class="status-el">{{ status }}</div>
                 <div class="width-row">
                     <Button
-                        v-for="px in WIDTH_PRESETS"
+                        v-for="px in widthPresets"
                         :key="px"
                         :label="String(px)"
                         text size="small"

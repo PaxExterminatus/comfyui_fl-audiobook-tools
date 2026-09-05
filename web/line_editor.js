@@ -1,28 +1,27 @@
-import { q as xn, s as _n, B as Pt, v as at, d, c as ce, x as tt, a as U, y as ae, f as k, n as re, e as v, z as Y, j as h, F as z, A as rt, i as R, t as P, C as jt, R as Tn, U as An, D as Z, E as Pn, Z as nt, G as It, T as jn, H as xt, _ as Rt, u as g, k as Ue, I as ee, b as S, r as y, w as it, o as Rn, J as Dn, K as Pe, S as le, L as On, M as ge, l as X, N as st, O as $n, Q as Me, g as _t, V as Nn, W as Fn, m as zn, p as Bn, P as Mn } from "./styles_link.js";
-import { s as Dt, a as Kn, b as Un, F as Hn } from "./dialog.esm.js";
-import { s as I } from "./button.esm.js";
-import { s as ct } from "./inputtext.esm.js";
-import { O as Ke } from "./overlayeventbus.esm.js";
-var ke = xn(), Ot = Symbol();
-function Vn() {
-  var o = _n(Ot);
+import { q as wn, v as Cn, B as St, x as it, d as f, c as Q, y as Ye, a as M, z as re, f as b, n as ce, e as v, A as Z, j as y, F as z, C as st, i as D, t as P, s as x, D as Et, R as Ln, U as Sn, E as J, G as En, Z as Ge, H as wt, T as In, I as Ct, _ as It, u as m, k as Be, J as G, b as I, r as g, w as Qe, o as xn, K as _n, L as Te, S as ae, M as Tn, N as he, l as X, O as et, Q as An, V as ze, g as Lt, W as jn, X as Pn, m as Rn, p as On, P as Dn } from "./styles_link.js";
+import { s as xt, a as $n, b as Nn, F as zn } from "./dialog.esm.js";
+import { s as ot } from "./inputtext.esm.js";
+import { O as Fe, u as Fn } from "./panel_width.js";
+var ye = wn(), _t = Symbol();
+function Bn() {
+  var o = Cn(_t);
   if (!o)
     throw new Error("No PrimeVue Confirmation provided!");
   return o;
 }
-var qn = {
+var Mn = {
   install: function(i) {
     var u = {
-      require: function(b) {
-        ke.emit("confirm", b);
+      require: function(w) {
+        ye.emit("confirm", w);
       },
       close: function() {
-        ke.emit("close");
+        ye.emit("close");
       }
     };
-    i.config.globalProperties.$confirm = u, i.provide(Ot, u);
+    i.config.globalProperties.$confirm = u, i.provide(_t, u);
   }
-}, Jn = {
+}, Kn = {
   root: "p-confirm-dialog",
   icon: "p-confirm-dialog-icon",
   message: "p-confirm-dialog-message",
@@ -31,12 +30,12 @@ var qn = {
     return ["p-confirm-dialog-reject", u.confirmation && !u.confirmation.rejectClass ? "p-button-text" : null];
   },
   acceptButton: "p-confirm-dialog-accept"
-}, Wn = Pt.extend({
+}, Un = St.extend({
   name: "confirmdialog",
-  classes: Jn
-}), Zn = {
+  classes: Kn
+}), Vn = {
   name: "BaseConfirmDialog",
-  extends: jt,
+  extends: Et,
   props: {
     group: String,
     breakpoints: {
@@ -48,15 +47,15 @@ var qn = {
       default: !0
     }
   },
-  style: Wn,
+  style: Un,
   provide: function() {
     return {
       $parentInstance: this
     };
   }
-}, $t = {
+}, Tt = {
   name: "ConfirmDialog",
-  extends: Zn,
+  extends: Vn,
   confirmListener: null,
   closeListener: null,
   data: function() {
@@ -71,10 +70,10 @@ var qn = {
       u && u.group === i.group && (i.confirmation = u, i.confirmation.onShow && i.confirmation.onShow(), i.visible = !0);
     }, this.closeListener = function() {
       i.visible = !1, i.confirmation = null;
-    }, ke.on("confirm", this.confirmListener), ke.on("close", this.closeListener);
+    }, ye.on("confirm", this.confirmListener), ye.on("close", this.closeListener);
   },
   beforeUnmount: function() {
-    ke.off("confirm", this.confirmListener), ke.off("close", this.closeListener);
+    ye.off("confirm", this.confirmListener), ye.off("close", this.closeListener);
   },
   methods: {
     accept: function() {
@@ -131,19 +130,19 @@ var qn = {
     }
   },
   components: {
-    CDialog: Dt,
-    CDButton: I
+    CDialog: xt,
+    CDButton: x
   }
 };
-function Xn(o, i, u, L, b, a) {
-  var E = at("CDButton"), B = at("CDialog");
-  return d(), ce(B, {
-    visible: b.visible,
-    "onUpdate:visible": [i[2] || (i[2] = function(T) {
-      return b.visible = T;
+function Hn(o, i, u, C, w, a) {
+  var L = it("CDButton"), F = it("CDialog");
+  return f(), Q(F, {
+    visible: w.visible,
+    "onUpdate:visible": [i[2] || (i[2] = function(A) {
+      return w.visible = A;
     }), a.onHide],
     role: "alertdialog",
-    class: re(o.cx("root")),
+    class: ce(o.cx("root")),
     modal: !0,
     header: a.header,
     blockScroll: a.blockScroll,
@@ -153,37 +152,37 @@ function Xn(o, i, u, L, b, a) {
     draggable: o.draggable,
     pt: o.pt,
     unstyled: o.unstyled
-  }, tt({
-    default: U(function() {
-      return [o.$slots.container ? R("", !0) : (d(), h(z, {
+  }, Ye({
+    default: M(function() {
+      return [o.$slots.container ? D("", !0) : (f(), y(z, {
         key: 0
-      }, [o.$slots.message ? (d(), ce(rt(o.$slots.message), {
+      }, [o.$slots.message ? (f(), Q(st(o.$slots.message), {
         key: 1,
-        message: b.confirmation
-      }, null, 8, ["message"])) : (d(), h(z, {
+        message: w.confirmation
+      }, null, 8, ["message"])) : (f(), y(z, {
         key: 0
-      }, [ae(o.$slots, "icon", {}, function() {
-        return [o.$slots.icon ? (d(), ce(rt(o.$slots.icon), {
+      }, [re(o.$slots, "icon", {}, function() {
+        return [o.$slots.icon ? (f(), Q(st(o.$slots.icon), {
           key: 0,
-          class: re(o.cx("icon"))
-        }, null, 8, ["class"])) : b.confirmation.icon ? (d(), h("span", Y({
+          class: ce(o.cx("icon"))
+        }, null, 8, ["class"])) : w.confirmation.icon ? (f(), y("span", Z({
           key: 1,
-          class: [b.confirmation.icon, o.cx("icon")]
-        }, o.ptm("icon")), null, 16)) : R("", !0)];
-      }), v("span", Y({
+          class: [w.confirmation.icon, o.cx("icon")]
+        }, o.ptm("icon")), null, 16)) : D("", !0)];
+      }), v("span", Z({
         class: o.cx("message")
       }, o.ptm("message")), P(a.message), 17)], 64))], 64))];
     }),
     _: 2
   }, [o.$slots.container ? {
     name: "container",
-    fn: U(function(T) {
-      return [ae(o.$slots, "container", {
-        message: b.confirmation,
-        onClose: T.onClose,
+    fn: M(function(A) {
+      return [re(o.$slots, "container", {
+        message: w.confirmation,
+        onClose: A.onClose,
         onAccept: a.accept,
         onReject: a.reject,
-        closeCallback: T.onclose,
+        closeCallback: A.onclose,
         acceptCallback: a.accept,
         rejectCallback: a.reject
       })];
@@ -191,47 +190,47 @@ function Xn(o, i, u, L, b, a) {
     key: "0"
   } : void 0, o.$slots.container ? void 0 : {
     name: "footer",
-    fn: U(function() {
-      return [k(E, {
+    fn: M(function() {
+      return [b(L, {
         label: a.rejectLabel,
-        class: re([o.cx("rejectButton"), b.confirmation.rejectClass]),
-        onClick: i[0] || (i[0] = function(T) {
+        class: ce([o.cx("rejectButton"), w.confirmation.rejectClass]),
+        onClick: i[0] || (i[0] = function(A) {
           return a.reject();
         }),
         autofocus: a.autoFocusReject,
         unstyled: o.unstyled,
         pt: o.ptm("rejectButton")
-      }, tt({
+      }, Ye({
         _: 2
       }, [a.rejectIcon || o.$slots.rejecticon ? {
         name: "icon",
-        fn: U(function(T) {
-          return [ae(o.$slots, "rejecticon", {}, function() {
-            return [v("span", Y({
-              class: [a.rejectIcon, T.class]
+        fn: M(function(A) {
+          return [re(o.$slots, "rejecticon", {}, function() {
+            return [v("span", Z({
+              class: [a.rejectIcon, A.class]
             }, o.ptm("rejectButton").icon, {
               "data-pc-section": "rejectbuttonicon"
             }), null, 16)];
           })];
         }),
         key: "0"
-      } : void 0]), 1032, ["label", "class", "autofocus", "unstyled", "pt"]), k(E, {
+      } : void 0]), 1032, ["label", "class", "autofocus", "unstyled", "pt"]), b(L, {
         label: a.acceptLabel,
-        class: re([o.cx("acceptButton"), b.confirmation.acceptClass]),
-        onClick: i[1] || (i[1] = function(T) {
+        class: ce([o.cx("acceptButton"), w.confirmation.acceptClass]),
+        onClick: i[1] || (i[1] = function(A) {
           return a.accept();
         }),
         autofocus: a.autoFocusAccept,
         unstyled: o.unstyled,
         pt: o.ptm("acceptButton")
-      }, tt({
+      }, Ye({
         _: 2
       }, [a.acceptIcon || o.$slots.accepticon ? {
         name: "icon",
-        fn: U(function(T) {
-          return [ae(o.$slots, "accepticon", {}, function() {
-            return [v("span", Y({
-              class: [a.acceptIcon, T.class]
+        fn: M(function(A) {
+          return [re(o.$slots, "accepticon", {}, function() {
+            return [v("span", Z({
+              class: [a.acceptIcon, A.class]
             }, o.ptm("acceptButton").icon, {
               "data-pc-section": "acceptbuttonicon"
             }), null, 16)];
@@ -243,8 +242,8 @@ function Xn(o, i, u, L, b, a) {
     key: "1"
   }]), 1032, ["visible", "class", "header", "blockScroll", "position", "breakpoints", "closeOnEscape", "draggable", "onUpdate:visible", "pt", "unstyled"]);
 }
-$t.render = Xn;
-var Yn = {
+Tt.render = Hn;
+var qn = {
   root: function(i) {
     var u = i.instance;
     return ["p-overlaypanel p-component", {
@@ -254,12 +253,12 @@ var Yn = {
   content: "p-overlaypanel-content",
   closeButton: "p-overlaypanel-close p-link",
   closeIcon: "p-overlaypanel-close-icon"
-}, Gn = Pt.extend({
+}, Jn = St.extend({
   name: "overlaypanel",
-  classes: Yn
-}), Qn = {
+  classes: qn
+}), Xn = {
   name: "BaseOverlayPanel",
-  extends: jt,
+  extends: Et,
   props: {
     dismissable: {
       type: Boolean,
@@ -294,15 +293,15 @@ var Yn = {
       default: !0
     }
   },
-  style: Gn,
+  style: Jn,
   provide: function() {
     return {
       $parentInstance: this
     };
   }
-}, Nt = {
+}, At = {
   name: "OverlayPanel",
-  extends: Qn,
+  extends: Xn,
   inheritAttrs: !1,
   emits: ["show", "hide"],
   data: function() {
@@ -329,7 +328,7 @@ var Yn = {
   overlayEventListener: null,
   documentKeydownListener: null,
   beforeUnmount: function() {
-    this.dismissable && this.unbindOutsideClickListener(), this.scrollHandler && (this.scrollHandler.destroy(), this.scrollHandler = null), this.destroyStyle(), this.unbindResizeListener(), this.target = null, this.container && this.autoZIndex && nt.clear(this.container), this.overlayEventListener && (Ke.off("overlay-click", this.overlayEventListener), this.overlayEventListener = null), this.container = null;
+    this.dismissable && this.unbindOutsideClickListener(), this.scrollHandler && (this.scrollHandler.destroy(), this.scrollHandler = null), this.destroyStyle(), this.unbindResizeListener(), this.target = null, this.container && this.autoZIndex && Ge.clear(this.container), this.overlayEventListener && (Fe.off("overlay-click", this.overlayEventListener), this.overlayEventListener = null), this.container = null;
   },
   mounted: function() {
     this.breakpoints && this.createStyle();
@@ -349,27 +348,27 @@ var Yn = {
     },
     onEnter: function(i) {
       var u = this;
-      this.container.setAttribute(this.attributeSelector, ""), Z.addStyles(i, {
+      this.container.setAttribute(this.attributeSelector, ""), J.addStyles(i, {
         position: "absolute",
         top: "0",
         left: "0"
-      }), this.alignOverlay(), this.dismissable && this.bindOutsideClickListener(), this.bindScrollListener(), this.bindResizeListener(), this.autoZIndex && nt.set("overlay", i, this.baseZIndex + this.$primevue.config.zIndex.overlay), this.overlayEventListener = function(L) {
-        u.container.contains(L.target) && (u.selfClick = !0);
-      }, this.focus(), Ke.on("overlay-click", this.overlayEventListener), this.$emit("show"), this.closeOnEscape && this.bindDocumentKeyDownListener();
+      }), this.alignOverlay(), this.dismissable && this.bindOutsideClickListener(), this.bindScrollListener(), this.bindResizeListener(), this.autoZIndex && Ge.set("overlay", i, this.baseZIndex + this.$primevue.config.zIndex.overlay), this.overlayEventListener = function(C) {
+        u.container.contains(C.target) && (u.selfClick = !0);
+      }, this.focus(), Fe.on("overlay-click", this.overlayEventListener), this.$emit("show"), this.closeOnEscape && this.bindDocumentKeyDownListener();
     },
     onLeave: function() {
-      this.unbindOutsideClickListener(), this.unbindScrollListener(), this.unbindResizeListener(), this.unbindDocumentKeyDownListener(), Ke.off("overlay-click", this.overlayEventListener), this.overlayEventListener = null, this.$emit("hide");
+      this.unbindOutsideClickListener(), this.unbindScrollListener(), this.unbindResizeListener(), this.unbindDocumentKeyDownListener(), Fe.off("overlay-click", this.overlayEventListener), this.overlayEventListener = null, this.$emit("hide");
     },
     onAfterLeave: function(i) {
-      this.autoZIndex && nt.clear(i);
+      this.autoZIndex && Ge.clear(i);
     },
     alignOverlay: function() {
-      Z.absolutePosition(this.container, this.target, !1);
-      var i = Z.getOffset(this.container), u = Z.getOffset(this.target), L = 0;
-      i.left < u.left && (L = u.left - i.left), this.container.style.setProperty("--overlayArrowLeft", "".concat(L, "px")), i.top < u.top && (this.container.setAttribute("data-p-overlaypanel-flipped", "true"), !this.isUnstyled && Z.addClass(this.container, "p-overlaypanel-flipped"));
+      J.absolutePosition(this.container, this.target, !1);
+      var i = J.getOffset(this.container), u = J.getOffset(this.target), C = 0;
+      i.left < u.left && (C = u.left - i.left), this.container.style.setProperty("--overlayArrowLeft", "".concat(C, "px")), i.top < u.top && (this.container.setAttribute("data-p-overlaypanel-flipped", "true"), !this.isUnstyled && J.addClass(this.container, "p-overlaypanel-flipped"));
     },
     onContentKeydown: function(i) {
-      i.code === "Escape" && this.closeOnEscape && (this.hide(), Z.focus(this.target));
+      i.code === "Escape" && this.closeOnEscape && (this.hide(), J.focus(this.target));
     },
     onButtonKeydown: function(i) {
       switch (i.code) {
@@ -395,7 +394,7 @@ var Yn = {
     },
     bindOutsideClickListener: function() {
       var i = this;
-      !this.outsideClickListener && Z.isClient() && (this.outsideClickListener = function(u) {
+      !this.outsideClickListener && J.isClient() && (this.outsideClickListener = function(u) {
         i.visible && !i.selfClick && !i.isTargetClicked(u) && (i.visible = !1), i.selfClick = !1;
       }, document.addEventListener("click", this.outsideClickListener));
     },
@@ -404,7 +403,7 @@ var Yn = {
     },
     bindScrollListener: function() {
       var i = this;
-      this.scrollHandler || (this.scrollHandler = new Pn(this.target, function() {
+      this.scrollHandler || (this.scrollHandler = new En(this.target, function() {
         i.visible && (i.visible = !1);
       })), this.scrollHandler.bindScrollListener();
     },
@@ -414,7 +413,7 @@ var Yn = {
     bindResizeListener: function() {
       var i = this;
       this.resizeListener || (this.resizeListener = function() {
-        i.visible && !Z.isTouchDevice() && (i.visible = !1);
+        i.visible && !J.isTouchDevice() && (i.visible = !1);
       }, window.addEventListener("resize", this.resizeListener));
     },
     unbindResizeListener: function() {
@@ -429,13 +428,13 @@ var Yn = {
     createStyle: function() {
       if (!this.styleElement && !this.isUnstyled) {
         var i;
-        this.styleElement = document.createElement("style"), this.styleElement.type = "text/css", Z.setAttribute(this.styleElement, "nonce", (i = this.$primevue) === null || i === void 0 || (i = i.config) === null || i === void 0 || (i = i.csp) === null || i === void 0 ? void 0 : i.nonce), document.head.appendChild(this.styleElement);
+        this.styleElement = document.createElement("style"), this.styleElement.type = "text/css", J.setAttribute(this.styleElement, "nonce", (i = this.$primevue) === null || i === void 0 || (i = i.config) === null || i === void 0 || (i = i.csp) === null || i === void 0 ? void 0 : i.nonce), document.head.appendChild(this.styleElement);
         var u = "";
-        for (var L in this.breakpoints)
+        for (var C in this.breakpoints)
           u += `
-                        @media screen and (max-width: `.concat(L, `) {
+                        @media screen and (max-width: `.concat(C, `) {
                             .p-overlaypanel[`).concat(this.attributeSelector, `] {
-                                width: `).concat(this.breakpoints[L], ` !important;
+                                width: `).concat(this.breakpoints[C], ` !important;
                             }
                         }
                     `);
@@ -446,7 +445,7 @@ var Yn = {
       this.styleElement && (document.head.removeChild(this.styleElement), this.styleElement = null);
     },
     onOverlayClick: function(i) {
-      Ke.emit("overlay-click", {
+      Fe.emit("overlay-click", {
         originalEvent: i,
         target: this.target
       });
@@ -454,56 +453,56 @@ var Yn = {
   },
   computed: {
     attributeSelector: function() {
-      return An();
+      return Sn();
     },
     closeAriaLabel: function() {
       return this.$primevue.config.locale.aria ? this.$primevue.config.locale.aria.close : void 0;
     }
   },
   directives: {
-    focustrap: Hn,
-    ripple: Tn
+    focustrap: zn,
+    ripple: Ln
   },
   components: {
-    Portal: Un,
-    TimesIcon: Kn
+    Portal: Nn,
+    TimesIcon: $n
   }
-}, ei = ["aria-modal"], ti = ["aria-label"];
-function ni(o, i, u, L, b, a) {
-  var E = at("Portal"), B = It("ripple"), T = It("focustrap");
-  return d(), ce(E, {
+}, Zn = ["aria-modal"], Wn = ["aria-label"];
+function Yn(o, i, u, C, w, a) {
+  var L = it("Portal"), F = wt("ripple"), A = wt("focustrap");
+  return f(), Q(L, {
     appendTo: o.appendTo
   }, {
-    default: U(function() {
-      return [k(jn, Y({
+    default: M(function() {
+      return [b(In, Z({
         name: "p-overlaypanel",
         onEnter: a.onEnter,
         onLeave: a.onLeave,
         onAfterLeave: a.onAfterLeave
       }, o.ptm("transition")), {
-        default: U(function() {
-          return [b.visible ? xt((d(), h("div", Y({
+        default: M(function() {
+          return [w.visible ? Ct((f(), y("div", Z({
             key: 0,
             ref: a.containerRef,
             role: "dialog",
-            "aria-modal": b.visible,
+            "aria-modal": w.visible,
             onClick: i[5] || (i[5] = function() {
               return a.onOverlayClick && a.onOverlayClick.apply(a, arguments);
             }),
             class: o.cx("root")
-          }, o.ptmi("root")), [o.$slots.container ? ae(o.$slots, "container", {
+          }, o.ptmi("root")), [o.$slots.container ? re(o.$slots, "container", {
             key: 0,
             onClose: a.hide,
-            onKeydown: function(M) {
-              return a.onButtonKeydown(M);
+            onKeydown: function(ee) {
+              return a.onButtonKeydown(ee);
             },
             closeCallback: a.hide,
-            keydownCallback: function(M) {
-              return a.onButtonKeydown(M);
+            keydownCallback: function(ee) {
+              return a.onButtonKeydown(ee);
             }
-          }) : (d(), h(z, {
+          }) : (f(), y(z, {
             key: 1
-          }, [v("div", Y({
+          }, [v("div", Z({
             class: o.cx("content"),
             onClick: i[0] || (i[0] = function() {
               return a.onContentClick && a.onContentClick.apply(a, arguments);
@@ -514,7 +513,7 @@ function ni(o, i, u, L, b, a) {
             onKeydown: i[2] || (i[2] = function() {
               return a.onContentKeydown && a.onContentKeydown.apply(a, arguments);
             })
-          }, o.ptm("content")), [ae(o.$slots, "default")], 16), o.showCloseIcon ? xt((d(), h("button", Y({
+          }, o.ptm("content")), [re(o.$slots, "default")], 16), o.showCloseIcon ? Ct((f(), y("button", Z({
             key: 0,
             class: o.cx("closeButton"),
             "aria-label": a.closeAriaLabel,
@@ -526,11 +525,11 @@ function ni(o, i, u, L, b, a) {
             onKeydown: i[4] || (i[4] = function() {
               return a.onButtonKeydown && a.onButtonKeydown.apply(a, arguments);
             })
-          }, o.ptm("closeButton")), [ae(o.$slots, "closeicon", {}, function() {
-            return [(d(), ce(rt(o.closeIcon ? "span" : "TimesIcon"), Y({
+          }, o.ptm("closeButton")), [re(o.$slots, "closeicon", {}, function() {
+            return [(f(), Q(st(o.closeIcon ? "span" : "TimesIcon"), Z({
               class: [o.cx("closeIcon"), o.closeIcon]
             }, o.ptm("closeIcon")), null, 16, ["class"]))];
-          })], 16, ti)), [[B]]) : R("", !0)], 64))], 16, ei)), [[T]]) : R("", !0)];
+          })], 16, Wn)), [[F]]) : D("", !0)], 64))], 16, Zn)), [[A]]) : D("", !0)];
         }),
         _: 3
       }, 16, ["onEnter", "onLeave", "onAfterLeave"])];
@@ -538,77 +537,77 @@ function ni(o, i, u, L, b, a) {
     _: 3
   }, 8, ["appendTo"]);
 }
-Nt.render = ni;
-const ii = { class: "pick-panel-rows" }, si = {
+At.render = Yn;
+const Gn = { class: "pick-panel-rows" }, Qn = {
   key: 0,
   class: "pick-panel-empty"
-}, oi = ["onClick"], li = { class: "pick-panel-label" }, ai = {
+}, ei = ["onClick"], ti = { class: "pick-panel-label" }, ni = {
   key: 0,
   class: "pick-panel-sublabel"
-}, ri = {
+}, ii = {
   __name: "PickPanel",
   setup(o, { expose: i }) {
-    const u = y(null), L = y(""), b = y([]), a = y(($) => String($)), E = y(null), B = y(null), T = S(() => b.value.length > 6), ue = S(() => {
-      const $ = L.value.trim().toLowerCase();
-      return $ ? b.value.filter((D) => {
-        const O = a.value(D) || "", H = E.value && E.value(D) || "";
-        return `${O} ${H}`.toLowerCase().includes($);
-      }) : b.value;
+    const u = g(null), C = g(""), w = g([]), a = g((R) => String(R)), L = g(null), F = g(null), A = I(() => w.value.length > 6), ue = I(() => {
+      const R = C.value.trim().toLowerCase();
+      return R ? w.value.filter((k) => {
+        const d = a.value(k) || "", $ = L.value && L.value(k) || "";
+        return `${d} ${$}`.toLowerCase().includes(R);
+      }) : w.value;
     });
-    function M($, { items: D, getLabel: O, getSubLabel: H, onPick: de }) {
-      b.value = D, a.value = O, E.value = H || null, B.value = de, L.value = "", u.value.toggle($), ee(() => {
-        var A, p;
-        return (p = (A = u.value.$el) == null ? void 0 : A.querySelector("input")) == null ? void 0 : p.focus();
+    function ee(R, { items: k, getLabel: d, getSubLabel: $, onPick: j }) {
+      w.value = k, a.value = d, L.value = $ || null, F.value = j, C.value = "", u.value.toggle(R), G(() => {
+        var K, te;
+        return (te = (K = u.value.$el) == null ? void 0 : K.querySelector("input")) == null ? void 0 : te.focus();
       });
     }
-    function He($) {
-      var D;
-      (D = B.value) == null || D.call(B, $), u.value.hide();
+    function ge(R) {
+      var k;
+      (k = F.value) == null || k.call(F, R), u.value.hide();
     }
-    return i({ open: M }), ($, D) => (d(), ce(g(Nt), {
+    return i({ open: ee }), (R, k) => (f(), Q(m(At), {
       ref_key: "panelRef",
       ref: u,
       class: "pick-panel"
     }, {
-      default: U(() => [
-        T.value ? (d(), ce(g(ct), {
+      default: M(() => [
+        A.value ? (f(), Q(m(ot), {
           key: 0,
-          modelValue: L.value,
-          "onUpdate:modelValue": D[0] || (D[0] = (O) => L.value = O),
+          modelValue: C.value,
+          "onUpdate:modelValue": k[0] || (k[0] = (d) => C.value = d),
           placeholder: "Type to filter...",
           class: "pick-panel-filter"
-        }, null, 8, ["modelValue"])) : R("", !0),
-        v("div", ii, [
-          ue.value.length ? R("", !0) : (d(), h("div", si, "(no matches)")),
-          (d(!0), h(z, null, Ue(ue.value, (O, H) => (d(), h("div", {
-            key: H,
+        }, null, 8, ["modelValue"])) : D("", !0),
+        v("div", Gn, [
+          ue.value.length ? D("", !0) : (f(), y("div", Qn, "(no matches)")),
+          (f(!0), y(z, null, Be(ue.value, (d, $) => (f(), y("div", {
+            key: $,
             class: "pick-panel-row",
-            onClick: (de) => He(O)
+            onClick: (j) => ge(d)
           }, [
-            v("div", li, P(a.value(O)), 1),
-            E.value && E.value(O) ? (d(), h("div", ai, P(E.value(O)), 1)) : R("", !0)
-          ], 8, oi))), 128))
+            v("div", ti, P(a.value(d)), 1),
+            L.value && L.value(d) ? (f(), y("div", ni, P(L.value(d)), 1)) : D("", !0)
+          ], 8, ei))), 128))
         ])
       ]),
       _: 1
     }, 512));
   }
-}, ci = /* @__PURE__ */ Rt(ri, [["__scopeId", "data-v-86b8a254"]]), ui = { class: "header-row" }, di = ["checked", "disabled"], fi = { class: "title-el" }, pi = { class: "status-el" }, vi = { class: "width-row" }, mi = { class: "font-row" }, hi = { class: "audio-row" }, yi = { class: "audio-content-row" }, gi = {
+}, si = /* @__PURE__ */ It(ii, [["__scopeId", "data-v-86b8a254"]]), oi = { class: "header-row" }, li = ["checked", "disabled"], ai = { class: "title-el" }, ri = { class: "status-el" }, ci = { class: "width-row" }, ui = { class: "font-row" }, di = { class: "audio-row" }, fi = { class: "audio-content-row" }, pi = {
   key: 0,
   class: "muted-note"
-}, ki = {
+}, vi = {
   key: 1,
   class: "muted-note"
-}, bi = { class: "audio-label" }, wi = ["src"], Ci = {
+}, mi = { class: "audio-label" }, hi = ["src"], yi = {
   key: 3,
   class: "muted-note"
-}, Li = {
+}, gi = {
   key: 0,
   class: "timing-warning"
-}, Si = { class: "actions-row" }, Ei = ["data-row-index"], Ii = { class: "malformed-warn-line" }, xi = ["value", "onInput"], _i = { class: "top-line" }, Ti = ["title", "onClick"], Ai = ["title", "onClick"], Pi = ["onMouseenter"], ji = { class: "instruct-line" }, Ri = {
+}, ki = { class: "actions-row" }, bi = ["data-row-index"], wi = { class: "malformed-warn-line" }, Ci = ["value", "onInput"], Li = { class: "top-line" }, Si = ["title", "onClick"], Ei = ["title", "onClick"], Ii = ["onMouseenter"], xi = { class: "instruct-line" }, _i = {
   key: 0,
   class: "instruct-desc"
-}, Di = ["value", "onInput", "onPaste"], Oi = { key: 0 }, $i = { class: "role-info-key" }, Ni = { class: "role-info-value" }, Fi = 600, ot = 3e3, zi = 1500, Tt = 1600, Bi = 11.5, Mi = 9, Ki = 22, At = "FL_CosyVoice3.LineEditor.widthPx", lt = "FL_CosyVoice3.LineEditor.textFontSizePx", Ui = {
+}, Ti = ["value", "onInput", "onPaste"], Ai = { key: 0 }, ji = { class: "role-info-key" }, Pi = { class: "role-info-value" }, Ri = 600, tt = 3e3, Oi = 1500, Di = 11.5, $i = 9, Ni = 22, nt = "FL_CosyVoice3.LineEditor.textFontSizePx", zi = {
   __name: "LineEditorApp",
   props: {
     folder: { type: String, required: !0 },
@@ -621,8 +620,8 @@ const ii = { class: "pick-panel-rows" }, si = {
     onClose: { type: Function, required: !0 }
   },
   setup(o) {
-    const i = o, u = [1280, 1600];
-    function L(e, t) {
+    const i = o;
+    function u(e, t) {
       try {
         const n = parseFloat(localStorage.getItem(e));
         return Number.isFinite(n) ? n : t;
@@ -630,60 +629,41 @@ const ii = { class: "pick-panel-rows" }, si = {
         return t;
       }
     }
-    function b(e, t) {
+    function C(e, t) {
       try {
         localStorage.setItem(e, String(t));
       } catch {
       }
     }
-    function a() {
-      try {
-        const e = localStorage.getItem(At);
-        if (e === "full") return "full";
-        const t = parseFloat(e);
-        return Number.isFinite(t) ? t : Tt;
-      } catch {
-        return Tt;
-      }
-    }
-    function E(e) {
-      try {
-        localStorage.setItem(At, String(e));
-      } catch {
-      }
-    }
-    function B(e) {
-      return e === "full" ? "94vw" : `min(94vw, ${e}px)`;
-    }
-    function T(e) {
+    function w(e) {
       const t = e.split("|");
       return t.length !== 3 ? null : { speaker: t[0].trim(), instruct: t[1].trim(), text: t[2].trim() };
     }
-    let ue = 1;
-    function M(e) {
-      return { ...e, __key: ue++ };
+    let a = 1;
+    function L(e) {
+      return { ...e, __key: a++ };
     }
-    function He(e) {
+    function F(e) {
       return e.split(`
 `).map((t) => t.replace(/\r$/, "")).filter((t) => t.trim()).map((t) => {
-        const n = T(t);
-        return M(n ? { ...n, raw: t, malformed: !1 } : { raw: t, malformed: !0 });
+        const n = w(t);
+        return L(n ? { ...n, raw: t, malformed: !1 } : { raw: t, malformed: !0 });
       });
     }
-    function $(e) {
+    function A(e) {
       return e.map((t) => t.malformed ? t.raw : `${t.speaker} | ${t.instruct} | ${t.text}`).join(`
 `);
     }
-    function D(e) {
+    function ue(e) {
       if (!e) return "rgba(255,255,255,0.15)";
       let t = 0;
       for (let n = 0; n < e.length; n++) t = t * 31 + e.charCodeAt(n) >>> 0;
       return `hsl(${t % 360}, 55%, 55%)`;
     }
-    const O = Vn();
-    function H({ title: e = "Confirm", message: t = "", okText: n = "OK", cancelText: s = "Cancel" } = {}) {
+    const ee = Bn();
+    function ge({ title: e = "Confirm", message: t = "", okText: n = "OK", cancelText: s = "Cancel" } = {}) {
       return new Promise((l) => {
-        O.require({
+        ee.require({
           header: e,
           message: t,
           acceptLabel: n,
@@ -694,96 +674,97 @@ const ii = { class: "pick-panel-rows" }, si = {
         });
       });
     }
-    const de = y(!0), A = y(i.filename), p = y([]), be = y([]), N = y([]), fe = y(null), je = y([]), Re = y([]), te = y([]), ut = y(""), dt = y(a()), V = y(L(lt, Bi)), q = y(null), we = y(-1), pe = y(!1), ve = y(-1), De = y(i.checkedApi ? i.checkedApi.isChecked(i.filename) : !1), x = st({ checking: !0, best: null, mtime: null, error: null }), J = st({ visible: !1, top: 0, left: 0, code: null }), Oe = y(null), ne = st(/* @__PURE__ */ new Set());
-    let me = 1, he = null, $e = null, Ve = 0, ye = null, ie = null, G = null, Ce = null, Le = null, Se = null, qe = !1, Je = null, Ee = null;
-    const We = y(null), Ze = y(null), Ne = /* @__PURE__ */ new Map(), Xe = /* @__PURE__ */ new Map(), Fe = y(null), ft = S(() => X(i.folder, A.value)), Ie = S(() => X(i.folder, "_audio")), se = S(() => $n(A.value, i.suffix)), pt = S(() => X(X(Ie.value, "lines"), se.value)), vt = S(() => X(pt.value, "_state.json")), _ = S(() => Re.value.includes(A.value)), Ye = S(() => {
-      const e = p.value.filter((t) => !t.malformed);
+    const R = g(!0), k = g(i.filename), d = g([]), $ = g([]), j = g([]), K = g(null), te = g([]), Ae = g([]), ne = g([]), lt = g(""), { cssWidth: jt, setWidth: at, presets: Pt } = Fn({
+      storageKey: "FL_CosyVoice3.LineEditor.widthPx",
+      defaultWidth: 1600,
+      presets: [1280, 1600]
+    }), U = g(u(nt, Di)), V = g(null), ke = g(-1), de = g(!1), fe = g(-1), je = g(i.checkedApi ? i.checkedApi.isChecked(i.filename) : !1), _ = et({ checking: !0, best: null, mtime: null, error: null }), H = et({ visible: !1, top: 0, left: 0, code: null }), Pe = g(null), ie = et(/* @__PURE__ */ new Set());
+    let pe = 1, ve = null, Re = null, Me = 0, me = null, se = null, W = null, be = null, we = null, Ce = null, Ke = !1, Ue = null, Le = null;
+    const Ve = g(null), He = g(null), Oe = /* @__PURE__ */ new Map(), qe = /* @__PURE__ */ new Map(), De = g(null), rt = I(() => X(i.folder, k.value)), Se = I(() => X(i.folder, "_audio")), oe = I(() => An(k.value, i.suffix)), ct = I(() => X(X(Se.value, "lines"), oe.value)), ut = I(() => X(ct.value, "_state.json")), T = I(() => Ae.value.includes(k.value)), Je = I(() => {
+      const e = d.value.filter((t) => !t.malformed);
       return e.length > 0 && e.every((t) => t.status === "voiced");
-    }), Ft = S(() => B(dt.value));
-    function f(e) {
-      ut.value = e;
+    });
+    function p(e) {
+      lt.value = e;
     }
-    function mt(e) {
-      dt.value = e, E(e);
-    }
-    function ht(e) {
+    function dt(e) {
       if (!e) return "";
-      const t = N.value.find((l) => l.code === e), n = t && t.speaker ? t.speaker : e, s = String(n).split("#", 1)[0].trim();
+      const t = j.value.find((l) => l.code === e), n = t && t.speaker ? t.speaker : e, s = String(n).split("#", 1)[0].trim();
       return s ? `${s}.pt` : "";
     }
-    function zt() {
+    function Rt() {
       const e = {};
-      return N.value.forEach((t) => {
+      return j.value.forEach((t) => {
         const n = String(t.speaker || "").split("#", 1)[0].trim();
         !n || !t.code || (e[n] = e[n] || []).push(t.code);
       }), e;
     }
-    async function Bt() {
-      if (!fe.value)
-        return f("No _roles.json found for this project -- can't save"), !1;
+    async function Ot() {
+      if (!K.value)
+        return p("No _roles.json found for this project -- can't save"), !1;
       try {
-        const t = await (await fetch(`${ge}/write`, {
+        const t = await (await fetch(`${he}/write`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: fe.value, content: JSON.stringify({ roles: N.value }, null, 2) })
+          body: JSON.stringify({ path: K.value, content: JSON.stringify({ roles: j.value }, null, 2) })
         })).json();
-        return t.error ? (f(`Error saving _roles.json: ${t.error}`), !1) : !0;
+        return t.error ? (p(`Error saving _roles.json: ${t.error}`), !1) : !0;
       } catch (e) {
-        return f(`Error saving _roles.json: ${e}`), !1;
+        return p(`Error saving _roles.json: ${e}`), !1;
       }
     }
-    async function Mt(e) {
-      if (!fe.value) return;
-      const t = Nn(fe.value), n = await Fn(t, e, i.suffix);
-      f(n.message), (n.changed.some((s) => s.file === A.value) || n.untracked.some((s) => s.file === A.value)) && (await yt(), await St(), ye = null, ie = null, oe(), _e());
+    async function Dt(e) {
+      if (!K.value) return;
+      const t = jn(K.value), n = await Pn(t, e, i.suffix);
+      p(n.message), (n.changed.some((s) => s.file === k.value) || n.untracked.some((s) => s.file === k.value)) && (await ft(), await kt(), me = null, se = null, le(), Ie());
     }
-    function Kt(e, t) {
+    function $t(e, t) {
       if (!Array.isArray(e) || !e.length) return null;
       const n = [];
       return t.forEach((s, l) => {
         s.malformed || n.push(l);
       }), n.length !== e.length ? null : { lines: e, rowIndexMap: n };
     }
-    const F = S(() => _.value ? Kt(q.value, p.value) : null), ze = S(() => {
+    const N = I(() => T.value ? $t(V.value, d.value) : null), $e = I(() => {
       const e = /* @__PURE__ */ new Map();
-      return F.value && F.value.rowIndexMap.forEach((t, n) => e.set(t, n)), e;
-    }), Ut = S(() => !!(_.value && q.value && q.value.length && !F.value));
-    function Ht() {
+      return N.value && N.value.rowIndexMap.forEach((t, n) => e.set(t, n)), e;
+    }), Nt = I(() => !!(T.value && V.value && V.value.length && !N.value));
+    function zt() {
       return JSON.stringify({
-        next_id: me,
-        lines: p.value.filter((e) => !e.malformed).map((e) => ({ id: e.id, text: e.text, status: e.status }))
+        next_id: pe,
+        lines: d.value.filter((e) => !e.malformed).map((e) => ({ id: e.id, text: e.text, status: e.status }))
       }, null, 2);
     }
-    function Vt(e, t) {
+    function Ft(e, t) {
       const n = t && Array.isArray(t.lines) ? t.lines : [];
       let s = t && Number.isFinite(t.next_id) ? t.next_id : 1;
       const l = e.filter((c) => !c.malformed);
       if (n.length === l.length)
-        return l.forEach((c, w) => {
-          const C = n[w];
-          c.id = Number.isFinite(C.id) ? C.id : s++;
-          const j = (C.text || "") === c.text;
-          c.status = j ? C.status === "voiced" || C.status === "stale" ? C.status : "unvoiced" : C.status === "voiced" || C.status === "stale" ? "stale" : "unvoiced";
+        return l.forEach((c, S) => {
+          const E = n[S];
+          c.id = Number.isFinite(E.id) ? E.id : s++;
+          const O = (E.text || "") === c.text;
+          c.status = O ? E.status === "voiced" || E.status === "stale" ? E.status : "unvoiced" : E.status === "voiced" || E.status === "stale" ? "stale" : "unvoiced";
         }), Math.max(s, ...l.map((c) => c.id + 1), 1);
       const r = /* @__PURE__ */ new Map();
       n.forEach((c) => {
-        const w = (c.text || "").trim();
-        r.has(w) || r.set(w, []), r.get(w).push(c);
+        const S = (c.text || "").trim();
+        r.has(S) || r.set(S, []), r.get(S).push(c);
       });
-      const m = /* @__PURE__ */ new Map();
+      const h = /* @__PURE__ */ new Map();
       return l.forEach((c) => {
-        const w = (c.text || "").trim(), C = r.get(w), j = m.get(w) || 0;
-        if (C && j < C.length) {
-          const W = C[j];
-          m.set(w, j + 1), c.id = Number.isFinite(W.id) ? W.id : s++, c.status = W.status === "voiced" ? "voiced" : "unvoiced";
+        const S = (c.text || "").trim(), E = r.get(S), O = h.get(S) || 0;
+        if (E && O < E.length) {
+          const q = E[O];
+          h.set(S, O + 1), c.id = Number.isFinite(q.id) ? q.id : s++, c.status = q.status === "voiced" ? "voiced" : "unvoiced";
         } else
           c.id = s++, c.status = "unvoiced";
       }), s;
     }
-    async function yt() {
+    async function ft() {
       let e = null, t = null;
       try {
-        const s = await (await fetch(`${ge}/read?path=${encodeURIComponent(vt.value)}`)).json();
+        const s = await (await fetch(`${he}/read?path=${encodeURIComponent(ut.value)}`)).json();
         if (s.exists) {
           t = s.content;
           try {
@@ -795,79 +776,79 @@ const ii = { class: "pick-panel-rows" }, si = {
       } catch {
         e = null;
       }
-      me = Vt(p.value, e), $e = t;
+      pe = Ft(d.value, e), Re = t;
     }
-    function xe(e) {
+    function Ee(e) {
       e.status === "voiced" && (e.status = "stale");
     }
-    function Ge() {
-      Ee && (Ee.pause(), Ee.src = "", Ee = null), ve.value = -1;
+    function Xe() {
+      Le && (Le.pause(), Le.src = "", Le = null), fe.value = -1;
     }
-    function qt(e) {
-      Ge();
-      const t = pt.value, n = (s) => {
-        for (; s < p.value.length && (p.value[s].malformed || p.value[s].status === "unvoiced"); ) s++;
-        if (s >= p.value.length) {
-          ve.value = -1;
+    function Bt(e) {
+      Xe();
+      const t = ct.value, n = (s) => {
+        for (; s < d.value.length && (d.value[s].malformed || d.value[s].status === "unvoiced"); ) s++;
+        if (s >= d.value.length) {
+          fe.value = -1;
           return;
         }
-        ve.value = s;
-        const l = p.value[s], r = new Audio(`${le}/audio?path=${encodeURIComponent(X(t, `id${l.id}.wav`))}&v=${Date.now()}`);
-        Ee = r, r.addEventListener("ended", () => n(s + 1)), r.play().catch((m) => f(`Playback failed: ${m}`));
+        fe.value = s;
+        const l = d.value[s], r = new Audio(`${ae}/audio?path=${encodeURIComponent(X(t, `id${l.id}.wav`))}&v=${Date.now()}`);
+        Le = r, r.addEventListener("ended", () => n(s + 1)), r.play().catch((h) => p(`Playback failed: ${h}`));
       };
       n(e);
     }
-    function Be() {
+    function Ne() {
       var s;
-      const e = We.value;
-      if (!F.value || !e) {
-        we.value = -1;
+      const e = Ve.value;
+      if (!N.value || !e) {
+        ke.value = -1;
         return;
       }
       const t = e.currentTime;
       let n = -1;
-      for (let l = 0; l < F.value.lines.length; l++)
-        if (t >= F.value.lines[l].start && t < F.value.lines[l].end) {
+      for (let l = 0; l < N.value.lines.length; l++)
+        if (t >= N.value.lines[l].start && t < N.value.lines[l].end) {
           n = l;
           break;
         }
-      if (n !== we.value && (we.value = n, n >= 0 && pe.value)) {
-        const l = F.value.rowIndexMap[n], r = l !== void 0 ? Ne.get((s = p.value[l]) == null ? void 0 : s.__key) : null;
+      if (n !== ke.value && (ke.value = n, n >= 0 && de.value)) {
+        const l = N.value.rowIndexMap[n], r = l !== void 0 ? Oe.get((s = d.value[l]) == null ? void 0 : s.__key) : null;
         r == null || r.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }
-    async function _e({ silent: e = !1 } = {}) {
-      const t = X(X(Ie.value, "timing"), `${se.value}.json`);
+    async function Ie({ silent: e = !1 } = {}) {
+      const t = X(X(Se.value, "timing"), `${oe.value}.json`);
       try {
-        const s = await (await fetch(`${ge}/read?path=${encodeURIComponent(t)}`)).json();
+        const s = await (await fetch(`${he}/read?path=${encodeURIComponent(t)}`)).json();
         if (!s.exists) {
-          q.value = null, ie = null;
+          V.value = null, se = null;
           return;
         }
-        if (e && s.mtime === ie) return;
-        const l = s.mtime !== ie;
-        ie = s.mtime;
+        if (e && s.mtime === se) return;
+        const l = s.mtime !== se;
+        se = s.mtime;
         let r;
         try {
           r = JSON.parse(s.content);
         } catch {
-          q.value = null;
+          V.value = null;
           return;
         }
-        q.value = Array.isArray(r.lines) ? r.lines : null;
-        const m = p.value.filter((c) => !c.malformed);
-        l && q.value && q.value.length === m.length && m.length > 0 && await Jt(m), ee(Be);
+        V.value = Array.isArray(r.lines) ? r.lines : null;
+        const h = d.value.filter((c) => !c.malformed);
+        l && V.value && V.value.length === h.length && h.length > 0 && await Mt(h), G(Ne);
       } catch {
       }
     }
-    async function Jt(e) {
+    async function Mt(e) {
       try {
-        const n = await (await fetch(`${le}/commit_full_render`, {
+        const n = await (await fetch(`${ae}/commit_full_render`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             folder: i.folder,
-            base_name: se.value,
+            base_name: oe.value,
             row_texts: e.map((l) => l.text),
             row_ids: e.map((l) => Number.isFinite(l.id) ? l.id : null)
           })
@@ -876,719 +857,719 @@ const ii = { class: "pick-panel-rows" }, si = {
         const s = new Set(n.committed_ids || []);
         e.forEach((l, r) => {
           l.id = n.ids[r], s.has(n.ids[r]) && (l.status = "voiced");
-        }), Number.isFinite(n.next_id) && (me = Math.max(me, n.next_id)), s.size && Te();
+        }), Number.isFinite(n.next_id) && (pe = Math.max(pe, n.next_id)), s.size && xe();
       } catch {
       }
     }
-    function Wt() {
-      qe || (qe = !0, G && (clearTimeout(G), Te()), Ce && clearInterval(Ce), Le && clearInterval(Le), Se && clearInterval(Se), i.onClose());
+    function Kt() {
+      Ke || (Ke = !0, W && (clearTimeout(W), xe()), be && clearInterval(be), we && clearInterval(we), Ce && clearInterval(Ce), i.onClose());
     }
-    it(de, (e) => {
-      e || Wt();
+    Qe(R, (e) => {
+      e || Kt();
     });
-    function K() {
-      Ve = Date.now(), G && clearTimeout(G), G = setTimeout(Te, Fi);
+    function B() {
+      Me = Date.now(), W && clearTimeout(W), W = setTimeout(xe, Ri);
     }
-    async function Te() {
-      const e = $(p.value), t = Ht(), n = e !== he, s = t !== $e;
+    async function xe() {
+      const e = A(d.value), t = zt(), n = e !== ve, s = t !== Re;
       if (!(!n && !s))
         try {
           if (n) {
-            const r = await (await fetch(`${ge}/write`, {
+            const r = await (await fetch(`${he}/write`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ path: ft.value, content: e })
+              body: JSON.stringify({ path: rt.value, content: e })
             })).json();
             if (r.error) {
-              f(`Save error: ${r.error}`);
+              p(`Save error: ${r.error}`);
               return;
             }
-            he = e;
+            ve = e;
           }
-          s && (await fetch(`${ge}/write`, {
+          s && (await fetch(`${he}/write`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: vt.value, content: t })
-          }), $e = t), f(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+            body: JSON.stringify({ path: ut.value, content: t })
+          }), Re = t), p(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
         } catch (l) {
-          f(`Save failed: ${l}`);
+          p(`Save failed: ${l}`);
         }
     }
-    function Ae(e) {
+    function _e(e) {
       e && (e.style.height = "auto", e.style.height = `${e.scrollHeight}px`);
     }
-    function gt(e, t) {
+    function pt(e, t) {
       if (!t) {
-        Xe.delete(e);
+        qe.delete(e);
         return;
       }
-      Xe.set(e, t.$el ?? t);
+      qe.set(e, t.$el ?? t);
     }
-    function Zt() {
-      ee(() => Xe.forEach(Ae));
+    function Ut() {
+      G(() => qe.forEach(_e));
     }
-    function Xt(e, t) {
+    function Vt(e, t) {
       if (!t) {
-        Ne.delete(e);
+        Oe.delete(e);
         return;
       }
-      Ne.set(e, t);
+      Oe.set(e, t);
     }
-    async function kt(e) {
+    async function vt(e) {
       var n;
-      Oe.value = e, await ee();
-      const t = Ne.get(e);
+      Pe.value = e, await G();
+      const t = Oe.get(e);
       t == null || t.scrollIntoView({ behavior: "smooth", block: "nearest" }), (n = t == null ? void 0 : t.querySelector(".fl-input")) == null || n.focus(), setTimeout(() => {
-        Oe.value === e && (Oe.value = null);
+        Pe.value === e && (Pe.value = null);
       }, 500);
     }
-    async function Yt(e, t) {
-      const n = p.value[e], s = p.value[t];
+    async function Ht(e, t) {
+      const n = d.value[e], s = d.value[t];
       if (!n || !s || n.malformed || s.malformed) return;
-      const l = Math.min(e, t), r = Math.max(e, t), m = p.value[l], c = p.value[r];
-      (m.speaker || "").trim() !== (c.speaker || "").trim() && !await H({
+      const l = Math.min(e, t), r = Math.max(e, t), h = d.value[l], c = d.value[r];
+      (h.speaker || "").trim() !== (c.speaker || "").trim() && !await ge({
         title: "Merge lines with different speakers?",
-        message: `"${m.speaker}" and "${c.speaker}" are different speakers. Merge anyway? The combined line keeps "${m.speaker}".`,
+        message: `"${h.speaker}" and "${c.speaker}" are different speakers. Merge anyway? The combined line keeps "${h.speaker}".`,
         okText: "Merge",
         cancelText: "Cancel"
-      }) || (m.text = `${m.text} ${c.text}`.trim(), m.status = "unvoiced", p.value.splice(r, 1), K());
+      }) || (h.text = `${h.text} ${c.text}`.trim(), h.status = "unvoiced", d.value.splice(r, 1), B());
     }
-    function Gt(e, t) {
+    function qt(e, t) {
       !e || e.__flDragAttached || (e.__flDragAttached = !0, e.addEventListener("pointerdown", (n) => {
         if (n.button !== 0) return;
         n.preventDefault();
         const s = e.closest(".fl-line-row");
-        Je = Number(s == null ? void 0 : s.dataset.rowIndex), s == null || s.classList.add("fl-row-dragging");
-        const l = (m) => {
-          var C;
-          (C = Ze.value) == null || C.querySelectorAll(".fl-row-drop-target").forEach((j) => j.classList.remove("fl-row-drop-target"));
-          const c = document.elementFromPoint(m.clientX, m.clientY), w = c && c.closest ? c.closest(".fl-line-row") : null;
-          w && w !== s && w.classList.add("fl-row-drop-target");
-        }, r = (m) => {
-          var j;
+        Ue = Number(s == null ? void 0 : s.dataset.rowIndex), s == null || s.classList.add("fl-row-dragging");
+        const l = (h) => {
+          var E;
+          (E = He.value) == null || E.querySelectorAll(".fl-row-drop-target").forEach((O) => O.classList.remove("fl-row-drop-target"));
+          const c = document.elementFromPoint(h.clientX, h.clientY), S = c && c.closest ? c.closest(".fl-line-row") : null;
+          S && S !== s && S.classList.add("fl-row-drop-target");
+        }, r = (h) => {
+          var O;
           document.removeEventListener("pointermove", l), document.removeEventListener("pointerup", r), document.removeEventListener("pointercancel", r);
-          const c = document.elementFromPoint(m.clientX, m.clientY), w = c && c.closest ? c.closest(".fl-line-row") : null, C = Je;
-          if (Je = null, s == null || s.classList.remove("fl-row-dragging"), (j = Ze.value) == null || j.querySelectorAll(".fl-row-drop-target").forEach((W) => W.classList.remove("fl-row-drop-target")), w && w !== s) {
-            const W = Number(w.dataset.rowIndex);
-            Number.isNaN(W) || Yt(C, W);
+          const c = document.elementFromPoint(h.clientX, h.clientY), S = c && c.closest ? c.closest(".fl-line-row") : null, E = Ue;
+          if (Ue = null, s == null || s.classList.remove("fl-row-dragging"), (O = He.value) == null || O.querySelectorAll(".fl-row-drop-target").forEach((q) => q.classList.remove("fl-row-drop-target")), S && S !== s) {
+            const q = Number(S.dataset.rowIndex);
+            Number.isNaN(q) || Ht(E, q);
           }
         };
         document.addEventListener("pointermove", l), document.addEventListener("pointerup", r), document.addEventListener("pointercancel", r);
       }));
     }
-    function Qt(e) {
-      p.value.splice(e, 1), K();
+    function Jt(e) {
+      d.value.splice(e, 1), B();
     }
-    async function bt(e, t) {
-      t && t.trim() && !await H({
+    async function mt(e, t) {
+      t && t.trim() && !await ge({
         title: "Delete this line?",
         message: t.length > 200 ? t.slice(0, 200) + "…" : t,
         okText: "Delete",
         cancelText: "Cancel"
-      }) || Qt(e);
+      }) || Jt(e);
     }
-    function en(e) {
-      xe(e), K();
+    function Xt(e) {
+      Ee(e), B();
     }
-    function tn(e) {
-      xe(e), K();
+    function Zt(e) {
+      Ee(e), B();
     }
-    function wt(e, t) {
-      Ae(t), xe(e), K();
+    function ht(e, t) {
+      _e(t), Ee(e), B();
     }
-    function nn(e, t, n) {
+    function Wt(e, t, n) {
       n.preventDefault();
       const s = (n.clipboardData || window.clipboardData).getData("text").replace(/[\r\n]+/g, " "), l = t.selectionStart, r = t.selectionEnd;
-      t.value = t.value.slice(0, l) + s + t.value.slice(r), t.selectionStart = t.selectionEnd = l + s.length, e.text = t.value, wt(e, t);
+      t.value = t.value.slice(0, l) + s + t.value.slice(r), t.selectionStart = t.selectionEnd = l + s.length, e.text = t.value, ht(e, t);
     }
-    function sn(e) {
-      const t = N.value.find((s) => s.code === e.speaker), n = ht(e.speaker);
+    function Yt(e) {
+      const t = j.value.find((s) => s.code === e.speaker), n = dt(e.speaker);
       return t ? `Change "${t.code}"'s speaker for the whole play (currently ${n || "unset"})` : n ? `"${e.speaker}" is a literal preset, not a role code -- edit it directly in the speaker field to change it` : "No speaker set on this line yet";
     }
-    function Ct(e) {
-      const t = be.value.find((n) => (n.text || "").trim() === e.instruct.trim());
+    function yt(e) {
+      const t = $.value.find((n) => (n.text || "").trim() === e.instruct.trim());
       return t && t.note ? t.note : null;
     }
-    function on(e, t) {
-      if (!N.value.length) {
-        f("No roles catalog found for this project (_roles.json)");
+    function Gt(e, t) {
+      if (!j.value.length) {
+        p("No roles catalog found for this project (_roles.json)");
         return;
       }
-      Fe.value.open(e, {
-        items: N.value,
+      De.value.open(e, {
+        items: j.value,
         getLabel: (n) => n.code || n.speaker || "",
         getSubLabel: (n) => [n.name, n.speaker, n.description].filter(Boolean).join(" -- "),
         onPick: (n) => {
           const s = n.code || n.speaker || "";
-          t.speaker = s, xe(t), K();
+          t.speaker = s, Ee(t), B();
         }
       });
     }
-    function ln(e, t) {
-      const n = N.value.find((l) => l.code === t.speaker);
+    function Qt(e, t) {
+      const n = j.value.find((l) => l.code === t.speaker);
       if (!n) return;
-      if (!je.value.length) {
-        f("No saved speaker presets found (FL CosyVoice3 Save Speaker)");
+      if (!te.value.length) {
+        p("No saved speaker presets found (FL CosyVoice3 Save Speaker)");
         return;
       }
-      const s = zt();
-      Fe.value.open(e, {
-        items: je.value,
+      const s = Rt();
+      De.value.open(e, {
+        items: te.value,
         getLabel: (l) => l,
         getSubLabel: (l) => {
           const r = s[l] || [];
           return r.length ? `used by: ${r.join(", ")} -- ${r.length} role(s)` : "not used by any role yet";
         },
         onPick: async (l) => {
-          n.speaker = l, await Bt() && (f(`"${n.code}" now uses "${l}" for the whole play`), await Mt(n.code));
+          n.speaker = l, await Ot() && (p(`"${n.code}" now uses "${l}" for the whole play`), await Dt(n.code));
         }
       });
     }
-    function an(e, t) {
-      if (!be.value.length) {
-        f("No instructions catalog found for this project (_instructions.json)");
+    function en(e, t) {
+      if (!$.value.length) {
+        p("No instructions catalog found for this project (_instructions.json)");
         return;
       }
-      Fe.value.open(e, {
-        items: be.value,
+      De.value.open(e, {
+        items: $.value,
         getLabel: (n) => n.text,
         getSubLabel: (n) => n.note || "",
         onPick: (n) => {
-          t.instruct = n.text, xe(t), K();
+          t.instruct = n.text, Ee(t), B();
         }
       });
     }
-    function rn(e, t) {
+    function tn(e, t) {
       const n = e.getBoundingClientRect();
-      J.left = Math.min(n.left, window.innerWidth - 280), J.top = n.bottom + 4, J.code = t, J.visible = !0;
+      H.left = Math.min(n.left, window.innerWidth - 280), H.top = n.bottom + 4, H.code = t, H.visible = !0;
     }
-    function cn() {
-      J.visible = !1;
+    function nn() {
+      H.visible = !1;
     }
-    const Qe = S(() => {
-      const e = J.code;
+    const Ze = I(() => {
+      const e = H.code;
       if (!e) return { message: "No speaker set on this line yet" };
-      const t = N.value.find((s) => s.code === e);
+      const t = j.value.find((s) => s.code === e);
       if (!t) return { message: `"${e}" is not a role code in _roles.json -- used directly as a preset name` };
       const n = Object.entries(t).filter(([, s]) => s !== "" && s !== null && s !== void 0 && s !== t.__key);
       return n.length ? { fields: n } : { message: `"${e}" has no fields set in _roles.json` };
     });
-    function un(e) {
-      return ne.has(e) ? "Re-voicing..." : e.status === "stale" ? "Text/speaker/instruct changed since this line's audio was last rendered -- click to re-voice with the current content" : e.status === "voiced" ? "Re-voice just this line (uses the currently open workflow)" : "Not voiced yet -- click to render just this line";
+    function sn(e) {
+      return ie.has(e) ? "Re-voicing..." : e.status === "stale" ? "Text/speaker/instruct changed since this line's audio was last rendered -- click to re-voice with the current content" : e.status === "voiced" ? "Re-voice just this line (uses the currently open workflow)" : "Not voiced yet -- click to render just this line";
     }
-    async function dn(e) {
-      if (!ne.has(e)) {
-        ne.add(e), f("Re-voicing...");
+    async function on(e) {
+      if (!ie.has(e)) {
+        ie.add(e), p("Re-voicing...");
         try {
-          await i.revoiceApi.revoiceLine({ lineId: e.id, speaker: e.speaker, instruct: e.instruct, text: e.text }), e.status = "voiced", f("Line re-voiced");
+          await i.revoiceApi.revoiceLine({ lineId: e.id, speaker: e.speaker, instruct: e.instruct, text: e.text }), e.status = "voiced", p("Line re-voiced");
         } catch (t) {
-          f(`Re-voice failed: ${t.message || t}`);
+          p(`Re-voice failed: ${t.message || t}`);
         } finally {
-          ne.delete(e), Te();
+          ie.delete(e), xe();
         }
       }
     }
-    function Lt(e) {
-      return (_.value ? we.value === ze.value.get(e) : ve.value === e) && pe.value;
+    function gt(e) {
+      return (T.value ? ke.value === $e.value.get(e) : fe.value === e) && de.value;
     }
-    function fn(e, t) {
-      if (_.value) {
-        const s = ze.value.get(t), l = We.value;
-        if (s === void 0 || !l || !F.value) return;
-        l.currentTime = F.value.lines[s].start, l.play();
-      } else ve.value === t ? Ge() : qt(t);
+    function ln(e, t) {
+      if (T.value) {
+        const s = $e.value.get(t), l = Ve.value;
+        if (s === void 0 || !l || !N.value) return;
+        l.currentTime = N.value.lines[s].start, l.play();
+      } else fe.value === t ? Xe() : Bt(t);
     }
-    async function oe({ silent: e = !1 } = {}) {
-      e || (x.checking = !0);
+    async function le({ silent: e = !1 } = {}) {
+      e || (_.checking = !0);
       try {
-        const n = await (await fetch(`/fl_cosyvoice3/browse/list_dir?path=${encodeURIComponent(Ie.value)}`)).json(), s = Array.isArray(n.files) ? n.files : [], l = n.file_mtimes || {}, r = se.value.toLowerCase(), m = s.filter((C) => {
-          const j = C.lastIndexOf(".");
-          return (j > 0 ? C.slice(0, j) : C).toLowerCase().startsWith(r);
+        const n = await (await fetch(`/fl_cosyvoice3/browse/list_dir?path=${encodeURIComponent(Se.value)}`)).json(), s = Array.isArray(n.files) ? n.files : [], l = n.file_mtimes || {}, r = oe.value.toLowerCase(), h = s.filter((E) => {
+          const O = E.lastIndexOf(".");
+          return (O > 0 ? E.slice(0, O) : E).toLowerCase().startsWith(r);
         });
-        m.sort();
-        const c = m.length ? m[m.length - 1] : null, w = c ? `${c}::${l[c] || ""}` : null;
-        if (e && w === ye) return;
-        ye = w, x.checking = !1, x.error = null, x.best = c, x.mtime = c ? l[c] || Date.now() : null, c || (pe.value = !1, ee(Be));
+        h.sort();
+        const c = h.length ? h[h.length - 1] : null, S = c ? `${c}::${l[c] || ""}` : null;
+        if (e && S === me) return;
+        me = S, _.checking = !1, _.error = null, _.best = c, _.mtime = c ? l[c] || Date.now() : null, c || (de.value = !1, G(Ne));
       } catch (t) {
-        x.checking = !1, x.error = String(t);
+        _.checking = !1, _.error = String(t);
       }
     }
-    const pn = S(() => !x.best || _.value);
-    async function vn() {
-      if (!(!x.best || _.value || !await H({
+    const an = I(() => !_.best || T.value);
+    async function rn() {
+      if (!(!_.best || T.value || !await ge({
         title: "Delete rendered audio?",
-        message: `Deletes every _audio\\ file matching "${se.value}" (currently: ${x.best}).`,
+        message: `Deletes every _audio\\ file matching "${oe.value}" (currently: ${_.best}).`,
         okText: "Delete",
         cancelText: "Cancel"
       })))
         try {
-          const n = await (await fetch(`${le}/delete_audio`, {
+          const n = await (await fetch(`${ae}/delete_audio`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folder: i.folder, base_name: se.value, filename: A.value })
+            body: JSON.stringify({ folder: i.folder, base_name: oe.value, filename: k.value })
           })).json();
           if (n.error) {
-            f(`Error: ${n.error}`);
+            p(`Error: ${n.error}`);
             return;
           }
-          f(`Deleted ${n.deleted.length} audio file(s)`), ye = null, oe();
+          p(`Deleted ${n.deleted.length} audio file(s)`), me = null, le();
         } catch (t) {
-          f(`Error: ${t}`);
+          p(`Error: ${t}`);
         }
     }
-    function mn(e) {
+    function cn(e) {
       var t;
-      (t = i.checkedApi) == null || t.setChecked(A.value, e);
+      (t = i.checkedApi) == null || t.setChecked(k.value, e);
     }
-    const hn = S(() => !_.value && !Ye.value), yn = S(() => _.value ? "Marked ready to release -- click to unmark and go back to editing" : Ye.value ? "Stitch every line into the final file and mark this script done / ready to release" : "Every line needs to be voiced first");
-    async function gn() {
+    const un = I(() => !T.value && !Je.value), dn = I(() => T.value ? "Marked ready to release -- click to unmark and go back to editing" : Je.value ? "Stitch every line into the final file and mark this script done / ready to release" : "Every line needs to be voiced first");
+    async function fn() {
       var t;
-      const e = !_.value;
-      if (e && !Ye.value) {
-        f("Every line needs to be voiced before marking done");
+      const e = !T.value;
+      if (e && !Je.value) {
+        p("Every line needs to be voiced before marking done");
         return;
       }
       if (e) {
-        f("Stitching final file...");
-        const n = p.value.filter((s) => !s.malformed);
+        p("Stitching final file...");
+        const n = d.value.filter((s) => !s.malformed);
         try {
-          const l = await (await fetch(`${le}/stitch_lines`, {
+          const l = await (await fetch(`${ae}/stitch_lines`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               folder: i.folder,
-              base_name: se.value,
+              base_name: oe.value,
               line_ids: n.map((r) => r.id),
               line_texts: n.map((r) => r.text)
             })
           })).json();
           if (l.error) {
-            f(`Stitch error: ${l.error}`);
+            p(`Stitch error: ${l.error}`);
             return;
           }
         } catch (s) {
-          f(`Stitch failed: ${s}`);
+          p(`Stitch failed: ${s}`);
           return;
         }
       }
       try {
-        const s = await (await fetch(`${le}/set_ready`, {
+        const s = await (await fetch(`${ae}/set_ready`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ folder: i.folder, filename: A.value, ready: e })
+          body: JSON.stringify({ folder: i.folder, filename: k.value, ready: e })
         })).json();
         if (s.error) {
-          f(`Error: ${s.error}`);
+          p(`Error: ${s.error}`);
           return;
         }
-        Re.value = s.ready_scripts || [], e && ((t = i.checkedApi) == null || t.setChecked(A.value, !1), De.value = !1), f(e ? "Stitched and marked done" : "Unmarked -- can be edited/re-voiced again"), e && (ye = null, ie = null, oe(), _e());
+        Ae.value = s.ready_scripts || [], e && ((t = i.checkedApi) == null || t.setChecked(k.value, !1), je.value = !1), p(e ? "Stitched and marked done" : "Unmarked -- can be edited/re-voiced again"), e && (me = null, se = null, le(), Ie());
       } catch (n) {
-        f(`Error: ${n}`);
+        p(`Error: ${n}`);
       }
     }
-    function kn() {
+    function pn() {
       const e = document.activeElement;
       if (!e || e.tagName !== "TEXTAREA" && e.tagName !== "INPUT") {
-        f("Click into a line's text first, place the cursor right after the vowel to stress");
+        p("Click into a line's text first, place the cursor right after the vowel to stress");
         return;
       }
       const t = e.selectionStart;
       e.value = e.value.slice(0, t) + "́" + e.value.slice(t), e.selectionStart = e.selectionEnd = t + 1, e.dispatchEvent(new Event("input", { bubbles: !0 }));
     }
-    function bn() {
+    function vn() {
       const e = document.activeElement;
       if (!e || e.tagName !== "TEXTAREA" || !e.classList.contains("fl-textarea")) {
-        f("Click into a line's text first, place the cursor where it should split");
+        p("Click into a line's text first, place the cursor where it should split");
         return;
       }
-      const t = e.closest(".fl-line-row"), n = t ? Number(t.dataset.rowIndex) : -1, s = n >= 0 ? p.value[n] : null;
+      const t = e.closest(".fl-line-row"), n = t ? Number(t.dataset.rowIndex) : -1, s = n >= 0 ? d.value[n] : null;
       if (!s || s.malformed) {
-        f("Can't split a malformed/raw line -- fix it to plain text first");
+        p("Can't split a malformed/raw line -- fix it to plain text first");
         return;
       }
-      const l = e.selectionStart, r = s.text.slice(0, l).trimEnd(), m = s.text.slice(l).trimStart();
+      const l = e.selectionStart, r = s.text.slice(0, l).trimEnd(), h = s.text.slice(l).trimStart();
       s.text = r, s.status = "unvoiced";
-      const c = M({ speaker: s.speaker, instruct: s.instruct, text: m, raw: "", malformed: !1, id: me++, status: "unvoiced" });
-      p.value.splice(n + 1, 0, c), kt(c.__key), K();
+      const c = L({ speaker: s.speaker, instruct: s.instruct, text: h, raw: "", malformed: !1, id: pe++, status: "unvoiced" });
+      d.value.splice(n + 1, 0, c), vt(c.__key), B();
     }
-    function wn() {
-      const e = M({ speaker: "", instruct: "", text: "", raw: "", malformed: !1, id: me++, status: "unvoiced" });
-      p.value.push(e), kt(e.__key), K();
+    function mn() {
+      const e = L({ speaker: "", instruct: "", text: "", raw: "", malformed: !1, id: pe++, status: "unvoiced" });
+      d.value.push(e), vt(e.__key), B();
     }
-    const Q = S(() => te.value.indexOf(A.value)), Cn = S(() => !(Q.value > 0)), Ln = S(() => !(Q.value >= 0 && Q.value < te.value.length - 1));
-    function Sn() {
-      Q.value > 0 && Et(te.value[Q.value - 1]);
+    const Y = I(() => ne.value.indexOf(k.value)), hn = I(() => !(Y.value > 0)), yn = I(() => !(Y.value >= 0 && Y.value < ne.value.length - 1));
+    function gn() {
+      Y.value > 0 && bt(ne.value[Y.value - 1]);
     }
-    function En() {
-      Q.value >= 0 && Q.value < te.value.length - 1 && Et(te.value[Q.value + 1]);
+    function kn() {
+      Y.value >= 0 && Y.value < ne.value.length - 1 && bt(ne.value[Y.value + 1]);
     }
-    async function In() {
+    async function bn() {
       try {
-        const t = await (await fetch(On)).json();
-        je.value = t.presets || [];
+        const t = await (await fetch(Tn)).json();
+        te.value = t.presets || [];
       } catch {
-        je.value = [];
+        te.value = [];
       }
     }
-    async function St() {
+    async function kt() {
       var e, t, n;
       try {
-        const s = `${le}/scan?path=${encodeURIComponent(i.folder)}&act=&suffix=${encodeURIComponent(i.suffix)}`, r = await (await fetch(s)).json();
-        be.value = ((e = r.instructions) == null ? void 0 : e.entries) || [], N.value = ((t = r.roles) == null ? void 0 : t.entries) || [], fe.value = ((n = r.roles) == null ? void 0 : n.path) || null, te.value = Array.isArray(r.scripts) ? r.scripts : [], Re.value = Array.isArray(r.ready_scripts) ? r.ready_scripts : [];
+        const s = `${ae}/scan?path=${encodeURIComponent(i.folder)}&act=&suffix=${encodeURIComponent(i.suffix)}`, r = await (await fetch(s)).json();
+        $.value = ((e = r.instructions) == null ? void 0 : e.entries) || [], j.value = ((t = r.roles) == null ? void 0 : t.entries) || [], K.value = ((n = r.roles) == null ? void 0 : n.path) || null, ne.value = Array.isArray(r.scripts) ? r.scripts : [], Ae.value = Array.isArray(r.ready_scripts) ? r.ready_scripts : [];
       } catch {
-        be.value = [], N.value = [], fe.value = null, te.value = [], Re.value = [];
+        $.value = [], j.value = [], K.value = null, ne.value = [], Ae.value = [];
       }
     }
-    async function Et(e) {
-      !e || e === A.value || qe || (G && (clearTimeout(G), G = null, await Te()), A.value = e, ye = null, q.value = null, ie = null, p.value = [], he = null, Ve = 0, De.value = i.checkedApi ? i.checkedApi.isChecked(e) : !1, f("Loading..."), await et(), oe(), _e());
+    async function bt(e) {
+      !e || e === k.value || Ke || (W && (clearTimeout(W), W = null, await xe()), k.value = e, me = null, V.value = null, se = null, d.value = [], ve = null, Me = 0, je.value = i.checkedApi ? i.checkedApi.isChecked(e) : !1, p("Loading..."), await We(), le(), Ie());
     }
-    async function et({ isPoll: e = !1 } = {}) {
+    async function We({ isPoll: e = !1 } = {}) {
       try {
-        const n = await (await fetch(`${ge}/read?path=${encodeURIComponent(ft.value)}`)).json();
+        const n = await (await fetch(`${he}/read?path=${encodeURIComponent(rt.value)}`)).json();
         if (n.error) {
-          f(`Read error: ${n.error}`);
+          p(`Read error: ${n.error}`);
           return;
         }
         if (!n.exists) {
-          e || (p.value = [], he = "", $e = null, f("File does not exist yet (will be created on first edit)"));
+          e || (d.value = [], ve = "", Re = null, p("File does not exist yet (will be created on first edit)"));
           return;
         }
-        if (e && Date.now() - Ve < zi || n.content === he) return;
-        p.value = He(n.content), he = n.content, await yt(), e || f(`Loaded ${p.value.length} line(s)`);
+        if (e && Date.now() - Me < Oi || n.content === ve) return;
+        d.value = F(n.content), ve = n.content, await ft(), e || p(`Loaded ${d.value.length} line(s)`);
       } catch (t) {
-        f(`Read failed: ${t}`);
+        p(`Read failed: ${t}`);
       }
     }
-    return it(F, () => ee(Be)), it(V, Zt), Rn(() => {
-      St(), In(), oe(), Le = setInterval(() => oe({ silent: !0 }), ot), et().then(() => {
-        Ce = setInterval(() => et({ isPoll: !0 }), ot), _e(), Se = setInterval(() => _e({ silent: !0 }), ot);
+    return Qe(N, () => G(Ne)), Qe(U, Ut), xn(() => {
+      kt(), bn(), le(), we = setInterval(() => le({ silent: !0 }), tt), We().then(() => {
+        be = setInterval(() => We({ isPoll: !0 }), tt), Ie(), Ce = setInterval(() => Ie({ silent: !0 }), tt);
       });
-    }), Dn(() => {
-      Ge(), Ce && clearInterval(Ce), Le && clearInterval(Le), Se && clearInterval(Se);
-    }), (e, t) => (d(), h(z, null, [
-      k(g(Dt), {
-        visible: de.value,
-        "onUpdate:visible": t[10] || (t[10] = (n) => de.value = n),
+    }), _n(() => {
+      Xe(), be && clearInterval(be), we && clearInterval(we), Ce && clearInterval(Ce);
+    }), (e, t) => (f(), y(z, null, [
+      b(m(xt), {
+        visible: R.value,
+        "onUpdate:visible": t[10] || (t[10] = (n) => R.value = n),
         modal: !1,
         draggable: !1,
         "close-on-escape": "",
         header: " ",
-        style: Pe({ width: Ft.value }),
+        style: Te({ width: m(jt) }),
         class: "line-editor-dialog"
       }, {
-        header: U(() => [
-          v("div", ui, [
+        header: M(() => [
+          v("div", oi, [
             v("input", {
               type: "checkbox",
               class: "row-checkbox",
-              checked: De.value,
-              disabled: !o.checkedApi || _.value,
+              checked: je.value,
+              disabled: !o.checkedApi || T.value,
               title: "Mark this script as checked for queueing (Script Library's tree)",
               onChange: t[0] || (t[0] = (n) => {
-                De.value = n.target.checked, mn(n.target.checked);
+                je.value = n.target.checked, cn(n.target.checked);
               })
-            }, null, 40, di),
-            k(g(I), {
-              label: _.value ? "Done ✓" : "Done",
+            }, null, 40, li),
+            b(m(x), {
+              label: T.value ? "Done ✓" : "Done",
               size: "small",
-              outlined: !_.value,
-              disabled: hn.value,
-              title: yn.value,
-              onClick: gn
+              outlined: !T.value,
+              disabled: un.value,
+              title: dn.value,
+              onClick: fn
             }, null, 8, ["label", "outlined", "disabled", "title"]),
-            v("div", fi, P(A.value), 1),
-            v("div", pi, P(ut.value), 1),
-            v("div", vi, [
-              (d(), h(z, null, Ue(u, (n) => k(g(I), {
+            v("div", ai, P(k.value), 1),
+            v("div", ri, P(lt.value), 1),
+            v("div", ci, [
+              (f(!0), y(z, null, Be(m(Pt), (n) => (f(), Q(m(x), {
                 key: n,
                 label: String(n),
                 text: "",
                 size: "small",
                 title: `Set editor width to ${n}px (capped to the window's width)`,
-                onClick: (s) => mt(n)
-              }, null, 8, ["label", "title", "onClick"])), 64)),
-              k(g(I), {
+                onClick: (s) => m(at)(n)
+              }, null, 8, ["label", "title", "onClick"]))), 128)),
+              b(m(x), {
                 label: "100%",
                 text: "",
                 size: "small",
                 title: "Use the full available window width",
-                onClick: t[1] || (t[1] = (n) => mt("full"))
+                onClick: t[1] || (t[1] = (n) => m(at)("full"))
               })
             ]),
-            v("div", mi, [
-              k(g(I), {
+            v("div", ui, [
+              b(m(x), {
                 label: "A−",
                 text: "",
                 size: "small",
                 title: "Decrease line text font size",
                 onClick: t[2] || (t[2] = (n) => {
-                  V.value = Math.max(Mi, V.value - 1), b(lt, V.value);
+                  U.value = Math.max($i, U.value - 1), C(nt, U.value);
                 })
               }),
-              k(g(I), {
+              b(m(x), {
                 label: "A+",
                 text: "",
                 size: "small",
                 title: "Increase line text font size",
                 onClick: t[3] || (t[3] = (n) => {
-                  V.value = Math.min(Ki, V.value + 1), b(lt, V.value);
+                  U.value = Math.min(Ni, U.value + 1), C(nt, U.value);
                 })
               })
             ])
           ])
         ]),
-        default: U(() => [
-          v("div", hi, [
-            v("div", yi, [
-              x.checking ? (d(), h("div", gi, "Checking for audio...")) : x.error ? (d(), h("div", ki, "Audio check failed: " + P(x.error), 1)) : x.best ? (d(), h(z, { key: 2 }, [
-                v("div", bi, P(x.best), 1),
+        default: M(() => [
+          v("div", di, [
+            v("div", fi, [
+              _.checking ? (f(), y("div", pi, "Checking for audio...")) : _.error ? (f(), y("div", vi, "Audio check failed: " + P(_.error), 1)) : _.best ? (f(), y(z, { key: 2 }, [
+                v("div", mi, P(_.best), 1),
                 v("audio", {
                   ref_key: "audioElRef",
-                  ref: We,
+                  ref: Ve,
                   controls: "",
                   class: "audio-el",
-                  src: `${g(le)}/audio?path=${encodeURIComponent(g(X)(Ie.value, x.best))}&v=${encodeURIComponent(x.mtime || "")}`,
-                  onTimeupdate: Be,
-                  onPlay: t[4] || (t[4] = (n) => pe.value = !0),
-                  onPause: t[5] || (t[5] = (n) => pe.value = !1),
-                  onEnded: t[6] || (t[6] = (n) => pe.value = !1)
-                }, null, 40, wi),
-                k(g(I), {
+                  src: `${m(ae)}/audio?path=${encodeURIComponent(m(X)(Se.value, _.best))}&v=${encodeURIComponent(_.mtime || "")}`,
+                  onTimeupdate: Ne,
+                  onPlay: t[4] || (t[4] = (n) => de.value = !0),
+                  onPause: t[5] || (t[5] = (n) => de.value = !1),
+                  onEnded: t[6] || (t[6] = (n) => de.value = !1)
+                }, null, 40, hi),
+                b(m(x), {
                   label: "🗑 Delete audio",
                   text: "",
                   size: "small",
-                  disabled: pn.value,
-                  title: _.value ? "Marked ready to release -- unmark it (Done) before deleting audio" : "Delete the rendered audio for this script",
-                  onClick: vn
+                  disabled: an.value,
+                  title: T.value ? "Marked ready to release -- unmark it (Done) before deleting audio" : "Delete the rendered audio for this script",
+                  onClick: rn
                 }, null, 8, ["disabled", "title"])
-              ], 64)) : (d(), h("div", Ci, "No audio yet in " + P(Ie.value), 1)),
-              k(g(I), {
+              ], 64)) : (f(), y("div", yi, "No audio yet in " + P(Se.value), 1)),
+              b(m(x), {
                 icon: "pi pi-refresh",
                 text: "",
                 size: "small",
                 title: "Re-check _audio\\ for this script's rendered audio",
-                onClick: t[7] || (t[7] = (n) => oe())
+                onClick: t[7] || (t[7] = (n) => le())
               })
             ]),
-            Ut.value ? (d(), h("div", Li, "⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер")) : R("", !0)
+            Nt.value ? (f(), y("div", gi, "⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер")) : D("", !0)
           ]),
-          v("div", Si, [
-            k(g(I), {
+          v("div", ki, [
+            b(m(x), {
               label: "´ Stress mark",
               text: "",
               size: "small",
               title: "Insert a stress mark at the cursor: click into a line's text, place the cursor right after the vowel to stress (факел|ов), then click this",
-              onMousedown: Me(kn, ["prevent"])
+              onMousedown: ze(pn, ["prevent"])
             }),
-            k(g(I), {
+            b(m(x), {
               label: "✂ Split line",
               text: "",
               size: "small",
               title: "Split this line into two at the cursor: click into a line's text, place the cursor where it should split, then click this",
-              onMousedown: Me(bn, ["prevent"])
+              onMousedown: ze(vn, ["prevent"])
             }),
-            k(g(I), {
+            b(m(x), {
               label: "+ Add line",
               text: "",
               size: "small",
               title: "Add a new empty line at the end of the script",
-              onClick: wn
+              onClick: mn
             }),
             t[11] || (t[11] = v("div", { class: "actions-divider" }, null, -1)),
-            k(g(I), {
+            b(m(x), {
               label: "◀ Prev",
               text: "",
               size: "small",
-              disabled: Cn.value,
+              disabled: hn.value,
               title: "Open the previous script in this act",
-              onClick: Sn
+              onClick: gn
             }, null, 8, ["disabled"]),
-            k(g(I), {
+            b(m(x), {
               label: "Next ▶",
               text: "",
               size: "small",
-              disabled: Ln.value,
+              disabled: yn.value,
               title: "Open the next script in this act",
-              onClick: En
+              onClick: kn
             }, null, 8, ["disabled"])
           ]),
           v("div", {
             ref_key: "rowsContainerEl",
-            ref: Ze,
+            ref: He,
             class: "rows-container"
           }, [
-            (d(!0), h(z, null, Ue(p.value, (n, s) => (d(), h("div", {
+            (f(!0), y(z, null, Be(d.value, (n, s) => (f(), y("div", {
               key: n.__key,
-              class: re(["fl-line-row", { "row-enter": Oe.value === n.__key, "row-playing": _.value ? ze.value.get(s) === we.value : ve.value === s }]),
+              class: ce(["fl-line-row", { "row-enter": Pe.value === n.__key, "row-playing": T.value ? $e.value.get(s) === ke.value : fe.value === s }]),
               "data-row-index": s,
               ref_for: !0,
-              ref: (l) => Xt(n.__key, l),
-              style: Pe(n.malformed ? {} : { borderLeftColor: D(n.speaker) })
+              ref: (l) => Vt(n.__key, l),
+              style: Te(n.malformed ? {} : { borderLeftColor: ue(n.speaker) })
             }, [
-              n.malformed ? (d(), h(z, { key: 0 }, [
-                v("div", Ii, [
+              n.malformed ? (f(), y(z, { key: 0 }, [
+                v("div", wi, [
                   t[12] || (t[12] = v("div", { class: "malformed-warn" }, "⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:", -1)),
-                  k(g(I), {
+                  b(m(x), {
                     icon: "pi pi-trash",
                     text: "",
                     size: "small",
                     title: "Delete this line",
-                    onClick: (l) => bt(s, n.raw)
+                    onClick: (l) => mt(s, n.raw)
                   }, null, 8, ["onClick"])
                 ]),
                 v("textarea", {
                   class: "fl-textarea malformed-textarea",
-                  style: Pe({ fontSize: `${V.value}px` }),
+                  style: Te({ fontSize: `${U.value}px` }),
                   value: n.raw,
                   rows: "1",
                   ref_for: !0,
                   ref: (l) => {
-                    gt(n.__key, l), ee(() => Ae(l));
+                    pt(n.__key, l), G(() => _e(l));
                   },
                   onInput: (l) => {
-                    n.raw = l.target.value, Ae(l.target), K();
+                    n.raw = l.target.value, _e(l.target), B();
                   },
-                  onKeydown: t[8] || (t[8] = _t(Me(() => {
+                  onKeydown: t[8] || (t[8] = Lt(ze(() => {
                   }, ["prevent"]), ["enter"]))
-                }, null, 44, xi)
-              ], 64)) : (d(), h(z, { key: 1 }, [
-                v("div", _i, [
+                }, null, 44, Ci)
+              ], 64)) : (f(), y(z, { key: 1 }, [
+                v("div", Li, [
                   v("span", {
                     class: "drag-handle",
                     title: "Drag onto another line to merge them",
                     ref_for: !0,
-                    ref: (l) => Gt(l, s)
+                    ref: (l) => qt(l, s)
                   }, "⠿", 512),
-                  (_.value ? ze.value.get(s) !== void 0 : n.status !== "unvoiced") ? (d(), h("span", {
+                  (T.value ? $e.value.get(s) !== void 0 : n.status !== "unvoiced") ? (f(), y("span", {
                     key: 0,
-                    class: re(["play-btn", { "is-playing": Lt(s) }]),
-                    title: _.value ? "Play from this line" : "Play this line (and every voiced line after it)",
-                    onClick: (l) => fn(n, s)
-                  }, P(Lt(s) ? "⏸" : "▶"), 11, Ti)) : R("", !0),
-                  o.revoiceApi && !_.value ? (d(), h("span", {
+                    class: ce(["play-btn", { "is-playing": gt(s) }]),
+                    title: T.value ? "Play from this line" : "Play this line (and every voiced line after it)",
+                    onClick: (l) => ln(n, s)
+                  }, P(gt(s) ? "⏸" : "▶"), 11, Si)) : D("", !0),
+                  o.revoiceApi && !T.value ? (f(), y("span", {
                     key: 1,
-                    class: re(["revoice-btn", { pending: ne.has(n), stale: !ne.has(n) && n.status === "stale" }]),
-                    title: un(n),
-                    onClick: (l) => dn(n)
-                  }, P(ne.has(n) ? "⏳" : "🔁"), 11, Ai)) : R("", !0),
-                  k(g(I), {
+                    class: ce(["revoice-btn", { pending: ie.has(n), stale: !ie.has(n) && n.status === "stale" }]),
+                    title: sn(n),
+                    onClick: (l) => on(n)
+                  }, P(ie.has(n) ? "⏳" : "🔁"), 11, Ei)) : D("", !0),
+                  b(m(x), {
                     icon: "pi pi-user",
                     text: "",
                     size: "small",
                     class: "icon-btn",
                     title: "Pick from _roles.json",
-                    onClick: (l) => on(l, n)
+                    onClick: (l) => Gt(l, n)
                   }, null, 8, ["onClick"]),
-                  k(g(ct), {
+                  b(m(ot), {
                     class: "speaker-input",
                     "model-value": n.speaker,
                     title: "Speaker (preset or preset#tag)",
                     "onUpdate:modelValue": (l) => {
-                      n.speaker = l, en(n);
+                      n.speaker = l, Xt(n);
                     }
                   }, null, 8, ["model-value", "onUpdate:modelValue"]),
-                  k(g(I), {
+                  b(m(x), {
                     class: "speaker-file-btn",
                     text: "",
                     size: "small",
-                    label: ht(n.speaker) || "(no speaker)",
-                    disabled: !N.value.find((l) => l.code === n.speaker),
-                    title: sn(n),
-                    onClick: (l) => ln(l, n)
+                    label: dt(n.speaker) || "(no speaker)",
+                    disabled: !j.value.find((l) => l.code === n.speaker),
+                    title: Yt(n),
+                    onClick: (l) => Qt(l, n)
                   }, null, 8, ["label", "disabled", "title", "onClick"]),
                   v("span", {
                     class: "role-info-btn",
-                    onMouseenter: (l) => rn(l.target, n.speaker),
-                    onMouseleave: cn
-                  }, "ℹ", 40, Pi),
+                    onMouseenter: (l) => tn(l.target, n.speaker),
+                    onMouseleave: nn
+                  }, "ℹ", 40, Ii),
                   t[13] || (t[13] = v("div", { class: "spacer" }, null, -1)),
-                  k(g(I), {
+                  b(m(x), {
                     icon: "pi pi-trash",
                     text: "",
                     size: "small",
                     title: "Delete this line",
-                    onClick: (l) => bt(s, n.text)
+                    onClick: (l) => mt(s, n.text)
                   }, null, 8, ["onClick"])
                 ]),
-                v("div", ji, [
-                  k(g(I), {
+                v("div", xi, [
+                  b(m(x), {
                     icon: "pi pi-list",
                     text: "",
                     size: "small",
                     class: "icon-btn",
                     title: "Pick from the instructions catalog (_instructions.json)",
-                    onClick: (l) => an(l, n)
+                    onClick: (l) => en(l, n)
                   }, null, 8, ["onClick"]),
-                  k(g(ct), {
+                  b(m(ot), {
                     class: "instruct-input",
                     "model-value": n.instruct,
                     title: "Instruct text",
                     "onUpdate:modelValue": (l) => {
-                      n.instruct = l, tn(n);
+                      n.instruct = l, Zt(n);
                     }
                   }, null, 8, ["model-value", "onUpdate:modelValue"])
                 ]),
-                Ct(n) ? (d(), h("div", Ri, "↳ " + P(Ct(n)), 1)) : R("", !0),
+                yt(n) ? (f(), y("div", _i, "↳ " + P(yt(n)), 1)) : D("", !0),
                 v("textarea", {
                   class: "fl-textarea",
-                  style: Pe({ fontSize: `${V.value}px` }),
+                  style: Te({ fontSize: `${U.value}px` }),
                   value: n.text,
                   rows: "1",
                   ref_for: !0,
                   ref: (l) => {
-                    gt(n.__key, l), ee(() => Ae(l));
+                    pt(n.__key, l), G(() => _e(l));
                   },
                   onInput: (l) => {
-                    n.text = l.target.value, wt(n, l.target);
+                    n.text = l.target.value, ht(n, l.target);
                   },
-                  onKeydown: t[9] || (t[9] = _t(Me(() => {
+                  onKeydown: t[9] || (t[9] = Lt(ze(() => {
                   }, ["prevent"]), ["enter"])),
-                  onPaste: (l) => nn(n, l.target, l)
-                }, null, 44, Di)
+                  onPaste: (l) => Wt(n, l.target, l)
+                }, null, 44, Ti)
               ], 64))
-            ], 14, Ei))), 128))
+            ], 14, bi))), 128))
           ], 512)
         ]),
         _: 1
       }, 8, ["visible", "style"]),
-      k(ci, {
+      b(si, {
         ref_key: "pickPanelRef",
-        ref: Fe
+        ref: De
       }, null, 512),
-      k(g($t)),
-      J.visible ? (d(), h("div", {
+      b(m(Tt)),
+      H.visible ? (f(), y("div", {
         key: 0,
         class: "role-info-popover",
-        style: Pe({ left: `${J.left}px`, top: `${J.top}px` })
+        style: Te({ left: `${H.left}px`, top: `${H.top}px` })
       }, [
-        Qe.value.message ? (d(), h("div", Oi, P(Qe.value.message), 1)) : R("", !0),
-        (d(!0), h(z, null, Ue(Qe.value.fields, ([n, s]) => (d(), h("div", {
+        Ze.value.message ? (f(), y("div", Ai, P(Ze.value.message), 1)) : D("", !0),
+        (f(!0), y(z, null, Be(Ze.value.fields, ([n, s]) => (f(), y("div", {
           key: n,
           class: "role-info-row"
         }, [
-          v("span", $i, P(n), 1),
-          v("span", Ni, P(s), 1)
+          v("span", ji, P(n), 1),
+          v("span", Pi, P(s), 1)
         ]))), 128))
-      ], 4)) : R("", !0)
+      ], 4)) : D("", !0)
     ], 64));
   }
-}, Hi = /* @__PURE__ */ Rt(Ui, [["__scopeId", "data-v-ef2f5c94"]]);
-function Xi({ folder: o, filename: i, suffix: u = "_speakers.txt", checkedApi: L, revoiceApi: b }) {
-  zn(import.meta.url);
+}, Fi = /* @__PURE__ */ It(zi, [["__scopeId", "data-v-2530d837"]]);
+function Vi({ folder: o, filename: i, suffix: u = "_speakers.txt", checkedApi: C, revoiceApi: w }) {
+  Rn(import.meta.url);
   const a = document.createElement("div");
   document.body.appendChild(a);
-  const E = Bn(Hi, {
+  const L = On(Fi, {
     folder: o,
     filename: i,
     suffix: u,
-    checkedApi: L || null,
-    revoiceApi: b || null,
+    checkedApi: C || null,
+    revoiceApi: w || null,
     onClose: () => {
-      E.unmount(), a.remove();
+      L.unmount(), a.remove();
     }
   });
-  E.use(Mn, { ripple: !0 }), E.use(qn), E.mount(a);
+  L.use(Dn, { ripple: !0 }), L.use(Mn), L.mount(a);
 }
 export {
-  Xi as openLineEditor
+  Vi as openLineEditor
 };

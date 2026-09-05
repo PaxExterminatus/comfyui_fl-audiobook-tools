@@ -1,4 +1,4 @@
-import { a2 as A, D as r, $ as K, d as u, j as h, z as l, e as C, X as k, y as v, c as S, a3 as Z, i as y, B as X, v as N, G as $, a as I, f as Y, T as U, H as x, F as G, n as z, t as O, A as P, h as W, R as q, C as J, U as B, Z as F, b as Q } from "./styles_link.js";
+import { a3 as A, E as r, a0 as K, d as u, j as h, A as l, e as C, Y as k, z as v, c as S, a4 as Z, i as y, B as Y, x as N, H as $, a as I, f as X, T as U, I as x, F as G, n as z, t as O, C as P, h as W, R as q, D as J, U as B, Z as F, b as Q } from "./styles_link.js";
 var ee = {}, te = A.extend({
   style: ee
 });
@@ -257,7 +257,7 @@ var he = {
   closeButtonIcon: "p-dialog-header-close-icon",
   content: "p-dialog-content",
   footer: "p-dialog-footer"
-}, ye = X.extend({
+}, ye = Y.extend({
   name: "dialog",
   classes: ge,
   inlineStyles: he
@@ -643,7 +643,7 @@ function Be(t, e, n, o, a, i) {
         onClick: e[3] || (e[3] = function() {
           return i.onMaskClick && i.onMaskClick.apply(i, arguments);
         })
-      }, t.ptm("mask")), [Y(U, l({
+      }, t.ptm("mask")), [X(U, l({
         name: "p-dialog",
         onBeforeEnter: i.onBeforeEnter,
         onEnter: i.onEnter,

@@ -288,9 +288,17 @@ onBeforeUnmount(() => {
 }
 /* Card's #content slot stacks the Dropdown above the Textarea by default
    (block flow) -- this is the one place a bit of spacing/width is needed
-   between them, not an override of either component's own look. */
+   between them, not an override of either component's own look.
+   IMPORTANT: no `display` here. PrimeVue's theme.css declares
+   `.p-dropdown { display: inline-flex }` inside `@layer primevue`, and its
+   internal label relies on that flex context (`flex: 1 1 auto`) to stretch
+   to the dropdown's full width. This scoped style is NOT in a CSS layer,
+   so an unlayered `display` here would always win the cascade over the
+   theme's layered one regardless of specificity -- killing the flex
+   context and collapsing the label to a few px (its `width: 1%` applied
+   as a literal width instead of a flex-basis). `width` alone doesn't
+   conflict with anything the theme sets on this element, so it's safe. */
 .role-speaker {
-    display: block;
     width: 100%;
     margin-bottom: 8px;
 }

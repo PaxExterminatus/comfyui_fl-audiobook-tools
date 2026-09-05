@@ -43,12 +43,21 @@ function sendJson(res, status, body) {
 // dev entry passes a made-up `root` (see dev-ui/main.js), so matching by
 // suffix (not the exact path) is what lets the same mock work regardless
 // of what fake root string is used.
+function readFixtureText(filename, fallback) {
+    try {
+        return fs.readFileSync(path.join(FIXTURES_DIR, filename), "utf-8");
+    } catch (e) {
+        return fallback;
+    }
+}
+
 function makeFileStore() {
     const roles = readFixtureJson("_roles.json", { roles: [] });
     const instructions = readFixtureJson("_instructions.json", { instructions: [] });
     return new Map([
         ["_roles.json", JSON.stringify(roles, null, 2)],
         ["_instructions.json", JSON.stringify(instructions, null, 2)],
+        ["Test_speakers.txt", readFixtureText("Test_speakers.txt", "")],
     ]);
 }
 
@@ -78,6 +87,7 @@ function fakeParentOf(norm) {
 
 export function mockComfyApiPlugin() {
     const files = makeFileStore();
+    let readyScripts = [];
 
     return {
         name: "mock-comfy-api",
@@ -155,6 +165,37 @@ export function mockComfyApiPlugin() {
                     const body = JSON.parse((await readBody(req)) || "{}");
                     console.log(`[mock-comfy-api] mark_line_voiced ${body.base_name} line ${body.line_id}`);
                     return sendJson(res, 200, { found: true });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/scan" && req.method === "GET") {
+                    return sendJson(res, 200, {
+                        instructions: { entries: readFixtureJson("_instructions.json", { instructions: [] }).instructions || [] },
+                        roles: { entries: readFixtureJson("_roles.json", { roles: [] }).roles || [], path: "C:\\fake\\project\\_roles.json" },
+                        scripts: ["Second_speakers.txt", "Test_speakers.txt"],
+                        ready_scripts: readyScripts,
+                    });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/set_ready" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    if (body.ready) readyScripts = [...new Set([...readyScripts, body.filename])];
+                    else readyScripts = readyScripts.filter((f) => f !== body.filename);
+                    console.log(`[mock-comfy-api] set_ready ${body.filename} -> ${body.ready}`);
+                    return sendJson(res, 200, { ready: body.ready, ready_scripts: readyScripts });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/stitch_lines" && req.method === "POST") {
+                    return sendJson(res, 200, { ok: true });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/delete_audio" && req.method === "POST") {
+                    return sendJson(res, 200, { deleted: [] });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/commit_full_render" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    const ids = (body.row_ids || []).map((id, i) => (Number.isFinite(id) ? id : i + 1));
+                    return sendJson(res, 200, { ids, committed_ids: [], next_id: Math.max(0, ...ids) + 1 });
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/browse/list_dir" && req.method === "GET") {

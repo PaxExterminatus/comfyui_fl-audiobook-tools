@@ -1,1911 +1,1594 @@
-// Full-screen, per-line script editor for FL CosyVoice3 Script Library.
-// Parses a "preset | instruct | text" file into one row per line, each with
-// its own speaker input, instruct input (with a catalog picker from
-// _instructions.json -- {text, note} entries, no per-role filtering), a
-// wrapped textarea for the spoken text, and a 🗑 delete control. Rows merge
-// via drag-and-drop (drag one row's handle onto another) instead of a
-// button -- see mergeRows(). Edits save to disk (debounced) via the same
-// generic endpoints FL CosyVoice3 Script Editor uses, and the file is
-// polled for external changes.
-//
-// Voicing works per-line, not per-script, until the script is marked ✅
-// Done -- see the big mode-1/mode-2 comment near the top of
-// openLineEditor() for the full picture: each row tracks its own stable
-// id + voice status (reconcileState), addressing its own
-// _audio\lines\<script>\id<N>.wav directly, so merging/deleting/
-// splitting/reordering lines never desyncs anything the way relying on a
-// single script-wide timing manifest used to. "Done" is what actually
-// stitches everything into one final file (stitch_lines).
-import { openFloatingPanel, openConfirmDialog, iconButton } from "./ui_kit.js";
-import { injectStyles } from "./styles.js";
-import {
-    joinPath, stripSuffixAndExt, dirOf, markRoleStale,
-    SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
-} from "./fl_common.js";
-
-const SAVE_DEBOUNCE_MS = 600;
-const POLL_MS = 3000;
-const EDIT_QUIET_MS = 1500;
-const DEFAULT_PANEL_WIDTH = 1600;
-const WIDTH_PRESETS = [1280, 1600];
-const DEFAULT_TEXT_FONT_SIZE = 11.5; // matches .fl-textarea's own default in styles.js
-const MIN_TEXT_FONT_SIZE = 9;
-const MAX_TEXT_FONT_SIZE = 22;
-const LS_WIDTH_KEY = "FL_CosyVoice3.LineEditor.widthPx";
-const LS_FONT_KEY = "FL_CosyVoice3.LineEditor.textFontSizePx";
-
-function loadNum(key, fallback) {
-    try {
-        const v = parseFloat(localStorage.getItem(key));
-        return Number.isFinite(v) ? v : fallback;
-    } catch (e) {
-        return fallback;
+import { q as In, s as xn, B as At, v as at, d, c as de, x as tt, a as U, y as ue, f as k, n as be, e as p, z as Y, j as h, F as z, A as rt, i as R, t as j, C as jt, R as _n, U as Tn, D as Z, E as An, Z as nt, G as Et, T as jn, H as It, _ as Pt, u as g, k as Ue, I as ee, b as S, r as y, w as it, o as Pn, J as Rn, K as re, S as ce, L as Dn, M as ke, l as X, N as st, O as On, Q as Me, g as xt, V as $n, W as Nn, m as Fn, p as zn, P as Bn } from "./styles_link.js";
+import { s as Rt, a as Mn, b as Kn, F as Un } from "./dialog.esm.js";
+import { s as x } from "./button.esm.js";
+import { s as ct } from "./inputtext.esm.js";
+import { O as Ke } from "./overlayeventbus.esm.js";
+var we = In(), Dt = Symbol();
+function Hn() {
+  var o = xn(Dt);
+  if (!o)
+    throw new Error("No PrimeVue Confirmation provided!");
+  return o;
+}
+var Vn = {
+  install: function(s) {
+    var u = {
+      require: function(b) {
+        we.emit("confirm", b);
+      },
+      close: function() {
+        we.emit("close");
+      }
+    };
+    s.config.globalProperties.$confirm = u, s.provide(Dt, u);
+  }
+}, qn = {
+  root: "p-confirm-dialog",
+  icon: "p-confirm-dialog-icon",
+  message: "p-confirm-dialog-message",
+  rejectButton: function(s) {
+    var u = s.instance;
+    return ["p-confirm-dialog-reject", u.confirmation && !u.confirmation.rejectClass ? "p-button-text" : null];
+  },
+  acceptButton: "p-confirm-dialog-accept"
+}, Jn = At.extend({
+  name: "confirmdialog",
+  classes: qn
+}), Wn = {
+  name: "BaseConfirmDialog",
+  extends: jt,
+  props: {
+    group: String,
+    breakpoints: {
+      type: Object,
+      default: null
+    },
+    draggable: {
+      type: Boolean,
+      default: !0
     }
-}
-
-function saveNum(key, value) {
-    try {
-        localStorage.setItem(key, String(value));
-    } catch (e) {
-        /* localStorage unavailable -- persistence just won't work this session */
+  },
+  style: Jn,
+  provide: function() {
+    return {
+      $parentInstance: this
+    };
+  }
+}, Ot = {
+  name: "ConfirmDialog",
+  extends: Wn,
+  confirmListener: null,
+  closeListener: null,
+  data: function() {
+    return {
+      visible: !1,
+      confirmation: null
+    };
+  },
+  mounted: function() {
+    var s = this;
+    this.confirmListener = function(u) {
+      u && u.group === s.group && (s.confirmation = u, s.confirmation.onShow && s.confirmation.onShow(), s.visible = !0);
+    }, this.closeListener = function() {
+      s.visible = !1, s.confirmation = null;
+    }, we.on("confirm", this.confirmListener), we.on("close", this.closeListener);
+  },
+  beforeUnmount: function() {
+    we.off("confirm", this.confirmListener), we.off("close", this.closeListener);
+  },
+  methods: {
+    accept: function() {
+      this.confirmation.accept && this.confirmation.accept(), this.visible = !1;
+    },
+    reject: function() {
+      this.confirmation.reject && this.confirmation.reject(), this.visible = !1;
+    },
+    onHide: function() {
+      this.confirmation.onHide && this.confirmation.onHide(), this.visible = !1;
+    },
+    getCXOptions: function(s, u) {
+      return {
+        contenxt: {
+          icon: s,
+          iconClass: u.class
+        }
+      };
     }
-}
-
-// Editor width is either a px number or the sentinel "full" (94vw, no cap) --
-// loadNum/saveNum above assume a plain float, so this key gets its own pair.
-function loadWidthPref() {
-    try {
-        const raw = localStorage.getItem(LS_WIDTH_KEY);
-        if (raw === "full") return "full";
-        const v = parseFloat(raw);
-        return Number.isFinite(v) ? v : DEFAULT_PANEL_WIDTH;
-    } catch (e) {
-        return DEFAULT_PANEL_WIDTH;
+  },
+  computed: {
+    header: function() {
+      return this.confirmation ? this.confirmation.header : null;
+    },
+    message: function() {
+      return this.confirmation ? this.confirmation.message : null;
+    },
+    blockScroll: function() {
+      return this.confirmation ? this.confirmation.blockScroll : !0;
+    },
+    position: function() {
+      return this.confirmation ? this.confirmation.position : null;
+    },
+    acceptLabel: function() {
+      return this.confirmation ? this.confirmation.acceptLabel || this.$primevue.config.locale.accept : null;
+    },
+    rejectLabel: function() {
+      return this.confirmation ? this.confirmation.rejectLabel || this.$primevue.config.locale.reject : null;
+    },
+    acceptIcon: function() {
+      return this.confirmation ? this.confirmation.acceptIcon : null;
+    },
+    rejectIcon: function() {
+      return this.confirmation ? this.confirmation.rejectIcon : null;
+    },
+    autoFocusAccept: function() {
+      return this.confirmation.defaultFocus === void 0 || this.confirmation.defaultFocus === "accept";
+    },
+    autoFocusReject: function() {
+      return this.confirmation.defaultFocus === "reject";
+    },
+    closeOnEscape: function() {
+      return this.confirmation ? this.confirmation.closeOnEscape : !0;
     }
+  },
+  components: {
+    CDialog: Rt,
+    CDButton: x
+  }
+};
+function Zn(o, s, u, L, b, a) {
+  var E = at("CDButton"), B = at("CDialog");
+  return d(), de(B, {
+    visible: b.visible,
+    "onUpdate:visible": [s[2] || (s[2] = function(T) {
+      return b.visible = T;
+    }), a.onHide],
+    role: "alertdialog",
+    class: be(o.cx("root")),
+    modal: !0,
+    header: a.header,
+    blockScroll: a.blockScroll,
+    position: a.position,
+    breakpoints: o.breakpoints,
+    closeOnEscape: a.closeOnEscape,
+    draggable: o.draggable,
+    pt: o.pt,
+    unstyled: o.unstyled
+  }, tt({
+    default: U(function() {
+      return [o.$slots.container ? R("", !0) : (d(), h(z, {
+        key: 0
+      }, [o.$slots.message ? (d(), de(rt(o.$slots.message), {
+        key: 1,
+        message: b.confirmation
+      }, null, 8, ["message"])) : (d(), h(z, {
+        key: 0
+      }, [ue(o.$slots, "icon", {}, function() {
+        return [o.$slots.icon ? (d(), de(rt(o.$slots.icon), {
+          key: 0,
+          class: be(o.cx("icon"))
+        }, null, 8, ["class"])) : b.confirmation.icon ? (d(), h("span", Y({
+          key: 1,
+          class: [b.confirmation.icon, o.cx("icon")]
+        }, o.ptm("icon")), null, 16)) : R("", !0)];
+      }), p("span", Y({
+        class: o.cx("message")
+      }, o.ptm("message")), j(a.message), 17)], 64))], 64))];
+    }),
+    _: 2
+  }, [o.$slots.container ? {
+    name: "container",
+    fn: U(function(T) {
+      return [ue(o.$slots, "container", {
+        message: b.confirmation,
+        onClose: T.onClose,
+        onAccept: a.accept,
+        onReject: a.reject,
+        closeCallback: T.onclose,
+        acceptCallback: a.accept,
+        rejectCallback: a.reject
+      })];
+    }),
+    key: "0"
+  } : void 0, o.$slots.container ? void 0 : {
+    name: "footer",
+    fn: U(function() {
+      return [k(E, {
+        label: a.rejectLabel,
+        class: be([o.cx("rejectButton"), b.confirmation.rejectClass]),
+        onClick: s[0] || (s[0] = function(T) {
+          return a.reject();
+        }),
+        autofocus: a.autoFocusReject,
+        unstyled: o.unstyled,
+        pt: o.ptm("rejectButton")
+      }, tt({
+        _: 2
+      }, [a.rejectIcon || o.$slots.rejecticon ? {
+        name: "icon",
+        fn: U(function(T) {
+          return [ue(o.$slots, "rejecticon", {}, function() {
+            return [p("span", Y({
+              class: [a.rejectIcon, T.class]
+            }, o.ptm("rejectButton").icon, {
+              "data-pc-section": "rejectbuttonicon"
+            }), null, 16)];
+          })];
+        }),
+        key: "0"
+      } : void 0]), 1032, ["label", "class", "autofocus", "unstyled", "pt"]), k(E, {
+        label: a.acceptLabel,
+        class: be([o.cx("acceptButton"), b.confirmation.acceptClass]),
+        onClick: s[1] || (s[1] = function(T) {
+          return a.accept();
+        }),
+        autofocus: a.autoFocusAccept,
+        unstyled: o.unstyled,
+        pt: o.ptm("acceptButton")
+      }, tt({
+        _: 2
+      }, [a.acceptIcon || o.$slots.accepticon ? {
+        name: "icon",
+        fn: U(function(T) {
+          return [ue(o.$slots, "accepticon", {}, function() {
+            return [p("span", Y({
+              class: [a.acceptIcon, T.class]
+            }, o.ptm("acceptButton").icon, {
+              "data-pc-section": "acceptbuttonicon"
+            }), null, 16)];
+          })];
+        }),
+        key: "0"
+      } : void 0]), 1032, ["label", "class", "autofocus", "unstyled", "pt"])];
+    }),
+    key: "1"
+  }]), 1032, ["visible", "class", "header", "blockScroll", "position", "breakpoints", "closeOnEscape", "draggable", "onUpdate:visible", "pt", "unstyled"]);
 }
-
-function saveWidthPref(value) {
-    try {
-        localStorage.setItem(LS_WIDTH_KEY, String(value));
-    } catch (e) {
-        /* localStorage unavailable -- persistence just won't work this session */
+Ot.render = Zn;
+var Xn = {
+  root: function(s) {
+    var u = s.instance;
+    return ["p-overlaypanel p-component", {
+      "p-ripple-disabled": u.$primevue.config.ripple === !1
+    }];
+  },
+  content: "p-overlaypanel-content",
+  closeButton: "p-overlaypanel-close p-link",
+  closeIcon: "p-overlaypanel-close-icon"
+}, Yn = At.extend({
+  name: "overlaypanel",
+  classes: Xn
+}), Gn = {
+  name: "BaseOverlayPanel",
+  extends: jt,
+  props: {
+    dismissable: {
+      type: Boolean,
+      default: !0
+    },
+    showCloseIcon: {
+      type: Boolean,
+      default: !1
+    },
+    appendTo: {
+      type: [String, Object],
+      default: "body"
+    },
+    baseZIndex: {
+      type: Number,
+      default: 0
+    },
+    autoZIndex: {
+      type: Boolean,
+      default: !0
+    },
+    breakpoints: {
+      type: Object,
+      default: null
+    },
+    closeIcon: {
+      type: String,
+      default: void 0
+    },
+    closeOnEscape: {
+      type: Boolean,
+      default: !0
     }
+  },
+  style: Yn,
+  provide: function() {
+    return {
+      $parentInstance: this
+    };
+  }
+}, $t = {
+  name: "OverlayPanel",
+  extends: Gn,
+  inheritAttrs: !1,
+  emits: ["show", "hide"],
+  data: function() {
+    return {
+      visible: !1
+    };
+  },
+  watch: {
+    dismissable: {
+      immediate: !0,
+      handler: function(s) {
+        s ? this.bindOutsideClickListener() : this.unbindOutsideClickListener();
+      }
+    }
+  },
+  selfClick: !1,
+  target: null,
+  eventTarget: null,
+  outsideClickListener: null,
+  scrollHandler: null,
+  resizeListener: null,
+  container: null,
+  styleElement: null,
+  overlayEventListener: null,
+  documentKeydownListener: null,
+  beforeUnmount: function() {
+    this.dismissable && this.unbindOutsideClickListener(), this.scrollHandler && (this.scrollHandler.destroy(), this.scrollHandler = null), this.destroyStyle(), this.unbindResizeListener(), this.target = null, this.container && this.autoZIndex && nt.clear(this.container), this.overlayEventListener && (Ke.off("overlay-click", this.overlayEventListener), this.overlayEventListener = null), this.container = null;
+  },
+  mounted: function() {
+    this.breakpoints && this.createStyle();
+  },
+  methods: {
+    toggle: function(s, u) {
+      this.visible ? this.hide() : this.show(s, u);
+    },
+    show: function(s, u) {
+      this.visible = !0, this.eventTarget = s.currentTarget, this.target = u || s.currentTarget;
+    },
+    hide: function() {
+      this.visible = !1;
+    },
+    onContentClick: function() {
+      this.selfClick = !0;
+    },
+    onEnter: function(s) {
+      var u = this;
+      this.container.setAttribute(this.attributeSelector, ""), Z.addStyles(s, {
+        position: "absolute",
+        top: "0",
+        left: "0"
+      }), this.alignOverlay(), this.dismissable && this.bindOutsideClickListener(), this.bindScrollListener(), this.bindResizeListener(), this.autoZIndex && nt.set("overlay", s, this.baseZIndex + this.$primevue.config.zIndex.overlay), this.overlayEventListener = function(L) {
+        u.container.contains(L.target) && (u.selfClick = !0);
+      }, this.focus(), Ke.on("overlay-click", this.overlayEventListener), this.$emit("show"), this.closeOnEscape && this.bindDocumentKeyDownListener();
+    },
+    onLeave: function() {
+      this.unbindOutsideClickListener(), this.unbindScrollListener(), this.unbindResizeListener(), this.unbindDocumentKeyDownListener(), Ke.off("overlay-click", this.overlayEventListener), this.overlayEventListener = null, this.$emit("hide");
+    },
+    onAfterLeave: function(s) {
+      this.autoZIndex && nt.clear(s);
+    },
+    alignOverlay: function() {
+      Z.absolutePosition(this.container, this.target, !1);
+      var s = Z.getOffset(this.container), u = Z.getOffset(this.target), L = 0;
+      s.left < u.left && (L = u.left - s.left), this.container.style.setProperty("--overlayArrowLeft", "".concat(L, "px")), s.top < u.top && (this.container.setAttribute("data-p-overlaypanel-flipped", "true"), !this.isUnstyled && Z.addClass(this.container, "p-overlaypanel-flipped"));
+    },
+    onContentKeydown: function(s) {
+      s.code === "Escape" && this.closeOnEscape && (this.hide(), Z.focus(this.target));
+    },
+    onButtonKeydown: function(s) {
+      switch (s.code) {
+        case "ArrowDown":
+        case "ArrowUp":
+        case "ArrowLeft":
+        case "ArrowRight":
+          s.preventDefault();
+      }
+    },
+    focus: function() {
+      var s = this.container.querySelector("[autofocus]");
+      s && s.focus();
+    },
+    onKeyDown: function(s) {
+      s.code === "Escape" && this.closeOnEscape && (this.visible = !1);
+    },
+    bindDocumentKeyDownListener: function() {
+      this.documentKeydownListener || (this.documentKeydownListener = this.onKeyDown.bind(this), window.document.addEventListener("keydown", this.documentKeydownListener));
+    },
+    unbindDocumentKeyDownListener: function() {
+      this.documentKeydownListener && (window.document.removeEventListener("keydown", this.documentKeydownListener), this.documentKeydownListener = null);
+    },
+    bindOutsideClickListener: function() {
+      var s = this;
+      !this.outsideClickListener && Z.isClient() && (this.outsideClickListener = function(u) {
+        s.visible && !s.selfClick && !s.isTargetClicked(u) && (s.visible = !1), s.selfClick = !1;
+      }, document.addEventListener("click", this.outsideClickListener));
+    },
+    unbindOutsideClickListener: function() {
+      this.outsideClickListener && (document.removeEventListener("click", this.outsideClickListener), this.outsideClickListener = null, this.selfClick = !1);
+    },
+    bindScrollListener: function() {
+      var s = this;
+      this.scrollHandler || (this.scrollHandler = new An(this.target, function() {
+        s.visible && (s.visible = !1);
+      })), this.scrollHandler.bindScrollListener();
+    },
+    unbindScrollListener: function() {
+      this.scrollHandler && this.scrollHandler.unbindScrollListener();
+    },
+    bindResizeListener: function() {
+      var s = this;
+      this.resizeListener || (this.resizeListener = function() {
+        s.visible && !Z.isTouchDevice() && (s.visible = !1);
+      }, window.addEventListener("resize", this.resizeListener));
+    },
+    unbindResizeListener: function() {
+      this.resizeListener && (window.removeEventListener("resize", this.resizeListener), this.resizeListener = null);
+    },
+    isTargetClicked: function(s) {
+      return this.eventTarget && (this.eventTarget === s.target || this.eventTarget.contains(s.target));
+    },
+    containerRef: function(s) {
+      this.container = s;
+    },
+    createStyle: function() {
+      if (!this.styleElement && !this.isUnstyled) {
+        var s;
+        this.styleElement = document.createElement("style"), this.styleElement.type = "text/css", Z.setAttribute(this.styleElement, "nonce", (s = this.$primevue) === null || s === void 0 || (s = s.config) === null || s === void 0 || (s = s.csp) === null || s === void 0 ? void 0 : s.nonce), document.head.appendChild(this.styleElement);
+        var u = "";
+        for (var L in this.breakpoints)
+          u += `
+                        @media screen and (max-width: `.concat(L, `) {
+                            .p-overlaypanel[`).concat(this.attributeSelector, `] {
+                                width: `).concat(this.breakpoints[L], ` !important;
+                            }
+                        }
+                    `);
+        this.styleElement.innerHTML = u;
+      }
+    },
+    destroyStyle: function() {
+      this.styleElement && (document.head.removeChild(this.styleElement), this.styleElement = null);
+    },
+    onOverlayClick: function(s) {
+      Ke.emit("overlay-click", {
+        originalEvent: s,
+        target: this.target
+      });
+    }
+  },
+  computed: {
+    attributeSelector: function() {
+      return Tn();
+    },
+    closeAriaLabel: function() {
+      return this.$primevue.config.locale.aria ? this.$primevue.config.locale.aria.close : void 0;
+    }
+  },
+  directives: {
+    focustrap: Un,
+    ripple: _n
+  },
+  components: {
+    Portal: Kn,
+    TimesIcon: Mn
+  }
+}, Qn = ["aria-modal"], ei = ["aria-label"];
+function ti(o, s, u, L, b, a) {
+  var E = at("Portal"), B = Et("ripple"), T = Et("focustrap");
+  return d(), de(E, {
+    appendTo: o.appendTo
+  }, {
+    default: U(function() {
+      return [k(jn, Y({
+        name: "p-overlaypanel",
+        onEnter: a.onEnter,
+        onLeave: a.onLeave,
+        onAfterLeave: a.onAfterLeave
+      }, o.ptm("transition")), {
+        default: U(function() {
+          return [b.visible ? It((d(), h("div", Y({
+            key: 0,
+            ref: a.containerRef,
+            role: "dialog",
+            "aria-modal": b.visible,
+            onClick: s[5] || (s[5] = function() {
+              return a.onOverlayClick && a.onOverlayClick.apply(a, arguments);
+            }),
+            class: o.cx("root")
+          }, o.ptmi("root")), [o.$slots.container ? ue(o.$slots, "container", {
+            key: 0,
+            onClose: a.hide,
+            onKeydown: function(M) {
+              return a.onButtonKeydown(M);
+            },
+            closeCallback: a.hide,
+            keydownCallback: function(M) {
+              return a.onButtonKeydown(M);
+            }
+          }) : (d(), h(z, {
+            key: 1
+          }, [p("div", Y({
+            class: o.cx("content"),
+            onClick: s[0] || (s[0] = function() {
+              return a.onContentClick && a.onContentClick.apply(a, arguments);
+            }),
+            onMousedown: s[1] || (s[1] = function() {
+              return a.onContentClick && a.onContentClick.apply(a, arguments);
+            }),
+            onKeydown: s[2] || (s[2] = function() {
+              return a.onContentKeydown && a.onContentKeydown.apply(a, arguments);
+            })
+          }, o.ptm("content")), [ue(o.$slots, "default")], 16), o.showCloseIcon ? It((d(), h("button", Y({
+            key: 0,
+            class: o.cx("closeButton"),
+            "aria-label": a.closeAriaLabel,
+            type: "button",
+            autofocus: "",
+            onClick: s[3] || (s[3] = function() {
+              return a.hide && a.hide.apply(a, arguments);
+            }),
+            onKeydown: s[4] || (s[4] = function() {
+              return a.onButtonKeydown && a.onButtonKeydown.apply(a, arguments);
+            })
+          }, o.ptm("closeButton")), [ue(o.$slots, "closeicon", {}, function() {
+            return [(d(), de(rt(o.closeIcon ? "span" : "TimesIcon"), Y({
+              class: [o.cx("closeIcon"), o.closeIcon]
+            }, o.ptm("closeIcon")), null, 16, ["class"]))];
+          })], 16, ei)), [[B]]) : R("", !0)], 64))], 16, Qn)), [[T]]) : R("", !0)];
+        }),
+        _: 3
+      }, 16, ["onEnter", "onLeave", "onAfterLeave"])];
+    }),
+    _: 3
+  }, 8, ["appendTo"]);
 }
-
-function parseLine(line) {
-    const parts = line.split("|");
-    if (parts.length !== 3) return null;
-    return { speaker: parts[0].trim(), instruct: parts[1].trim(), text: parts[2].trim() };
-}
-
-function parseScript(content) {
-    return content
-        .split("\n")
-        .map((raw) => raw.replace(/\r$/, ""))
-        .filter((line) => line.trim())
-        .map((line) => {
-            const parsed = parseLine(line);
-            return parsed
-                ? { ...parsed, raw: line, malformed: false }
-                : { raw: line, malformed: true };
+$t.render = ti;
+const ni = { class: "pick-panel-rows" }, ii = {
+  key: 0,
+  class: "pick-panel-empty"
+}, si = ["onClick"], oi = { class: "pick-panel-label" }, li = {
+  key: 0,
+  class: "pick-panel-sublabel"
+}, ai = {
+  __name: "PickPanel",
+  setup(o, { expose: s }) {
+    const u = y(null), L = y(""), b = y([]), a = y(($) => String($)), E = y(null), B = y(null), T = S(() => b.value.length > 6), fe = S(() => {
+      const $ = L.value.trim().toLowerCase();
+      return $ ? b.value.filter((D) => {
+        const O = a.value(D) || "", H = E.value && E.value(D) || "";
+        return `${O} ${H}`.toLowerCase().includes($);
+      }) : b.value;
+    });
+    function M($, { items: D, getLabel: O, getSubLabel: H, onPick: ve }) {
+      b.value = D, a.value = O, E.value = H || null, B.value = ve, L.value = "", u.value.toggle($), ee(() => {
+        var A, v;
+        return (v = (A = u.value.$el) == null ? void 0 : A.querySelector("input")) == null ? void 0 : v.focus();
+      });
+    }
+    function He($) {
+      var D;
+      (D = B.value) == null || D.call(B, $), u.value.hide();
+    }
+    return s({ open: M }), ($, D) => (d(), de(g($t), {
+      ref_key: "panelRef",
+      ref: u,
+      class: "pick-panel"
+    }, {
+      default: U(() => [
+        T.value ? (d(), de(g(ct), {
+          key: 0,
+          modelValue: L.value,
+          "onUpdate:modelValue": D[0] || (D[0] = (O) => L.value = O),
+          placeholder: "Type to filter...",
+          class: "pick-panel-filter"
+        }, null, 8, ["modelValue"])) : R("", !0),
+        p("div", ni, [
+          fe.value.length ? R("", !0) : (d(), h("div", ii, "(no matches)")),
+          (d(!0), h(z, null, Ue(fe.value, (O, H) => (d(), h("div", {
+            key: H,
+            class: "pick-panel-row",
+            onClick: (ve) => He(O)
+          }, [
+            p("div", oi, j(a.value(O)), 1),
+            E.value && E.value(O) ? (d(), h("div", li, j(E.value(O)), 1)) : R("", !0)
+          ], 8, si))), 128))
+        ])
+      ]),
+      _: 1
+    }, 512));
+  }
+}, ri = /* @__PURE__ */ Pt(ai, [["__scopeId", "data-v-86b8a254"]]), ci = { class: "header-row" }, ui = ["checked", "disabled"], di = { class: "title-el" }, fi = { class: "status-el" }, vi = { class: "width-row" }, pi = { class: "font-row" }, mi = { class: "audio-row" }, hi = { class: "audio-content-row" }, yi = {
+  key: 0,
+  class: "muted-note"
+}, gi = {
+  key: 1,
+  class: "muted-note"
+}, ki = { class: "audio-label" }, bi = ["src"], wi = {
+  key: 3,
+  class: "muted-note"
+}, Ci = {
+  key: 0,
+  class: "timing-warning"
+}, Li = { class: "actions-row" }, Si = ["data-row-index"], Ei = { class: "malformed-warn-line" }, Ii = ["value", "onInput"], xi = { class: "top-line" }, _i = ["title", "onClick"], Ti = ["title", "onClick"], Ai = ["onMouseenter"], ji = { class: "instruct-line" }, Pi = {
+  key: 0,
+  class: "instruct-desc"
+}, Ri = ["value", "onInput", "onPaste"], Di = { key: 0 }, Oi = { class: "role-info-key" }, $i = { class: "role-info-value" }, Ni = 600, ot = 3e3, Fi = 1500, _t = 1600, zi = 11.5, Bi = 9, Mi = 22, Tt = "FL_CosyVoice3.LineEditor.widthPx", lt = "FL_CosyVoice3.LineEditor.textFontSizePx", Ki = {
+  __name: "LineEditorApp",
+  props: {
+    folder: { type: String, required: !0 },
+    filename: { type: String, required: !0 },
+    suffix: { type: String, default: "_speakers.txt" },
+    checkedApi: { type: Object, default: null },
+    // {isChecked(fname), setChecked(fname, val)}
+    revoiceApi: { type: Object, default: null },
+    // {revoiceLine({lineId, speaker, instruct, text}) => Promise}
+    onClose: { type: Function, required: !0 }
+  },
+  setup(o) {
+    const s = o, u = [1280, 1600];
+    function L(e, t) {
+      try {
+        const n = parseFloat(localStorage.getItem(e));
+        return Number.isFinite(n) ? n : t;
+      } catch {
+        return t;
+      }
+    }
+    function b(e, t) {
+      try {
+        localStorage.setItem(e, String(t));
+      } catch {
+      }
+    }
+    function a() {
+      try {
+        const e = localStorage.getItem(Tt);
+        if (e === "full") return "full";
+        const t = parseFloat(e);
+        return Number.isFinite(t) ? t : _t;
+      } catch {
+        return _t;
+      }
+    }
+    function E(e) {
+      try {
+        localStorage.setItem(Tt, String(e));
+      } catch {
+      }
+    }
+    function B(e) {
+      return e === "full" ? "94vw" : `min(94vw, ${e}px)`;
+    }
+    function T(e) {
+      const t = e.split("|");
+      return t.length !== 3 ? null : { speaker: t[0].trim(), instruct: t[1].trim(), text: t[2].trim() };
+    }
+    let fe = 1;
+    function M(e) {
+      return { ...e, __key: fe++ };
+    }
+    function He(e) {
+      return e.split(`
+`).map((t) => t.replace(/\r$/, "")).filter((t) => t.trim()).map((t) => {
+        const n = T(t);
+        return M(n ? { ...n, raw: t, malformed: !1 } : { raw: t, malformed: !0 });
+      });
+    }
+    function $(e) {
+      return e.map((t) => t.malformed ? t.raw : `${t.speaker} | ${t.instruct} | ${t.text}`).join(`
+`);
+    }
+    function D(e) {
+      if (!e) return "rgba(255,255,255,0.15)";
+      let t = 0;
+      for (let n = 0; n < e.length; n++) t = t * 31 + e.charCodeAt(n) >>> 0;
+      return `hsl(${t % 360}, 55%, 55%)`;
+    }
+    const O = Hn();
+    function H({ title: e = "Confirm", message: t = "", okText: n = "OK", cancelText: i = "Cancel" } = {}) {
+      return new Promise((l) => {
+        O.require({
+          header: e,
+          message: t,
+          acceptLabel: n,
+          rejectLabel: i,
+          accept: () => l(!0),
+          reject: () => l(!1),
+          onHide: () => l(!1)
         });
-}
-
-function serializeRows(rows) {
-    return rows
-        .map((r) => (r.malformed ? r.raw : `${r.speaker} | ${r.instruct} | ${r.text}`))
-        .join("\n");
-}
-
-// Stable, cheap hash -> hue, so each distinct speaker gets a consistent
-// accent color across the whole editor (helps the eye group consecutive
-// lines by speaker at a glance, like a subtitle/transcript tool would).
-function speakerAccent(name) {
-    if (!name) return "rgba(255,255,255,0.15)";
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-    const hue = hash % 360;
-    return `hsl(${hue}, 55%, 55%)`;
-}
-
-/**
- * @param {Object} opts
- * @param {string} opts.folder - absolute path to the act folder containing filename.
- * @param {string} opts.filename
- * @param {string} [opts.suffix] - script_filter, passed through to the catalog scan (roles/instructions) and used to derive the audio file's base name.
- * @param {Object} [opts.checkedApi] - {isChecked(fname), setChecked(fname, val)} backing the header checkbox against Script Library's own "checked for queueing" set for this act. Omit to disable the checkbox.
- * @param {Object} [opts.revoiceApi] - {revoiceLine({lineId, speaker, instruct, text}) => Promise} backing each row's "🔁 Re-voice this line" button. Omit to hide it entirely.
- */
-export function openLineEditor({ folder, filename, suffix = "_speakers.txt", checkedApi, revoiceApi }) {
-    injectStyles();
-    let fullPath = joinPath(folder, filename);
-    const audioFolder = joinPath(folder, "_audio");
-    let audioBaseName = stripSuffixAndExt(filename, suffix);
-    let scriptList = [];
-
-    let rows = [];
-    let instructionEntries = [];
-    let roleEntries = [];
-    let rolesJsonPath = null; // resolved _roles.json path (project root) -- from /scan, needed to write role.speaker changes back
-    let presets = []; // saved CosyVoice speaker presets -- for the "change this role's speaker" picker
-    let readyScripts = []; // filenames marked done/ready-to-release in this act -- from _ready.json
-    let lastSavedText = null;
-    let lastSavedStatePayload = null; // last _state.json content actually written -- flushSave() diffs against this
-    let nextLineId = 1; // next fresh stable line id to hand out (add/split/reconcile) -- see reconcileState
-    let lastLocalEditAt = 0;
-    let saveTimer = null;
-    let pollTimer = null;
-    let audioPollTimer = null;
-    let timingPollTimer = null;
-    let closed = false;
-
-    // --- two playback/editing modes, switched by the script's ✅ Done state:
-    //
-    // MODE 1 (not ready -- normal working state): each row's own audio
-    // lives in its own file (_audio\lines\<base>\id<N>.wav, N = that row's
-    // STABLE id, independent of its position in the script -- see
-    // reconcileState). ▶ just plays that one file directly; clicking it
-    // plays every VOICED row from there on, back to back (see
-    // playRowSequential). 🔁 is available on every row regardless of
-    // whether it's ever been voiced. Nothing here depends on a script-wide
-    // timing manifest, so merging/deleting/splitting/reordering lines
-    // never desyncs anything -- there IS no shared position to desync.
-    //
-    // MODE 2 (ready -- after ✅ Done): "Done" stitches every line's file
-    // into one final track (see stitch_lines) and writes a timing manifest
-    // next to it, and THAT'S what the mini player + per-row ▶ use from
-    // then on (exactly like before this redesign) -- valid by construction
-    // since a fresh stitch just happened. To edit further, unmark Done
-    // first (drops back to mode 1).
-    let rawTimingLines = null; // last-fetched manifest's "lines" array, unvalidated
-    let lastTimingMtime = null;
-    let lineTiming = null; // mode 2 only: { lines, rowIndexMap } once validated against `rows`, else null
-    let currentRowToTimingIdx = new Map(); // row-array index -> lineTiming.lines index, rebuilt every render()
-    let timingRowEls = []; // lineTiming.lines index -> that row's DOM element, rebuilt every render()
-    let timingPlayBtns = []; // lineTiming.lines index -> that row's ▶ button, rebuilt every render()
-    let lastActiveTimingIdx = -1;
-    let audioEl = null; // mode 2: the <audio> element loadAudio() most recently built, or null
-    let audioIsPlaying = false;
-
-    // Mode 1 playback: a lightweight, standalone <audio> (not the mini
-    // player's audioEl) that plays one row's own per-line file, then
-    // advances to the next voiced row on "ended" -- see playRowSequential.
-    let rowEls = []; // row-array index -> that row's DOM element, rebuilt every render()
-    let mode1AudioEl = null;
-    let mode1PlayingIdx = -1;
-
-    // Rows (by object reference -- stable across render() unless the file
-    // is reloaded wholesale) with a "🔁 Re-voice this line" request
-    // in flight. Survives re-renders that happen for unrelated reasons
-    // while one is pending (buildRow checks this set fresh every time), so
-    // its spinner state never gets silently lost. Multiple lines can be
-    // pending at once -- only submission is serialized (see
-    // web/script_library.js's queueLineRevoice), not the wait.
-    const pendingRevoiceRows = new Set();
-    let dragFromIndex = null;
-    let textFontSizePx = loadNum(LS_FONT_KEY, DEFAULT_TEXT_FONT_SIZE);
-
-    // Resolves a row's speaker field (a role CODE from _roles.json, or a raw
-    // preset/preset#tag typed directly) down to the actual .pt file name
-    // Speaker Instruct2 Dialog will load -- mirrors
-    // nodes/script_library.py's role_map_from_entries + resolve_roles (role
-    // code -> speaker) and speaker_instruct2_dialog.py's
-    // preset.split("#",1)[0] + ".pt" (the "#tag" suffix is an
-    // authoring-only convenience, never part of the real file name).
-    function resolveSpeakerFile(code) {
-        if (!code) return "";
-        const entry = roleEntries.find((e) => e.code === code);
-        const preset = entry && entry.speaker ? entry.speaker : code;
-        const base = String(preset).split("#", 1)[0].trim();
-        return base ? `${base}.pt` : "";
+      });
     }
-
-    // Instant hover popover for the "ℹ" button next to each row's speaker
-    // field -- every field _roles.json has for that role code, one per
-    // styled row (not a flat native-title string), so the user can
-    // sanity-check a role (name/speaker/description/whatever else the JSON
-    // carries) without opening the roles editor. Generic over whatever
-    // fields the JSON actually carries rather than a hardcoded list, so it
-    // never goes stale as _roles.json's shape grows. A single shared
-    // element (not one per row) since only one can be hovered at a time.
-    let roleInfoPopoverEl = null;
-    function hideRoleInfoPopover() {
-        if (roleInfoPopoverEl) {
-            roleInfoPopoverEl.remove();
-            roleInfoPopoverEl = null;
+    const ve = y(!0), A = y(s.filename), v = y([]), Ce = y([]), N = y([]), pe = y(null), Re = y([]), De = y([]), te = y([]), ut = y(""), dt = y(a()), V = y(L(lt, zi)), q = y(null), me = y(-1), ne = y(!1), ie = y(-1), Oe = y(s.checkedApi ? s.checkedApi.isChecked(s.filename) : !1), _ = st({ checking: !0, best: null, mtime: null, error: null }), J = st({ visible: !1, top: 0, left: 0, code: null }), $e = y(null), se = st(/* @__PURE__ */ new Set());
+    let he = 1, ye = null, Ne = null, Ve = 0, ge = null, oe = null, G = null, Le = null, Se = null, Ee = null, qe = !1, Je = null, Ie = null;
+    const We = y(null), Ze = y(null), Fe = /* @__PURE__ */ new Map(), Xe = /* @__PURE__ */ new Map(), ze = y(null), ft = S(() => X(s.folder, A.value)), xe = S(() => X(s.folder, "_audio")), le = S(() => On(A.value, s.suffix)), vt = S(() => X(X(xe.value, "lines"), le.value)), pt = S(() => X(vt.value, "_state.json")), I = S(() => De.value.includes(A.value)), Ye = S(() => {
+      const e = v.value.filter((t) => !t.malformed);
+      return e.length > 0 && e.every((t) => t.status === "voiced");
+    }), Nt = S(() => B(dt.value));
+    function f(e) {
+      ut.value = e;
+    }
+    function mt(e) {
+      dt.value = e, E(e);
+    }
+    function ht(e) {
+      if (!e) return "";
+      const t = N.value.find((l) => l.code === e), n = t && t.speaker ? t.speaker : e, i = String(n).split("#", 1)[0].trim();
+      return i ? `${i}.pt` : "";
+    }
+    function Ft() {
+      const e = {};
+      return N.value.forEach((t) => {
+        const n = String(t.speaker || "").split("#", 1)[0].trim();
+        !n || !t.code || (e[n] = e[n] || []).push(t.code);
+      }), e;
+    }
+    async function zt() {
+      if (!pe.value)
+        return f("No _roles.json found for this project -- can't save"), !1;
+      try {
+        const t = await (await fetch(`${ke}/write`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: pe.value, content: JSON.stringify({ roles: N.value }, null, 2) })
+        })).json();
+        return t.error ? (f(`Error saving _roles.json: ${t.error}`), !1) : !0;
+      } catch (e) {
+        return f(`Error saving _roles.json: ${e}`), !1;
+      }
+    }
+    async function Bt(e) {
+      if (!pe.value) return;
+      const t = $n(pe.value), n = await Nn(t, e, s.suffix);
+      f(n.message), (n.changed.some((i) => i.file === A.value) || n.untracked.some((i) => i.file === A.value)) && (await yt(), await Lt(), ge = null, oe = null, ae(), Ae());
+    }
+    function Mt(e, t) {
+      if (!Array.isArray(e) || !e.length) return null;
+      const n = [];
+      return t.forEach((i, l) => {
+        i.malformed || n.push(l);
+      }), n.length !== e.length ? null : { lines: e, rowIndexMap: n };
+    }
+    const F = S(() => I.value ? Mt(q.value, v.value) : null), _e = S(() => {
+      const e = /* @__PURE__ */ new Map();
+      return F.value && F.value.rowIndexMap.forEach((t, n) => e.set(t, n)), e;
+    }), Kt = S(() => !!(I.value && q.value && q.value.length && !F.value));
+    function Ut() {
+      return JSON.stringify({
+        next_id: he,
+        lines: v.value.filter((e) => !e.malformed).map((e) => ({ id: e.id, text: e.text, status: e.status }))
+      }, null, 2);
+    }
+    function Ht(e, t) {
+      const n = t && Array.isArray(t.lines) ? t.lines : [];
+      let i = t && Number.isFinite(t.next_id) ? t.next_id : 1;
+      const l = e.filter((c) => !c.malformed);
+      if (n.length === l.length)
+        return l.forEach((c, w) => {
+          const C = n[w];
+          c.id = Number.isFinite(C.id) ? C.id : i++;
+          const P = (C.text || "") === c.text;
+          c.status = P ? C.status === "voiced" || C.status === "stale" ? C.status : "unvoiced" : C.status === "voiced" || C.status === "stale" ? "stale" : "unvoiced";
+        }), Math.max(i, ...l.map((c) => c.id + 1), 1);
+      const r = /* @__PURE__ */ new Map();
+      n.forEach((c) => {
+        const w = (c.text || "").trim();
+        r.has(w) || r.set(w, []), r.get(w).push(c);
+      });
+      const m = /* @__PURE__ */ new Map();
+      return l.forEach((c) => {
+        const w = (c.text || "").trim(), C = r.get(w), P = m.get(w) || 0;
+        if (C && P < C.length) {
+          const W = C[P];
+          m.set(w, P + 1), c.id = Number.isFinite(W.id) ? W.id : i++, c.status = W.status === "voiced" ? "voiced" : "unvoiced";
+        } else
+          c.id = i++, c.status = "unvoiced";
+      }), i;
+    }
+    async function yt() {
+      let e = null, t = null;
+      try {
+        const i = await (await fetch(`${ke}/read?path=${encodeURIComponent(pt.value)}`)).json();
+        if (i.exists) {
+          t = i.content;
+          try {
+            e = JSON.parse(i.content);
+          } catch {
+            e = null;
+          }
         }
+      } catch {
+        e = null;
+      }
+      he = Ht(v.value, e), Ne = t;
     }
-    function showRoleInfoPopover(anchorEl, code) {
-        hideRoleInfoPopover();
-        const pop = document.createElement("div");
-        pop.className = "fl-float-panel fl-role-popover";
-        const rect = anchorEl.getBoundingClientRect();
-        pop.style.left = `${Math.min(rect.left, window.innerWidth - 280)}px`;
-        pop.style.top = `${rect.bottom + 4}px`;
-        pop.style.width = "260px";
-
-        const entry = roleEntries.find((e) => e.code === code);
-        const fields = entry
-            ? Object.entries(entry).filter(([, v]) => v !== "" && v !== null && v !== undefined)
-            : [];
-        if (!code) {
-            pop.textContent = "No speaker set on this line yet";
-        } else if (!entry) {
-            pop.textContent = `"${code}" is not a role code in _roles.json -- used directly as a preset name`;
-        } else if (!fields.length) {
-            pop.textContent = `"${code}" has no fields set in _roles.json`;
-        } else {
-            fields.forEach(([k, v]) => {
-                const fieldRow = document.createElement("div");
-                fieldRow.className = "fl-role-popover-row";
-                const key = document.createElement("span");
-                key.className = "fl-role-popover-key";
-                key.textContent = k;
-                const value = document.createElement("span");
-                value.className = "fl-role-popover-value";
-                value.textContent = v;
-                fieldRow.appendChild(key);
-                fieldRow.appendChild(value);
-                pop.appendChild(fieldRow);
-            });
+    function Te(e) {
+      e.status === "voiced" && (e.status = "stale");
+    }
+    function Ge() {
+      Ie && (Ie.pause(), Ie.src = "", Ie = null), ie.value = -1;
+    }
+    function Vt(e) {
+      Ge();
+      const t = vt.value, n = (i) => {
+        for (; i < v.value.length && (v.value[i].malformed || v.value[i].status === "unvoiced"); ) i++;
+        if (i >= v.value.length) {
+          ie.value = -1;
+          return;
         }
-        document.body.appendChild(pop);
-        roleInfoPopoverEl = pop;
+        ie.value = i;
+        const l = v.value[i], r = new Audio(`${ce}/audio?path=${encodeURIComponent(X(t, `id${l.id}.wav`))}&v=${Date.now()}`);
+        Ie = r, r.addEventListener("ended", () => n(i + 1)), r.play().catch((m) => f(`Playback failed: ${m}`));
+      };
+      n(e);
     }
-
-    // ▶ = can play from here, ⏸ = this is the line currently playing.
-    function setPlayGlyph(btn, playing) {
-        if (!btn) return;
-        btn.textContent = playing ? "⏸" : "▶";
-        btn.style.color = playing ? "#e0b030" : "#4caf50";
-    }
-
-    // Reverse index for the "change this role's speaker" picker: preset name
-    // -> role codes currently assigned to it, so re-casting a role shows
-    // what else is already using a given voice instead of picking blind.
-    function speakerUsageIndex() {
-        const usage = {};
-        roleEntries.forEach((r) => {
-            const preset = String(r.speaker || "").split("#", 1)[0].trim();
-            if (!preset || !r.code) return;
-            (usage[preset] = usage[preset] || []).push(r.code);
-        });
-        return usage;
-    }
-
-    // Persists roleEntries back to _roles.json -- the single source of
-    // truth every script's role codes resolve against (see
-    // nodes/script_library.py's resolve_roles), so this reassigns a role's
-    // voice for the WHOLE project, not just the line currently open.
-    async function saveRolesJson() {
-        if (!rolesJsonPath) {
-            setStatus("No _roles.json found for this project -- can't save");
-            return false;
+    function Be() {
+      var i;
+      const e = We.value;
+      if (!F.value || !e) {
+        me.value = -1;
+        return;
+      }
+      const t = e.currentTime;
+      let n = -1;
+      for (let l = 0; l < F.value.lines.length; l++)
+        if (t >= F.value.lines[l].start && t < F.value.lines[l].end) {
+          n = l;
+          break;
         }
+      if (n !== me.value && (me.value = n, n >= 0 && ne.value)) {
+        const l = F.value.rowIndexMap[n], r = l !== void 0 ? Fe.get((i = v.value[l]) == null ? void 0 : i.__key) : null;
+        r == null || r.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+    async function Ae({ silent: e = !1 } = {}) {
+      const t = X(X(xe.value, "timing"), `${le.value}.json`);
+      try {
+        const i = await (await fetch(`${ke}/read?path=${encodeURIComponent(t)}`)).json();
+        if (!i.exists) {
+          q.value = null, oe = null;
+          return;
+        }
+        if (e && i.mtime === oe) return;
+        const l = i.mtime !== oe;
+        oe = i.mtime;
+        let r;
         try {
-            const resp = await fetch(`${FILE_API}/write`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: rolesJsonPath, content: JSON.stringify({ roles: roleEntries }, null, 2) }),
-            });
-            const data = await resp.json();
-            if (data.error) {
-                setStatus(`Error saving _roles.json: ${data.error}`);
-                return false;
-            }
-            return true;
-        } catch (e) {
-            setStatus(`Error saving _roles.json: ${e}`);
-            return false;
+          r = JSON.parse(i.content);
+        } catch {
+          q.value = null;
+          return;
         }
+        q.value = Array.isArray(r.lines) ? r.lines : null;
+        const m = v.value.filter((c) => !c.malformed);
+        l && q.value && q.value.length === m.length && m.length > 0 && await qt(m), ee(Be);
+      } catch {
+      }
     }
-
-    // Recasting a role changes what EVERY line using that role code
-    // resolves to, project-wide -- not just the lines visible in this one
-    // open script. Marks every already-voiced line using `roleCode` stale
-    // in whichever script(s) it appears in (any act), un-readying + wiping
-    // the final file for any of them that was marked ✅ Done (a frozen
-    // "done" file that no longer matches one of its lines' actual voice
-    // isn't valid any more) -- see nodes/script_library.py's
-    // mark_role_stale. If THIS open script was one of them, reload its
-    // state/ready flag/audio right away instead of waiting for the next
-    // poll tick.
-    async function notifyRoleSpeakerChanged(roleCode) {
-        if (!rolesJsonPath) return;
-        const root = dirOf(rolesJsonPath);
-        const result = await markRoleStale(root, roleCode, suffix);
-        setStatus(result.message);
-        if (result.changed.some((c) => c.file === filename) || result.untracked.some((c) => c.file === filename)) {
-            await loadAndReconcileState();
-            await loadCatalog(); // picks up readyScripts in case this script just got un-readied server-side
-            lastAudioFingerprint = null;
-            lastTimingMtime = null;
-            loadAudio();
-            loadTiming();
-        }
+    async function qt(e) {
+      try {
+        const n = await (await fetch(`${ce}/commit_full_render`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            folder: s.folder,
+            base_name: le.value,
+            row_texts: e.map((l) => l.text),
+            row_ids: e.map((l) => Number.isFinite(l.id) ? l.id : null)
+          })
+        })).json();
+        if (n.error || !Array.isArray(n.ids)) return;
+        const i = new Set(n.committed_ids || []);
+        e.forEach((l, r) => {
+          l.id = n.ids[r], i.has(n.ids[r]) && (l.status = "voiced");
+        }), Number.isFinite(n.next_id) && (he = Math.max(he, n.next_id)), i.size && je();
+      } catch {
+      }
     }
-
-    // MODE 2 ONLY: validates a fetched timing manifest against the CURRENT
-    // `rows` before trusting it for anything -- malformed/raw rows are
-    // skipped (Dialog never synthesizes them either, so they're not in the
-    // manifest). Requires only that the COUNT of real (non-malformed) rows
-    // still matches the manifest's line count: that's what makes "row N is
-    // at script position N" reliable. Valid by construction right after a
-    // ✅ Done stitch (see stitch_lines) -- mode 2 is only ever entered
-    // right after one, and further editing is meant to unmark Done first
-    // (dropping back to mode 1) rather than editing "on top of" a frozen
-    // final file.
-    function computeLineTiming(rawLines, rowsArr) {
-        if (!Array.isArray(rawLines) || !rawLines.length) return null;
-        const rowIndexMap = [];
-        rowsArr.forEach((r, idx) => {
-            if (!r.malformed) rowIndexMap.push(idx);
-        });
-        if (rowIndexMap.length !== rawLines.length) return null;
-        return { lines: rawLines, rowIndexMap };
+    function Jt() {
+      qe || (qe = !0, G && (clearTimeout(G), je()), Le && clearInterval(Le), Se && clearInterval(Se), Ee && clearInterval(Ee), s.onClose());
     }
-
-    function linesDirPath() {
-        return joinPath(joinPath(audioFolder, "lines"), audioBaseName);
+    it(ve, (e) => {
+      e || Jt();
+    });
+    function K() {
+      Ve = Date.now(), G && clearTimeout(G), G = setTimeout(je, Ni);
     }
-
-    function stateFilePath() {
-        return joinPath(linesDirPath(), "_state.json");
-    }
-
-    function currentStatePayload() {
-        return JSON.stringify({
-            next_id: nextLineId,
-            lines: rows.filter((r) => !r.malformed).map((r) => ({ id: r.id, text: r.text, status: r.status })),
-        }, null, 2);
-    }
-
-    // Assigns each CURRENT (non-malformed) row a stable `id` + a voice
-    // `status` ("unvoiced" | "voiced" | "stale"), reconciled against the
-    // last-saved _state.json. This is what makes mode 1 immune to
-    // merge/delete/split/reorder desyncing anything: a row's own audio
-    // file is addressed by ITS id, never by array position.
-    //
-    // Fast path: row count unchanged since the save -> match by position
-    // (matches this file's own in-session bookkeeping, which already keeps
-    // ids/status correct through every edit operation -- see mergeRows,
-    // splitBtn, addRowBtn, deleteBtn, and the speaker/instruct/text input
-    // handlers in buildRow). A text mismatch here means something changed
-    // the file outside this exact reconciliation (e.g. a fresh page load,
-    // or a hand-edit) -- downgrade voiced/stale to stale/unvoiced rather
-    // than trust a status that might not describe the CURRENT text.
-    //
-    // Fallback: row count changed (or this is the very first load with a
-    // pre-existing _state.json) -- recover ids for every row whose text is
-    // UNCHANGED by matching on exact text content (in script order, so
-    // repeated identical lines each claim a distinct saved entry). Only
-    // the row(s) actually touched by the structural edit (new/merged/split
-    // text) come up unmatched and get a fresh id + "unvoiced".
-    function reconcileState(rowsArr, saved) {
-        const savedLines = (saved && Array.isArray(saved.lines)) ? saved.lines : [];
-        let nextId = (saved && Number.isFinite(saved.next_id)) ? saved.next_id : 1;
-        const nonMalformed = rowsArr.filter((r) => !r.malformed);
-
-        if (savedLines.length === nonMalformed.length) {
-            nonMalformed.forEach((row, i) => {
-                const s = savedLines[i];
-                row.id = Number.isFinite(s.id) ? s.id : nextId++;
-                const textMatches = (s.text || "") === row.text;
-                row.status = textMatches ? (s.status === "voiced" || s.status === "stale" ? s.status : "unvoiced")
-                    : (s.status === "voiced" || s.status === "stale" ? "stale" : "unvoiced");
-            });
-            return Math.max(nextId, ...nonMalformed.map((r) => r.id + 1), 1);
-        }
-
-        const pools = new Map();
-        savedLines.forEach((s) => {
-            const key = (s.text || "").trim();
-            if (!pools.has(key)) pools.set(key, []);
-            pools.get(key).push(s);
-        });
-        const consumed = new Map();
-        nonMalformed.forEach((row) => {
-            const key = (row.text || "").trim();
-            const pool = pools.get(key);
-            const used = consumed.get(key) || 0;
-            if (pool && used < pool.length) {
-                const s = pool[used];
-                consumed.set(key, used + 1);
-                row.id = Number.isFinite(s.id) ? s.id : nextId++;
-                row.status = s.status === "voiced" ? "voiced" : "unvoiced";
-            } else {
-                row.id = nextId++;
-                row.status = "unvoiced";
-            }
-        });
-        return nextId;
-    }
-
-    async function loadAndReconcileState() {
-        let saved = null;
-        let rawContent = null;
+    async function je() {
+      const e = $(v.value), t = Ut(), n = e !== ye, i = t !== Ne;
+      if (!(!n && !i))
         try {
-            const resp = await fetch(`${FILE_API}/read?path=${encodeURIComponent(stateFilePath())}`);
-            const data = await resp.json();
-            if (data.exists) {
-                rawContent = data.content;
-                try {
-                    saved = JSON.parse(data.content);
-                } catch (e) {
-                    saved = null;
-                }
+          if (n) {
+            const r = await (await fetch(`${ke}/write`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ path: ft.value, content: e })
+            })).json();
+            if (r.error) {
+              f(`Save error: ${r.error}`);
+              return;
             }
-        } catch (e) {
-            saved = null;
+            ye = e;
+          }
+          i && (await fetch(`${ke}/write`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: pt.value, content: t })
+          }), Ne = t), f(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+        } catch (l) {
+          f(`Save failed: ${l}`);
         }
-        nextLineId = reconcileState(rows, saved);
-        // Baseline against what's actually ON DISK (not the just-reconciled
-        // result) so the next flushSave() persists the reconciliation for
-        // real instead of silently believing it already happened.
-        lastSavedStatePayload = rawContent;
     }
-
-    function allRowsVoiced() {
-        const nonMalformed = rows.filter((r) => !r.malformed);
-        return nonMalformed.length > 0 && nonMalformed.every((r) => r.status === "voiced");
+    function Pe(e) {
+      e && (e.style.height = "auto", e.style.height = `${e.scrollHeight}px`);
     }
-
-    // Marks a previously-voiced row as needing re-voice -- called on any
-    // edit to what actually gets synthesized (text, speaker, or instruct;
-    // see nodes/script_library.py's line_override, which is exactly
-    // "speaker | instruct | text"). "unvoiced" rows have no audio to go
-    // stale, so they stay "unvoiced".
-    function markRowEdited(row) {
-        if (row.status === "voiced") row.status = "stale";
+    function gt(e, t) {
+      if (!t) {
+        Xe.delete(e);
+        return;
+      }
+      Xe.set(e, t.$el ?? t);
     }
-
-    // --- mode 1 sequential playback: plays one row's own per-line file,
-    // then the next VOICED/STALE row (skipping ones with no audio at all),
-    // and so on -- "просто читаем все строки последовательно". Entirely
-    // separate from the mini player's audioEl (mode 2). ---
-    function stopMode1Playback() {
-        if (mode1AudioEl) {
-            mode1AudioEl.pause();
-            mode1AudioEl.src = "";
-            mode1AudioEl = null;
-        }
-        if (mode1PlayingIdx >= 0 && rowEls[mode1PlayingIdx]) {
-            rowEls[mode1PlayingIdx].classList.remove("fl-row-playing");
-            setPlayGlyph(rowEls[mode1PlayingIdx].querySelector(".fl-play-btn"), false);
-        }
-        mode1PlayingIdx = -1;
+    function Wt() {
+      ee(() => Xe.forEach(Pe));
     }
-
-    function playRowSequential(startIndex) {
-        stopMode1Playback();
-        const dir = linesDirPath();
-        const playIdx = (idx) => {
-            while (idx < rows.length && (rows[idx].malformed || rows[idx].status === "unvoiced")) idx++;
-            if (idx >= rows.length) {
-                mode1PlayingIdx = -1;
-                return;
-            }
-            mode1PlayingIdx = idx;
-            const row = rows[idx];
-            const el = new Audio(`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(dir, `id${row.id}.wav`))}&v=${Date.now()}`);
-            mode1AudioEl = el;
-            if (rowEls[idx]) {
-                rowEls[idx].classList.add("fl-row-playing");
-                setPlayGlyph(rowEls[idx].querySelector(".fl-play-btn"), true);
-            }
-            el.addEventListener("ended", () => {
-                if (rowEls[idx]) {
-                    rowEls[idx].classList.remove("fl-row-playing");
-                    setPlayGlyph(rowEls[idx].querySelector(".fl-play-btn"), false);
-                }
-                playIdx(idx + 1);
-            });
-            el.play().catch((e) => setStatus(`Playback failed: ${e}`));
+    function Zt(e, t) {
+      if (!t) {
+        Fe.delete(e);
+        return;
+      }
+      Fe.set(e, t);
+    }
+    async function kt(e) {
+      var n;
+      $e.value = e, await ee();
+      const t = Fe.get(e);
+      t == null || t.scrollIntoView({ behavior: "smooth", block: "nearest" }), (n = t == null ? void 0 : t.querySelector(".fl-input")) == null || n.focus(), setTimeout(() => {
+        $e.value === e && ($e.value = null);
+      }, 500);
+    }
+    async function Xt(e, t) {
+      const n = v.value[e], i = v.value[t];
+      if (!n || !i || n.malformed || i.malformed) return;
+      const l = Math.min(e, t), r = Math.max(e, t), m = v.value[l], c = v.value[r];
+      (m.speaker || "").trim() !== (c.speaker || "").trim() && !await H({
+        title: "Merge lines with different speakers?",
+        message: `"${m.speaker}" and "${c.speaker}" are different speakers. Merge anyway? The combined line keeps "${m.speaker}".`,
+        okText: "Merge",
+        cancelText: "Cancel"
+      }) || (m.text = `${m.text} ${c.text}`.trim(), m.status = "unvoiced", v.value.splice(r, 1), K());
+    }
+    function Yt(e, t) {
+      !e || e.__flDragAttached || (e.__flDragAttached = !0, e.addEventListener("pointerdown", (n) => {
+        if (n.button !== 0) return;
+        n.preventDefault();
+        const i = e.closest(".fl-line-row");
+        Je = Number(i == null ? void 0 : i.dataset.rowIndex), i == null || i.classList.add("fl-row-dragging");
+        const l = (m) => {
+          var C;
+          (C = Ze.value) == null || C.querySelectorAll(".fl-row-drop-target").forEach((P) => P.classList.remove("fl-row-drop-target"));
+          const c = document.elementFromPoint(m.clientX, m.clientY), w = c && c.closest ? c.closest(".fl-line-row") : null;
+          w && w !== i && w.classList.add("fl-row-drop-target");
+        }, r = (m) => {
+          var P;
+          document.removeEventListener("pointermove", l), document.removeEventListener("pointerup", r), document.removeEventListener("pointercancel", r);
+          const c = document.elementFromPoint(m.clientX, m.clientY), w = c && c.closest ? c.closest(".fl-line-row") : null, C = Je;
+          if (Je = null, i == null || i.classList.remove("fl-row-dragging"), (P = Ze.value) == null || P.querySelectorAll(".fl-row-drop-target").forEach((W) => W.classList.remove("fl-row-drop-target")), w && w !== i) {
+            const W = Number(w.dataset.rowIndex);
+            Number.isNaN(W) || Xt(C, W);
+          }
         };
-        playIdx(startIndex);
+        document.addEventListener("pointermove", l), document.addEventListener("pointerup", r), document.addEventListener("pointercancel", r);
+      }));
     }
-
-    // Sets the ▶/⏸ glyph on whichever row is currently "active" (see
-    // syncActiveLine) -- separate from syncActiveLine itself because play/
-    // pause/ended need to flip the glyph without re-deciding WHICH line is
-    // active.
-    function updateActivePlayIcon() {
-        if (lastActiveTimingIdx >= 0) {
-            setPlayGlyph(timingPlayBtns[lastActiveTimingIdx], audioIsPlaying);
-        }
+    function Gt(e) {
+      v.value.splice(e, 1), K();
     }
-
-    // Figures out which line audioEl.currentTime falls in (if any), moves
-    // the "now playing" highlight + auto-scroll there, and updates the
-    // ▶/⏸ glyphs. Called on every audio timeupdate tick AND right after
-    // every render() (so a mid-edit rebuild doesn't lose the highlight).
-    function syncActiveLine() {
-        if (!lineTiming || !audioEl) {
-            if (lastActiveTimingIdx >= 0 && timingRowEls[lastActiveTimingIdx]) {
-                timingRowEls[lastActiveTimingIdx].classList.remove("fl-row-playing");
-            }
-            lastActiveTimingIdx = -1;
-            return;
-        }
-        const t = audioEl.currentTime;
-        let activeIdx = -1;
-        for (let i = 0; i < lineTiming.lines.length; i++) {
-            if (t >= lineTiming.lines[i].start && t < lineTiming.lines[i].end) {
-                activeIdx = i;
-                break;
-            }
-        }
-        if (activeIdx === lastActiveTimingIdx) {
-            updateActivePlayIcon();
-            return;
-        }
-        if (lastActiveTimingIdx >= 0) {
-            if (timingRowEls[lastActiveTimingIdx]) timingRowEls[lastActiveTimingIdx].classList.remove("fl-row-playing");
-            setPlayGlyph(timingPlayBtns[lastActiveTimingIdx], false);
-        }
-        lastActiveTimingIdx = activeIdx;
-        if (activeIdx >= 0 && timingRowEls[activeIdx]) {
-            timingRowEls[activeIdx].classList.add("fl-row-playing");
-            // Only auto-scroll while actually playing -- render() re-syncs
-            // this on every rebuild (speaker change, add/split line, timing
-            // reload, ...), and audioEl.currentTime can still land inside a
-            // line's [start,end) range while paused (e.g. sitting at 0 with
-            // nothing played yet), which used to yank the view to that row
-            // any time something unrelated triggered a re-render.
-            if (audioIsPlaying) {
-                timingRowEls[activeIdx].scrollIntoView({ behavior: "smooth", block: "nearest" });
-            }
-        }
-        updateActivePlayIcon();
+    async function bt(e, t) {
+      t && t.trim() && !await H({
+        title: "Delete this line?",
+        message: t.length > 200 ? t.slice(0, 200) + "…" : t,
+        okText: "Delete",
+        cancelText: "Cancel"
+      }) || Gt(e);
     }
-
-    // Fetches _audio\timing\<script base>.json (written by FL CosyVoice3
-    // Audio Post-Process). silent=true (background poll) skips re-parsing
-    // when the file's mtime hasn't changed, so it doesn't fight an
-    // in-progress edit every poll tick for no reason.
-    async function loadTiming({ silent = false } = {}) {
-        const timingPath = joinPath(joinPath(audioFolder, "timing"), `${audioBaseName}.json`);
-        try {
-            const resp = await fetch(`${FILE_API}/read?path=${encodeURIComponent(timingPath)}`);
-            const data = await resp.json();
-            if (!data.exists) {
-                if (rawTimingLines !== null) {
-                    rawTimingLines = null;
-                    lastTimingMtime = null;
-                    render();
-                }
-                return;
-            }
-            if (silent && data.mtime === lastTimingMtime) return;
-            const isFreshMtime = data.mtime !== lastTimingMtime;
-            lastTimingMtime = data.mtime;
-            let parsed;
-            try {
-                parsed = JSON.parse(data.content);
-            } catch (e) {
-                rawTimingLines = null;
-                render();
-                return;
-            }
-            rawTimingLines = Array.isArray(parsed.lines) ? parsed.lines : null;
-
-            // A genuinely NEW manifest whose line count matches the current
-            // script looks like a FULL render that just finished (Dialog +
-            // Post-Process processed every current row, in order) -- adopt
-            // its per-line files into the stable-id scheme mode 1 relies on
-            // (see commitFullRenderIfNeeded/commit_full_render) so 🔁/▶
-            // light up for every line without the user doing anything.
-            const nonMalformed = rows.filter((r) => !r.malformed);
-            if (isFreshMtime && rawTimingLines && rawTimingLines.length === nonMalformed.length && nonMalformed.length > 0) {
-                await commitFullRenderIfNeeded(nonMalformed);
-            }
-            render(); // recomputes lineTiming + toggles timingWarningEl as a side effect
-        } catch (e) {
-            // Transient fetch error -- leave whatever timing state we already had.
+    function Qt(e) {
+      Te(e), K();
+    }
+    function en(e) {
+      Te(e), K();
+    }
+    function wt(e, t) {
+      Pe(t), Te(e), K();
+    }
+    function tn(e, t, n) {
+      n.preventDefault();
+      const i = (n.clipboardData || window.clipboardData).getData("text").replace(/[\r\n]+/g, " "), l = t.selectionStart, r = t.selectionEnd;
+      t.value = t.value.slice(0, l) + i + t.value.slice(r), t.selectionStart = t.selectionEnd = l + i.length, e.text = t.value, wt(e, t);
+    }
+    function nn(e) {
+      const t = N.value.find((i) => i.code === e.speaker), n = ht(e.speaker);
+      return t ? `Change "${t.code}"'s speaker for the whole play (currently ${n || "unset"})` : n ? `"${e.speaker}" is a literal preset, not a role code -- edit it directly in the speaker field to change it` : "No speaker set on this line yet";
+    }
+    function Ct(e) {
+      const t = Ce.value.find((n) => (n.text || "").trim() === e.instruct.trim());
+      return t && t.note ? t.note : null;
+    }
+    function sn(e, t) {
+      if (!N.value.length) {
+        f("No roles catalog found for this project (_roles.json)");
+        return;
+      }
+      ze.value.open(e, {
+        items: N.value,
+        getLabel: (n) => n.code || n.speaker || "",
+        getSubLabel: (n) => [n.name, n.speaker, n.description].filter(Boolean).join(" -- "),
+        onPick: (n) => {
+          const i = n.code || n.speaker || "";
+          t.speaker = i, Te(t), K();
         }
+      });
     }
-
-    // See loadTiming above -- converts a just-finished full render's
-    // positional per-line files to id<N>.wav and marks every row "voiced",
-    // so mode 1's 🔁/▶ work immediately after a normal full-script queue
-    // run, not just after per-line re-voicing.
-    async function commitFullRenderIfNeeded(nonMalformedRows) {
-        try {
-            const resp = await fetch(`${SCAN_API}/commit_full_render`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    folder,
-                    base_name: audioBaseName,
-                    row_texts: nonMalformedRows.map((r) => r.text),
-                    row_ids: nonMalformedRows.map((r) => (Number.isFinite(r.id) ? r.id : null)),
-                }),
-            });
-            const data = await resp.json();
-            if (data.error || !Array.isArray(data.ids)) return;
-            // This call is speculative (see loadTiming above) and often a
-            // no-op once every line is already on the id<N>.wav scheme --
-            // only mark a row "voiced" when ITS file was actually just
-            // renamed (committed_ids), never blindly for every row, or a
-            // redundant re-check would stomp a row's genuine "stale"
-            // status (edited after the real commit already happened)
-            // back to "voiced".
-            const committed = new Set(data.committed_ids || []);
-            nonMalformedRows.forEach((r, i) => {
-                r.id = data.ids[i];
-                if (committed.has(data.ids[i])) r.status = "voiced";
-            });
-            if (Number.isFinite(data.next_id)) nextLineId = Math.max(nextLineId, data.next_id);
-            if (committed.size) flushSave();
-        } catch (e) {
-            // Best-effort -- a transient failure here just leaves these
-            // rows showing "unvoiced" until the next full render (or a
-            // per-line 🔁, which doesn't depend on this at all).
+    function on(e, t) {
+      const n = N.value.find((l) => l.code === t.speaker);
+      if (!n) return;
+      if (!Re.value.length) {
+        f("No saved speaker presets found (FL CosyVoice3 Save Speaker)");
+        return;
+      }
+      const i = Ft();
+      ze.value.open(e, {
+        items: Re.value,
+        getLabel: (l) => l,
+        getSubLabel: (l) => {
+          const r = i[l] || [];
+          return r.length ? `used by: ${r.join(", ")} -- ${r.length} role(s)` : "not used by any role yet";
+        },
+        onPick: async (l) => {
+          n.speaker = l, await zt() && (f(`"${n.code}" now uses "${l}" for the whole play`), await Bt(n.code));
         }
+      });
     }
-
-    // Non-modal: no dark backdrop, and clicks outside the panel fall through
-    // to the graph underneath, so the user can keep this window open while
-    // working the canvas (drag nodes, queue prompts, etc.) instead of it
-    // blocking the whole screen like a normal dialog.
-    const overlay = document.createElement("div");
-    overlay.className = "fl-overlay fl-overlay-floating";
-
-    const panel = document.createElement("div");
-    panel.className = "fl-panel";
-    function widthCss(value) {
-        return value === "full" ? "94vw" : `min(94vw, ${value}px)`;
+    function ln(e, t) {
+      if (!Ce.value.length) {
+        f("No instructions catalog found for this project (_instructions.json)");
+        return;
+      }
+      ze.value.open(e, {
+        items: Ce.value,
+        getLabel: (n) => n.text,
+        getSubLabel: (n) => n.note || "",
+        onPick: (n) => {
+          t.instruct = n.text, Te(t), K();
+        }
+      });
     }
-    panel.style.cssText = `width:${widthCss(loadWidthPref())};height:92vh;`;
-    function setPanelWidth(value) {
-        panel.style.width = widthCss(value);
-        saveWidthPref(value);
+    function an(e, t) {
+      const n = e.getBoundingClientRect();
+      J.left = Math.min(n.left, window.innerWidth - 280), J.top = n.bottom + 4, J.code = t, J.visible = !0;
     }
-
-    const header = document.createElement("div");
-    header.className = "fl-panel-header";
-
-    const selectCheckbox = document.createElement("input");
-    selectCheckbox.type = "checkbox";
-    selectCheckbox.title = "Mark this script as checked for queueing (Script Library's tree)";
-    selectCheckbox.style.cssText = "flex:0 0 auto;cursor:pointer;";
-    if (!checkedApi) selectCheckbox.disabled = true;
-    function refreshCheckbox() {
-        if (checkedApi) selectCheckbox.checked = checkedApi.isChecked(filename);
+    function rn() {
+      J.visible = !1;
     }
-    selectCheckbox.addEventListener("change", () => {
-        if (checkedApi) checkedApi.setChecked(filename, selectCheckbox.checked);
+    const Qe = S(() => {
+      const e = J.code;
+      if (!e) return { message: "No speaker set on this line yet" };
+      const t = N.value.find((i) => i.code === e);
+      if (!t) return { message: `"${e}" is not a role code in _roles.json -- used directly as a preset name` };
+      const n = Object.entries(t).filter(([, i]) => i !== "" && i !== null && i !== void 0 && i !== t.__key);
+      return n.length ? { fields: n } : { message: `"${e}" has no fields set in _roles.json` };
     });
-    refreshCheckbox();
-
-    // --- ✅ Done: marks this script ready to release. Persisted
-    // server-side in <act folder>/_ready.json (nodes/script_library.py's
-    // scripts_ready / set_script_ready) so it shows as a green checkmark
-    // back in Script Library's tree, which also refuses to keep a ready
-    // script checked for queueing -- mirrored here by disabling/unchecking
-    // selectCheckbox and the delete-audio button (see below) while ready.
-    const doneBtn = iconButton("✅ Done", "");
-    function isCurrentlyReady() {
-        return readyScripts.includes(filename);
+    function cn(e) {
+      return se.has(e) ? "Re-voicing..." : e.status === "stale" ? "Text/speaker/instruct changed since this line's audio was last rendered -- click to re-voice with the current content" : e.status === "voiced" ? "Re-voice just this line (uses the currently open workflow)" : "Not voiced yet -- click to render just this line";
     }
-    function updateDoneUi() {
-        const ready = isCurrentlyReady();
-        const canMarkReady = allRowsVoiced();
-        doneBtn.classList.toggle("fl-btn-done-active", ready);
-        doneBtn.disabled = !ready && !canMarkReady;
-        doneBtn.title = ready
-            ? "Marked ready to release -- click to unmark and go back to editing"
-            : canMarkReady
-            ? "Stitch every line into the final file and mark this script done / ready to release"
-            : "Every line needs to be voiced (🔁) first";
-        selectCheckbox.disabled = !checkedApi || ready;
-        if (ready) selectCheckbox.checked = false;
-        updateDeleteAudioUi();
-    }
-    doneBtn.addEventListener("click", async () => {
-        const newReady = !isCurrentlyReady();
-        if (newReady && !allRowsVoiced()) {
-            setStatus("Every line needs to be voiced (🔁) before marking done");
-            return;
-        }
-        if (newReady) {
-            setStatus("Stitching final file...");
-            const nonMalformed = rows.filter((r) => !r.malformed);
-            try {
-                const stitchResp = await fetch(`${SCAN_API}/stitch_lines`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        folder,
-                        base_name: audioBaseName,
-                        line_ids: nonMalformed.map((r) => r.id),
-                        line_texts: nonMalformed.map((r) => r.text),
-                    }),
-                });
-                const stitchData = await stitchResp.json();
-                if (stitchData.error) {
-                    setStatus(`Stitch error: ${stitchData.error}`);
-                    return;
-                }
-            } catch (e) {
-                setStatus(`Stitch failed: ${e}`);
-                return;
-            }
-        }
+    async function un(e) {
+      if (!se.has(e)) {
+        se.add(e), f("Re-voicing...");
         try {
-            const resp = await fetch(`${SCAN_API}/set_ready`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ folder, filename, ready: newReady }),
-            });
-            const data = await resp.json();
-            if (data.error) {
-                setStatus(`Error: ${data.error}`);
-                return;
-            }
-            readyScripts = data.ready_scripts || [];
-            if (newReady && checkedApi) checkedApi.setChecked(filename, false);
-            updateDoneUi();
-            render(); // switches every row between mode 1 / mode 2
-            if (newReady) {
-                lastAudioFingerprint = null;
-                lastTimingMtime = null;
-                loadAudio(); // pick up the freshly stitched file right away
-                loadTiming();
-            }
-            setStatus(newReady ? "Stitched and marked done" : "Unmarked -- can be edited/re-voiced again");
-        } catch (e) {
-            setStatus(`Error: ${e}`);
+          await s.revoiceApi.revoiceLine({ lineId: e.id, speaker: e.speaker, instruct: e.instruct, text: e.text }), e.status = "voiced", f("Line re-voiced");
+        } catch (t) {
+          f(`Re-voice failed: ${t.message || t}`);
+        } finally {
+          se.delete(e), je();
         }
-    });
-
-    const titleEl = document.createElement("div");
-    titleEl.textContent = filename;
-    titleEl.style.cssText = "font-weight:600;font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-
-    const statusEl = document.createElement("div");
-    statusEl.className = "fl-status";
-    statusEl.style.flex = "0 0 auto";
-
-    // "Display" cluster: window width and text font size are both "how
-    // this window looks", grouped together here (Design Guideline --
-    // Layout > Best practices: "group related items... provide enough
-    // space around them and group them in logical sections") -- font size
-    // used to live in the actions row below, mixed in with line-editing
-    // tools it has nothing to do with.
-    const widthRow = document.createElement("div");
-    widthRow.style.cssText = "display:flex;gap:3px;flex:0 0 auto;";
-    WIDTH_PRESETS.forEach((px) => {
-        const btn = document.createElement("button");
-        btn.className = "fl-btn fl-btn-icon";
-        btn.style.fontSize = "10px";
-        btn.textContent = String(px);
-        btn.title = `Set editor width to ${px}px (capped to the window's width)`;
-        btn.addEventListener("click", () => setPanelWidth(px));
-        widthRow.appendChild(btn);
-    });
-    const fullWidthBtn = document.createElement("button");
-    fullWidthBtn.className = "fl-btn fl-btn-icon";
-    fullWidthBtn.style.fontSize = "10px";
-    fullWidthBtn.textContent = "100%";
-    fullWidthBtn.title = "Use the full available window width";
-    fullWidthBtn.addEventListener("click", () => setPanelWidth("full"));
-    widthRow.appendChild(fullWidthBtn);
-
-    // --- text font size: applies ONLY to the spoken-text textareas
-    // (.fl-textarea inside a row), never to speaker/instruct inputs or any
-    // other chrome. Persisted so it survives closing and reopening the
-    // editor. ---
-    function applyTextFontSize() {
-        rowsContainer.querySelectorAll(".fl-textarea").forEach((ta) => {
-            ta.style.fontSize = `${textFontSizePx}px`;
-            autoGrow(ta); // a bigger font needs a taller box -- the old height is now stale
+      }
+    }
+    function dn(e, t) {
+      if (I.value) {
+        const i = _e.value.get(t), l = We.value;
+        if (i === void 0 || !l || !F.value) return;
+        l.currentTime = F.value.lines[i].start, l.play();
+      } else ie.value === t ? Ge() : Vt(t);
+    }
+    async function ae({ silent: e = !1 } = {}) {
+      e || (_.checking = !0);
+      try {
+        const n = await (await fetch(`/fl_cosyvoice3/browse/list_dir?path=${encodeURIComponent(xe.value)}`)).json(), i = Array.isArray(n.files) ? n.files : [], l = n.file_mtimes || {}, r = le.value.toLowerCase(), m = i.filter((C) => {
+          const P = C.lastIndexOf(".");
+          return (P > 0 ? C.slice(0, P) : C).toLowerCase().startsWith(r);
         });
+        m.sort();
+        const c = m.length ? m[m.length - 1] : null, w = c ? `${c}::${l[c] || ""}` : null;
+        if (e && w === ge) return;
+        ge = w, _.checking = !1, _.error = null, _.best = c, _.mtime = c ? l[c] || Date.now() : null, c || (ne.value = !1, ee(Be));
+      } catch (t) {
+        _.checking = !1, _.error = String(t);
+      }
     }
-    const fontMinusBtn = iconButton("A−", "Decrease line text font size");
-    const fontPlusBtn = iconButton("A+", "Increase line text font size");
-    fontMinusBtn.addEventListener("click", () => {
-        textFontSizePx = Math.max(MIN_TEXT_FONT_SIZE, textFontSizePx - 1);
-        saveNum(LS_FONT_KEY, textFontSizePx);
-        applyTextFontSize();
-    });
-    fontPlusBtn.addEventListener("click", () => {
-        textFontSizePx = Math.min(MAX_TEXT_FONT_SIZE, textFontSizePx + 1);
-        saveNum(LS_FONT_KEY, textFontSizePx);
-        applyTextFontSize();
-    });
-    const fontSizeRow = document.createElement("div");
-    fontSizeRow.style.cssText = "display:flex;gap:3px;flex:0 0 auto;margin-left:10px;";
-    fontSizeRow.appendChild(fontMinusBtn);
-    fontSizeRow.appendChild(fontPlusBtn);
-
-    const closeBtn = document.createElement("button");
-    closeBtn.className = "fl-btn fl-btn-plain fl-btn-round";
-    closeBtn.textContent = "✕";
-    closeBtn.title = "Close";
-
-    header.appendChild(selectCheckbox);
-    header.appendChild(doneBtn);
-    header.appendChild(titleEl);
-    header.appendChild(statusEl);
-    header.appendChild(widthRow);
-    header.appendChild(fontSizeRow);
-    header.appendChild(closeBtn);
-
-    // --- mini audio player: looks in <act folder>\_audio\ for a file whose
-    // name starts with this script's base name (no script_filter suffix, no
-    // extension -- see stripSuffixAndExt), since a Save Audio node's
-    // filename_prefix produces names like "<base>_00001_.flac" -- an exact
-    // match is never guaranteed, so this matches by prefix and picks the
-    // alphabetically-last hit (the highest counter, i.e. the latest take). ---
-    // Outer wrapper: the mini player row (fully rebuilt by loadAudio on
-    // every refresh) plus timingWarningEl, which must survive those
-    // rebuilds untouched -- appended once, below, never wiped.
-    const audioRow = document.createElement("div");
-    audioRow.style.cssText = "display:flex;flex-direction:column;flex:0 0 auto;border-bottom:1px solid rgba(255,255,255,0.08);";
-
-    const audioContentRow = document.createElement("div");
-    audioContentRow.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 16px;flex:0 0 auto;";
-
-    const audioPlaceholder = document.createElement("div");
-    audioPlaceholder.className = "fl-status";
-    audioPlaceholder.textContent = "Checking for audio...";
-    audioPlaceholder.style.flex = "1";
-
-    const audioRefreshBtn = iconButton("🔄", "Re-check _audio\\ for this script's rendered audio");
-    audioRefreshBtn.style.flex = "0 0 auto";
-
-    // Deletes every _audio\ file matching this script's base name (same
-    // prefix match as detection below) -- for clearing out a take before
-    // re-rendering. Blocked (both here and server-side) while the script is
-    // marked ready to release.
-    const deleteAudioBtn = iconButton("🗑 Delete audio", "");
-    deleteAudioBtn.style.flex = "0 0 auto";
-
-    let lastAudioFilename = null; // last-seen "best" match's plain name -- for the label/delete confirm
-    let lastAudioFingerprint = null; // "<filename>::<mtime>" -- lets silent polling skip a rebuild only when TRULY nothing changed
-    function updateDeleteAudioUi() {
-        const ready = isCurrentlyReady();
-        deleteAudioBtn.disabled = !lastAudioFilename || ready;
-        deleteAudioBtn.title = ready
-            ? "Marked ready to release -- unmark it (✅ Done) before deleting audio"
-            : "Delete the rendered audio for this script";
-    }
-    deleteAudioBtn.addEventListener("click", async () => {
-        if (!lastAudioFilename || isCurrentlyReady()) return;
-        const ok = await openConfirmDialog({
-            title: "Delete rendered audio?",
-            message: `Deletes every _audio\\ file matching "${audioBaseName}" (currently: ${lastAudioFilename}).`,
-            okText: "Delete",
-            cancelText: "Cancel",
-        });
-        if (!ok) return;
+    const fn = S(() => !_.best || I.value);
+    async function vn() {
+      if (!(!_.best || I.value || !await H({
+        title: "Delete rendered audio?",
+        message: `Deletes every _audio\\ file matching "${le.value}" (currently: ${_.best}).`,
+        okText: "Delete",
+        cancelText: "Cancel"
+      })))
         try {
-            const resp = await fetch(`${SCAN_API}/delete_audio`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ folder, base_name: audioBaseName, filename }),
-            });
-            const data = await resp.json();
-            if (data.error) {
-                setStatus(`Error: ${data.error}`);
-                return;
-            }
-            setStatus(`Deleted ${data.deleted.length} audio file(s)`);
-            lastAudioFilename = null;
-            lastAudioFingerprint = null;
-            loadAudio();
-        } catch (e) {
-            setStatus(`Error: ${e}`);
+          const n = await (await fetch(`${ce}/delete_audio`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folder: s.folder, base_name: le.value, filename: A.value })
+          })).json();
+          if (n.error) {
+            f(`Error: ${n.error}`);
+            return;
+          }
+          f(`Deleted ${n.deleted.length} audio file(s)`), ge = null, ae();
+        } catch (t) {
+          f(`Error: ${t}`);
         }
-    });
-
-    audioContentRow.appendChild(audioPlaceholder);
-    audioContentRow.appendChild(audioRefreshBtn);
-
-    // silent=true is used by the background poll below: it skips the
-    // "Checking..." flicker and, if the resolved file hasn't actually
-    // changed, skips rebuilding the DOM entirely so an in-progress playback
-    // isn't interrupted every poll tick.
-    async function loadAudio({ silent = false } = {}) {
-        if (!silent) {
-            audioContentRow.innerHTML = "";
-            audioPlaceholder.textContent = "Checking for audio...";
-            audioContentRow.appendChild(audioPlaceholder);
-            audioContentRow.appendChild(audioRefreshBtn);
-        }
+    }
+    function pn(e) {
+      var t;
+      (t = s.checkedApi) == null || t.setChecked(A.value, e);
+    }
+    const mn = S(() => !I.value && !Ye.value), hn = S(() => I.value ? "Marked ready to release -- click to unmark and go back to editing" : Ye.value ? "Stitch every line into the final file and mark this script done / ready to release" : "Every line needs to be voiced first");
+    async function yn() {
+      var t;
+      const e = !I.value;
+      if (e && !Ye.value) {
+        f("Every line needs to be voiced before marking done");
+        return;
+      }
+      if (e) {
+        f("Stitching final file...");
+        const n = v.value.filter((i) => !i.malformed);
         try {
-            const resp = await fetch(`/fl_cosyvoice3/browse/list_dir?path=${encodeURIComponent(audioFolder)}`);
-            const data = await resp.json();
-            const files = Array.isArray(data.files) ? data.files : [];
-            const mtimes = data.file_mtimes || {};
-            const needle = audioBaseName.toLowerCase();
-            const matches = files.filter((f) => {
-                const dot = f.lastIndexOf(".");
-                const base = dot > 0 ? f.slice(0, dot) : f;
-                return base.toLowerCase().startsWith(needle);
-            });
-            matches.sort();
-            const best = matches.length ? matches[matches.length - 1] : null;
-            // Include mtime, not just the filename: a deleted-then-re-rendered
-            // take can land on the exact same name (ComfyUI's Save Audio
-            // counter starts over once no matching files remain), which a
-            // filename-only check would wrongly call "unchanged".
-            const fingerprint = best ? `${best}::${mtimes[best] || ""}` : null;
-
-            if (silent && fingerprint === lastAudioFingerprint) return;
-            lastAudioFingerprint = fingerprint;
-            lastAudioFilename = best;
-
-            audioContentRow.innerHTML = "";
-            if (best) {
-                audioEl = document.createElement("audio");
-                audioEl.controls = true;
-                audioEl.style.cssText = "flex:1;height:32px;";
-                // Cache-bust: the browser caches media responses by URL, and
-                // without this an <audio> element would keep playing stale
-                // cached bytes for a filename that got deleted and
-                // re-rendered under the same name (see fingerprint above).
-                const cacheBust = encodeURIComponent(mtimes[best] || Date.now());
-                audioEl.src = `${SCAN_API}/audio?path=${encodeURIComponent(joinPath(audioFolder, best))}&v=${cacheBust}`;
-                audioIsPlaying = false;
-                audioEl.addEventListener("timeupdate", syncActiveLine);
-                audioEl.addEventListener("play", () => {
-                    audioIsPlaying = true;
-                    updateActivePlayIcon();
-                });
-                audioEl.addEventListener("pause", () => {
-                    audioIsPlaying = false;
-                    updateActivePlayIcon();
-                });
-                audioEl.addEventListener("ended", () => {
-                    audioIsPlaying = false;
-                    updateActivePlayIcon();
-                });
-                const label = document.createElement("div");
-                label.className = "fl-status";
-                label.textContent = best;
-                label.style.cssText = "flex:0 0 auto;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-                audioContentRow.appendChild(label);
-                audioContentRow.appendChild(audioEl);
-                audioContentRow.appendChild(deleteAudioBtn);
-            } else {
-                audioEl = null;
-                syncActiveLine();
-                audioPlaceholder.textContent = `No audio yet in ${audioFolder}`;
-                audioContentRow.appendChild(audioPlaceholder);
-            }
-            audioContentRow.appendChild(audioRefreshBtn);
-            updateDeleteAudioUi();
-        } catch (e) {
-            audioContentRow.innerHTML = "";
-            audioPlaceholder.textContent = `Audio check failed: ${e}`;
-            audioContentRow.appendChild(audioPlaceholder);
-            audioContentRow.appendChild(audioRefreshBtn);
-        }
-    }
-    audioRefreshBtn.addEventListener("click", () => loadAudio());
-    audioRow.appendChild(audioContentRow);
-
-    // --- actions panel (below the player): script-wide tools that aren't
-    // tied to any one row. ---
-    const actionsRow = document.createElement("div");
-    actionsRow.style.cssText = "display:flex;gap:6px;align-items:center;padding:6px 16px;border-bottom:1px solid rgba(255,255,255,0.08);flex:0 0 auto;";
-
-    // Inserts a combining acute accent (U+0301) at the cursor position of
-    // whatever text field was last focused -- place the cursor right after
-    // the vowel to mark (e.g. "фа|келов", cursor between а and к) and click
-    // this to get "фа́келов". Uses mousedown+preventDefault (not click)
-    // because a plain click on a <button> steals focus from the textarea
-    // in Chromium before any click handler runs, which would leave
-    // document.activeElement pointing at the button instead.
-    const stressBtn = document.createElement("button");
-    stressBtn.className = "fl-btn fl-btn-icon";
-    stressBtn.textContent = "´ Stress mark";
-    stressBtn.title = "Insert a stress mark at the cursor: click into a line's text, place the cursor right after the vowel to stress (факел|ов), then click this";
-    stressBtn.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        const el = document.activeElement;
-        if (!el || (el.tagName !== "TEXTAREA" && el.tagName !== "INPUT") || !panel.contains(el)) {
-            setStatus("Click into a line's text first, place the cursor right after the vowel to stress");
+          const l = await (await fetch(`${ce}/stitch_lines`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              folder: s.folder,
+              base_name: le.value,
+              line_ids: n.map((r) => r.id),
+              line_texts: n.map((r) => r.text)
+            })
+          })).json();
+          if (l.error) {
+            f(`Stitch error: ${l.error}`);
             return;
+          }
+        } catch (i) {
+          f(`Stitch failed: ${i}`);
+          return;
         }
-        const pos = el.selectionStart;
-        el.value = el.value.slice(0, pos) + "\u0301" + el.value.slice(pos);
-        el.selectionStart = el.selectionEnd = pos + 1;
-        el.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    actionsRow.appendChild(stressBtn);
-
-    // --- split line: cuts the focused line's text in two at the cursor --
-    // text before the cursor stays on this row, text after becomes a brand
-    // new row right below it (same speaker/instruct, since it's presumably
-    // the same character continuing). Same "click into text, place cursor,
-    // then click this" pattern as the stress-mark button above. The new
-    // row gets the same grow+fade-in entrance as "+ Add line". ---
-    const splitBtn = document.createElement("button");
-    splitBtn.className = "fl-btn fl-btn-icon";
-    splitBtn.textContent = "✂ Split line";
-    splitBtn.title = "Split this line into two at the cursor: click into a line's text, place the cursor where it should split, then click this";
-    splitBtn.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        const el = document.activeElement;
-        if (!el || el.tagName !== "TEXTAREA" || !el.classList.contains("fl-textarea") || !panel.contains(el)) {
-            setStatus("Click into a line's text first, place the cursor where it should split");
-            return;
+      }
+      try {
+        const i = await (await fetch(`${ce}/set_ready`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder: s.folder, filename: A.value, ready: e })
+        })).json();
+        if (i.error) {
+          f(`Error: ${i.error}`);
+          return;
         }
-        const rowEl = el.closest(".fl-line-row");
-        const index = rowEl ? Array.from(rowsContainer.children).indexOf(rowEl) : -1;
-        const row = index >= 0 ? rows[index] : null;
-        if (!row || row.malformed) {
-            setStatus("Can't split a malformed/raw line -- fix it to plain text first");
-            return;
+        De.value = i.ready_scripts || [], e && ((t = s.checkedApi) == null || t.setChecked(A.value, !1), Oe.value = !1), f(e ? "Stitched and marked done" : "Unmarked -- can be edited/re-voiced again"), e && (ge = null, oe = null, ae(), Ae());
+      } catch (n) {
+        f(`Error: ${n}`);
+      }
+    }
+    function gn() {
+      const e = document.activeElement;
+      if (!e || e.tagName !== "TEXTAREA" && e.tagName !== "INPUT") {
+        f("Click into a line's text first, place the cursor right after the vowel to stress");
+        return;
+      }
+      const t = e.selectionStart;
+      e.value = e.value.slice(0, t) + "́" + e.value.slice(t), e.selectionStart = e.selectionEnd = t + 1, e.dispatchEvent(new Event("input", { bubbles: !0 }));
+    }
+    function kn() {
+      const e = document.activeElement;
+      if (!e || e.tagName !== "TEXTAREA" || !e.classList.contains("fl-textarea")) {
+        f("Click into a line's text first, place the cursor where it should split");
+        return;
+      }
+      const t = e.closest(".fl-line-row"), n = t ? Number(t.dataset.rowIndex) : -1, i = n >= 0 ? v.value[n] : null;
+      if (!i || i.malformed) {
+        f("Can't split a malformed/raw line -- fix it to plain text first");
+        return;
+      }
+      const l = e.selectionStart, r = i.text.slice(0, l).trimEnd(), m = i.text.slice(l).trimStart();
+      i.text = r, i.status = "unvoiced";
+      const c = M({ speaker: i.speaker, instruct: i.instruct, text: m, raw: "", malformed: !1, id: he++, status: "unvoiced" });
+      v.value.splice(n + 1, 0, c), kt(c.__key), K();
+    }
+    function bn() {
+      const e = M({ speaker: "", instruct: "", text: "", raw: "", malformed: !1, id: he++, status: "unvoiced" });
+      v.value.push(e), kt(e.__key), K();
+    }
+    const Q = S(() => te.value.indexOf(A.value)), wn = S(() => !(Q.value > 0)), Cn = S(() => !(Q.value >= 0 && Q.value < te.value.length - 1));
+    function Ln() {
+      Q.value > 0 && St(te.value[Q.value - 1]);
+    }
+    function Sn() {
+      Q.value >= 0 && Q.value < te.value.length - 1 && St(te.value[Q.value + 1]);
+    }
+    async function En() {
+      try {
+        const t = await (await fetch(Dn)).json();
+        Re.value = t.presets || [];
+      } catch {
+        Re.value = [];
+      }
+    }
+    async function Lt() {
+      var e, t, n;
+      try {
+        const i = `${ce}/scan?path=${encodeURIComponent(s.folder)}&act=&suffix=${encodeURIComponent(s.suffix)}`, r = await (await fetch(i)).json();
+        Ce.value = ((e = r.instructions) == null ? void 0 : e.entries) || [], N.value = ((t = r.roles) == null ? void 0 : t.entries) || [], pe.value = ((n = r.roles) == null ? void 0 : n.path) || null, te.value = Array.isArray(r.scripts) ? r.scripts : [], De.value = Array.isArray(r.ready_scripts) ? r.ready_scripts : [];
+      } catch {
+        Ce.value = [], N.value = [], pe.value = null, te.value = [], De.value = [];
+      }
+    }
+    async function St(e) {
+      !e || e === A.value || qe || (G && (clearTimeout(G), G = null, await je()), A.value = e, ge = null, q.value = null, oe = null, v.value = [], ye = null, Ve = 0, Oe.value = s.checkedApi ? s.checkedApi.isChecked(e) : !1, f("Loading..."), await et(), ae(), Ae());
+    }
+    async function et({ isPoll: e = !1 } = {}) {
+      try {
+        const n = await (await fetch(`${ke}/read?path=${encodeURIComponent(ft.value)}`)).json();
+        if (n.error) {
+          f(`Read error: ${n.error}`);
+          return;
         }
-        const pos = el.selectionStart;
-        const before = row.text.slice(0, pos).trimEnd();
-        const after = row.text.slice(pos).trimStart();
-        row.text = before;
-        // Neither half's text matches what row's audio (if any) was
-        // rendered for -- row keeps its id but needs re-voicing, and the
-        // new second half never had audio at all.
-        row.status = "unvoiced";
-        rows.splice(index + 1, 0, {
-            speaker: row.speaker, instruct: row.instruct, text: after, raw: "", malformed: false,
-            id: nextLineId++, status: "unvoiced",
-        });
-        render(index + 1);
-        scheduleSave();
-    });
-    actionsRow.appendChild(splitBtn);
-
-    // --- add line: appends a new empty row at the end and animates it into
-    // place (grow + fade-in, see .fl-row-enter in styles.js) so it's obvious
-    // a new line just appeared rather than the list silently redrawing --
-    // then focuses its speaker field so typing can start immediately. ---
-    const addRowBtn = iconButton("+ Add line", "Add a new empty line at the end of the script");
-    addRowBtn.addEventListener("click", () => {
-        rows.push({ speaker: "", instruct: "", text: "", raw: "", malformed: false, id: nextLineId++, status: "unvoiced" });
-        render(rows.length - 1);
-        scheduleSave();
-    });
-    actionsRow.appendChild(addRowBtn);
-
-    // Separates "edit the focused line" (stress/split/add, left) from
-    // "switch to a different script" (Prev/Next, right) -- two unrelated
-    // concerns that used to just run together in one undifferentiated row
-    // (Design Guideline -- Layout > Best practices: "group related items...
-    // ensure content and controls remain clearly distinct").
-    const actionsDivider = document.createElement("div");
-    actionsDivider.style.cssText = "width:1px;align-self:stretch;background:rgba(255,255,255,0.12);margin:0 4px;flex:0 0 auto;";
-    actionsRow.appendChild(actionsDivider);
-
-    // --- prev/next: cycle through this act's other scripts (same folder,
-    // same suffix filter, same order as Script Library's own tree --
-    // scriptList comes from the /scan call loadCatalog() already makes)
-    // without closing the editor. ---
-    const prevBtn = iconButton("◀ Prev", "Open the previous script in this act");
-    const nextBtn = iconButton("Next ▶", "Open the next script in this act");
-    function updateNavState() {
-        const idx = scriptList.indexOf(filename);
-        prevBtn.disabled = !(idx > 0);
-        nextBtn.disabled = !(idx >= 0 && idx < scriptList.length - 1);
-    }
-    prevBtn.addEventListener("click", () => {
-        const idx = scriptList.indexOf(filename);
-        if (idx > 0) switchToFile(scriptList[idx - 1]);
-    });
-    nextBtn.addEventListener("click", () => {
-        const idx = scriptList.indexOf(filename);
-        if (idx >= 0 && idx < scriptList.length - 1) switchToFile(scriptList[idx + 1]);
-    });
-    actionsRow.appendChild(prevBtn);
-    actionsRow.appendChild(nextBtn);
-
-    // MODE 2 ONLY (see the mode-1/mode-2 comment near the top of
-    // openLineEditor): persistent (not a transient status-line message,
-    // which loadFromDisk's own "Loaded N line(s)" tends to race and
-    // overwrite within milliseconds) note for when the frozen final
-    // file's timing manifest doesn't line up with the script any more --
-    // shouldn't normally happen (Done always stitches fresh right before
-    // freezing), but shown just in case rather than silently mis-syncing.
-    // Mode 1 has no equivalent: each row's own status (see
-    // updateRevoiceStale) already says everything there is to say about
-    // that row, without needing a script-wide warning.
-    const timingWarningEl = document.createElement("div");
-    timingWarningEl.className = "fl-status";
-    timingWarningEl.style.cssText = "color:#e0a030;display:none;width:100%;flex:0 0 100%;";
-    timingWarningEl.textContent = "⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер";
-    audioRow.appendChild(timingWarningEl);
-
-    const rowsContainer = document.createElement("div");
-    rowsContainer.style.cssText = "flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:3px;";
-
-    panel.appendChild(header);
-    panel.appendChild(audioRow);
-    panel.appendChild(actionsRow);
-    panel.appendChild(rowsContainer);
-    overlay.appendChild(panel);
-    document.body.appendChild(overlay);
-
-    function setStatus(text) {
-        statusEl.textContent = text;
-    }
-
-    function close() {
-        if (closed) return;
-        closed = true;
-        if (saveTimer) {
-            clearTimeout(saveTimer);
-            flushSave();
+        if (!n.exists) {
+          e || (v.value = [], ye = "", Ne = null, f("File does not exist yet (will be created on first edit)"));
+          return;
         }
-        if (pollTimer) clearInterval(pollTimer);
-        if (audioPollTimer) clearInterval(audioPollTimer);
-        if (timingPollTimer) clearInterval(timingPollTimer);
-        document.removeEventListener("keydown", onKeydown);
-        overlay.remove();
+        if (e && Date.now() - Ve < Fi || n.content === ye) return;
+        v.value = He(n.content), ye = n.content, await yt(), e || f(`Loaded ${v.value.length} line(s)`);
+      } catch (t) {
+        f(`Read failed: ${t}`);
+      }
     }
-
-    function onKeydown(e) {
-        if (e.key === "Escape") close();
-    }
-    document.addEventListener("keydown", onKeydown);
-    closeBtn.addEventListener("click", close);
-
-    function scheduleSave() {
-        lastLocalEditAt = Date.now();
-        if (saveTimer) clearTimeout(saveTimer);
-        saveTimer = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
-    }
-
-    async function flushSave() {
-        const text = serializeRows(rows);
-        const statePayload = currentStatePayload();
-        const textChanged = text !== lastSavedText;
-        const stateChanged = statePayload !== lastSavedStatePayload;
-        if (!textChanged && !stateChanged) return;
-        try {
-            if (textChanged) {
-                const resp = await fetch(`${FILE_API}/write`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ path: fullPath, content: text }),
-                });
-                const data = await resp.json();
-                if (data.error) {
-                    setStatus(`Save error: ${data.error}`);
-                    return;
-                }
-                lastSavedText = text;
-            }
-            if (stateChanged) {
-                await fetch(`${FILE_API}/write`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ path: stateFilePath(), content: statePayload }),
-                });
-                lastSavedStatePayload = statePayload;
-            }
-            setStatus(`Saved ${new Date().toLocaleTimeString()}`);
-        } catch (e) {
-            setStatus(`Save failed: ${e}`);
-        }
-    }
-
-    function autoGrow(textarea) {
-        textarea.style.height = "auto";
-        textarea.style.height = `${textarea.scrollHeight}px`;
-    }
-
-    // Merges two non-malformed rows into the one at the LOWER index
-    // (whichever comes first in reading order), regardless of which was
-    // dragged onto which -- that keeps the result predictable no matter
-    // the drag direction. Confirms first if the two rows' speakers differ.
-    async function mergeRows(idxA, idxB) {
-        const rowA = rows[idxA];
-        const rowB = rows[idxB];
-        if (!rowA || !rowB || rowA.malformed || rowB.malformed) return;
-
-        const firstIdx = Math.min(idxA, idxB);
-        const secondIdx = Math.max(idxA, idxB);
-        const first = rows[firstIdx];
-        const second = rows[secondIdx];
-
-        if ((first.speaker || "").trim() !== (second.speaker || "").trim()) {
-            const ok = await openConfirmDialog({
-                title: "Merge lines with different speakers?",
-                message: `"${first.speaker}" and "${second.speaker}" are different speakers. `
-                    + `Merge anyway? The combined line keeps "${first.speaker}".`,
-                okText: "Merge",
-                cancelText: "Cancel",
-            });
-            if (!ok) return;
-        }
-
-        first.text = `${first.text} ${second.text}`.trim();
-        // The combined text has never been voiced -- first keeps its id
-        // (its file gets overwritten once re-voiced), second's id/file is
-        // just discarded along with the row.
-        first.status = "unvoiced";
-        rows.splice(secondIdx, 1);
-        render();
-        scheduleSave();
-    }
-
-    function clearDragIndicators() {
-        rowsContainer.querySelectorAll(".fl-row-drop-target").forEach((el) => el.classList.remove("fl-row-drop-target"));
-        rowsContainer.querySelectorAll(".fl-row-dragging").forEach((el) => el.classList.remove("fl-row-dragging"));
-    }
-
-    // Plain pointer-event drag (not native HTML5 drag-and-drop): dragstart/
-    // dragover/drop require the browser's own OS-level drag gesture
-    // recognition, which turned out unreliable in practice here. Tracking
-    // pointerdown -> pointermove -> pointerup ourselves and locating the
-    // element under the cursor via elementFromPoint is more predictable
-    // and works the same way everywhere.
-    function attachDragHandlers(rowEl, handleEl, index) {
-        rowEl.classList.add("fl-line-row");
-        rowEl.dataset.rowIndex = String(index);
-
-        handleEl.addEventListener("pointerdown", (e) => {
-            if (e.button !== 0) return; // primary mouse button / touch only
-            e.preventDefault();
-            dragFromIndex = index;
-            rowEl.classList.add("fl-row-dragging");
-
-            const onMove = (ev) => {
-                rowsContainer.querySelectorAll(".fl-row-drop-target").forEach((el) => el.classList.remove("fl-row-drop-target"));
-                const el = document.elementFromPoint(ev.clientX, ev.clientY);
-                const targetRow = el && el.closest ? el.closest(".fl-line-row") : null;
-                if (targetRow && targetRow !== rowEl) targetRow.classList.add("fl-row-drop-target");
-            };
-            const onUp = (ev) => {
-                document.removeEventListener("pointermove", onMove);
-                document.removeEventListener("pointerup", onUp);
-                document.removeEventListener("pointercancel", onUp);
-                const el = document.elementFromPoint(ev.clientX, ev.clientY);
-                const targetRow = el && el.closest ? el.closest(".fl-line-row") : null;
-                const fromIdx = dragFromIndex;
-                dragFromIndex = null;
-                clearDragIndicators();
-                if (targetRow && targetRow !== rowEl) {
-                    const toIdx = Number(targetRow.dataset.rowIndex);
-                    if (!Number.isNaN(toIdx)) mergeRows(fromIdx, toIdx);
-                }
-            };
-            document.addEventListener("pointermove", onMove);
-            document.addEventListener("pointerup", onUp);
-            document.addEventListener("pointercancel", onUp);
-        });
-    }
-
-    function buildRow(row, index) {
-        const rowEl = document.createElement("div");
-        rowEl.style.cssText =
-            "display:flex;flex-direction:column;gap:4px;padding:6px 8px 6px 10px;border-radius:6px;" +
-            "background:rgba(255,255,255,0.02);border-left:3px solid " + speakerAccent(row.malformed ? "" : row.speaker) + ";";
-
-        if (row.malformed) {
-            const warnLine = document.createElement("div");
-            warnLine.style.cssText = "display:flex;align-items:center;gap:6px;";
-            const warn = document.createElement("div");
-            warn.textContent = "⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:";
-            warn.style.cssText = "font-size:10px;color:#e0a030;flex:1;";
-            const deleteBtn = iconButton("🗑️", "Delete this line");
-            deleteBtn.addEventListener("click", async () => {
-                if (row.raw && row.raw.trim()) {
-                    const ok = await openConfirmDialog({
-                        title: "Delete this line?",
-                        message: row.raw.length > 200 ? row.raw.slice(0, 200) + "…" : row.raw,
-                        okText: "Delete",
-                        cancelText: "Cancel",
-                    });
-                    if (!ok) return;
-                }
-                rows.splice(index, 1);
-                render();
-                scheduleSave();
-            });
-            warnLine.appendChild(warn);
-            warnLine.appendChild(deleteBtn);
-
-            const raw = document.createElement("textarea");
-            raw.className = "fl-textarea";
-            raw.style.borderColor = "rgba(224,160,48,0.5)";
-            raw.style.fontSize = `${textFontSizePx}px`;
-            raw.value = row.raw;
-            raw.rows = 1;
-            raw.addEventListener("input", () => {
-                row.raw = raw.value;
-                autoGrow(raw);
-                scheduleSave();
-            });
-            raw.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") e.preventDefault();
-            });
-            rowEl.appendChild(warnLine);
-            rowEl.appendChild(raw);
-            requestAnimationFrame(() => autoGrow(raw));
-            return rowEl;
-        }
-
-        // --- top line: drag handle, compact speaker + instruct pickers,
-        // side by side. Fixed widths on purpose -- these are short labels,
-        // not prose, and shouldn't stretch to fill the row's full width. ---
-        const topLine = document.createElement("div");
-        topLine.style.cssText = "display:flex;gap:4px;align-items:center;flex-wrap:wrap;";
-
-        const dragHandle = document.createElement("span");
-        dragHandle.className = "fl-drag-handle";
-        dragHandle.textContent = "⠿";
-        dragHandle.title = "Drag onto another line to merge them";
-
-        const ready = isCurrentlyReady();
-
-        // Jump-to-line playback. Mode 2 (ready): only shown when a
-        // validated timing manifest (see loadTiming/computeLineTiming)
-        // actually covers this row, seeks the mini player exactly like
-        // before this redesign. Mode 1 (not ready): shown whenever this
-        // row has SOME audio on disk (voiced or stale -- stale still has
-        // real, just outdated, audio), plays that row's own file and
-        // continues sequentially -- see playRowSequential. The glyph
-        // itself flips to ⏸ for whichever line is currently playing (see
-        // syncActiveLine/updateActivePlayIcon for mode 2, or
-        // playRowSequential/stopMode1Playback for mode 1).
-        const playBtn = document.createElement("span");
-        playBtn.className = "fl-play-btn";
-        setPlayGlyph(playBtn, false);
-        const timingIdx = currentRowToTimingIdx.get(index);
-        if (ready) {
-            if (timingIdx === undefined) {
-                playBtn.style.display = "none";
-            } else {
-                playBtn.title = "Play from this line";
-                playBtn.addEventListener("click", () => {
-                    if (!audioEl || !lineTiming) return;
-                    audioEl.currentTime = lineTiming.lines[timingIdx].start;
-                    audioEl.play();
-                });
-            }
-        } else if (row.status === "unvoiced") {
-            playBtn.style.display = "none";
-        } else {
-            playBtn.title = "Play this line (and every voiced line after it)";
-            playBtn.addEventListener("click", () => {
-                if (mode1PlayingIdx === index) {
-                    stopMode1Playback();
-                } else {
-                    playRowSequential(index);
-                }
-            });
-        }
-
-        // Re-voice just this line. Mode 1 (not ready): always available on
-        // any non-malformed row, regardless of whether it's ever been
-        // voiced -- clicking it renders just this line into its own
-        // id<N>.wav (see nodes/script_library.py's line_index_override)
-        // and marks it "voiced"; nothing else in the script is touched.
-        // Mode 2 (ready): hidden -- the script is frozen at that point,
-        // unmark ✅ Done first to go back to editing. Spinner state lives
-        // in pendingRevoiceRows (keyed by the row object), not a local
-        // variable, so it survives a render() triggered by something else
-        // while this is in flight -- see that Set's own comment above.
-        const revoiceBtn = iconButton("🔁", "");
-        // Amber tint = this line's audio (if any) no longer matches its
-        // current text/speaker/instruct -- a nudge to re-voice, not a
-        // block on anything. Re-checked on every keystroke (not just at
-        // build time) so it reacts instantly, same as
-        // updateSpeakerFileInfo/updateInstructDesc elsewhere in this row.
-        function updateRevoiceStale() {
-            const isPending = pendingRevoiceRows.has(row);
-            revoiceBtn.style.color = !isPending && row.status === "stale" ? "#e0a030" : "";
-            if (!isPending) {
-                revoiceBtn.title = row.status === "stale"
-                    ? "Text/speaker/instruct changed since this line's audio was last rendered -- click to re-voice with the current content"
-                    : row.status === "voiced"
-                    ? "Re-voice just this line (uses the currently open workflow)"
-                    : "Not voiced yet -- click to render just this line";
-            }
-        }
-        if (!revoiceApi || ready) {
-            revoiceBtn.style.display = "none";
-        } else {
-            const isPending = pendingRevoiceRows.has(row);
-            revoiceBtn.disabled = isPending;
-            revoiceBtn.textContent = isPending ? "⏳" : "🔁";
-            revoiceBtn.title = isPending ? "Re-voicing..." : "";
-            updateRevoiceStale();
-            revoiceBtn.addEventListener("click", async () => {
-                if (pendingRevoiceRows.has(row)) return;
-                pendingRevoiceRows.add(row);
-                refreshRowByObject(row); // just this row -- see its own comment for why not render()
-                updateDoneUi();
-                setStatus(`Re-voicing...`);
-                try {
-                    await revoiceApi.revoiceLine({
-                        lineId: row.id,
-                        speaker: row.speaker,
-                        instruct: row.instruct,
-                        text: row.text,
-                    });
-                    row.status = "voiced";
-                    setStatus(`Line re-voiced`);
-                } catch (e) {
-                    setStatus(`Re-voice failed: ${e.message || e}`);
-                } finally {
-                    pendingRevoiceRows.delete(row);
-                    flushSave(); // persist the new status right away, not debounced
-                    refreshRowByObject(row);
-                    updateDoneUi();
-                }
-            });
-        }
-
-        const speakerInput = document.createElement("input");
-        speakerInput.className = "fl-input";
-        speakerInput.style.cssText = "width:108px;flex:0 0 auto;";
-        speakerInput.type = "text";
-        speakerInput.value = row.speaker;
-        speakerInput.title = "Speaker (preset or preset#tag)";
-
-        // Shows the actual .pt file this speaker resolves to, AND -- when
-        // the speaker is a role code -- doubles as the control for
-        // re-casting that role: picking a different preset here rewrites
-        // _roles.json's entry for the code (see saveRolesJson), so it
-        // changes the voice for EVERY line using that role code across the
-        // WHOLE project, not just this one. A literal preset (no matching
-        // role) has nothing project-wide to change, so the button stays
-        // disabled and just displays the resolved file.
-        const speakerChangeBtn = document.createElement("button");
-        speakerChangeBtn.className = "fl-btn fl-btn-icon";
-        speakerChangeBtn.style.cssText =
-            "flex:0 0 auto;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-        const updateSpeakerFileInfo = (value) => {
-            const file = resolveSpeakerFile(value);
-            const entry = roleEntries.find((e) => e.code === value);
-            speakerChangeBtn.textContent = file || "(no speaker)";
-            speakerChangeBtn.disabled = !entry;
-            speakerChangeBtn.title = entry
-                ? `Change "${entry.code}"'s speaker for the whole play (currently ${file || "unset"})`
-                : file
-                ? `"${value}" is a literal preset, not a role code -- edit it directly in the speaker field to change it`
-                : "No speaker set on this line yet";
-        };
-        updateSpeakerFileInfo(row.speaker);
-        speakerChangeBtn.addEventListener("click", () => {
-            const entry = roleEntries.find((e) => e.code === row.speaker);
-            if (!entry) return;
-            if (!presets.length) {
-                setStatus("No saved speaker presets found (FL CosyVoice3 Save Speaker)");
-                return;
-            }
-            const usage = speakerUsageIndex();
-            openFloatingPanel({
-                anchorEl: speakerChangeBtn,
-                items: presets,
-                getLabel: (p) => p,
-                getSubLabel: (p) => {
-                    const codes = usage[p] || [];
-                    return codes.length ? `used by: ${codes.join(", ")} -- ${codes.length} role(s)` : "not used by any role yet";
-                },
-                onPick: async (p) => {
-                    entry.speaker = p;
-                    const ok = await saveRolesJson();
-                    if (ok) {
-                        setStatus(`"${entry.code}" now uses "${p}" for the whole play`);
-                        await notifyRoleSpeakerChanged(entry.code);
+    return it(F, () => ee(Be)), it(V, Wt), Pn(() => {
+      Lt(), En(), ae(), Se = setInterval(() => ae({ silent: !0 }), ot), et().then(() => {
+        Le = setInterval(() => et({ isPoll: !0 }), ot), Ae(), Ee = setInterval(() => Ae({ silent: !0 }), ot);
+      });
+    }), Rn(() => {
+      Ge(), Le && clearInterval(Le), Se && clearInterval(Se), Ee && clearInterval(Ee);
+    }), (e, t) => (d(), h(z, null, [
+      k(g(Rt), {
+        visible: ve.value,
+        "onUpdate:visible": t[10] || (t[10] = (n) => ve.value = n),
+        modal: !1,
+        draggable: !1,
+        "close-on-escape": "",
+        header: " ",
+        style: re({ width: Nt.value, height: "92vh" }),
+        "content-style": { display: "flex", flexDirection: "column", height: "100%", padding: 0 },
+        class: "line-editor-dialog"
+      }, {
+        header: U(() => [
+          p("div", ci, [
+            p("input", {
+              type: "checkbox",
+              class: "row-checkbox",
+              checked: Oe.value,
+              disabled: !o.checkedApi || I.value,
+              title: "Mark this script as checked for queueing (Script Library's tree)",
+              onChange: t[0] || (t[0] = (n) => {
+                Oe.value = n.target.checked, pn(n.target.checked);
+              })
+            }, null, 40, ui),
+            k(g(x), {
+              label: I.value ? "Done ✓" : "Done",
+              size: "small",
+              outlined: !I.value,
+              disabled: mn.value,
+              title: hn.value,
+              onClick: yn
+            }, null, 8, ["label", "outlined", "disabled", "title"]),
+            p("div", di, j(A.value), 1),
+            p("div", fi, j(ut.value), 1),
+            p("div", vi, [
+              (d(), h(z, null, Ue(u, (n) => k(g(x), {
+                key: n,
+                label: String(n),
+                text: "",
+                size: "small",
+                title: `Set editor width to ${n}px (capped to the window's width)`,
+                onClick: (i) => mt(n)
+              }, null, 8, ["label", "title", "onClick"])), 64)),
+              k(g(x), {
+                label: "100%",
+                text: "",
+                size: "small",
+                title: "Use the full available window width",
+                onClick: t[1] || (t[1] = (n) => mt("full"))
+              })
+            ]),
+            p("div", pi, [
+              k(g(x), {
+                label: "A−",
+                text: "",
+                size: "small",
+                title: "Decrease line text font size",
+                onClick: t[2] || (t[2] = (n) => {
+                  V.value = Math.max(Bi, V.value - 1), b(lt, V.value);
+                })
+              }),
+              k(g(x), {
+                label: "A+",
+                text: "",
+                size: "small",
+                title: "Increase line text font size",
+                onClick: t[3] || (t[3] = (n) => {
+                  V.value = Math.min(Mi, V.value + 1), b(lt, V.value);
+                })
+              })
+            ])
+          ])
+        ]),
+        default: U(() => [
+          p("div", mi, [
+            p("div", hi, [
+              _.checking ? (d(), h("div", yi, "Checking for audio...")) : _.error ? (d(), h("div", gi, "Audio check failed: " + j(_.error), 1)) : _.best ? (d(), h(z, { key: 2 }, [
+                p("div", ki, j(_.best), 1),
+                p("audio", {
+                  ref_key: "audioElRef",
+                  ref: We,
+                  controls: "",
+                  class: "audio-el",
+                  src: `${g(ce)}/audio?path=${encodeURIComponent(g(X)(xe.value, _.best))}&v=${encodeURIComponent(_.mtime || "")}`,
+                  onTimeupdate: Be,
+                  onPlay: t[4] || (t[4] = (n) => ne.value = !0),
+                  onPause: t[5] || (t[5] = (n) => ne.value = !1),
+                  onEnded: t[6] || (t[6] = (n) => ne.value = !1)
+                }, null, 40, bi),
+                k(g(x), {
+                  label: "🗑 Delete audio",
+                  text: "",
+                  size: "small",
+                  disabled: fn.value,
+                  title: I.value ? "Marked ready to release -- unmark it (Done) before deleting audio" : "Delete the rendered audio for this script",
+                  onClick: vn
+                }, null, 8, ["disabled", "title"])
+              ], 64)) : (d(), h("div", wi, "No audio yet in " + j(xe.value), 1)),
+              k(g(x), {
+                icon: "pi pi-refresh",
+                text: "",
+                size: "small",
+                title: "Re-check _audio\\ for this script's rendered audio",
+                onClick: t[7] || (t[7] = (n) => ae())
+              })
+            ]),
+            Kt.value ? (d(), h("div", Ci, "⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер")) : R("", !0)
+          ]),
+          p("div", Li, [
+            k(g(x), {
+              label: "´ Stress mark",
+              text: "",
+              size: "small",
+              title: "Insert a stress mark at the cursor: click into a line's text, place the cursor right after the vowel to stress (факел|ов), then click this",
+              onMousedown: Me(gn, ["prevent"])
+            }),
+            k(g(x), {
+              label: "✂ Split line",
+              text: "",
+              size: "small",
+              title: "Split this line into two at the cursor: click into a line's text, place the cursor where it should split, then click this",
+              onMousedown: Me(kn, ["prevent"])
+            }),
+            k(g(x), {
+              label: "+ Add line",
+              text: "",
+              size: "small",
+              title: "Add a new empty line at the end of the script",
+              onClick: bn
+            }),
+            t[11] || (t[11] = p("div", { class: "actions-divider" }, null, -1)),
+            k(g(x), {
+              label: "◀ Prev",
+              text: "",
+              size: "small",
+              disabled: wn.value,
+              title: "Open the previous script in this act",
+              onClick: Ln
+            }, null, 8, ["disabled"]),
+            k(g(x), {
+              label: "Next ▶",
+              text: "",
+              size: "small",
+              disabled: Cn.value,
+              title: "Open the next script in this act",
+              onClick: Sn
+            }, null, 8, ["disabled"])
+          ]),
+          p("div", {
+            ref_key: "rowsContainerEl",
+            ref: Ze,
+            class: "rows-container"
+          }, [
+            (d(!0), h(z, null, Ue(v.value, (n, i) => (d(), h("div", {
+              key: n.__key,
+              class: be(["fl-line-row", { "row-enter": $e.value === n.__key, "row-playing": I.value ? _e.value.get(i) === me.value : ie.value === i }]),
+              "data-row-index": i,
+              ref_for: !0,
+              ref: (l) => Zt(n.__key, l),
+              style: re(n.malformed ? {} : { borderLeftColor: D(n.speaker) })
+            }, [
+              n.malformed ? (d(), h(z, { key: 0 }, [
+                p("div", Ei, [
+                  t[12] || (t[12] = p("div", { class: "malformed-warn" }, "⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:", -1)),
+                  k(g(x), {
+                    icon: "pi pi-trash",
+                    text: "",
+                    size: "small",
+                    title: "Delete this line",
+                    onClick: (l) => bt(i, n.raw)
+                  }, null, 8, ["onClick"])
+                ]),
+                p("textarea", {
+                  class: "fl-textarea malformed-textarea",
+                  style: re({ fontSize: `${V.value}px` }),
+                  value: n.raw,
+                  rows: "1",
+                  ref_for: !0,
+                  ref: (l) => {
+                    gt(n.__key, l), ee(() => Pe(l));
+                  },
+                  onInput: (l) => {
+                    n.raw = l.target.value, Pe(l.target), K();
+                  },
+                  onKeydown: t[8] || (t[8] = xt(Me(() => {
+                  }, ["prevent"]), ["enter"]))
+                }, null, 44, Ii)
+              ], 64)) : (d(), h(z, { key: 1 }, [
+                p("div", xi, [
+                  p("span", {
+                    class: "drag-handle",
+                    title: "Drag onto another line to merge them",
+                    ref_for: !0,
+                    ref: (l) => Yt(l, i)
+                  }, "⠿", 512),
+                  (I.value ? _e.value.get(i) !== void 0 : n.status !== "unvoiced") ? (d(), h("span", {
+                    key: 0,
+                    class: "play-btn",
+                    style: re({ color: (I.value ? me.value === _e.value.get(i) : ie.value === i) && ne.value ? "#e0b030" : "#4caf50" }),
+                    title: I.value ? "Play from this line" : "Play this line (and every voiced line after it)",
+                    onClick: (l) => dn(n, i)
+                  }, j((I.value ? me.value === _e.value.get(i) : ie.value === i) && ne.value ? "⏸" : "▶"), 13, _i)) : R("", !0),
+                  o.revoiceApi && !I.value ? (d(), h("span", {
+                    key: 1,
+                    class: be(["revoice-btn", { pending: se.has(n) }]),
+                    style: re({ color: !se.has(n) && n.status === "stale" ? "#e0a030" : "" }),
+                    title: cn(n),
+                    onClick: (l) => un(n)
+                  }, j(se.has(n) ? "⏳" : "🔁"), 15, Ti)) : R("", !0),
+                  k(g(x), {
+                    icon: "pi pi-user",
+                    text: "",
+                    size: "small",
+                    class: "icon-btn",
+                    title: "Pick from _roles.json",
+                    onClick: (l) => sn(l, n)
+                  }, null, 8, ["onClick"]),
+                  k(g(ct), {
+                    class: "speaker-input",
+                    "model-value": n.speaker,
+                    title: "Speaker (preset or preset#tag)",
+                    "onUpdate:modelValue": (l) => {
+                      n.speaker = l, Qt(n);
                     }
-                    render(); // refreshes every row referencing this role code, not just this one
-                },
-            });
-        });
-
-        // Hover info: every field _roles.json has for this role code, so the
-        // user can sanity-check a role (name/speaker/description/whatever
-        // else the JSON carries) without opening the roles editor. Instant
-        // custom popover (see showRoleInfoPopover) instead of the native
-        // title tooltip -- no hover delay, and each field gets its own
-        // styled row instead of one flat string.
-        const roleInfoBtn = iconButton("ℹ", "");
-        roleInfoBtn.style.cssText = "flex:0 0 auto;cursor:help;";
-        roleInfoBtn.addEventListener("mouseenter", () => showRoleInfoPopover(roleInfoBtn, row.speaker));
-        roleInfoBtn.addEventListener("mouseleave", hideRoleInfoPopover);
-
-        speakerInput.addEventListener("input", () => {
-            row.speaker = speakerInput.value;
-            rowEl.style.borderLeftColor = speakerAccent(row.speaker);
-            updateSpeakerFileInfo(row.speaker);
-            markRowEdited(row);
-            updateRevoiceStale();
-            updateDoneUi(); // this row leaving "voiced" can flip Done's enabled state
-            scheduleSave();
-        });
-
-        const rolePickBtn = iconButton("👤", "Pick from _roles.json");
-        rolePickBtn.addEventListener("click", () => {
-            if (!roleEntries.length) {
-                setStatus("No roles catalog found for this project (_roles.json)");
-                return;
-            }
-            openFloatingPanel({
-                anchorEl: rolePickBtn,
-                items: roleEntries,
-                // Script lines name a stable role CODE (e.g. "voldemort"),
-                // not the real preset -- resolution to an actual speaker
-                // happens once, at Script Library's output. Showing the
-                // currently-assigned speaker here is just context.
-                getLabel: (e) => e.code || e.speaker || "",
-                getSubLabel: (e) => [e.name, e.speaker, e.description].filter(Boolean).join(" -- "),
-                onPick: (e) => {
-                    const value = e.code || e.speaker || "";
-                    row.speaker = value;
-                    speakerInput.value = value;
-                    rowEl.style.borderLeftColor = speakerAccent(value);
-                    updateSpeakerFileInfo(value);
-                    markRowEdited(row);
-                    updateRevoiceStale();
-                    updateDoneUi(); // this row leaving "voiced" can flip Done's enabled state
-                    scheduleSave();
-                },
-            });
-        });
-
-        // Instruct now gets its own full-width band below the speaker line
-        // instead of sharing a row with 5 other controls in a fixed 260px
-        // box (Design Guideline -- Layout: "make essential information
-        // easy to find by giving it sufficient space") -- the instruct
-        // text defines how the line is DELIVERED, which is as important as
-        // who's speaking.
-        const instructInput = document.createElement("input");
-        instructInput.className = "fl-input";
-        instructInput.style.cssText = "flex:1 1 auto;";
-        instructInput.type = "text";
-        instructInput.value = row.instruct;
-        instructInput.title = "Instruct text";
-
-        // Secondary line under the instruct text, matching whatever note
-        // _instructions.json has for this exact instruct text (best-effort
-        // lookup by text, since a row only stores the instruct string, not
-        // which catalog entry it came from) -- only shown when a match
-        // exists. Design Guideline -- Typography > Conveying hierarchy:
-        // muted/smaller secondary text under the primary value.
-        const instructDescEl = document.createElement("div");
-        instructDescEl.className = "fl-status";
-        instructDescEl.style.cssText = "padding-left:22px;display:none;";
-        function updateInstructDesc() {
-            const entry = instructionEntries.find((e) => (e.text || "").trim() === row.instruct.trim());
-            if (entry && entry.note) {
-                instructDescEl.textContent = `↳ ${entry.note}`;
-                instructDescEl.style.display = "";
-            } else {
-                instructDescEl.style.display = "none";
-            }
-        }
-        updateInstructDesc();
-
-        instructInput.addEventListener("input", () => {
-            row.instruct = instructInput.value;
-            updateInstructDesc();
-            markRowEdited(row);
-            updateRevoiceStale();
-            updateDoneUi(); // this row leaving "voiced" can flip Done's enabled state
-            scheduleSave();
-        });
-
-        const instructPickBtn = iconButton("📋", "Pick from the instructions catalog (_instructions.json)");
-        instructPickBtn.addEventListener("click", () => {
-            if (!instructionEntries.length) {
-                setStatus("No instructions catalog found for this project (_instructions.json)");
-                return;
-            }
-            openFloatingPanel({
-                anchorEl: instructPickBtn,
-                items: instructionEntries,
-                getLabel: (e) => e.text,
-                getSubLabel: (e) => e.note || "",
-                onPick: (e) => {
-                    row.instruct = e.text;
-                    instructInput.value = e.text;
-                    updateInstructDesc();
-                    markRowEdited(row);
-                    updateRevoiceStale();
-                    updateDoneUi(); // this row leaving "voiced" can flip Done's enabled state
-                    scheduleSave();
-                },
-            });
-        });
-
-        const deleteBtn = iconButton("🗑️", "Delete this line");
-        deleteBtn.addEventListener("click", async () => {
-            if (row.text && row.text.trim()) {
-                const ok = await openConfirmDialog({
-                    title: "Delete this line?",
-                    message: row.text.length > 200 ? row.text.slice(0, 200) + "…" : row.text,
-                    okText: "Delete",
-                    cancelText: "Cancel",
-                });
-                if (!ok) return;
-            }
-            rows.splice(index, 1);
-            render();
-            scheduleSave();
-        });
-
-        const spacer = document.createElement("div");
-        spacer.style.cssText = "flex:1 1 auto;";
-
-        // Speaker band: who's speaking. 👤 (re-cast this LINE to a
-        // different role) sits before the speaker field it acts on.
-        topLine.appendChild(dragHandle);
-        topLine.appendChild(playBtn);
-        topLine.appendChild(revoiceBtn);
-        topLine.appendChild(rolePickBtn);
-        topLine.appendChild(speakerInput);
-        topLine.appendChild(speakerChangeBtn);
-        topLine.appendChild(roleInfoBtn);
-        topLine.appendChild(spacer);
-        topLine.appendChild(deleteBtn);
-
-        // Instruct band: how it's delivered -- its own line, full width,
-        // with the matching _instructions.json note (if any) directly
-        // underneath (Design Guideline -- Layout > Best practices: "group
-        // related items... use negative space... to show when elements are
-        // related").
-        const instructLine = document.createElement("div");
-        instructLine.style.cssText = "display:flex;gap:4px;align-items:center;";
-        instructLine.appendChild(instructPickBtn);
-        instructLine.appendChild(instructInput);
-
-        // --- bottom line: the spoken text, full width. Long lines wrap
-        // purely via CSS (white-space/overflow-wrap) -- Enter never inserts
-        // a real newline, since each row is exactly one script line. ---
-        const textArea = document.createElement("textarea");
-        textArea.className = "fl-textarea";
-        // Auto-height only here -- no manual drag handle, no scrollbar.
-        // .fl-textarea's own resize:vertical stays the default for other
-        // uses of that class (e.g. ui_kit.js's full-screen report viewer,
-        // which is a fixed-size scrollable panel, not an auto-growing
-        // field), so these are overridden per-instance rather than at the
-        // shared class level.
-        textArea.style.resize = "none";
-        textArea.style.overflow = "hidden";
-        textArea.style.fontSize = `${textFontSizePx}px`;
-        textArea.value = row.text;
-        textArea.rows = 1;
-        textArea.addEventListener("input", () => {
-            row.text = textArea.value;
-            autoGrow(textArea);
-            markRowEdited(row);
-            updateRevoiceStale();
-            updateDoneUi(); // this row leaving "voiced" can flip Done's enabled state
-            scheduleSave();
-        });
-        textArea.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") e.preventDefault();
-        });
-        textArea.addEventListener("paste", (e) => {
-            e.preventDefault();
-            const pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/[\r\n]+/g, " ");
-            const start = textArea.selectionStart, end = textArea.selectionEnd;
-            textArea.value = textArea.value.slice(0, start) + pasted + textArea.value.slice(end);
-            textArea.selectionStart = textArea.selectionEnd = start + pasted.length;
-            row.text = textArea.value;
-            autoGrow(textArea);
-            markRowEdited(row);
-            updateRevoiceStale();
-            updateDoneUi(); // this row leaving "voiced" can flip Done's enabled state
-            scheduleSave();
-        });
-        requestAnimationFrame(() => autoGrow(textArea));
-
-        rowEl.appendChild(topLine);
-        rowEl.appendChild(instructLine);
-        rowEl.appendChild(instructDescEl);
-        rowEl.appendChild(textArea);
-        attachDragHandlers(rowEl, dragHandle, index);
-        return rowEl;
+                  }, null, 8, ["model-value", "onUpdate:modelValue"]),
+                  k(g(x), {
+                    class: "speaker-file-btn",
+                    text: "",
+                    size: "small",
+                    label: ht(n.speaker) || "(no speaker)",
+                    disabled: !N.value.find((l) => l.code === n.speaker),
+                    title: nn(n),
+                    onClick: (l) => on(l, n)
+                  }, null, 8, ["label", "disabled", "title", "onClick"]),
+                  p("span", {
+                    class: "role-info-btn",
+                    onMouseenter: (l) => an(l.target, n.speaker),
+                    onMouseleave: rn
+                  }, "ℹ", 40, Ai),
+                  t[13] || (t[13] = p("div", { class: "spacer" }, null, -1)),
+                  k(g(x), {
+                    icon: "pi pi-trash",
+                    text: "",
+                    size: "small",
+                    title: "Delete this line",
+                    onClick: (l) => bt(i, n.text)
+                  }, null, 8, ["onClick"])
+                ]),
+                p("div", ji, [
+                  k(g(x), {
+                    icon: "pi pi-list",
+                    text: "",
+                    size: "small",
+                    class: "icon-btn",
+                    title: "Pick from the instructions catalog (_instructions.json)",
+                    onClick: (l) => ln(l, n)
+                  }, null, 8, ["onClick"]),
+                  k(g(ct), {
+                    class: "instruct-input",
+                    "model-value": n.instruct,
+                    title: "Instruct text",
+                    "onUpdate:modelValue": (l) => {
+                      n.instruct = l, en(n);
+                    }
+                  }, null, 8, ["model-value", "onUpdate:modelValue"])
+                ]),
+                Ct(n) ? (d(), h("div", Pi, "↳ " + j(Ct(n)), 1)) : R("", !0),
+                p("textarea", {
+                  class: "fl-textarea",
+                  style: re({ fontSize: `${V.value}px` }),
+                  value: n.text,
+                  rows: "1",
+                  ref_for: !0,
+                  ref: (l) => {
+                    gt(n.__key, l), ee(() => Pe(l));
+                  },
+                  onInput: (l) => {
+                    n.text = l.target.value, wt(n, l.target);
+                  },
+                  onKeydown: t[9] || (t[9] = xt(Me(() => {
+                  }, ["prevent"]), ["enter"])),
+                  onPaste: (l) => tn(n, l.target, l)
+                }, null, 44, Ri)
+              ], 64))
+            ], 14, Si))), 128))
+          ], 512)
+        ]),
+        _: 1
+      }, 8, ["visible", "style"]),
+      k(ri, {
+        ref_key: "pickPanelRef",
+        ref: ze
+      }, null, 512),
+      k(g(Ot)),
+      J.visible ? (d(), h("div", {
+        key: 0,
+        class: "role-info-popover",
+        style: re({ left: `${J.left}px`, top: `${J.top}px` })
+      }, [
+        Qe.value.message ? (d(), h("div", Di, j(Qe.value.message), 1)) : R("", !0),
+        (d(!0), h(z, null, Ue(Qe.value.fields, ([n, i]) => (d(), h("div", {
+          key: n,
+          class: "role-info-row"
+        }, [
+          p("span", Oi, j(n), 1),
+          p("span", $i, j(i), 1)
+        ]))), 128))
+      ], 4)) : R("", !0)
+    ], 64));
+  }
+}, Ui = /* @__PURE__ */ Pt(Ki, [["__scopeId", "data-v-70d31e59"]]);
+function Zi({ folder: o, filename: s, suffix: u = "_speakers.txt", checkedApi: L, revoiceApi: b }) {
+  Fn(import.meta.url);
+  const a = document.createElement("div");
+  document.body.appendChild(a);
+  const E = zn(Ui, {
+    folder: o,
+    filename: s,
+    suffix: u,
+    checkedApi: L || null,
+    revoiceApi: b || null,
+    onClose: () => {
+      E.unmount(), a.remove();
     }
-
-    // animateIndex: if given, that row gets the entrance animation (see
-    // .fl-row-enter in styles.js) plus a scroll-into-view and an immediate
-    // focus on its speaker field -- used only for a freshly-added row, not
-    // on every render (delete/merge/load stay instant, matching the HIG
-    // motion guidance to animate purposefully, not on every redraw).
-    // Rebuilds just ONE row's own DOM subtree in place (via buildRow),
-    // leaving every other row -- and the scroll container's scroll
-    // position -- completely untouched. Used for a single row's own 🔁
-    // start/finish instead of a full render(): a re-render tears down and
-    // rebuilds rowsContainer.innerHTML wholesale, which visibly "jumps"
-    // the view (scroll position, focus) even though only one row actually
-    // changed, and re-voicing a line further down a long script is
-    // exactly when the user is most likely to be looking somewhere else
-    // in the list while it finishes.
-    //
-    // Looks up the row's CURRENT index by object identity rather than
-    // trusting a captured one -- re-voicing takes real time (an actual
-    // TTS render), during which the user can freely add/delete/merge/
-    // split other rows, shifting everyone's position. Silently no-ops if
-    // the row no longer exists (deleted while its re-voice was still in
-    // flight) -- whatever delete/merge operation removed it already
-    // called a full render() of its own.
-    function refreshRowByObject(row) {
-        const index = rows.indexOf(row);
-        if (index === -1) return;
-        if (mode1PlayingIdx === index) stopMode1Playback();
-        const oldEl = rowEls[index];
-        const newEl = buildRow(row, index);
-        if (oldEl && oldEl.parentNode) {
-            oldEl.parentNode.replaceChild(newEl, oldEl);
-        } else if (rowsContainer.children[index]) {
-            rowsContainer.replaceChild(newEl, rowsContainer.children[index]);
-        }
-        rowEls[index] = newEl;
-    }
-
-    function render(animateIndex = -1) {
-        // Mode 1 playback holds direct DOM refs (rowEls) that are about to
-        // be thrown away below -- stop it first rather than leave it
-        // pointing at detached elements. Mode 2's audioEl lives outside
-        // rowsContainer entirely and is unaffected (see syncActiveLine).
-        stopMode1Playback();
-
-        // Re-validated on every render (not just when the manifest is
-        // re-fetched) -- MODE 2 ONLY. Editing in mode 1 doesn't touch
-        // rawTimingLines/lineTiming at all (see the mode-1/mode-2 comment
-        // above) -- each row's own id/status is the only thing that
-        // matters there.
-        const ready = isCurrentlyReady();
-        lineTiming = ready ? computeLineTiming(rawTimingLines, rows) : null;
-        currentRowToTimingIdx = new Map();
-        if (lineTiming) {
-            lineTiming.rowIndexMap.forEach((rowIdx, timingIdx) => currentRowToTimingIdx.set(rowIdx, timingIdx));
-        }
-        timingWarningEl.style.display = ready && rawTimingLines && rawTimingLines.length && !lineTiming ? "" : "none";
-
-        rowsContainer.innerHTML = "";
-        rowEls = [];
-        rows.forEach((row, i) => {
-            const el = buildRow(row, i);
-            rowEls.push(el);
-            rowsContainer.appendChild(el);
-        });
-
-        timingRowEls = lineTiming ? lineTiming.rowIndexMap.map((rowIdx) => rowsContainer.children[rowIdx]) : [];
-        timingPlayBtns = timingRowEls.map((el) => (el ? el.querySelector(".fl-play-btn") : null));
-        lastActiveTimingIdx = -1; // DOM just got rebuilt -- let syncActiveLine reattach fresh
-        syncActiveLine();
-
-        // "✅ Done" enables/disables based on every row's voice status
-        // (allRowsVoiced) -- refresh it here too, not just after its own
-        // click handler, so it comes on by itself once the last line gets
-        // voiced (a 🔁 completing, or a full render's commit) instead of
-        // needing an unrelated interaction to notice.
-        updateDoneUi();
-
-        if (animateIndex >= 0) {
-            const el = rowsContainer.children[animateIndex];
-            if (el) {
-                el.classList.add("fl-row-enter");
-                el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                const speakerInput = el.querySelector(".fl-input");
-                if (speakerInput) speakerInput.focus();
-            }
-        }
-    }
-
-    async function loadPresets() {
-        try {
-            const resp = await fetch(PRESETS_API);
-            const data = await resp.json();
-            presets = data.presets || [];
-        } catch (e) {
-            presets = [];
-        }
-    }
-
-    async function loadCatalog() {
-        try {
-            const url = `${SCAN_API}/scan?path=${encodeURIComponent(folder)}&act=&suffix=${encodeURIComponent(suffix)}`;
-            const resp = await fetch(url);
-            const data = await resp.json();
-            instructionEntries = data.instructions?.entries || [];
-            roleEntries = data.roles?.entries || [];
-            rolesJsonPath = data.roles?.path || null;
-            scriptList = Array.isArray(data.scripts) ? data.scripts : [];
-            readyScripts = Array.isArray(data.ready_scripts) ? data.ready_scripts : [];
-        } catch (e) {
-            instructionEntries = [];
-            roleEntries = [];
-            rolesJsonPath = null;
-            scriptList = [];
-            readyScripts = [];
-        }
-        updateNavState();
-        updateDoneUi();
-        // loadCatalog() and loadFromDisk() race independently (see call site
-        // below) -- if rows already rendered before roleEntries arrived, the
-        // per-row file-name labels would be stuck on their pre-catalog
-        // fallback. Re-render now that roleEntries is settled; harmless
-        // no-op if rows is still empty.
-        render();
-    }
-
-    // Switches this same editor instance to a different script in the same
-    // act (Prev/Next), without closing/reopening the overlay. Flushes any
-    // pending edit to the file being left first.
-    async function switchToFile(newFilename) {
-        if (!newFilename || newFilename === filename || closed) return;
-        if (saveTimer) {
-            clearTimeout(saveTimer);
-            saveTimer = null;
-            await flushSave();
-        }
-        filename = newFilename;
-        fullPath = joinPath(folder, filename);
-        audioBaseName = stripSuffixAndExt(filename, suffix);
-        lastAudioFilename = null; // new script -> force a full (non-silent) audio recheck below
-        lastAudioFingerprint = null;
-        rawTimingLines = null; // different script -> old timing manifest no longer applies at all
-        lastTimingMtime = null;
-        titleEl.textContent = filename;
-        rows = [];
-        lastSavedText = null;
-        lastLocalEditAt = 0;
-        render();
-        refreshCheckbox();
-        updateDoneUi();
-        updateNavState();
-        setStatus("Loading...");
-        await loadFromDisk();
-        loadAudio();
-        loadTiming();
-    }
-
-    async function loadFromDisk({ isPoll = false } = {}) {
-        try {
-            const resp = await fetch(`${FILE_API}/read?path=${encodeURIComponent(fullPath)}`);
-            const data = await resp.json();
-            if (data.error) {
-                setStatus(`Read error: ${data.error}`);
-                return;
-            }
-            if (!data.exists) {
-                if (!isPoll) {
-                    rows = [];
-                    lastSavedText = "";
-                    lastSavedStatePayload = null;
-                    render();
-                    setStatus("File does not exist yet (will be created on first edit)");
-                }
-                return;
-            }
-            if (isPoll && Date.now() - lastLocalEditAt < EDIT_QUIET_MS) return;
-            if (data.content === lastSavedText) return;
-            rows = parseScript(data.content);
-            lastSavedText = data.content;
-            await loadAndReconcileState();
-            render();
-            if (!isPoll) setStatus(`Loaded ${rows.length} line(s)`);
-        } catch (e) {
-            setStatus(`Read failed: ${e}`);
-        }
-    }
-
-    updateDoneUi();
-    loadCatalog();
-    loadPresets();
-    loadAudio();
-    audioPollTimer = setInterval(() => loadAudio({ silent: true }), POLL_MS);
-    // loadTiming() must not run before `rows` is populated: its
-    // commit_full_render check (see commitFullRenderIfNeeded) only fires
-    // when the manifest's line count matches the CURRENT non-malformed row
-    // count, and an empty `rows` (before loadFromDisk resolves) would both
-    // wrongly skip it AND mark this mtime "already seen" -- silently
-    // losing the one chance to adopt a full render that finished before
-    // this editor was even opened, since the next poll tick's mtime
-    // wouldn't look "fresh" any more either.
-    loadFromDisk().then(() => {
-        pollTimer = setInterval(() => loadFromDisk({ isPoll: true }), POLL_MS);
-        loadTiming();
-        timingPollTimer = setInterval(() => loadTiming({ silent: true }), POLL_MS);
-    });
+  });
+  E.use(Bn, { ripple: !0 }), E.use(Vn), E.mount(a);
 }
+export {
+  Zi as openLineEditor
+};

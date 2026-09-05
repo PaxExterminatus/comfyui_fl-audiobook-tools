@@ -95,17 +95,29 @@ MyPlay/                          <- Script Library's folder_path
 
 ## Frontend development
 
-The editors are being migrated from hand-written vanilla JS to Vue 3 +
-PrimeVue 3, one at a time -- Roles Editor, Browse Dialog, and the Script
-Library node's tree panel are done so far (Line Editor is still vanilla
-JS). Each is built with Vite in library mode straight into `web/`,
-replacing the hand-written file of the same name -- end users never need
-Node.js, only whoever's developing this addon. Script Library's own
-`web/script_library.js` still holds a hand-written remainder: the
-`app.graphToPrompt`/`app.queuePrompt` queue-orchestration patch (running
-the checked scripts, per-line re-voice) isn't UI and stays untouched --
-only the tree/browse-button/tools-row rendering moved to
+Every editor has been migrated from hand-written vanilla JS to Vue 3 +
+PrimeVue 3: Roles Editor, Browse Dialog, the Script Library node's tree
+panel, and the Line Editor. Each is built with Vite in library mode
+straight into `web/`, replacing the hand-written file of the same name --
+end users never need Node.js, only whoever's developing this addon.
+`ui_kit.js`/`styles.js` stay as plain JS (still used by
+`audio_post_process.js`'s report viewer and `script_editor.js`'s browse
+button), and `web/script_library.js` keeps one hand-written remainder:
+the `app.graphToPrompt`/`app.queuePrompt` queue-orchestration patch
+(running the checked scripts, per-line re-voice) isn't UI and stays
+untouched -- only the tree/browse-button/tools-row rendering moved to
 `src/script_library/ScriptLibraryPanel.vue`.
+
+A cross-entry gotcha worth knowing: every entry's own source file is
+named `main.js` within its own folder (`src/roles_editor/main.js`, `src/
+browse_dialog/main.js`, ...). Importing one entry's `main.js` directly
+from a DIFFERENT entry's component (rather than passing the function in
+as a prop) makes Rollup hoist the shared code into its own chunk named
+after that shared module's basename -- i.e. also `main.js`, colliding
+across entries. `ScriptLibraryPanel.vue` and `LineEditorApp.vue` both
+avoid this by receiving `openBrowseDialog`/`openRolesEditor`/
+`openLineEditor` as props from whichever hand-written `web/*.js` file
+mounts them, never importing another entry's `main.js` directly.
 
 ```bash
 npm install
@@ -124,7 +136,9 @@ in memory for that dev-server session (not written back to the fixture
 files); restart the server to reset to the fixtures' on-disk content.
 
 ```bash
-npm run dev:ui   # http://localhost:5173 -- opens the Roles Editor immediately
+npm run dev:ui   # http://localhost:5173 -- opens the Roles Editor immediately;
+                 # buttons in the toolbar open the others (Browse Dialog,
+                 # Script Library panel, Line Editor)
 ```
 
 ### Tests
@@ -137,9 +151,11 @@ npm run test:watch
 ```
 
 `src/__tests__/` covers the pure helpers in `web/fl_common.js`;
-`src/roles_editor/__tests__/`, `src/browse_dialog/__tests__/`, and
-`src/script_library/__tests__/` each mount their component with a mocked
-`fetch` and drive it through the DOM.
+`src/roles_editor/__tests__/`, `src/browse_dialog/__tests__/`,
+`src/script_library/__tests__/`, and `src/line_editor/__tests__/` each
+mount their component with a mocked `fetch` and drive it through the DOM
+(the Line Editor's suite also exercises its `ConfirmDialog` flow --
+delete-with-confirm -- via `primevue/confirmationservice`).
 
 ## License
 

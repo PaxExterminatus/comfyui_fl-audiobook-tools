@@ -6,6 +6,7 @@
 import { openRolesEditor } from "../src/roles_editor/main.js";
 import { openBrowseDialog } from "../src/browse_dialog/main.js";
 import { mountScriptLibraryPanel } from "../src/script_library/main.js";
+import { openLineEditor } from "../src/line_editor/main.js";
 
 // Any string works -- the mock backend matches requests by filename
 // suffix (_roles.json, _instructions.json, ...), not the literal path.
@@ -52,5 +53,24 @@ const scriptLibraryPanel = mountScriptLibraryPanel({
 });
 scriptLibraryPanel.element.style.cssText = "width:100%;height:100%;";
 document.getElementById("script-library-host").appendChild(scriptLibraryPanel.element);
+
+let devLineChecked = false;
+document.getElementById("open-line-editor").addEventListener("click", () => {
+    openLineEditor({
+        folder: `${FAKE_PROJECT_ROOT}\\Act01`,
+        filename: "Test_speakers.txt",
+        suffix: "_speakers.txt",
+        checkedApi: {
+            isChecked: () => devLineChecked,
+            setChecked: (fname, val) => { devLineChecked = val; console.log("[dev-ui] setChecked", fname, val); },
+        },
+        revoiceApi: {
+            revoiceLine: (opts) => {
+                console.log("[dev-ui] revoiceLine called with:", opts);
+                return new Promise((resolve) => setTimeout(resolve, 600));
+            },
+        },
+    });
+});
 
 open(); // open immediately on load too, for a one-click `npm run dev:ui`

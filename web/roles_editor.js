@@ -1,6 +1,8 @@
-import { B as se, s as re, o as f, c as b, m as d, v as C, j as P, f as z, x as ue, y as ze, z as ye, D as y, A as W, F as G, k as ne, g as q, R as Fe, O as T, C as Pe, E as Te, Z as oe, U as de, G as Ee, i as J, t as A, b as R, H as le, n as te, d as N, T as Me, I as xe, J as Be, _ as De, l as Ae, w as Ke, a as He, K as Re, u as U, S as je, L as ce, M as Ne, r as ie, N as $e, p as Ue, q as Ge, P as We } from "./styles_link.js";
-import { b as qe, c as Ze, d as Je, s as he, a as Qe } from "./message.esm.js";
-var Ye = {
+import { B as se, C as re, d as f, j as b, z as d, y as C, i as P, e as z, X as ue, Y as ye, D as y, v as W, F as G, k as ne, f as q, R as ze, $ as T, a0 as Fe, E as Pe, Z as oe, U as de, G as Te, h as J, t as A, c as R, A as le, n as te, a as N, T as Ee, x as Me, H as xe, _ as Be, l as De, w as Ae, o as Ke, J as He, u as U, L as Re, M as ce, I as je, r as ie, W as Ne, m as $e, p as Ue, P as Ge } from "./styles_link.js";
+import { a as We, b as qe, s as Ze } from "./dialog.esm.js";
+import { a as Je, s as he } from "./message.esm.js";
+import { O as Ye } from "./overlayeventbus.esm.js";
+var Qe = {
   root: "p-card p-component",
   header: "p-card-header",
   body: "p-card-body",
@@ -11,7 +13,7 @@ var Ye = {
   footer: "p-card-footer"
 }, Xe = se.extend({
   name: "card",
-  classes: Ye
+  classes: Qe
 }), _e = {
   name: "BaseCard",
   extends: re,
@@ -101,7 +103,7 @@ function ut(t, e, i, s, r, n) {
   }, t.pti()), at, 16);
 }
 Se.render = ut;
-var dt = ze(), ct = `
+var dt = `
 @layer primevue {
     .p-virtualscroller {
         position: relative;
@@ -166,8 +168,8 @@ var dt = ze(), ct = `
 }
 `, pe = se.extend({
   name: "virtualscroller",
-  css: ct
-}), ht = {
+  css: dt
+}), ct = {
   name: "BaseVirtualScroller",
   extends: re,
   props: {
@@ -265,13 +267,13 @@ var dt = ze(), ct = `
     });
   }
 };
-function Q(t) {
+function Y(t) {
   "@babel/helpers - typeof";
-  return Q = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
+  return Y = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
     return typeof e;
   } : function(e) {
     return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-  }, Q(t);
+  }, Y(t);
 }
 function fe(t, e) {
   var i = Object.keys(t);
@@ -295,25 +297,25 @@ function Z(t) {
   return t;
 }
 function we(t, e, i) {
-  return e = pt(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
+  return e = ht(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
 }
-function pt(t) {
-  var e = ft(t, "string");
-  return Q(e) == "symbol" ? e : String(e);
+function ht(t) {
+  var e = pt(t, "string");
+  return Y(e) == "symbol" ? e : String(e);
 }
-function ft(t, e) {
-  if (Q(t) != "object" || !t) return t;
+function pt(t, e) {
+  if (Y(t) != "object" || !t) return t;
   var i = t[Symbol.toPrimitive];
   if (i !== void 0) {
     var s = i.call(t, e);
-    if (Q(s) != "object") return s;
+    if (Y(s) != "object") return s;
     throw new TypeError("@@toPrimitive must return a primitive value.");
   }
   return (e === "string" ? String : Number)(t);
 }
 var Ce = {
   name: "VirtualScroller",
-  extends: ht,
+  extends: ct,
   inheritAttrs: !1,
   emits: ["update:numToleratedItems", "scroll", "scroll-index-change", "lazy-load"],
   data: function() {
@@ -794,8 +796,8 @@ var Ce = {
   components: {
     SpinnerIcon: ye
   }
-}, mt = ["tabindex"];
-function vt(t, e, i, s, r, n) {
+}, ft = ["tabindex"];
+function mt(t, e, i, s, r, n) {
   var o = W("SpinnerIcon");
   return t.disabled ? (f(), b(G, {
     key: 1
@@ -860,10 +862,10 @@ function vt(t, e, i, s, r, n) {
       spin: "",
       class: "p-virtualscroller-loading-icon"
     }, t.ptm("loadingIcon")), null, 16)];
-  })], 16)) : P("", !0)], 16, mt));
+  })], 16)) : P("", !0)], 16, ft));
 }
-Ce.render = vt;
-var gt = {
+Ce.render = mt;
+var vt = {
   root: function(e) {
     var i = e.instance, s = e.props, r = e.state;
     return ["p-dropdown p-component p-inputwrapper", {
@@ -920,10 +922,10 @@ var gt = {
   checkIcon: "p-dropdown-check-icon",
   blankIcon: "p-dropdown-blank-icon",
   emptyMessage: "p-dropdown-empty-message"
-}, yt = se.extend({
+}, gt = se.extend({
   name: "dropdown",
-  classes: gt
-}), bt = {
+  classes: vt
+}), yt = {
   name: "BaseDropdown",
   extends: re,
   props: {
@@ -1100,29 +1102,29 @@ var gt = {
       default: null
     }
   },
-  style: yt,
+  style: gt,
   provide: function() {
     return {
       $parentInstance: this
     };
   }
 };
-function Y(t) {
+function Q(t) {
   "@babel/helpers - typeof";
-  return Y = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
+  return Q = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
     return typeof e;
   } : function(e) {
     return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-  }, Y(t);
+  }, Q(t);
 }
-function Ot(t) {
-  return Ct(t) || wt(t) || St(t) || It();
+function bt(t) {
+  return wt(t) || St(t) || It(t) || Ot();
 }
-function It() {
+function Ot() {
   throw new TypeError(`Invalid attempt to spread non-iterable instance.
 In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
 }
-function St(t, e) {
+function It(t, e) {
   if (t) {
     if (typeof t == "string") return ae(t, e);
     var i = Object.prototype.toString.call(t).slice(8, -1);
@@ -1130,10 +1132,10 @@ function St(t, e) {
     if (i === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(i)) return ae(t, e);
   }
 }
-function wt(t) {
+function St(t) {
   if (typeof Symbol < "u" && t[Symbol.iterator] != null || t["@@iterator"] != null) return Array.from(t);
 }
-function Ct(t) {
+function wt(t) {
   if (Array.isArray(t)) return ae(t);
 }
 function ae(t, e) {
@@ -1163,25 +1165,25 @@ function ve(t) {
   return t;
 }
 function Le(t, e, i) {
-  return e = Lt(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
+  return e = Ct(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
 }
-function Lt(t) {
-  var e = kt(t, "string");
-  return Y(e) == "symbol" ? e : String(e);
+function Ct(t) {
+  var e = Lt(t, "string");
+  return Q(e) == "symbol" ? e : String(e);
 }
-function kt(t, e) {
-  if (Y(t) != "object" || !t) return t;
+function Lt(t, e) {
+  if (Q(t) != "object" || !t) return t;
   var i = t[Symbol.toPrimitive];
   if (i !== void 0) {
     var s = i.call(t, e);
-    if (Y(s) != "object") return s;
+    if (Q(s) != "object") return s;
     throw new TypeError("@@toPrimitive must return a primitive value.");
   }
   return (e === "string" ? String : Number)(t);
 }
 var ke = {
   name: "Dropdown",
-  extends: bt,
+  extends: yt,
   inheritAttrs: !1,
   emits: ["update:modelValue", "change", "focus", "blur", "before-show", "before-hide", "show", "hide", "filter"],
   outsideClickListener: null,
@@ -1408,7 +1410,7 @@ var ke = {
       this.overlayVisible && this.alignOverlay();
     },
     onOverlayClick: function(e) {
-      dt.emit("overlay-click", {
+      Ye.emit("overlay-click", {
         originalEvent: e,
         target: this.$el
       });
@@ -1519,7 +1521,7 @@ var ke = {
     },
     bindScrollListener: function() {
       var e = this;
-      this.scrollHandler || (this.scrollHandler = new Te(this.$refs.container, function() {
+      this.scrollHandler || (this.scrollHandler = new Pe(this.$refs.container, function() {
         e.overlayVisible && e.hide();
       })), this.scrollHandler.bindScrollListener();
     },
@@ -1667,14 +1669,14 @@ var ke = {
     visibleOptions: function() {
       var e = this, i = this.optionGroupLabel ? this.flatOptions(this.options) : this.options || [];
       if (this.filterValue) {
-        var s = Pe.filter(i, this.searchFields, this.filterValue, this.filterMatchMode, this.filterLocale);
+        var s = Fe.filter(i, this.searchFields, this.filterValue, this.filterMatchMode, this.filterLocale);
         if (this.optionGroupLabel) {
           var r = this.options || [], n = [];
           return r.forEach(function(o) {
             var a = e.getOptionGroupChildren(o), c = a.filter(function(u) {
               return s.includes(u);
             });
-            c.length > 0 && n.push(ve(ve({}, o), {}, Le({}, typeof e.optionGroupChildren == "string" ? e.optionGroupChildren : "items", Ot(c))));
+            c.length > 0 && n.push(ve(ve({}, o), {}, Le({}, typeof e.optionGroupChildren == "string" ? e.optionGroupChildren : "items", bt(c))));
           }), this.flatOptions(n);
         }
         return s;
@@ -1736,16 +1738,16 @@ var ke = {
     }
   },
   directives: {
-    ripple: Fe
+    ripple: ze
   },
   components: {
     VirtualScroller: Ce,
-    Portal: Je,
-    TimesIcon: Ze,
+    Portal: qe,
+    TimesIcon: We,
     ChevronDownIcon: Ie,
     SpinnerIcon: ye,
     SearchIcon: Se,
-    CheckIcon: qe,
+    CheckIcon: Je,
     BlankIcon: Oe
   }
 };
@@ -1771,21 +1773,21 @@ function H(t) {
   for (var e = 1; e < arguments.length; e++) {
     var i = arguments[e] != null ? arguments[e] : {};
     e % 2 ? ge(Object(i), !0).forEach(function(s) {
-      Vt(t, s, i[s]);
+      kt(t, s, i[s]);
     }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(t, Object.getOwnPropertyDescriptors(i)) : ge(Object(i)).forEach(function(s) {
       Object.defineProperty(t, s, Object.getOwnPropertyDescriptor(i, s));
     });
   }
   return t;
 }
-function Vt(t, e, i) {
-  return e = zt(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
+function kt(t, e, i) {
+  return e = Vt(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
 }
-function zt(t) {
-  var e = Ft(t, "string");
+function Vt(t) {
+  var e = zt(t, "string");
   return X(e) == "symbol" ? e : String(e);
 }
-function Ft(t, e) {
+function zt(t, e) {
   if (X(t) != "object" || !t) return t;
   var i = t[Symbol.toPrimitive];
   if (i !== void 0) {
@@ -1795,9 +1797,9 @@ function Ft(t, e) {
   }
   return (e === "string" ? String : Number)(t);
 }
-var Pt = ["id"], Tt = ["id", "value", "placeholder", "tabindex", "disabled", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-invalid"], Et = ["id", "tabindex", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-disabled"], Mt = ["value", "placeholder", "aria-owns", "aria-activedescendant"], xt = ["id", "aria-label"], Bt = ["id"], Dt = ["id", "aria-label", "aria-selected", "aria-disabled", "aria-setsize", "aria-posinset", "onClick", "onMousemove", "data-p-highlight", "data-p-focused", "data-p-disabled"];
-function At(t, e, i, s, r, n) {
-  var o = W("SpinnerIcon"), a = W("CheckIcon"), c = W("BlankIcon"), u = W("VirtualScroller"), l = W("Portal"), v = Ee("ripple");
+var Ft = ["id"], Pt = ["id", "value", "placeholder", "tabindex", "disabled", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-invalid"], Tt = ["id", "tabindex", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-disabled"], Et = ["value", "placeholder", "aria-owns", "aria-activedescendant"], Mt = ["id", "aria-label"], xt = ["id"], Bt = ["id", "aria-label", "aria-selected", "aria-disabled", "aria-setsize", "aria-posinset", "onClick", "onMousemove", "data-p-highlight", "data-p-focused", "data-p-disabled"];
+function Dt(t, e, i, s, r, n) {
+  var o = W("SpinnerIcon"), a = W("CheckIcon"), c = W("BlankIcon"), u = W("VirtualScroller"), l = W("Portal"), v = Te("ripple");
   return f(), b("div", d({
     ref: "container",
     id: r.id,
@@ -1837,7 +1839,7 @@ function At(t, e, i, s, r, n) {
     onInput: e[3] || (e[3] = function() {
       return n.onEditableInput && n.onEditableInput.apply(n, arguments);
     })
-  }, H(H({}, t.inputProps), t.ptm("input"))), null, 16, Tt)) : (f(), b("span", d({
+  }, H(H({}, t.inputProps), t.ptm("input"))), null, 16, Pt)) : (f(), b("span", d({
     key: 1,
     ref: "focusInput",
     id: t.inputId,
@@ -1866,7 +1868,7 @@ function At(t, e, i, s, r, n) {
     placeholder: t.placeholder
   }, function() {
     return [J(A(n.label === "p-emptylabel" ? " " : n.label || "empty"), 1)];
-  })], 16, Et)), t.showClear && t.modelValue != null ? C(t.$slots, "clearicon", {
+  })], 16, Tt)), t.showClear && t.modelValue != null ? C(t.$slots, "clearicon", {
     key: 2,
     class: te(t.cx("clearIcon")),
     onClick: n.onClearClick,
@@ -1907,7 +1909,7 @@ function At(t, e, i, s, r, n) {
     appendTo: t.appendTo
   }, {
     default: N(function() {
-      return [q(Me, d({
+      return [q(Ee, d({
         name: "p-connected-overlay",
         onEnter: n.onOverlayEnter,
         onAfterEnter: n.onOverlayAfterEnter,
@@ -1971,7 +1973,7 @@ function At(t, e, i, s, r, n) {
             onInput: e[12] || (e[12] = function() {
               return n.onFilterChange && n.onFilterChange.apply(n, arguments);
             })
-          }, H(H({}, t.filterInputProps), t.ptm("filterInput"))), null, 16, Mt), C(t.$slots, "filtericon", {
+          }, H(H({}, t.filterInputProps), t.ptm("filterInput"))), null, 16, Et), C(t.$slots, "filtericon", {
             class: te(t.cx("filterIcon"))
           }, function() {
             return [(f(), R(le(t.filterIcon ? "span" : "SearchIcon"), d({
@@ -1998,7 +2000,7 @@ function At(t, e, i, s, r, n) {
             tabindex: -1,
             disabled: n.virtualScrollerDisabled,
             pt: t.ptm("virtualScroller")
-          }), xe({
+          }), Me({
             content: N(function(m) {
               var k = m.styleClass, V = m.contentRef, L = m.items, S = m.getItemOptions, E = m.contentStyle, F = m.itemSize;
               return [z("ul", d({
@@ -2028,7 +2030,7 @@ function At(t, e, i, s, r, n) {
                   return [z("span", d({
                     class: t.cx("itemGroupLabel")
                   }, t.ptm("itemGroupLabel")), A(n.getOptionGroupLabel(O.optionGroup)), 17)];
-                })], 16, Bt)) : Be((f(), b("li", d({
+                })], 16, xt)) : xe((f(), b("li", d({
                   key: 1,
                   id: r.id + "_" + n.getOptionIndex(g, S),
                   class: t.cx("item", {
@@ -2068,7 +2070,7 @@ function At(t, e, i, s, r, n) {
                   return [z("span", d({
                     class: t.cx("itemLabel")
                   }, t.ptm("itemLabel")), A(n.getOptionLabel(O)), 17)];
-                })], 16, Dt)), [[v]])], 64);
+                })], 16, Bt)), [[v]])], 64);
               }), 128)), r.filterValue && (!L || L && L.length === 0) ? (f(), b("li", d({
                 key: 0,
                 class: t.cx("emptyMessage"),
@@ -2085,7 +2087,7 @@ function At(t, e, i, s, r, n) {
                 "data-p-hidden-accessible": !0
               }), [C(t.$slots, "empty", {}, function() {
                 return [J(A(n.emptyMessageText), 1)];
-              })], 16)) : P("", !0)], 16, xt)];
+              })], 16)) : P("", !0)], 16, Mt)];
             }),
             _: 2
           }, [t.$slots.loader ? {
@@ -2131,10 +2133,10 @@ function At(t, e, i, s, r, n) {
       }, 16, ["onEnter", "onAfterEnter", "onLeave", "onAfterLeave"])];
     }),
     _: 3
-  }, 8, ["appendTo"])], 16, Pt);
+  }, 8, ["appendTo"])], 16, Ft);
 }
-ke.render = At;
-var Kt = {
+ke.render = Dt;
+var At = {
   root: function(e) {
     var i = e.instance, s = e.props;
     return ["p-inputtextarea p-inputtext p-component", {
@@ -2144,10 +2146,10 @@ var Kt = {
       "p-variant-filled": s.variant ? s.variant === "filled" : i.$primevue.config.inputStyle === "filled"
     }];
   }
-}, Ht = se.extend({
+}, Kt = se.extend({
   name: "textarea",
-  classes: Kt
-}), Rt = {
+  classes: At
+}), Ht = {
   name: "BaseTextarea",
   extends: re,
   props: {
@@ -2162,7 +2164,7 @@ var Kt = {
       default: null
     }
   },
-  style: Ht,
+  style: Kt,
   provide: function() {
     return {
       $parentInstance: this
@@ -2170,7 +2172,7 @@ var Kt = {
   }
 }, Ve = {
   name: "Textarea",
-  extends: Rt,
+  extends: Ht,
   inheritAttrs: !1,
   emits: ["update:modelValue"],
   mounted: function() {
@@ -2199,8 +2201,8 @@ var Kt = {
       };
     }
   }
-}, jt = ["value", "aria-invalid"];
-function Nt(t, e, i, s, r, n) {
+}, Rt = ["value", "aria-invalid"];
+function jt(t, e, i, s, r, n) {
   return f(), b("textarea", d({
     class: t.cx("root"),
     value: t.modelValue,
@@ -2208,13 +2210,13 @@ function Nt(t, e, i, s, r, n) {
     onInput: e[0] || (e[0] = function() {
       return n.onInput && n.onInput.apply(n, arguments);
     })
-  }, t.ptmi("root", n.ptmParams)), null, 16, jt);
+  }, t.ptmi("root", n.ptmParams)), null, 16, Rt);
 }
-Ve.render = Nt;
-const $t = { class: "roles-list" }, Ut = {
+Ve.render = jt;
+const Nt = { class: "roles-list" }, $t = {
   class: "role-code",
   title: "Role code (read-only here -- renaming would orphan script lines that already use it)"
-}, Gt = { class: "role-name" }, Wt = 600, qt = 3e3, Zt = 1500, Jt = {
+}, Ut = { class: "role-name" }, Gt = 600, Wt = 3e3, qt = 1500, Zt = {
   __name: "RolesEditorApp",
   props: {
     root: { type: String, required: !0 },
@@ -2222,7 +2224,7 @@ const $t = { class: "roles-list" }, Ut = {
     onClose: { type: Function, required: !0 }
   },
   setup(t) {
-    const e = t, i = Ae(e.root, "_roles.json"), s = ie(!0), r = ie([]), n = ie([]), o = ie("");
+    const e = t, i = De(e.root, "_roles.json"), s = ie(!0), r = ie([]), n = ie([]), o = ie("");
     let a = null, c = 0, u = null, l = null;
     const v = /* @__PURE__ */ new Map();
     function m(p) {
@@ -2264,17 +2266,17 @@ const $t = { class: "roles-list" }, Ut = {
         }
     }
     function O() {
-      c = Date.now(), u && clearTimeout(u), u = setTimeout(F, Wt);
+      c = Date.now(), u && clearTimeout(u), u = setTimeout(F, Gt);
     }
     function g(p) {
-      !p.code || v.get(p.code) === p.speaker || (v.set(p.code, p.speaker), $e(e.root, p.code, e.suffix).then((h) => m(h.message)));
+      !p.code || v.get(p.code) === p.speaker || (v.set(p.code, p.speaker), Ne(e.root, p.code, e.suffix).then((h) => m(h.message)));
     }
     function K(p) {
       O(), g(p);
     }
     async function M() {
       try {
-        const I = await (await fetch(je)).json();
+        const I = await (await fetch(Re)).json();
         n.value = I.presets || [];
       } catch {
         n.value = [];
@@ -2291,7 +2293,7 @@ const $t = { class: "roles-list" }, Ut = {
           p || (r.value = [], a = "", m("_roles.json does not exist yet"));
           return;
         }
-        if (p && Date.now() - c < Zt || h.content === a) return;
+        if (p && Date.now() - c < qt || h.content === a) return;
         let w;
         try {
           w = JSON.parse(h.content);
@@ -2301,7 +2303,7 @@ const $t = { class: "roles-list" }, Ut = {
         }
         r.value = Array.isArray(w.roles) ? w.roles : [], r.value.forEach((D) => {
           D.code && v.set(D.code, D.speaker);
-        }), a = h.content, p || m(`Loaded ${r.value.length} role(s)`), Ne(() => {
+        }), a = h.content, p || m(`Loaded ${r.value.length} role(s)`), je(() => {
           S(), requestAnimationFrame(S);
         });
       } catch (I) {
@@ -2311,13 +2313,13 @@ const $t = { class: "roles-list" }, Ut = {
     function x() {
       u && (clearTimeout(u), F()), r.value.forEach((p) => g(p)), l && clearInterval(l), e.onClose();
     }
-    return Ke(s, (p) => {
+    return Ae(s, (p) => {
       p || x();
-    }), He(async () => {
-      M(), await B(), l = setInterval(() => B({ isPoll: !0 }), qt);
-    }), Re(() => {
+    }), Ke(async () => {
+      M(), await B(), l = setInterval(() => B({ isPoll: !0 }), Wt);
+    }), He(() => {
       l && clearInterval(l);
-    }), (p, I) => (f(), R(U(Qe), {
+    }), (p, I) => (f(), R(U(Ze), {
       visible: s.value,
       "onUpdate:visible": I[1] || (I[1] = (h) => s.value = h),
       modal: "",
@@ -2347,14 +2349,14 @@ const $t = { class: "roles-list" }, Ut = {
           ])]),
           _: 1
         })),
-        z("div", $t, [
+        z("div", Nt, [
           (f(!0), b(G, null, ne(r.value, (h) => (f(), R(U(be), {
             key: h.code,
             class: "role-card"
           }, {
             title: N(() => [
-              z("span", Ut, A(h.code), 1),
-              z("span", Gt, A(h.name), 1)
+              z("span", $t, A(h.code), 1),
+              z("span", Ut, A(h.name), 1)
             ]),
             content: N(() => [
               q(U(ke), {
@@ -2390,20 +2392,20 @@ const $t = { class: "roles-list" }, Ut = {
       _: 1
     }, 8, ["visible"]));
   }
-}, Qt = /* @__PURE__ */ De(Jt, [["__scopeId", "data-v-2048209e"]]);
-function _t({ root: t, suffix: e = "_speakers.txt" }) {
-  Ue(import.meta.url);
+}, Jt = /* @__PURE__ */ Be(Zt, [["__scopeId", "data-v-2048209e"]]);
+function ei({ root: t, suffix: e = "_speakers.txt" }) {
+  $e(import.meta.url);
   const i = document.createElement("div");
   document.body.appendChild(i);
-  const s = Ge(Qt, {
+  const s = Ue(Jt, {
     root: t,
     suffix: e,
     onClose: () => {
       s.unmount(), i.remove();
     }
   });
-  s.use(We, { ripple: !0 }), s.mount(i);
+  s.use(Ge, { ripple: !0 }), s.mount(i);
 }
 export {
-  _t as openRolesEditor
+  ei as openRolesEditor
 };

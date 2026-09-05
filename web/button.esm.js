@@ -1,5 +1,5 @@
-import { B as y, O as u, o as l, c as p, v as d, i as P, t as v, m as i, s as m, A as c, G as z, J as k, n as b, b as g, j as f, f as C, R as w, z as A } from "./styles_link.js";
-var N = {
+import { B as y, $ as u, d as l, j as p, y as d, h as P, t as v, z as i, C as m, v as c, G as z, H as C, n as b, c as g, i as f, e as k, R as w, Y as N } from "./styles_link.js";
+var A = {
   root: function(n) {
     var t = n.props, a = n.instance;
     return ["p-badge p-component", {
@@ -17,7 +17,7 @@ var N = {
   }
 }, O = y.extend({
   name: "badge",
-  classes: N
+  classes: A
 }), T = {
   name: "BaseBadge",
   extends: m,
@@ -41,19 +41,19 @@ var N = {
       $parentInstance: this
     };
   }
-}, S = {
+}, h = {
   name: "Badge",
   extends: T,
   inheritAttrs: !1
 };
-function E(e, n, t, a, h, r) {
+function E(e, n, t, a, S, r) {
   return l(), p("span", i({
     class: e.cx("root")
   }, e.ptmi("root")), [d(e.$slots, "default", {}, function() {
     return [P(v(e.value), 1)];
   })], 16);
 }
-S.render = E;
+h.render = E;
 function s(e) {
   "@babel/helpers - typeof";
   return s = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(n) {
@@ -210,16 +210,16 @@ var V = {
     }
   },
   components: {
-    SpinnerIcon: A,
-    Badge: S
+    SpinnerIcon: N,
+    Badge: h
   },
   directives: {
     ripple: w
   }
-}, J = ["aria-label", "disabled", "data-p-severity"];
-function K(e, n, t, a, h, r) {
+}, H = ["aria-label", "disabled", "data-p-severity"];
+function K(e, n, t, a, S, r) {
   var $ = c("SpinnerIcon"), B = c("Badge"), I = z("ripple");
-  return k((l(), p("button", i({
+  return C((l(), p("button", i({
     class: e.cx("root"),
     type: "button",
     "aria-label": r.defaultAriaLabel,
@@ -247,7 +247,7 @@ function K(e, n, t, a, h, r) {
         key: 0,
         class: [e.cx("icon"), e.icon, e.iconClass]
       }, e.ptm("icon")), null, 16)) : f("", !0)];
-    }), C("span", i({
+    }), k("span", i({
       class: e.cx("label")
     }, e.ptm("label")), v(e.label || " "), 17), e.badge ? (l(), g(B, i({
       key: 2,
@@ -256,7 +256,7 @@ function K(e, n, t, a, h, r) {
       severity: e.badgeSeverity,
       unstyled: e.unstyled
     }, e.ptm("badge")), null, 16, ["value", "class", "severity", "unstyled"])) : f("", !0)];
-  })], 16, J)), [[I]]);
+  })], 16, H)), [[I]]);
 }
 G.render = K;
 export {

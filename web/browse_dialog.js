@@ -1,87 +1,15 @@
-import { B as j, s as z, o as u, c as m, m as N, _ as q, w as O, a as R, b as $, d as x, u as f, e as w, r as p, f as k, g as y, h as K, i as M, t as _, j as I, F as V, k as G, n as H, l as P, p as J, q as Q, P as W } from "./styles_link.js";
-import { s as X, a as Y } from "./message.esm.js";
-import { s as C } from "./button.esm.js";
-var Z = {
-  root: function(e) {
-    var i = e.instance, n = e.props;
-    return ["p-inputtext p-component", {
-      "p-filled": i.filled,
-      "p-inputtext-sm": n.size === "small",
-      "p-inputtext-lg": n.size === "large",
-      "p-invalid": n.invalid,
-      "p-variant-filled": n.variant ? n.variant === "filled" : i.$primevue.config.inputStyle === "filled"
-    }];
-  }
-}, ee = j.extend({
-  name: "inputtext",
-  classes: Z
-}), te = {
-  name: "BaseInputText",
-  extends: z,
-  props: {
-    modelValue: null,
-    size: {
-      type: String,
-      default: null
-    },
-    invalid: {
-      type: Boolean,
-      default: !1
-    },
-    variant: {
-      type: String,
-      default: null
-    }
-  },
-  style: ee,
-  provide: function() {
-    return {
-      $parentInstance: this
-    };
-  }
-}, B = {
-  name: "InputText",
-  extends: te,
-  inheritAttrs: !1,
-  emits: ["update:modelValue"],
-  methods: {
-    getPTOptions: function(e) {
-      var i = e === "root" ? this.ptmi : this.ptm;
-      return i(e, {
-        context: {
-          filled: this.filled,
-          disabled: this.$attrs.disabled || this.$attrs.disabled === ""
-        }
-      });
-    },
-    onInput: function(e) {
-      this.$emit("update:modelValue", e.target.value);
-    }
-  },
-  computed: {
-    filled: function() {
-      return this.modelValue != null && this.modelValue.toString().length > 0;
-    }
-  }
-}, le = ["value", "aria-invalid"];
-function ae(s, e, i, n, r, l) {
-  return u(), m("input", N({
-    class: s.cx("root"),
-    value: s.modelValue,
-    "aria-invalid": s.invalid || void 0,
-    onInput: e[0] || (e[0] = function() {
-      return l.onInput && l.onInput.apply(l, arguments);
-    })
-  }, l.getPTOptions("root")), null, 16, le);
-}
-B.render = ae;
-const ne = { class: "browse-toolbar" }, oe = { class: "browse-list" }, se = {
+import { _ as A, w as N, o as T, c as S, a as C, u as d, b as h, r, d as i, e as P, f as w, g as R, h as q, t as k, i as $, j as m, F as V, k as K, n as z, l as B, m as M, p as G, P as H } from "./styles_link.js";
+import { s as J } from "./dialog.esm.js";
+import { s as g } from "./button.esm.js";
+import { s as O } from "./inputtext.esm.js";
+import { s as Q } from "./message.esm.js";
+const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
   key: 0,
   class: "browse-row browse-row-note"
-}, ie = ["onClick"], re = {
+}, Z = ["onClick"], ee = {
   key: 0,
   class: "browse-row browse-row-note"
-}, ue = "/fl_cosyvoice3/browse/list_dir", pe = {
+}, te = "/fl_cosyvoice3/browse/list_dir", oe = {
   __name: "BrowseDialogApp",
   props: {
     mode: { type: String, default: "folder" },
@@ -91,127 +19,127 @@ const ne = { class: "browse-toolbar" }, oe = { class: "browse-list" }, se = {
     onSelect: { type: Function, required: !0 },
     onClose: { type: Function, required: !0 }
   },
-  setup(s) {
-    const e = s, i = p(!0), n = p(""), r = p(""), l = p(null), h = p(null), b = p(!1), d = p(null), T = w(() => e.mode === "folder" ? "Choose a folder" : "Choose a file"), E = w(() => e.mode === "folder" ? "Select This Folder" : "Select File"), F = w(
-      () => e.mode === "folder" ? !n.value : !h.value
+  setup(b) {
+    const a = b, v = r(!0), s = r(""), n = r(""), o = r(null), f = r(null), y = r(!1), u = r(null), E = h(() => a.mode === "folder" ? "Choose a folder" : "Choose a file"), F = h(() => a.mode === "folder" ? "Select This Folder" : "Select File"), D = h(
+      () => a.mode === "folder" ? !s.value : !f.value
     );
-    function D() {
-      l.value && l.value.parent ? c(l.value.parent) : (l.value && l.value.parent === "" || n.value) && c("");
+    function I() {
+      o.value && o.value.parent ? c(o.value.parent) : (o.value && o.value.parent === "" || s.value) && c("");
     }
-    const S = w(() => {
-      const a = l.value;
-      if (!a) return [];
-      const o = [];
-      return (a.drives || []).forEach((t) => o.push({ type: "drive", name: t, icon: "💽", path: t })), (a.dirs || []).forEach((t) => o.push({ type: "dir", name: t, icon: "📁", path: P(n.value, t) })), e.mode === "file" && (a.files || []).forEach((t) => o.push({ type: "file", name: t, icon: "📄", path: P(n.value, t) })), o;
+    const x = h(() => {
+      const t = o.value;
+      if (!t) return [];
+      const l = [];
+      return (t.drives || []).forEach((e) => l.push({ type: "drive", name: e, icon: "💽", path: e })), (t.dirs || []).forEach((e) => l.push({ type: "dir", name: e, icon: "📁", path: B(s.value, e) })), a.mode === "file" && (t.files || []).forEach((e) => l.push({ type: "file", name: e, icon: "📄", path: B(s.value, e) })), l;
     });
-    function U(a) {
-      a.type === "file" ? h.value = a.path : c(a.path);
+    function U(t) {
+      t.type === "file" ? f.value = t.path : c(t.path);
     }
-    async function c(a) {
-      b.value = !0, d.value = null, h.value = null;
+    async function c(t) {
+      y.value = !0, u.value = null, f.value = null;
       try {
-        const o = `${ue}?path=${encodeURIComponent(a)}${e.ext ? `&ext=${encodeURIComponent(e.ext)}` : ""}`, v = await (await fetch(o)).json();
-        if (v.error) {
-          d.value = v.error, l.value = null;
+        const l = `${te}?path=${encodeURIComponent(t)}${a.ext ? `&ext=${encodeURIComponent(a.ext)}` : ""}`, p = await (await fetch(l)).json();
+        if (p.error) {
+          u.value = p.error, o.value = null;
           return;
         }
-        n.value = v.path, r.value = v.path || "", l.value = v;
-      } catch (o) {
-        d.value = String(o), l.value = null;
+        s.value = p.path, n.value = p.path || "", o.value = p;
+      } catch (l) {
+        u.value = String(l), o.value = null;
       } finally {
-        b.value = !1;
+        y.value = !1;
       }
     }
-    function A() {
-      c(r.value.trim());
-    }
     function L() {
-      const a = e.mode === "folder" ? n.value : h.value;
-      a && (e.onSelect(a), g());
+      c(n.value.trim());
     }
-    function g() {
-      e.onClose();
+    function j() {
+      const t = a.mode === "folder" ? s.value : f.value;
+      t && (a.onSelect(t), _());
     }
-    return O(i, (a) => {
-      a || g();
-    }), R(() => c(e.startPath || "")), (a, o) => (u(), $(f(Y), {
-      visible: i.value,
-      "onUpdate:visible": o[1] || (o[1] = (t) => i.value = t),
+    function _() {
+      a.onClose();
+    }
+    return N(v, (t) => {
+      t || _();
+    }), T(() => c(a.startPath || "")), (t, l) => (i(), S(d(J), {
+      visible: v.value,
+      "onUpdate:visible": l[1] || (l[1] = (e) => v.value = e),
       modal: "",
       "dismissable-mask": "",
-      header: T.value,
+      header: E.value,
       style: { width: "min(560px, 90vw)" },
       "content-style": { display: "flex", flexDirection: "column" }
     }, {
-      footer: x(() => [
-        y(f(C), {
+      footer: C(() => [
+        w(d(g), {
           label: "Cancel",
           severity: "secondary",
           text: "",
-          onClick: g
+          onClick: _
         }),
-        y(f(C), {
-          label: E.value,
-          disabled: F.value,
-          onClick: L
+        w(d(g), {
+          label: F.value,
+          disabled: D.value,
+          onClick: j
         }, null, 8, ["label", "disabled"])
       ]),
-      default: x(() => [
-        k("div", ne, [
-          y(f(C), {
+      default: C(() => [
+        P("div", W, [
+          w(d(g), {
             icon: "pi pi-arrow-up",
             title: "Up one level",
             text: "",
-            onClick: D
+            onClick: I
           }),
-          y(f(B), {
-            modelValue: r.value,
-            "onUpdate:modelValue": o[0] || (o[0] = (t) => r.value = t),
+          w(d(O), {
+            modelValue: n.value,
+            "onUpdate:modelValue": l[0] || (l[0] = (e) => n.value = e),
             placeholder: "Path -- press Enter to jump here",
             class: "browse-path-input",
-            onKeydown: K(A, ["enter"])
+            onKeydown: R(L, ["enter"])
           }, null, 8, ["modelValue"])
         ]),
-        d.value ? (u(), $(f(X), {
+        u.value ? (i(), S(d(Q), {
           key: 0,
           severity: "error",
           closable: !1
         }, {
-          default: x(() => [
-            M(_(d.value), 1)
+          default: C(() => [
+            q(k(u.value), 1)
           ]),
           _: 1
-        })) : I("", !0),
-        k("div", oe, [
-          b.value ? (u(), m("div", se, "Loading...")) : (u(), m(V, { key: 1 }, [
-            (u(!0), m(V, null, G(S.value, (t) => (u(), m("div", {
-              key: `${t.type}:${t.name}`,
-              class: H(["browse-row", { "browse-row-selected": t.type === "file" && t.path === h.value }]),
-              onClick: (v) => U(t)
-            }, _(t.icon) + " " + _(t.name), 11, ie))), 128)),
-            !S.value.length && !d.value ? (u(), m("div", re, "(empty)")) : I("", !0)
+        })) : $("", !0),
+        P("div", X, [
+          y.value ? (i(), m("div", Y, "Loading...")) : (i(), m(V, { key: 1 }, [
+            (i(!0), m(V, null, K(x.value, (e) => (i(), m("div", {
+              key: `${e.type}:${e.name}`,
+              class: z(["browse-row", { "browse-row-selected": e.type === "file" && e.path === f.value }]),
+              onClick: (p) => U(e)
+            }, k(e.icon) + " " + k(e.name), 11, Z))), 128)),
+            !x.value.length && !u.value ? (i(), m("div", ee, "(empty)")) : $("", !0)
           ], 64))
         ])
       ]),
       _: 1
     }, 8, ["visible", "header"]));
   }
-}, de = /* @__PURE__ */ q(pe, [["__scopeId", "data-v-1d95d509"]]);
-function me({ mode: s = "folder", startPath: e = "", ext: i = "", onSelect: n }) {
-  J(import.meta.url);
-  const r = document.createElement("div");
-  document.body.appendChild(r);
-  const l = Q(de, {
-    mode: s,
-    startPath: e,
-    ext: i,
-    onSelect: n,
+}, le = /* @__PURE__ */ A(oe, [["__scopeId", "data-v-1d95d509"]]);
+function ue({ mode: b = "folder", startPath: a = "", ext: v = "", onSelect: s }) {
+  M(import.meta.url);
+  const n = document.createElement("div");
+  document.body.appendChild(n);
+  const o = G(le, {
+    mode: b,
+    startPath: a,
+    ext: v,
+    onSelect: s,
     onClose: () => {
-      l.unmount(), r.remove();
+      o.unmount(), n.remove();
     }
   });
-  l.use(W, { ripple: !0 }), l.mount(r);
+  o.use(H, { ripple: !0 }), o.mount(n);
 }
 export {
-  me as openBrowseDialog
+  ue as openBrowseDialog
 };

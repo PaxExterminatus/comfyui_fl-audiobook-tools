@@ -95,11 +95,17 @@ MyPlay/                          <- Script Library's folder_path
 
 ## Frontend development
 
-The line/roles editors are being migrated from hand-written vanilla JS to
-Vue 3 + PrimeVue 3 (`roles_editor.js` is the pilot so far), built with
-Vite in library mode straight into `web/`, replacing the hand-written file
-of the same name -- end users never need Node.js, only whoever's
-developing this addon.
+The editors are being migrated from hand-written vanilla JS to Vue 3 +
+PrimeVue 3, one at a time -- Roles Editor, Browse Dialog, and the Script
+Library node's tree panel are done so far (Line Editor is still vanilla
+JS). Each is built with Vite in library mode straight into `web/`,
+replacing the hand-written file of the same name -- end users never need
+Node.js, only whoever's developing this addon. Script Library's own
+`web/script_library.js` still holds a hand-written remainder: the
+`app.graphToPrompt`/`app.queuePrompt` queue-orchestration patch (running
+the checked scripts, per-line re-voice) isn't UI and stays untouched --
+only the tree/browse-button/tools-row rendering moved to
+`src/script_library/ScriptLibraryPanel.vue`.
 
 ```bash
 npm install
@@ -131,10 +137,9 @@ npm run test:watch
 ```
 
 `src/__tests__/` covers the pure helpers in `web/fl_common.js`;
-`src/roles_editor/__tests__/` mounts `RolesEditorApp.vue` with a mocked
-`fetch` and drives it through the DOM (edit a field, expect a save;
-change the speaker, expect the project-wide stale-scan; click the
-dialog's own close button, expect `onClose`).
+`src/roles_editor/__tests__/`, `src/browse_dialog/__tests__/`, and
+`src/script_library/__tests__/` each mount their component with a mocked
+`fetch` and drive it through the DOM.
 
 ## License
 

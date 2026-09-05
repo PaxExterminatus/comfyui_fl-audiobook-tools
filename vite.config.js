@@ -38,6 +38,7 @@ export default defineConfig(({ command }) => {
                 entry: {
                     roles_editor: "src/roles_editor/main.js",
                     browse_dialog: "src/browse_dialog/main.js",
+                    script_library_panel: "src/script_library/main.js",
                 },
                 formats: ["es"],
                 fileName: (_format, entryName) => `${entryName}.js`,

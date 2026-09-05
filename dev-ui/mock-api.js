@@ -119,6 +119,44 @@ export function mockComfyApiPlugin() {
                     });
                 }
 
+                if (url.pathname === "/fl_cosyvoice3/script_library/tree" && req.method === "GET") {
+                    return sendJson(res, 200, {
+                        tree: [
+                            {
+                                act: "Act01",
+                                scripts: ["Test_speakers.txt", "Second_speakers.txt"],
+                                audio_scripts: ["Test_speakers.txt"],
+                                ready_scripts: [],
+                                pending_scripts: ["Second_speakers.txt"],
+                                filter_applied: true,
+                            },
+                            {
+                                act: "Act02",
+                                scripts: ["Third_speakers.txt"],
+                                audio_scripts: [],
+                                ready_scripts: ["Third_speakers.txt"],
+                                pending_scripts: [],
+                                filter_applied: true,
+                            },
+                        ],
+                    });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/pending_revoice" && req.method === "GET") {
+                    return sendJson(res, 200, {
+                        scripts: [{
+                            act: "Act01", file: "Second_speakers.txt", folder: "C:\\fake\\project\\Act01", base_name: "Second",
+                            pending: [{ id: 1, speaker: "narrator", instruct: "calm", text: "A second, different test scene." }],
+                        }],
+                    });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/mark_line_voiced" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    console.log(`[mock-comfy-api] mark_line_voiced ${body.base_name} line ${body.line_id}`);
+                    return sendJson(res, 200, { found: true });
+                }
+
                 if (url.pathname === "/fl_cosyvoice3/browse/list_dir" && req.method === "GET") {
                     const norm = normalizeFakeDir(url.searchParams.get("path") || "");
                     const ext = (url.searchParams.get("ext") || "").toLowerCase();

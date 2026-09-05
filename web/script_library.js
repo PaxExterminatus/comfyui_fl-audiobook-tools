@@ -1,11 +1,10 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { openBrowseDialog } from "./browse_dialog.js";
 import { hideWidget } from "./ui_kit.js";
 import { openLineEditor } from "./line_editor.js";
+import { openBrowseDialog } from "./browse_dialog.js";
 import { openRolesEditor } from "./roles_editor.js";
-import { injectStyles } from "./styles.js";
-import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "./fl_common.js";
+import { mountScriptLibraryPanel } from "./script_library_panel.js";
 
 // FL CosyVoice3 Script Library: folder_path is a PROJECT ROOT. Shows every
 // "Act01"/"Act02"/... subfolder and its "_speakers.txt" scripts as a
@@ -36,40 +35,23 @@ import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "./fl_common.js";
 // prompt it's meant for. app.queuePrompt itself only decides how many
 // times to call the original and which override is active for each call.
 // Each script also has its own "Edit" button opening the full-screen
-// per-line editor from line_editor.js.
-const LAST_FOLDER_KEY = "FL_CosyVoice3.ScriptLibrary.lastFolder";
-const MIN_TREE_HEIGHT = 90;
-// How often to re-check which scripts already have rendered audio, while
-// this node is on the canvas -- so the 🔊 icon in the tree comes on by
-// itself once a render finishes, without the user having to touch anything.
-const TREE_POLL_MS = 3000;
-
-function rememberFolder(path) {
-    try {
-        if (path) localStorage.setItem(LAST_FOLDER_KEY, path);
-    } catch (e) {
-        /* localStorage unavailable (private mode, etc.) -- persistence just won't work this session */
-    }
-}
-
-function recallFolder() {
-    try {
-        return localStorage.getItem(LAST_FOLDER_KEY) || "";
-    } catch (e) {
-        return "";
-    }
-}
-
-const ACT_FILE_SEP = "::";
-function keyOf(act, file) {
-    return `${act}${ACT_FILE_SEP}${file}`;
-}
+// per-line editor from line_editor.js. The tree/browse-button/tools-row
+// rendering itself lives in src/script_library/ScriptLibraryPanel.vue
+// (built to script_library_panel.js) -- this file keeps only the ComfyUI
+// node-lifecycle wiring (hiding native widgets, mounting the panel, node
+// resize/cleanup) plus the queue-orchestration patch below, which is NOT
+// UI and stays untouched.
+// Combined min-height for the single merged DOM widget the panel mounts
+// into -- sum of what were 5 separately-pinned rows (browse button 32,
+// two tool rows 38 each, tree's own MIN_TREE_HEIGHT 90, status line 18).
+// No max: the tree (flex:1 inside the panel's own CSS) is what absorbs
+// any extra height the user drags the node to, same as before.
+const PANEL_MIN_HEIGHT = 32 + 38 + 38 + 90 + 18;
 
 app.registerExtension({
     name: "FL_CosyVoice3.ScriptLibrary",
     async nodeCreated(node) {
         if (node.comfyClass !== "FL_CosyVoice3_ScriptLibrary") return;
-        injectStyles();
 
         const folderWidget = node.widgets?.find((w) => w.name === "folder_path");
         const actWidget = node.widgets?.find((w) => w.name === "act");
@@ -86,531 +68,33 @@ app.registerExtension({
         if (filterWidget) hideWidget(node, filterWidget);
         if (lineOverrideWidget) hideWidget(node, lineOverrideWidget);
 
-        let treeData = []; // [{act, scripts: [...]}]
-        const checked = new Set(); // keyOf(act, file) -- which scripts Run should queue
-        const expanded = new Set(); // act names
-        let activeAct = actWidget.value || "";
         node._flCheckedItems = []; // read by the module-level app.queuePrompt hook below
 
-        // --- status line ---
-        const statusEl = document.createElement("div");
-        statusEl.className = "fl-status";
-        statusEl.style.cssText = "width:100%;box-sizing:border-box;padding:2px 2px;white-space:normal;flex:0 0 auto;";
-        function setStatus(text) {
-            statusEl.textContent = text;
-            node.setDirtyCanvas(true, true);
-        }
-
-        // Checked scripts in tree order (act, then script order within the
-        // act) -- this ordering is what the queuePrompt hook queues in.
-        function checkedItemsInOrder() {
-            const items = [];
-            treeData.forEach((a) => a.scripts.forEach((f) => {
-                if (checked.has(keyOf(a.act, f))) items.push({ act: a.act, file: f });
-            }));
-            return items;
-        }
-
-        // Persists which scripts are checked into node.properties, which
-        // ComfyUI serializes with the workflow -- so the selection survives
-        // a save + page reload, same as any other node property. Restored
-        // in syncFolderAndReload() below (called from both nodeCreated and
-        // onConfigure, for the same "configure() restores properties AFTER
-        // nodeCreated" reason the folder_path recall needs both).
-        function saveCheckedToProperties() {
-            node.properties = node.properties || {};
-            node.properties.checkedScripts = Array.from(checked);
-        }
-
-        function restoreCheckedFromProperties() {
-            const saved = node.properties?.checkedScripts;
-            if (!Array.isArray(saved)) return;
-            checked.clear();
-            saved.forEach((k) => { if (typeof k === "string") checked.add(k); });
-        }
-
-        function updateSelectionSummary() {
-            saveCheckedToProperties();
-            node._flCheckedItems = checkedItemsInOrder();
-            const totalScripts = treeData.reduce((n, a) => n + a.scripts.length, 0);
-            const filterNote = treeData.length && !treeData.every((a) => a.filter_applied !== false)
-                ? " (some acts have no \"" + (filterWidget?.value || "_speakers.txt") + "\" files -- showing all .txt there)"
-                : "";
-            setStatus(`${treeData.length} act(s), ${totalScripts} script(s)${filterNote} | ${checked.size} checked`);
-        }
-
-        // --- browse button ---
-        const browsePlaceholder = "📁 Click to browse for a project folder";
-        const browseButtonEl = document.createElement("div");
-        browseButtonEl.className = "fl-browse-btn";
-        browseButtonEl.style.flex = "0 0 auto";
-        browseButtonEl.textContent = browsePlaceholder;
-        function refreshBrowseLabel() {
-            browseButtonEl.textContent = folderWidget.value ? `📁 ${folderWidget.value}` : browsePlaceholder;
-            browseButtonEl.title = folderWidget.value || "";
-        }
-        browseButtonEl.addEventListener("click", () => {
-            openBrowseDialog({
-                mode: "folder",
-                startPath: folderWidget.value,
-                onSelect: (path) => {
-                    folderWidget.value = path;
-                    refreshBrowseLabel();
-                    loadTree();
-                },
-            });
+        const panel = mountScriptLibraryPanel({
+            node,
+            folderWidget,
+            actWidget,
+            filterWidget,
+            scriptFileWidget,
+            openBrowseDialog,
+            openRolesEditor,
+            openLineEditor,
+            // Assigned below, inside the patch guard -- already set by the
+            // time any node's nodeCreated can fire (module top-level code
+            // runs once on import, before ComfyUI calls nodeCreated).
+            queueLineRevoice,
         });
 
-        function actionButton(label, title, onClick) {
-            const btn = document.createElement("button");
-            btn.className = "fl-btn fl-btn-flex";
-            btn.style.cssText = "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-            btn.textContent = label;
-            btn.title = title;
-            btn.addEventListener("click", onClick);
-            return btn;
-        }
-
-        // --- project-scoped tools (not tied to the active act/script) ---
-        const toolsRow = document.createElement("div");
-        toolsRow.style.cssText = "display:flex;gap:5px;flex:0 0 auto;";
-        toolsRow.appendChild(actionButton("🎭 Roles", "Assign a real speaker preset to each role code (edits _roles.json)", () => {
-            if (!folderWidget.value) {
-                setStatus("Set a project folder first");
-                return;
-            }
-            openRolesEditor({ root: folderWidget.value, suffix: filterWidget?.value || "_speakers.txt" });
-        }));
-        // Project-wide "fix everything a role recast just invalidated" --
-        // scans every act's scripts for lines the line editor marked
-        // stale/unvoiced (see nodes/script_library.py's
-        // find_pending_revoice) and re-voices each one in place, forcing
-        // that line's own act/script_file per script the same way a
-        // single 🔁 click would from an open line editor -- just without
-        // needing one open for every affected script.
-        toolsRow.appendChild(actionButton("🔁 Re-voice pending", "Re-voice every line across the whole project marked as needing it (stale or never voiced)", () => revoiceAllPending()));
-
-        // --- checkbox selection helpers (the ordinary Run button is the
-        // queueing trigger -- see the app.queuePrompt hook below) ---
-        const buttonsRow = document.createElement("div");
-        buttonsRow.style.cssText = "display:flex;gap:5px;flex:0 0 auto;";
-
-        // A script marked "ready to release" (✅ Done in the line editor)
-        // can never be checked for queueing -- skipped by every bulk-select
-        // button below, same as the per-row checkbox (see renderTree).
-        buttonsRow.appendChild(actionButton("☑ All", "Check every script in every act (skips scripts marked ready)", () => {
-            treeData.forEach((a) => a.scripts.forEach((f) => {
-                if (!(a.ready_scripts || []).includes(f)) checked.add(keyOf(a.act, f));
-            }));
-            updateSelectionSummary();
-            renderTree();
-        }));
-        buttonsRow.appendChild(actionButton("☐ None", "Uncheck every script", () => {
-            checked.clear();
-            updateSelectionSummary();
-            renderTree();
-        }));
-        buttonsRow.appendChild(actionButton("⇄ Invert", "Flip every script's checked state (skips scripts marked ready)", () => {
-            treeData.forEach((a) => a.scripts.forEach((f) => {
-                const k = keyOf(a.act, f);
-                const isReady = (a.ready_scripts || []).includes(f);
-                if (checked.has(k)) checked.delete(k);
-                else if (!isReady) checked.add(k);
-            }));
-            updateSelectionSummary();
-            renderTree();
-        }));
-
-        // --- tree ---
-        const treeEl = document.createElement("div");
-        treeEl.style.cssText =
-            "overflow-y:auto;display:flex;flex-direction:column;gap:1px;padding:4px;" +
-            "border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(0,0,0,0.15);box-sizing:border-box;";
-
-        // `readySet`'s scripts are excluded from "checkable" so the act
-        // checkbox's tri-state doesn't get stuck on "some" forever just
-        // because a ready script can never be checked.
-        function actCheckState(act, scripts, readySet) {
-            const checkable = scripts.filter((f) => !readySet.has(f));
-            if (!checkable.length) return "none";
-            const n = checkable.filter((f) => checked.has(keyOf(act, f))).length;
-            if (n === 0) return "none";
-            return n === checkable.length ? "all" : "some";
-        }
-
-        function renderTree() {
-            treeEl.innerHTML = "";
-            if (!treeData.length) {
-                const empty = document.createElement("div");
-                empty.className = "fl-empty";
-                empty.textContent = "(no acts found)";
-                treeEl.appendChild(empty);
-                return;
-            }
-
-            // A script marked ready to release can never stay checked for
-            // queueing -- prune here so this stays true even when a script
-            // became ready from outside a checkbox click (the editor's ✅
-            // Done button, or the next poll tick picking up a change made
-            // there).
-            let prunedReady = false;
-            treeData.forEach(({ act, ready_scripts }) => {
-                (ready_scripts || []).forEach((f) => {
-                    const k = keyOf(act, f);
-                    if (checked.has(k)) {
-                        checked.delete(k);
-                        prunedReady = true;
-                    }
-                });
-            });
-
-            treeData.forEach(({ act, scripts, audio_scripts, ready_scripts, pending_scripts }) => {
-                const isExpanded = expanded.has(act);
-                const readySet = new Set(ready_scripts || []);
-                const state = actCheckState(act, scripts, readySet);
-                const checkedCount = scripts.filter((f) => checked.has(keyOf(act, f))).length;
-                const audioSet = new Set(audio_scripts || []);
-                const pendingSet = new Set(pending_scripts || []);
-
-                const actRow = document.createElement("div");
-                actRow.style.cssText =
-                    "display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:6px;cursor:pointer;" +
-                    (act === activeAct ? "background:rgba(90,140,255,0.12);" : "");
-
-                const actCheckbox = document.createElement("input");
-                actCheckbox.type = "checkbox";
-                actCheckbox.checked = state === "all";
-                actCheckbox.indeterminate = state === "some";
-                actCheckbox.style.cssText = "flex:0 0 auto;cursor:pointer;";
-                actCheckbox.addEventListener("click", (e) => e.stopPropagation());
-                actCheckbox.addEventListener("change", () => {
-                    if (actCheckbox.checked) scripts.forEach((f) => { if (!readySet.has(f)) checked.add(keyOf(act, f)); });
-                    else scripts.forEach((f) => checked.delete(keyOf(act, f)));
-                    updateSelectionSummary();
-                    renderTree();
-                });
-
-                const chevron = document.createElement("span");
-                chevron.textContent = isExpanded ? "▾" : "▸";
-                chevron.style.cssText = "font-size:10px;opacity:0.6;width:10px;flex:0 0 auto;";
-
-                const actNameEl = document.createElement("span");
-                actNameEl.textContent = act;
-                actNameEl.style.cssText = "font-weight:600;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-
-                const countEl = document.createElement("span");
-                countEl.textContent = checkedCount ? `${checkedCount}/${scripts.length}` : `${scripts.length}`;
-                countEl.style.cssText = "font-size:10px;opacity:0.5;flex:0 0 auto;";
-
-                actRow.appendChild(actCheckbox);
-                actRow.appendChild(chevron);
-                actRow.appendChild(actNameEl);
-                actRow.appendChild(countEl);
-                actRow.addEventListener("click", () => {
-                    activeAct = act;
-                    actWidget.value = act;
-                    if (expanded.has(act)) expanded.delete(act);
-                    else expanded.add(act);
-                    renderTree();
-                });
-                treeEl.appendChild(actRow);
-
-                if (isExpanded) {
-                    scripts.forEach((filename) => {
-                        const isChecked = checked.has(keyOf(act, filename));
-                        const isActiveFile = act === activeAct && scriptFileWidget.value === filename;
-                        const isReady = readySet.has(filename);
-
-                        const row = document.createElement("div");
-                        row.style.cssText =
-                            "display:flex;align-items:center;gap:6px;padding:3px 6px 3px 24px;border-radius:6px;" +
-                            "cursor:pointer;font-size:11px;" + (isActiveFile ? "background:rgba(90,140,255,0.18);" : "");
-
-                        const cb = document.createElement("input");
-                        cb.type = "checkbox";
-                        cb.checked = isChecked;
-                        cb.disabled = isReady;
-                        cb.style.cssText = "flex:0 0 auto;cursor:pointer;";
-                        cb.title = isReady
-                            ? "Marked ready to release -- unmark it in the editor (✅ Done) to queue it again"
-                            : "";
-                        cb.addEventListener("click", (e) => e.stopPropagation());
-                        cb.addEventListener("change", () => {
-                            if (cb.checked) checked.add(keyOf(act, filename));
-                            else checked.delete(keyOf(act, filename));
-                            updateSelectionSummary();
-                            renderTree();
-                        });
-
-                        const nameEl = document.createElement("span");
-                        nameEl.textContent = filename;
-                        nameEl.title = filename;
-                        nameEl.style.cssText =
-                            "flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" + (isActiveFile ? "font-weight:600;" : "");
-
-                        const editBtn = document.createElement("button");
-                        editBtn.className = "fl-btn fl-btn-icon";
-                        editBtn.style.fontSize = "10px";
-                        editBtn.textContent = "✏️";
-                        editBtn.title = "Open the full-screen line-by-line editor";
-                        editBtn.addEventListener("click", (e) => {
-                            e.stopPropagation();
-                            openLineEditor({
-                                folder: joinPath(folderWidget.value, act),
-                                filename,
-                                suffix: filterWidget?.value || "_speakers.txt",
-                                // Lets the editor's own header checkbox reflect/toggle
-                                // this script's checked-for-queueing state without the
-                                // user having to close the editor and go back to the
-                                // tree. Scoped to THIS act -- editor-side prev/next
-                                // navigation never crosses into another act.
-                                checkedApi: {
-                                    isChecked: (fname) => checked.has(keyOf(act, fname)),
-                                    setChecked: (fname, val) => {
-                                        const k = keyOf(act, fname);
-                                        if (val) checked.add(k); else checked.delete(k);
-                                        updateSelectionSummary();
-                                        renderTree();
-                                    },
-                                },
-                                // Backs the line editor's "🔁 Re-voice this line" button --
-                                // runs THIS node's current graph (same model) for just
-                                // one line's text. act/file are passed explicitly and
-                                // FORCED onto the node for this one queued run -- the
-                                // node's own act/script_file widgets reflect whatever is
-                                // "active" in the tree UI, which is NOT necessarily this
-                                // script (the editor can be opened for any row, active or
-                                // not), so folder_path/filename would otherwise resolve to
-                                // the wrong script and Post-Process would write the
-                                // re-voiced line into the wrong script's _audio/lines/.
-                                revoiceApi: {
-                                    revoiceLine: (opts) => queueLineRevoice(node, {
-                                        act,
-                                        file: filename,
-                                        ...opts,
-                                    }),
-                                },
-                            });
-                        });
-
-                        row.appendChild(cb);
-                        row.appendChild(editBtn);
-                        if (isReady) {
-                            const readyIcon = document.createElement("span");
-                            readyIcon.textContent = "✅";
-                            readyIcon.title = "Marked done / ready to release";
-                            readyIcon.style.cssText = "flex:0 0 auto;font-size:10px;";
-                            row.appendChild(readyIcon);
-                        }
-                        row.appendChild(nameEl);
-                        if (pendingSet.has(filename)) {
-                            const pendingIcon = document.createElement("span");
-                            pendingIcon.textContent = "⚠️";
-                            pendingIcon.title = "Has line(s) marked as needing re-voice (edited, or a role's speaker was recast)";
-                            pendingIcon.style.cssText = "flex:0 0 auto;font-size:10px;";
-                            row.appendChild(pendingIcon);
-                        }
-                        if (audioSet.has(filename)) {
-                            const audioIcon = document.createElement("span");
-                            audioIcon.textContent = "🔊";
-                            audioIcon.title = "Rendered audio already exists for this script";
-                            audioIcon.style.cssText = "flex:0 0 auto;font-size:10px;opacity:0.85;";
-                            row.appendChild(audioIcon);
-                        }
-                        row.addEventListener("click", () => {
-                            activeAct = act;
-                            actWidget.value = act;
-                            scriptFileWidget.value = filename;
-                            renderTree();
-                        });
-                        treeEl.appendChild(row);
-                    });
-                }
-            });
-
-            if (prunedReady) updateSelectionSummary();
-        }
-
-        // --- loading ---
-        async function loadTree() {
-            if (!folderWidget.value) {
-                treeData = [];
-                renderTree();
-                setStatus("No project folder set -- click below to browse for one");
-                return;
-            }
-            try {
-                const suffix = encodeURIComponent(filterWidget?.value ?? "_speakers.txt");
-                const resp = await fetch(`${SCAN_API}/tree?path=${encodeURIComponent(folderWidget.value)}&suffix=${suffix}`);
-                const data = await resp.json();
-                if (data.error) {
-                    setStatus(`Error: ${data.error}`);
-                    return;
-                }
-                rememberFolder(folderWidget.value);
-                treeData = data.tree;
-
-                if (!activeAct || !treeData.some((a) => a.act === activeAct)) {
-                    activeAct = treeData.length ? treeData[0].act : "";
-                    actWidget.value = activeAct;
-                }
-                if (activeAct) expanded.add(activeAct);
-
-                if (!scriptFileWidget.value && activeAct) {
-                    const entry = treeData.find((a) => a.act === activeAct);
-                    if (entry?.scripts.length) scriptFileWidget.value = entry.scripts[0];
-                }
-
-                renderTree();
-                updateSelectionSummary();
-            } catch (e) {
-                setStatus(`Error: ${e}`);
-            }
-        }
-
-        // Project-wide "🔁 Re-voice pending" button: finds every line
-        // (any act, any script) the line editor's per-line state marked
-        // stale/unvoiced -- e.g. every line a role recast just invalidated
-        // via nodes/script_library.py's mark_role_stale -- and re-voices
-        // each one in place, one at a time (queueLineRevoice forces that
-        // line's own act/script_file for its own request, same as a
-        // single 🔁 click would). Sequential on purpose: this can span
-        // many scripts at once, and queuing dozens of heavy TTS renders
-        // concurrently would just flood ComfyUI's own queue for no
-        // benefit -- the per-line UI's own concurrency (see line_editor.js's
-        // pendingRevoiceRows) is for a human clicking a few buttons by
-        // hand, not a bulk sweep like this.
-        async function revoiceAllPending() {
-            if (!folderWidget.value) {
-                setStatus("Set a project folder first");
-                return;
-            }
-            const suffix = filterWidget?.value || "_speakers.txt";
-            let scripts;
-            try {
-                const resp = await fetch(`${SCAN_API}/pending_revoice?path=${encodeURIComponent(folderWidget.value)}&suffix=${encodeURIComponent(suffix)}`);
-                const data = await resp.json();
-                if (data.error) {
-                    setStatus(`Error: ${data.error}`);
-                    return;
-                }
-                scripts = data.scripts || [];
-            } catch (e) {
-                setStatus(`Error: ${e}`);
-                return;
-            }
-
-            const total = scripts.reduce((n, s) => n + s.pending.length, 0);
-            if (!total) {
-                setStatus("Nothing needs re-voicing");
-                return;
-            }
-
-            let done = 0;
-            setStatus(`Re-voicing 0/${total}...`);
-            for (const script of scripts) {
-                for (const line of script.pending) {
-                    try {
-                        await queueLineRevoice(node, {
-                            act: script.act, file: script.file,
-                            lineId: line.id, speaker: line.speaker, instruct: line.instruct, text: line.text,
-                        });
-                        await fetch(`${SCAN_API}/mark_line_voiced`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ folder: script.folder, base_name: script.base_name, line_id: line.id }),
-                        });
-                    } catch (err) {
-                        console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${script.act}/${script.file} line ${line.id}`, err);
-                    }
-                    done++;
-                    setStatus(`Re-voicing ${done}/${total}...`);
-                }
-            }
-            setStatus(`Re-voiced ${done}/${total} line(s)`);
-            loadTree();
-        }
-
-        const origFolderCallback = folderWidget.callback;
-        folderWidget.callback = function (value) {
-            const result = origFolderCallback ? origFolderCallback.apply(this, arguments) : undefined;
-            refreshBrowseLabel();
-            loadTree();
-            return result;
-        };
-
-        // Recall-from-localStorage + refresh + (re)load the tree. Called both
-        // right after node creation AND after onConfigure (see below) -- a
-        // fresh node (dragged onto the canvas) only ever gets nodeCreated, but
-        // a node coming from a saved/reloaded workflow gets nodeCreated FIRST
-        // (with folder_path still at its Python default, usually empty) and
-        // THEN configure() restores the actual saved folder_path. Running this
-        // only in nodeCreated meant: (a) an empty saved folder_path never got
-        // the localStorage fallback applied after configure overwrote it back
-        // to "", and (b) even when the saved folder_path WAS a real path, the
-        // tree that got drawn during nodeCreated (before configure ran) never
-        // got refreshed for it -- the node just sat there showing whatever
-        // state it had before its real value was restored, until the user
-        // manually re-browsed. Both are why the picked folder "didn't stick"
-        // across a page reload.
-        function syncFolderAndReload() {
-            restoreCheckedFromProperties();
-            if (!folderWidget.value) {
-                const remembered = recallFolder();
-                if (remembered) folderWidget.value = remembered;
-            }
-            refreshBrowseLabel();
-            if (folderWidget.value) loadTree();
-            else setStatus("No project folder set -- click below to browse for one");
-        }
-
-        const origOnConfigure = node.onConfigure;
-        node.onConfigure = function (info) {
-            const result = origOnConfigure ? origOnConfigure.apply(this, arguments) : undefined;
-            syncFolderAndReload();
-            return result;
-        };
-
-        // Visual order top-to-bottom: pick the project, project-wide tools,
-        // bulk-select presets, the tree (flex-fills remaining node height),
-        // then a status line. Each DOM widget's actual rendered height comes
-        // from options.getMinHeight/getMaxHeight (DOMWidgetImpl.computeLayoutSize)
-        // -- NOT from widget.computeSize, which the DOM widget layout path
-        // never consults. Pinning min===max on every fixed-content row keeps
-        // it from being stretched to share in whatever extra height the user
-        // drags the node to; leaving script_tree's max unset is what lets it
-        // alone absorb all of that extra space.
-        const fixedHeight = (px) => ({ getMinHeight: () => px, getMaxHeight: () => px });
-        node.addDOMWidget("folder_browse_button", "custom", browseButtonEl, { serialize: false, ...fixedHeight(32) });
-        node.addDOMWidget("tools_row", "custom", toolsRow, { serialize: false, ...fixedHeight(38) });
-        node.addDOMWidget("action_buttons", "custom", buttonsRow, { serialize: false, ...fixedHeight(38) });
-        node.addDOMWidget("script_tree", "custom", treeEl, { serialize: false, getMinHeight: () => MIN_TREE_HEIGHT });
-
-        const order = ["folder_browse_button", "tools_row", "action_buttons", "script_tree"];
-        node.widgets.sort((a, b) => {
-            const ia = order.indexOf(a.name);
-            const ib = order.indexOf(b.name);
-            if (ia === -1 && ib === -1) return 0;
-            if (ia === -1) return 1;
-            if (ib === -1) return -1;
-            return ia - ib;
+        node.addDOMWidget("script_library_panel", "custom", panel.element, {
+            serialize: false,
+            getMinHeight: () => PANEL_MIN_HEIGHT,
         });
-        node.addDOMWidget("status_line", "custom", statusEl, { serialize: false, getMinHeight: () => 18, getMaxHeight: () => 40 });
         node.setSize(node.computeSize());
         node.setDirtyCanvas(true, true);
 
-        syncFolderAndReload();
-
-        // Keep the 🔊 "already rendered" icon current while this node sits
-        // on the canvas -- e.g. finishing a render for a checked script
-        // should light its icon up on its own, without the user having to
-        // re-browse the folder or reopen the node.
-        const treePollTimer = setInterval(() => {
-            if (folderWidget.value) loadTree();
-        }, TREE_POLL_MS);
         const origOnRemoved = node.onRemoved;
         node.onRemoved = function () {
-            clearInterval(treePollTimer);
+            panel.unmount();
             return origOnRemoved ? origOnRemoved.apply(this, arguments) : undefined;
         };
     },

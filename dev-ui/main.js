@@ -5,6 +5,7 @@
 // editing a .vue file here hot-reloads instantly.
 import { openRolesEditor } from "../src/roles_editor/main.js";
 import { openBrowseDialog } from "../src/browse_dialog/main.js";
+import { mountScriptLibraryPanel } from "../src/script_library/main.js";
 
 // Any string works -- the mock backend matches requests by filename
 // suffix (_roles.json, _instructions.json, ...), not the literal path.
@@ -30,4 +31,26 @@ document.getElementById("open-browse-file").addEventListener("click", () => {
         onSelect: (path) => console.log("[dev-ui] file selected:", path),
     });
 });
+// Script Library isn't a floating dialog -- it mounts directly into a
+// fixed-size host div standing in for the ComfyUI node body it normally
+// renders into via node.addDOMWidget. Fake widget/node stand-ins only need
+// the .value/.callback/.properties/.setDirtyCanvas surface this panel
+// actually touches.
+function makeFakeWidget(initial = "") {
+    return { value: initial, callback: null };
+}
+const scriptLibraryPanel = mountScriptLibraryPanel({
+    node: { properties: {}, _flCheckedItems: [], setDirtyCanvas: () => {} },
+    folderWidget: makeFakeWidget(FAKE_PROJECT_ROOT),
+    actWidget: makeFakeWidget(),
+    filterWidget: makeFakeWidget("_speakers.txt"),
+    scriptFileWidget: makeFakeWidget(),
+    openBrowseDialog,
+    openRolesEditor,
+    openLineEditor: (opts) => console.log("[dev-ui] openLineEditor (not ported yet) called with:", opts),
+    queueLineRevoice: async (node, opts) => console.log("[dev-ui] queueLineRevoice (stub) called with:", opts),
+});
+scriptLibraryPanel.element.style.cssText = "width:100%;height:100%;";
+document.getElementById("script-library-host").appendChild(scriptLibraryPanel.element);
+
 open(); // open immediately on load too, for a one-click `npm run dev:ui`

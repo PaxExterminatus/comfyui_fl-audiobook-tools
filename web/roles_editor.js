@@ -1,4 +1,5 @@
-import { B as se, s as re, o as f, c as b, m as d, r as C, g as P, h as z, E as ue, G as ze, b as ye, H as y, d as W, F as G, y as ne, q, I as Fe, J as Pe, K as Te, R as Ee, O as T, L as Me, M as xe, Z as oe, U as de, e as Be, a as J, t as A, f as R, N as le, n as te, k as N, T as De, Q as Ae, w as Ke, _ as He, A as Re, i as je, j as Ne, S as $e, u as U, V as Ue, W as ce, X as Ge, p as ie, x as he, z as We, Y as qe, C as Ze, D as Je, P as Qe } from "./styles_link.js";
+import { B as se, s as re, o as f, c as b, m as d, v as C, j as P, f as z, x as ue, y as ze, z as ye, D as y, A as W, F as G, k as ne, g as q, R as Fe, O as T, C as Pe, E as Te, Z as oe, U as de, G as Ee, i as J, t as A, b as R, H as le, n as te, d as N, T as Me, I as xe, J as Be, _ as De, l as Ae, w as Ke, a as He, K as Re, u as U, S as je, L as ce, M as Ne, r as ie, N as $e, p as Ue, q as Ge, P as We } from "./styles_link.js";
+import { b as qe, c as Ze, d as Je, s as he, a as Qe } from "./message.esm.js";
 var Ye = {
   root: "p-card p-component",
   header: "p-card-header",
@@ -1518,7 +1519,7 @@ var ke = {
     },
     bindScrollListener: function() {
       var e = this;
-      this.scrollHandler || (this.scrollHandler = new xe(this.$refs.container, function() {
+      this.scrollHandler || (this.scrollHandler = new Te(this.$refs.container, function() {
         e.overlayVisible && e.hide();
       })), this.scrollHandler.bindScrollListener();
     },
@@ -1666,7 +1667,7 @@ var ke = {
     visibleOptions: function() {
       var e = this, i = this.optionGroupLabel ? this.flatOptions(this.options) : this.options || [];
       if (this.filterValue) {
-        var s = Me.filter(i, this.searchFields, this.filterValue, this.filterMatchMode, this.filterLocale);
+        var s = Pe.filter(i, this.searchFields, this.filterValue, this.filterMatchMode, this.filterLocale);
         if (this.optionGroupLabel) {
           var r = this.options || [], n = [];
           return r.forEach(function(o) {
@@ -1735,16 +1736,16 @@ var ke = {
     }
   },
   directives: {
-    ripple: Ee
+    ripple: Fe
   },
   components: {
     VirtualScroller: Ce,
-    Portal: Te,
-    TimesIcon: Pe,
+    Portal: Je,
+    TimesIcon: Ze,
     ChevronDownIcon: Ie,
     SpinnerIcon: ye,
     SearchIcon: Se,
-    CheckIcon: Fe,
+    CheckIcon: qe,
     BlankIcon: Oe
   }
 };
@@ -1796,7 +1797,7 @@ function Ft(t, e) {
 }
 var Pt = ["id"], Tt = ["id", "value", "placeholder", "tabindex", "disabled", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-invalid"], Et = ["id", "tabindex", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-disabled"], Mt = ["value", "placeholder", "aria-owns", "aria-activedescendant"], xt = ["id", "aria-label"], Bt = ["id"], Dt = ["id", "aria-label", "aria-selected", "aria-disabled", "aria-setsize", "aria-posinset", "onClick", "onMousemove", "data-p-highlight", "data-p-focused", "data-p-disabled"];
 function At(t, e, i, s, r, n) {
-  var o = W("SpinnerIcon"), a = W("CheckIcon"), c = W("BlankIcon"), u = W("VirtualScroller"), l = W("Portal"), v = Be("ripple");
+  var o = W("SpinnerIcon"), a = W("CheckIcon"), c = W("BlankIcon"), u = W("VirtualScroller"), l = W("Portal"), v = Ee("ripple");
   return f(), b("div", d({
     ref: "container",
     id: r.id,
@@ -1906,7 +1907,7 @@ function At(t, e, i, s, r, n) {
     appendTo: t.appendTo
   }, {
     default: N(function() {
-      return [q(De, d({
+      return [q(Me, d({
         name: "p-connected-overlay",
         onEnter: n.onOverlayEnter,
         onAfterEnter: n.onOverlayAfterEnter,
@@ -1997,7 +1998,7 @@ function At(t, e, i, s, r, n) {
             tabindex: -1,
             disabled: n.virtualScrollerDisabled,
             pt: t.ptm("virtualScroller")
-          }), Ae({
+          }), xe({
             content: N(function(m) {
               var k = m.styleClass, V = m.contentRef, L = m.items, S = m.getItemOptions, E = m.contentStyle, F = m.itemSize;
               return [z("ul", d({
@@ -2027,7 +2028,7 @@ function At(t, e, i, s, r, n) {
                   return [z("span", d({
                     class: t.cx("itemGroupLabel")
                   }, t.ptm("itemGroupLabel")), A(n.getOptionGroupLabel(O.optionGroup)), 17)];
-                })], 16, Bt)) : Ke((f(), b("li", d({
+                })], 16, Bt)) : Be((f(), b("li", d({
                   key: 1,
                   id: r.id + "_" + n.getOptionIndex(g, S),
                   class: t.cx("item", {
@@ -2221,7 +2222,7 @@ const $t = { class: "roles-list" }, Ut = {
     onClose: { type: Function, required: !0 }
   },
   setup(t) {
-    const e = t, i = Re(e.root, "_roles.json"), s = ie(!0), r = ie([]), n = ie([]), o = ie("");
+    const e = t, i = Ae(e.root, "_roles.json"), s = ie(!0), r = ie([]), n = ie([]), o = ie("");
     let a = null, c = 0, u = null, l = null;
     const v = /* @__PURE__ */ new Map();
     function m(p) {
@@ -2266,14 +2267,14 @@ const $t = { class: "roles-list" }, Ut = {
       c = Date.now(), u && clearTimeout(u), u = setTimeout(F, Wt);
     }
     function g(p) {
-      !p.code || v.get(p.code) === p.speaker || (v.set(p.code, p.speaker), qe(e.root, p.code, e.suffix).then((h) => m(h.message)));
+      !p.code || v.get(p.code) === p.speaker || (v.set(p.code, p.speaker), $e(e.root, p.code, e.suffix).then((h) => m(h.message)));
     }
     function K(p) {
       O(), g(p);
     }
     async function M() {
       try {
-        const I = await (await fetch(Ue)).json();
+        const I = await (await fetch(je)).json();
         n.value = I.presets || [];
       } catch {
         n.value = [];
@@ -2300,7 +2301,7 @@ const $t = { class: "roles-list" }, Ut = {
         }
         r.value = Array.isArray(w.roles) ? w.roles : [], r.value.forEach((D) => {
           D.code && v.set(D.code, D.speaker);
-        }), a = h.content, p || m(`Loaded ${r.value.length} role(s)`), Ge(() => {
+        }), a = h.content, p || m(`Loaded ${r.value.length} role(s)`), Ne(() => {
           S(), requestAnimationFrame(S);
         });
       } catch (I) {
@@ -2310,13 +2311,13 @@ const $t = { class: "roles-list" }, Ut = {
     function x() {
       u && (clearTimeout(u), F()), r.value.forEach((p) => g(p)), l && clearInterval(l), e.onClose();
     }
-    return je(s, (p) => {
+    return Ke(s, (p) => {
       p || x();
-    }), Ne(async () => {
+    }), He(async () => {
       M(), await B(), l = setInterval(() => B({ isPoll: !0 }), qt);
-    }), $e(() => {
+    }), Re(() => {
       l && clearInterval(l);
-    }), (p, I) => (f(), R(U(We), {
+    }), (p, I) => (f(), R(U(Qe), {
       visible: s.value,
       "onUpdate:visible": I[1] || (I[1] = (h) => s.value = h),
       modal: "",
@@ -2389,20 +2390,20 @@ const $t = { class: "roles-list" }, Ut = {
       _: 1
     }, 8, ["visible"]));
   }
-}, Qt = /* @__PURE__ */ He(Jt, [["__scopeId", "data-v-2048209e"]]);
-function Xt({ root: t, suffix: e = "_speakers.txt" }) {
-  Ze(import.meta.url);
+}, Qt = /* @__PURE__ */ De(Jt, [["__scopeId", "data-v-2048209e"]]);
+function _t({ root: t, suffix: e = "_speakers.txt" }) {
+  Ue(import.meta.url);
   const i = document.createElement("div");
   document.body.appendChild(i);
-  const s = Je(Qt, {
+  const s = Ge(Qt, {
     root: t,
     suffix: e,
     onClose: () => {
       s.unmount(), i.remove();
     }
   });
-  s.use(Qe, { ripple: !0 }), s.mount(i);
+  s.use(We, { ripple: !0 }), s.mount(i);
 }
 export {
-  Xt as openRolesEditor
+  _t as openRolesEditor
 };

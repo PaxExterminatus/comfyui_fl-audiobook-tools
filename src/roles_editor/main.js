@@ -8,39 +8,7 @@
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import RolesEditorApp from "./RolesEditorApp.vue";
-
-// Vite extracts CSS imported from .vue <style> blocks / here into a
-// sibling style.css next to the built JS (Vite's lib-mode default name
-// for a single entry's CSS, NOT the entry's own name) -- injected as a
-// <link> below via a URL relative to this module's own location, so it
-// works regardless of what path ComfyUI actually serves
-// /extensions/comfyui_fl-audiobook-tools/ under. NOTE: if a second Vue
-// entry is added later, check vite's output naming again -- multiple
-// entries may need an explicit `build.rollupOptions.output.assetFileNames`
-// to keep each entry's CSS separately named.
-import "primevue/resources/themes/lara-dark-teal/theme.css";
-import "primevue/resources/primevue.min.css";
-import "primeicons/primeicons.css";
-
-// Bump this any time the built CSS could have changed (a new build of
-// this or any other Vue-migrated editor sharing style.css) -- without a
-// version on the URL, browsers cache style.css indefinitely (it's an
-// unversioned filename with no build hash), so an update to this addon
-// would otherwise show a stale, possibly broken UI until the user
-// happens to hard-refresh ComfyUI's page.
-const STYLE_VERSION = 4;
-
-let stylesLinked = false;
-function ensureStylesLinked() {
-    if (stylesLinked) return;
-    stylesLinked = true;
-    const href = new URL(/* @vite-ignore */ `./style.css?v=${STYLE_VERSION}`, import.meta.url).href;
-    if (document.querySelector(`link[href="${href}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-}
+import { ensureStylesLinked } from "../shared/styles_link.js";
 
 /**
  * @param {Object} opts
@@ -48,7 +16,7 @@ function ensureStylesLinked() {
  * @param {string} [opts.suffix] - script_filter, passed through to the project-wide stale-marking scan.
  */
 export function openRolesEditor({ root, suffix = "_speakers.txt" }) {
-    ensureStylesLinked();
+    ensureStylesLinked(import.meta.url);
 
     const container = document.createElement("div");
     document.body.appendChild(container);

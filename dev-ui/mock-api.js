@@ -52,6 +52,30 @@ function makeFileStore() {
     ]);
 }
 
+// A tiny made-up directory tree for the Browse Dialog to click through --
+// keyed by normalized (no trailing slash) path, mirroring the shape
+// nodes/script_library.py's list_dir route returns (dirs/files sorted,
+// drives only at the "" root). Good enough for clicking around in dev;
+// doesn't need to touch real disk.
+const FAKE_FS = {
+    "": { dirs: [], files: [], drives: ["C:\\"] },
+    "C:\\": { dirs: ["fake"], files: [] },
+    "C:\\fake": { dirs: ["project"], files: [] },
+    "C:\\fake\\project": { dirs: ["Act01"], files: ["_roles.json", "_instructions.json"] },
+    "C:\\fake\\project\\Act01": { dirs: [], files: ["Test_speakers.txt"] },
+};
+
+function normalizeFakeDir(p) {
+    return (p || "").replace(/[\\/]+$/, "");
+}
+
+function fakeParentOf(norm) {
+    if (!norm) return null;
+    if (/^[A-Za-z]:$/.test(norm)) return ""; // drive root -> back to the drive list
+    const idx = Math.max(norm.lastIndexOf("\\"), norm.lastIndexOf("/"));
+    return idx > 0 ? norm.slice(0, idx) : null;
+}
+
 export function mockComfyApiPlugin() {
     const files = makeFileStore();
 
@@ -92,6 +116,21 @@ export function mockComfyApiPlugin() {
                     return sendJson(res, 200, {
                         changed: [{ act: "Act01", file: "Test_speakers.txt", marked_ids: [1], was_ready: false, deleted_audio: [] }],
                         untracked: [{ act: "Act02", file: "Other_speakers.txt", was_ready: false, deleted_audio: [] }],
+                    });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/browse/list_dir" && req.method === "GET") {
+                    const norm = normalizeFakeDir(url.searchParams.get("path") || "");
+                    const ext = (url.searchParams.get("ext") || "").toLowerCase();
+                    const entry = FAKE_FS[norm];
+                    if (!entry) return sendJson(res, 200, { error: `not a folder: ${norm}` });
+                    const listedFiles = ext ? entry.files.filter((f) => f.toLowerCase().endsWith(ext)) : entry.files;
+                    return sendJson(res, 200, {
+                        path: norm,
+                        parent: norm ? fakeParentOf(norm) : null,
+                        dirs: entry.dirs,
+                        files: listedFiles,
+                        drives: entry.drives || [],
                     });
                 }
 

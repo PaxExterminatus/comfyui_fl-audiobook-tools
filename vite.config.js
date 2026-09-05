@@ -37,17 +37,30 @@ export default defineConfig(({ command }) => {
             lib: {
                 entry: {
                     roles_editor: "src/roles_editor/main.js",
+                    browse_dialog: "src/browse_dialog/main.js",
                 },
                 formats: ["es"],
                 fileName: (_format, entryName) => `${entryName}.js`,
             },
             rollupOptions: {
                 output: {
-                    // One self-contained file per entry (Vue/PrimeVue
-                    // inlined) -- matches how every other file in web/ is
-                    // already a standalone ES module with no shared
-                    // runtime chunk to load alongside it.
                     inlineDynamicImports: false,
+                    // With 2+ Vue entries, Rollup factors their shared
+                    // dependencies (Vue itself, PrimeVue's Dialog/Button/
+                    // etc.) into a common chunk rather than inlining Vue
+                    // wholesale into every single editor -- each entry's
+                    // own file just adds a plain relative `import` for it,
+                    // which resolves fine under ComfyUI's static file
+                    // serving regardless of what path the addon is mounted
+                    // under. Rollup's default naming for that chunk
+                    // includes a content hash; since `emptyOutDir: false`
+                    // never cleans web/ (it also holds the other,
+                    // not-yet-migrated hand-written editors), a hashed name
+                    // would leave one more orphaned file behind on every
+                    // rebuild. A stable name means each rebuild overwrites
+                    // the same file instead -- exactly how every entry's
+                    // own fileName above already works.
+                    chunkFileNames: "[name].js",
                 },
             },
         },

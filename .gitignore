@@ -1,6 +1,9 @@
 # Node (Vue/PrimeVue build tooling for the migrated editors)
 node_modules/
 
+# Claude Code's own local skill packs -- not project content
+.claude/
+
 # Python
 __pycache__/
 *.py[cod]

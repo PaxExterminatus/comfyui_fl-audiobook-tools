@@ -40,6 +40,23 @@ document.getElementById("open-browse-file").addEventListener("click", () => {
 function makeFakeWidget(initial = "") {
     return { value: initial, callback: null };
 }
+
+// Shared fake checkedApi/revoiceApi -- both the tree's own row ✏️ button
+// and the standalone "Open Line Editor" toolbar button open the same
+// real openLineEditor(), so they share the same stand-ins rather than
+// each rolling their own.
+let devLineChecked = false;
+const fakeCheckedApi = {
+    isChecked: () => devLineChecked,
+    setChecked: (fname, val) => { devLineChecked = val; console.log("[dev-ui] setChecked", fname, val); },
+};
+const fakeRevoiceApi = {
+    revoiceLine: (opts) => {
+        console.log("[dev-ui] revoiceLine called with:", opts);
+        return new Promise((resolve) => setTimeout(resolve, 600));
+    },
+};
+
 const scriptLibraryPanel = mountScriptLibraryPanel({
     node: { properties: {}, _flCheckedItems: [], setDirtyCanvas: () => {} },
     folderWidget: makeFakeWidget(FAKE_PROJECT_ROOT),
@@ -48,29 +65,18 @@ const scriptLibraryPanel = mountScriptLibraryPanel({
     scriptFileWidget: makeFakeWidget(),
     openBrowseDialog,
     openRolesEditor,
-    openLineEditor: (opts) => console.log("[dev-ui] openLineEditor (not ported yet) called with:", opts),
-    queueLineRevoice: async (node, opts) => console.log("[dev-ui] queueLineRevoice (stub) called with:", opts),
+    openLineEditor,
+    queueLineRevoice: async (node, opts) => fakeRevoiceApi.revoiceLine(opts),
 });
 scriptLibraryPanel.element.style.cssText = "width:100%;height:100%;";
 document.getElementById("script-library-host").appendChild(scriptLibraryPanel.element);
 
-let devLineChecked = false;
 document.getElementById("open-line-editor").addEventListener("click", () => {
     openLineEditor({
         folder: `${FAKE_PROJECT_ROOT}\\Act01`,
         filename: "Test_speakers.txt",
         suffix: "_speakers.txt",
-        checkedApi: {
-            isChecked: () => devLineChecked,
-            setChecked: (fname, val) => { devLineChecked = val; console.log("[dev-ui] setChecked", fname, val); },
-        },
-        revoiceApi: {
-            revoiceLine: (opts) => {
-                console.log("[dev-ui] revoiceLine called with:", opts);
-                return new Promise((resolve) => setTimeout(resolve, 600));
-            },
-        },
+        checkedApi: fakeCheckedApi,
+        revoiceApi: fakeRevoiceApi,
     });
 });
-
-open(); // open immediately on load too, for a one-click `npm run dev:ui`

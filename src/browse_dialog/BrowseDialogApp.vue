@@ -107,9 +107,11 @@ function close() {
     props.onClose();
 }
 
-// Dialog owns ESC-to-close, click-outside-to-close (dismissable-mask), and
-// its own header close button -- all of them just flip v-model:visible to
-// false, which lands here regardless of which one triggered it.
+// Dialog owns ESC-to-close and its own header close button -- both just
+// flip v-model:visible to false, which lands here regardless of which one
+// triggered it. Deliberately NOT dismissable-mask (no close-on-outside-
+// click) -- same as every other dialog in this addon, so an accidental
+// click past the panel's edge can't silently lose in-progress edits.
 watch(visible, (v) => {
     if (!v) close();
 });
@@ -121,7 +123,6 @@ onMounted(() => load(props.startPath || ""));
     <Dialog
         v-model:visible="visible"
         modal
-        dismissable-mask
         :header="title"
         class="browse-dialog"
     >

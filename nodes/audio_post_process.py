@@ -260,7 +260,7 @@ class FL_CosyVoice3_AudioPostProcess:
         # recoverable cost next to that.
         if lines_dir is not None and len(audio) > 1:
             try:
-                for pos, _, _, name in _line_audio.list_lines_dir(lines_dir):
+                for pos, _, name in _line_audio.list_lines_dir(lines_dir):
                     if pos >= len(audio):
                         os.remove(os.path.join(lines_dir, name))
             except OSError as e:
@@ -315,10 +315,13 @@ class FL_CosyVoice3_AudioPostProcess:
                     line_hashes[i] if i < len(line_hashes)
                     else _line_audio.line_hash("", "", line_texts[i] if i < len(line_texts) else "")
                 )
-                version = _line_audio.next_version_at(lines_dir, position)
-                filename = _line_audio.make_line_filename(position, version, content_hash)
+                # Deterministic path -- re-voicing a line whose content
+                # (hence hash) hasn't changed overwrites this SAME file in
+                # place, on purpose (see nodes/_line_audio.py's module
+                # docstring): a line has one current file per distinct
+                # wording it's ever said, not a growing history of takes.
                 try:
-                    save_wav(wav, sample_rate, os.path.join(lines_dir, filename))
+                    save_wav(wav, sample_rate, _line_audio.expected_path(lines_dir, position, content_hash))
                 except OSError as e:
                     print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't save line {position}: {e}")
 

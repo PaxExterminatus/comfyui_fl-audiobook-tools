@@ -7,15 +7,15 @@ import { lineHash } from "../../shared/line_hash.js";
 
 const SCRIPT_TEXT = "narrator | calm | First line.\nnarrator | calm | Second line.";
 
-// No _state.json any more -- a line's voiced/fresh state is purely
-// "does _audio\lines\<script>\ have a <position>_<version>_<hash>.wav
-// whose hash matches this row's CURRENT (role-resolved) content" (see
-// src/shared/line_hash.js). Builds a real filename the same way the app
-// itself will compute the EXPECTED one, so these tests exercise the actual
-// hashing path instead of a stand-in.
-async function lineFileName(position, version, speaker, instruct, text) {
+// No _state.json any more -- a line's voiced/fresh state is purely "does
+// _audio\lines\<script>\ have a <position>_<hash>.wav whose hash matches
+// this row's CURRENT (role-resolved) content" (see src/shared/line_hash.js).
+// Builds a real filename the same way the app itself will compute the
+// EXPECTED one, so these tests exercise the actual hashing path instead of
+// a stand-in.
+async function lineFileName(position, speaker, instruct, text) {
     const hash = await lineHash(speaker, instruct, text);
-    return `${String(position).padStart(4, "0")}_${String(version).padStart(2, "0")}_${hash}.wav`;
+    return `${String(position).padStart(4, "0")}_${hash}.wav`;
 }
 
 function mockFetch(overrides = {}) {
@@ -165,8 +165,8 @@ describe("LineEditorApp", () => {
         const { wrapper } = await mountEditor({
             revoiceApi,
             lineFiles: [
-                await lineFileName(0, 1, "narrator", "calm", "First line."),
-                await lineFileName(1, 1, "narrator", "calm", "Second line."),
+                await lineFileName(0, "narrator", "calm", "First line."),
+                await lineFileName(1, "narrator", "calm", "Second line."),
             ],
         });
 
@@ -240,6 +240,28 @@ describe("LineEditorApp", () => {
         wrapper.unmount();
     });
 
+    it("re-voicing stamps the CURRENT content's own hash, not relying on a graph wire", async () => {
+        // Regression test: contentHash used to not exist at all -- Post-
+        // Process fell back to hashing just the text whenever the new
+        // Script Library -> Post-Process line_hashes_json wire wasn't
+        // present in the user's own graph (a one-time setup step, easy to
+        // not have done yet). That fallback hash could never match this
+        // editor's own expected hash (voice+instruct+text), so a re-voice
+        // completed successfully server-side but the row looked exactly
+        // as "not voiced" as before -- indistinguishable from re-voicing
+        // silently doing nothing. See LineEditorApp.vue's revoiceRow.
+        const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
+        const { wrapper } = await mountEditor({ revoiceApi });
+
+        document.querySelector(".revoice-btn").click();
+
+        const expectedHash = await lineHash("narrator", "calm", "First line.");
+        await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
+            expect.objectContaining({ contentHash: expectedHash }),
+        ));
+        wrapper.unmount();
+    });
+
     it("toggles the header checkbox through checkedApi", async () => {
         const checkedApi = { isChecked: vi.fn(() => false), setChecked: vi.fn() };
         const { wrapper } = await mountEditor({ checkedApi });
@@ -259,8 +281,8 @@ describe("LineEditorApp", () => {
             checkedApi,
             onSetReady,
             lineFiles: [
-                await lineFileName(0, 1, "narrator", "calm", "First line."),
-                await lineFileName(1, 1, "narrator", "calm", "Second line."),
+                await lineFileName(0, "narrator", "calm", "First line."),
+                await lineFileName(1, "narrator", "calm", "Second line."),
             ],
         });
 
@@ -287,8 +309,8 @@ describe("LineEditorApp", () => {
     it("play button on a voiced line starts mode-1 playback, and clicking again stops it", async () => {
         const { wrapper } = await mountEditor({
             lineFiles: [
-                await lineFileName(0, 1, "narrator", "calm", "First line."),
-                await lineFileName(1, 1, "narrator", "calm", "Second line."),
+                await lineFileName(0, "narrator", "calm", "First line."),
+                await lineFileName(1, "narrator", "calm", "Second line."),
             ],
         });
 
@@ -311,7 +333,7 @@ describe("LineEditorApp", () => {
         // stricter check. Built from completely different text so its hash
         // can't coincidentally match "First line.".
         const { wrapper } = await mountEditor({
-            lineFiles: [await lineFileName(0, 1, "narrator", "calm", "Some older take entirely.")],
+            lineFiles: [await lineFileName(0, "narrator", "calm", "Some older take entirely.")],
         });
 
         const playBtn = document.querySelectorAll(".play-btn")[0];

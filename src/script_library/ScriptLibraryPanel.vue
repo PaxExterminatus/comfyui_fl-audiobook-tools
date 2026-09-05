@@ -366,8 +366,14 @@ async function revoiceAllPending() {
                     // LineEditorApp's revoiceRow): folder/base_name here come
                     // from the pending_revoice scan, which resolved them with
                     // THIS panel's suffix -- so they're the same names the
-                    // scan itself checked against.
-                    folder: script.folder, baseName: script.base_name,
+                    // scan itself checked against. contentHash likewise comes
+                    // straight from that same scan (nodes/script_library.py's
+                    // script_pending_lines already computed it from this
+                    // exact resolved speaker/instruct/text) instead of being
+                    // recomputed here -- stamped onto Post-Process's
+                    // line_hashes_json so the re-voice doesn't depend on the
+                    // graph having that output/input wired.
+                    folder: script.folder, baseName: script.base_name, contentHash: line.hash,
                 });
             } catch (err) {
                 console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${script.act}/${script.file} position ${line.position}`, err);

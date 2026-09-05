@@ -280,18 +280,19 @@ def _line_uses_role(line: str, role_code: str) -> bool:
 def script_pending_lines(act_folder: str, filename: str, suffix: str, role_map: Dict[str, str]) -> Tuple[Optional[str], List[dict]]:
     """
     Parses `filename` fresh from disk, resolves each line's speaker through
-    `role_map`, and compares against the LATEST-version file already
-    rendered at that line's POSITION in _audio\\lines\\<base_name>\\ (see
-    nodes/_line_audio.py). Returns (base_name, pending) where `pending` is
-    every line whose latest take is missing or doesn't match.
+    `role_map`, and checks whether _audio\\lines\\<base_name>\\ already has
+    the exact file that content's position+hash would live at (see
+    nodes/_line_audio.py's expected_path -- deterministic, no directory scan
+    needed). Returns (base_name, pending) where `pending` is every line
+    whose file is missing.
 
     This one function is the entire replacement for _state.json's per-line
     "voiced/unvoiced/stale" status -- nothing is stored anywhere; a role
     recast in _roles.json is picked up automatically the next time this
     runs (a fresh role_map naturally resolves that line's CURRENT preset,
-    which just won't match whatever hash is baked into the file already on
-    disk), with no separate "mark stale" step needed. Returns (None, [])
-    if the script itself can't be read.
+    which just won't match the hash any existing file was named from), with
+    no separate "mark stale" step needed. Returns (None, []) if the script
+    itself can't be read.
     """
     path = os.path.join(act_folder, filename)
     try:
@@ -302,7 +303,6 @@ def script_pending_lines(act_folder: str, filename: str, suffix: str, role_map: 
 
     base_name = strip_suffix_and_ext(filename, suffix)
     lines_dir = os.path.join(act_folder, "_audio", "lines", base_name)
-    latest = _line_audio.latest_by_position(lines_dir)
 
     pending = []
     position = 0
@@ -313,9 +313,14 @@ def script_pending_lines(act_folder: str, filename: str, suffix: str, role_map: 
         preset, instruct, text = parsed
         resolved = role_map.get(preset, preset)
         expected = _line_audio.line_hash(resolved, instruct, text)
-        current = latest.get(position)
-        if current is None or current[1] != expected:
-            pending.append({"position": position, "speaker": resolved, "instruct": instruct, "text": text})
+        if not os.path.isfile(_line_audio.expected_path(lines_dir, position, expected)):
+            # "hash" is what the caller must stamp onto Post-Process's
+            # line_hashes_json for a re-voice of THIS line (see
+            # web/script_library.js's queueLineRevoice / ScriptLibraryPanel.
+            # vue's revoiceAllPending) -- computed here from the exact same
+            # role_map this scan already resolved against, so it can't drift
+            # from what this function will check on the NEXT scan.
+            pending.append({"position": position, "speaker": resolved, "instruct": instruct, "text": text, "hash": expected})
         position += 1
     return base_name, pending
 
@@ -493,23 +498,23 @@ def _timing_manifest_path(act_folder: str, base_name: str) -> str:
 def stitch_lines(
     act_folder: str,
     base_name: str,
-    line_count: int,
+    line_hashes: List[str],
     line_texts: Optional[List[str]] = None,
     pause_s: float = DEFAULT_LINE_GAP_S,
 ) -> dict:
     """
-    Builds the final track by reading the LATEST-version file at each
-    position 0..line_count-1 in _audio/lines/<base_name>/ (see
-    nodes/_line_audio.py) -- backs the "✅ Done" button, the only place a
-    full stitch happens. Every position is expected to already have a take
-    whose hash matches its current content (Done only enables once the line
-    editor's own per-row check agrees they all do), so a missing position
-    here is a real error, not something to skip over.
+    Builds the final track by reading the EXACT file each position's
+    current content hashes to (see nodes/_line_audio.py's expected_path --
+    deterministic, no directory scan/"latest version" guessing) -- backs
+    the "✅ Done" button, the only place a full stitch happens. `line_hashes`
+    must be the caller's own freshly-computed hash per line (the line
+    editor already has these -- see LineEditorApp.vue's toggleDone), so a
+    missing file here is a real error (state genuinely doesn't match disk),
+    not something to skip over or fall back to guessing about.
     """
     lines_dir = os.path.join(act_folder, "_audio", "lines", base_name)
-    if line_count <= 0:
+    if not line_hashes:
         raise ValueError("No lines to stitch.")
-    latest = _line_audio.latest_by_position(lines_dir)
 
     sample_rate = None
     gap_samples = 0
@@ -517,12 +522,10 @@ def stitch_lines(
     timing_lines = []
     cursor_samples = 0
 
-    for pos in range(line_count):
-        entry = latest.get(pos)
-        if entry is None:
-            raise FileNotFoundError(f"Line at position {pos} has no rendered audio in {lines_dir}.")
-        _, _, filename = entry
-        path = os.path.join(lines_dir, filename)
+    for pos, content_hash in enumerate(line_hashes):
+        path = _line_audio.expected_path(lines_dir, pos, content_hash)
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"Line at position {pos} has no rendered audio matching its current content at {path}.")
         data, sr = sf.read(path, dtype="float32", always_2d=False)
         if sample_rate is None:
             sample_rate = sr
@@ -883,9 +886,9 @@ if _HAS_SERVER:
     @routes.post("/fl_cosyvoice3/script_library/stitch_lines")
     async def fl_cosyvoice3_script_library_stitch_lines(request):
         """
-        Stitches the latest take at each position 0..line_count-1 into the
-        final track -- the line editor's "✅ Done" button. See stitch_lines
-        for the actual logic.
+        Stitches the exact file each position's current content hashes to
+        into the final track -- the line editor's "✅ Done" button. See
+        stitch_lines for the actual logic.
         """
         try:
             data = await request.json()
@@ -895,18 +898,17 @@ if _HAS_SERVER:
         folder = data.get("folder", "").strip()
         base_name = data.get("base_name", "").strip()
         line_texts = data.get("line_texts")
+        line_hashes = data.get("line_hashes") or []
 
         if not folder or not os.path.isdir(folder):
             return web.json_response({"error": f"not a folder: {folder}"})
         if not base_name:
             return web.json_response({"error": "base_name is required"})
-        try:
-            line_count = int(data.get("line_count"))
-        except (TypeError, ValueError):
-            return web.json_response({"error": "line_count must be an integer"})
+        if not line_hashes or not all(isinstance(h, str) for h in line_hashes):
+            return web.json_response({"error": "line_hashes must be a non-empty array of strings"})
 
         try:
-            result = stitch_lines(folder, base_name, line_count, line_texts=line_texts)
+            result = stitch_lines(folder, base_name, line_hashes, line_texts=line_texts)
         except (FileNotFoundError, ValueError) as e:
             return web.json_response({"error": str(e)})
         except OSError as e:

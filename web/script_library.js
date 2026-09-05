@@ -156,7 +156,7 @@ const flActiveItem = new WeakMap();
 // non-malformed rows (kept in sync by LineEditorApp.vue's
 // reorganizeLines), stamped onto every Post-Process node found in the
 // prompt so it names that line's _audio/lines/ file
-// "<position>_<version>_<hash>.wav" instead of always position 0 (see
+// "<position>_<hash>.wav" instead of always position 0 (see
 // nodes/_line_audio.py / nodes/audio_post_process.py's line_index_override).
 let pendingRevoiceLineIndex = null;
 
@@ -170,6 +170,20 @@ let pendingRevoiceLineIndex = null;
 // disagreed with the editor's (see ScriptLibraryPanel.vue's `suffix`), the
 // audio was written to a folder nothing ever read from.
 let pendingRevoiceTarget = null;
+
+// Set alongside pendingRevoiceLineIndex/pendingRevoiceTarget: the content
+// hash (see src/shared/line_hash.js) the asking editor already computed
+// for this exact line, from the SAME resolved speaker+instruct+text it's
+// about to check the result against. Stamped onto Post-Process's
+// line_hashes_json input directly, the same literal-override pattern as
+// script_folder/script_base_name above -- Script Library's own
+// line_hashes_json OUTPUT only reaches Post-Process via a real graph
+// connection the user has to wire by hand, which a full render genuinely
+// needs (nothing else could supply per-line hashes for every line at
+// once) but a single re-voice doesn't: this editor already has the exact
+// value, and stamping it here means correctness never depends on whether
+// that wire exists in a given workflow.
+let pendingRevoiceContentHash = null;
 
 // Same subgraph-safe walk as buildFlNodeIndex, but collecting every
 // Post-Process node instead of indexing by id (a re-voice run has no
@@ -221,7 +235,7 @@ function findPromptEntry(prompt, node, classType) {
 const AUDIO_SAVER_CLASS_RE = /saveaudio|audiosave/i;
 
 // A single-line re-voice only needs Post-Process's own per-line file write
-// (_audio\lines\<script>\<position>_<version>_<hash>.wav, via
+// (_audio\lines\<script>\<position>_<hash>.wav, via
 // line_index_override) -- our own
 // "✅ Done" (stitch_lines) owns producing the actual final scene file now,
 // entirely server-side. If the user's graph still has a Save Audio node
@@ -294,6 +308,7 @@ if (!app._flScriptLibraryPatched) {
                         // backend's independent re-derivation of it.
                         if (pendingRevoiceTarget?.folder) ppEntry.inputs.script_folder = pendingRevoiceTarget.folder;
                         if (pendingRevoiceTarget?.baseName) ppEntry.inputs.script_base_name = pendingRevoiceTarget.baseName;
+                        if (pendingRevoiceContentHash) ppEntry.inputs.line_hashes_json = JSON.stringify([pendingRevoiceContentHash]);
                     }
                     stripDownstreamAudioSavers(prompt);
                 }
@@ -442,11 +457,11 @@ if (!app._flScriptLibraryPatched) {
     // can be opened for any row in the tree, not just whichever one is
     // "active", so folder_path/filename would otherwise resolve to a
     // DIFFERENT script than the one being re-voiced. Only saves that one
-    // line's own _audio/lines/<script>/<position>_<version>_<hash>.wav file
+    // line's own _audio/lines/<script>/<position>_<hash>.wav file
     // (via line_index_override = linePosition, see nodes/_line_audio.py) --
     // it does NOT touch the script's final stitched file any more: that
     // only happens once, when "✅ Done" stitches every line together.
-    queueLineRevoice = async function (node, { act, file, linePosition, speaker, instruct, text, folder, baseName }) {
+    queueLineRevoice = async function (node, { act, file, linePosition, speaker, instruct, text, folder, baseName, contentHash }) {
         const lineOverride = `${speaker} | ${instruct} | ${text}`;
 
         // Lock covers ONLY building the prompt (act/file/line_override are
@@ -459,12 +474,14 @@ if (!app._flScriptLibraryPatched) {
             flActiveItem.set(node, { act, file, lineOverride });
             pendingRevoiceLineIndex = linePosition;
             pendingRevoiceTarget = (folder && baseName) ? { folder, baseName } : null;
+            pendingRevoiceContentHash = contentHash || null;
             try {
                 promptResult = await app.graphToPrompt();
             } finally {
                 flActiveItem.delete(node);
                 pendingRevoiceLineIndex = null;
                 pendingRevoiceTarget = null;
+                pendingRevoiceContentHash = null;
             }
         });
 

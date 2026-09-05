@@ -1,4 +1,4 @@
-import { _ as ne, r as E, o as ae, M as le, i as v, e as m, u as C, d as p, h as R, F as I, j as z, n as ue, t as x, S as B, l as de, Q as D, b as h, s as w, k as A, W as j, m as pe, p as fe, q as ve, P as he } from "./styles_link.js";
+import { _ as ne, r as E, o as ae, M as le, i as h, e as m, u as C, d as p, h as R, F as I, j as z, n as de, t as x, S as B, l as ue, Q as D, b as v, s as w, k as A, W as j, m as pe, p as fe, q as he, P as ve } from "./styles_link.js";
 const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = { class: "tools-row" }, be = {
   key: 0,
   class: "tree-empty"
@@ -58,12 +58,12 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
         return "";
       }
     }
-    const n = E(i.folderWidget.value || ""), u = E(i.actWidget.value || ""), a = E([]), r = D(/* @__PURE__ */ new Set()), f = D(/* @__PURE__ */ new Set()), k = E(""), _ = E(((T = i.filterWidget) == null ? void 0 : T.value) ?? "");
+    const n = E(i.folderWidget.value || ""), d = E(i.actWidget.value || ""), a = E([]), r = D(/* @__PURE__ */ new Set()), f = D(/* @__PURE__ */ new Set()), k = E(""), _ = E(((T = i.filterWidget) == null ? void 0 : T.value) ?? "");
     function P() {
       i.filterWidget && (_.value = i.filterWidget.value ?? "");
     }
-    const U = de(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
-    function d(e) {
+    const U = ue(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
+    function u(e) {
       k.value = e, i.node.setDirtyCanvas(!0, !0);
     }
     function V() {
@@ -85,7 +85,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     function g() {
       H(), i.node._flCheckedItems = V();
       const e = a.value.reduce((t, o) => t + o.scripts.length, 0), s = a.value.length && !a.value.every((t) => t.filter_applied !== !1) ? ` (some acts have no "${_.value}" files -- showing all .txt there)` : "";
-      d(`${a.value.length} act(s), ${e} script(s)${s} | ${r.size} checked`);
+      u(`${a.value.length} act(s), ${e} script(s)${s} | ${r.size} checked`);
     }
     function G() {
       let e = !1;
@@ -112,7 +112,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       e && (e.indeterminate = q(s.act, s.scripts, b(s)) === "some");
     }
     function Q(e) {
-      u.value = e, i.actWidget.value = e, f.has(e) ? f.delete(e) : f.add(e);
+      d.value = e, i.actWidget.value = e, f.has(e) ? f.delete(e) : f.add(e);
     }
     function J(e, s) {
       const t = b(e);
@@ -124,7 +124,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       t ? r.add(l(e, s)) : r.delete(l(e, s)), g();
     }
     function Z(e, s) {
-      u.value = e, i.actWidget.value = e, i.scriptFileWidget.value = s;
+      d.value = e, i.actWidget.value = e, i.scriptFileWidget.value = s;
     }
     function ee() {
       a.value.forEach((e) => e.scripts.forEach((s) => {
@@ -151,7 +151,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     }
     function ie() {
       if (!n.value) {
-        d("Set a project folder first");
+        u("Set a project folder first");
         return;
       }
       i.openRolesEditor({ root: n.value, suffix: _.value });
@@ -188,49 +188,49 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     }
     async function S() {
       if (P(), !n.value) {
-        a.value = [], d("No project folder set -- click below to browse for one");
+        a.value = [], u("No project folder set -- click below to browse for one");
         return;
       }
       try {
         const s = await (await fetch(`${B}/tree?path=${encodeURIComponent(n.value)}&suffix=${encodeURIComponent(_.value)}`)).json();
         if (s.error) {
-          d(`Error: ${s.error}`);
+          u(`Error: ${s.error}`);
           return;
         }
-        if (F(n.value), a.value = s.tree, (!u.value || !a.value.some((o) => o.act === u.value)) && (u.value = a.value.length ? a.value[0].act : "", i.actWidget.value = u.value), u.value && f.add(u.value), !i.scriptFileWidget.value && u.value) {
-          const o = a.value.find((c) => c.act === u.value);
+        if (F(n.value), a.value = s.tree, (!d.value || !a.value.some((o) => o.act === d.value)) && (d.value = a.value.length ? a.value[0].act : "", i.actWidget.value = d.value), d.value && f.add(d.value), !i.scriptFileWidget.value && d.value) {
+          const o = a.value.find((c) => c.act === d.value);
           o != null && o.scripts.length && (i.scriptFileWidget.value = o.scripts[0]);
         }
         const t = G();
         g(), t && g();
       } catch (e) {
-        d(`Error: ${e}`);
+        u(`Error: ${e}`);
       }
     }
     async function ce() {
       if (!n.value) {
-        d("Set a project folder first");
+        u("Set a project folder first");
         return;
       }
       let e;
       try {
         const c = await (await fetch(`${B}/pending_revoice?path=${encodeURIComponent(n.value)}&suffix=${encodeURIComponent(_.value)}`)).json();
         if (c.error) {
-          d(`Error: ${c.error}`);
+          u(`Error: ${c.error}`);
           return;
         }
         e = c.scripts || [];
       } catch (o) {
-        d(`Error: ${o}`);
+        u(`Error: ${o}`);
         return;
       }
       const s = e.reduce((o, c) => o + c.pending.length, 0);
       if (!s) {
-        d("Nothing needs re-voicing");
+        u("Nothing needs re-voicing");
         return;
       }
       let t = 0;
-      d(`Re-voicing 0/${s}...`);
+      u(`Re-voicing 0/${s}...`);
       for (const o of e)
         for (const c of o.pending) {
           try {
@@ -245,23 +245,30 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
               // LineEditorApp's revoiceRow): folder/base_name here come
               // from the pending_revoice scan, which resolved them with
               // THIS panel's suffix -- so they're the same names the
-              // scan itself checked against.
+              // scan itself checked against. contentHash likewise comes
+              // straight from that same scan (nodes/script_library.py's
+              // script_pending_lines already computed it from this
+              // exact resolved speaker/instruct/text) instead of being
+              // recomputed here -- stamped onto Post-Process's
+              // line_hashes_json so the re-voice doesn't depend on the
+              // graph having that output/input wired.
               folder: o.folder,
-              baseName: o.base_name
+              baseName: o.base_name,
+              contentHash: c.hash
             });
           } catch ($) {
             console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${o.act}/${o.file} position ${c.position}`, $);
           }
-          t++, d(`Re-voicing ${t}/${s}...`);
+          t++, u(`Re-voicing ${t}/${s}...`);
         }
-      d(`Re-voiced ${t}/${s} line(s)`), S();
+      u(`Re-voiced ${t}/${s} line(s)`), S();
     }
     function N() {
       if (Y(), P(), !n.value) {
         const e = W();
         e && (n.value = e, i.folderWidget.value = e);
       }
-      n.value ? S() : d("No project folder set -- click below to browse for one");
+      n.value ? S() : u("No project folder set -- click below to browse for one");
     }
     let L = null;
     return ae(() => {
@@ -279,7 +286,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       }, je);
     }), le(() => {
       L && clearInterval(L);
-    }), (e, s) => (h(), v("div", ge, [
+    }), (e, s) => (v(), h("div", ge, [
       m(C(w), {
         label: U.value,
         title: n.value,
@@ -333,14 +340,14 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       ]),
       p("div", {
         class: "tree",
-        style: ue({ minHeight: `${Ae}px` })
+        style: de({ minHeight: `${Ae}px` })
       }, [
-        a.value.length ? R("", !0) : (h(), v("div", be, "(no acts found)")),
-        (h(!0), v(I, null, z(a.value, (t) => (h(), v(I, {
+        a.value.length ? R("", !0) : (v(), h("div", be, "(no acts found)")),
+        (v(!0), h(I, null, z(a.value, (t) => (v(), h(I, {
           key: t.act
         }, [
           p("div", {
-            class: A(["act-row", { "act-row-active": t.act === u.value }]),
+            class: A(["act-row", { "act-row-active": t.act === d.value }]),
             onClick: (o) => Q(t.act)
           }, [
             p("input", {
@@ -357,9 +364,9 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
             p("span", ye, x(t.act), 1),
             p("span", Se, x(O(t) ? `${O(t)}/${t.scripts.length}` : t.scripts.length), 1)
           ], 10, me),
-          f.has(t.act) ? (h(!0), v(I, { key: 0 }, z(t.scripts, (o) => (h(), v("div", {
+          f.has(t.act) ? (v(!0), h(I, { key: 0 }, z(t.scripts, (o) => (v(), h("div", {
             key: o,
-            class: A(["script-row", { "script-row-active": t.act === u.value && y.scriptFileWidget.value === o }]),
+            class: A(["script-row", { "script-row-active": t.act === d.value && y.scriptFileWidget.value === o }]),
             onClick: (c) => Z(t.act, o)
           }, [
             p("input", {
@@ -377,36 +384,36 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
               title: "Open the full-screen line-by-line editor",
               onClick: j((c) => re(t.act, o), ["stop"])
             }, "✏️", 8, Re),
-            b(t).has(o) ? (h(), v("span", xe, "✅")) : R("", !0),
+            b(t).has(o) ? (v(), h("span", xe, "✅")) : R("", !0),
             p("span", {
-              class: A(["script-name", { "script-name-active": t.act === u.value && y.scriptFileWidget.value === o }]),
+              class: A(["script-name", { "script-name-active": t.act === d.value && y.scriptFileWidget.value === o }]),
               title: o
             }, x(o), 11, Fe),
-            (t.pending_scripts || []).includes(o) ? (h(), v("span", We, "⚠️")) : R("", !0),
-            (t.audio_scripts || []).includes(o) ? (h(), v("span", Le, "🔊")) : R("", !0)
+            (t.pending_scripts || []).includes(o) ? (v(), h("span", We, "⚠️")) : R("", !0),
+            (t.audio_scripts || []).includes(o) ? (v(), h("span", Le, "🔊")) : R("", !0)
           ], 10, $e))), 128)) : R("", !0)
         ], 64))), 128))
       ], 4),
       p("div", Ie, x(k.value), 1)
     ]));
   }
-}, Oe = /* @__PURE__ */ ne(qe, [["__scopeId", "data-v-415a2104"]]);
-function Te({ node: y, folderWidget: i, actWidget: l, filterWidget: F, scriptFileWidget: W, openBrowseDialog: n, openRolesEditor: u, openLineEditor: a, queueLineRevoice: r }) {
+}, Oe = /* @__PURE__ */ ne(qe, [["__scopeId", "data-v-06adc896"]]);
+function Te({ node: y, folderWidget: i, actWidget: l, filterWidget: F, scriptFileWidget: W, openBrowseDialog: n, openRolesEditor: d, openLineEditor: a, queueLineRevoice: r }) {
   fe(import.meta.url);
   const f = document.createElement("div");
   f.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
-  const k = ve(Oe, {
+  const k = he(Oe, {
     node: y,
     folderWidget: i,
     actWidget: l,
     filterWidget: F,
     scriptFileWidget: W,
     openBrowseDialog: n,
-    openRolesEditor: u,
+    openRolesEditor: d,
     openLineEditor: a,
     queueLineRevoice: r
   });
-  return k.use(he, { ripple: !0 }), k.mount(f), { element: f, unmount: () => k.unmount() };
+  return k.use(ve, { ripple: !0 }), k.mount(f), { element: f, unmount: () => k.unmount() };
 }
 export {
   Te as mountScriptLibraryPanel

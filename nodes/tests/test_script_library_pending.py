@@ -49,7 +49,12 @@ def test_script_pending_lines_reports_missing_audio():
         role_map = sl.root_role_map(root)
         base_name, pending = sl.script_pending_lines(act_folder, "Scene_speakers.txt", "_speakers.txt", role_map)
         assert base_name == "Scene"
-        assert pending == [{"position": 0, "speaker": "narrator_v1.pt", "instruct": "calm", "text": "Hello."}]
+        # "hash" lets a caller (web/script_library.js's queueLineRevoice)
+        # stamp the correct expected hash onto Post-Process directly for a
+        # re-voice, without depending on the Script Library -> Post-Process
+        # line_hashes_json graph wire being present.
+        expected_hash = la.line_hash("narrator_v1.pt", "calm", "Hello.")
+        assert pending == [{"position": 0, "speaker": "narrator_v1.pt", "instruct": "calm", "text": "Hello.", "hash": expected_hash}]
     finally:
         shutil.rmtree(root)
 
@@ -61,7 +66,7 @@ def test_script_pending_lines_empty_once_matching_file_exists():
         lines_dir = os.path.join(act_folder, "_audio", "lines", "Scene")
         os.makedirs(lines_dir)
         expected_hash = la.line_hash("narrator_v1.pt", "calm", "Hello.")
-        open(os.path.join(lines_dir, la.make_line_filename(0, 1, expected_hash)), "w").close()
+        open(os.path.join(lines_dir, la.make_line_filename(0, expected_hash)), "w").close()
 
         role_map = sl.root_role_map(root)
         _, pending = sl.script_pending_lines(act_folder, "Scene_speakers.txt", "_speakers.txt", role_map)
@@ -80,7 +85,7 @@ def test_role_recast_makes_a_previously_fresh_line_pending_again():
         _write_script(act_folder, "Scene_speakers.txt", ["narrator | calm | Hello."])
         lines_dir = os.path.join(act_folder, "_audio", "lines", "Scene")
         os.makedirs(lines_dir)
-        open(os.path.join(lines_dir, la.make_line_filename(0, 1, la.line_hash("narrator_v1.pt", "calm", "Hello."))), "w").close()
+        open(os.path.join(lines_dir, la.make_line_filename(0, la.line_hash("narrator_v1.pt", "calm", "Hello."))), "w").close()
 
         role_map_before = sl.root_role_map(root)
         _, pending_before = sl.script_pending_lines(act_folder, "Scene_speakers.txt", "_speakers.txt", role_map_before)
@@ -92,7 +97,10 @@ def test_role_recast_makes_a_previously_fresh_line_pending_again():
 
         role_map_after = sl.root_role_map(root)
         _, pending_after = sl.script_pending_lines(act_folder, "Scene_speakers.txt", "_speakers.txt", role_map_after)
-        assert pending_after == [{"position": 0, "speaker": "narrator_v2.pt", "instruct": "calm", "text": "Hello."}]
+        assert pending_after == [{
+            "position": 0, "speaker": "narrator_v2.pt", "instruct": "calm", "text": "Hello.",
+            "hash": la.line_hash("narrator_v2.pt", "calm", "Hello."),
+        }]
     finally:
         shutil.rmtree(root)
 

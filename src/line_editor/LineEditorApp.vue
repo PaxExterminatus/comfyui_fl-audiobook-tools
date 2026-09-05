@@ -11,7 +11,7 @@ import PickPanel from "./PickPanel.vue";
 import { usePanelWidth } from "../shared/panel_width.js";
 import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
-import { lineHash, latestByPosition } from "../shared/line_hash.js";
+import { lineHash, hasExpectedFile, mostRecentAtPosition } from "../shared/line_hash.js";
 import {
     joinPath, stripSuffixAndExt, dirOf, markRoleStale,
     SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
@@ -155,23 +155,25 @@ const linesDirPath = computed(() => joinPath(joinPath(audioFolder.value, "lines"
 // Ground truth for "does this row have audio to play" -- an actual listing
 // of _audio\lines\<script>\, no separate state file. See src/shared/
 // line_hash.js / nodes/_line_audio.py: each file's name is
-// "<position>_<version>_<hash>.wav" -- position addresses a row purely by
-// its CURRENT rank among non-malformed rows (kept in sync on every
-// structural edit by reorganizeLines below), version picks out the latest
-// take at that position, and hash is compared against this row's OWN
-// currently-typed content to decide "voiced" vs "needs re-voice" -- nothing
-// is ever stored, so it can't fall out of sync with what's actually here.
+// "<position>_<hash>.wav" -- position addresses a row purely by its
+// CURRENT rank among non-malformed rows (kept in sync on every structural
+// edit by reorganizeLines below), and hash is compared against this row's
+// OWN currently-typed content to decide "voiced" vs "needs re-voice" --
+// nothing is ever stored, so it can't fall out of sync with what's
+// actually here. fileMtimes (from the same listing call) is only used for
+// the mode-1 "nothing fresh, but play the last take anyway" fallback.
 const lineFilesOnDisk = ref(new Set());
+const lineFileMtimes = ref({});
 async function loadLineFiles() {
     try {
         const resp = await fetch(`${BROWSE_API}?path=${encodeURIComponent(linesDirPath.value)}`);
         const data = await resp.json();
         lineFilesOnDisk.value = new Set(Array.isArray(data.files) ? data.files : []);
+        lineFileMtimes.value = data.file_mtimes || {};
     } catch (e) {
         // Transient fetch error -- leave whatever we already had.
     }
 }
-const latestFiles = computed(() => latestByPosition(lineFilesOnDisk.value)); // position -> {position,version,hash,filename}
 
 // This row's rank among non-malformed rows -- the addressing scheme every
 // per-line file is named by (see lineFilesOnDisk's own comment). Malformed
@@ -184,9 +186,13 @@ const positionByIndex = computed(() => {
     });
     return map;
 });
+// The most-recently-modified file at this row's position, REGARDLESS of
+// whether it matches current content -- mode 1's "play whatever's there"
+// fallback (see rowIsFresh below for the strict, hash-matching check
+// instead). null if this position has no file at all.
 function latestFileFor(index) {
     const pos = positionByIndex.value.get(index);
-    return pos === undefined ? null : (latestFiles.value.get(pos) || null);
+    return pos === undefined ? null : mostRecentAtPosition(lineFilesOnDisk.value, lineFileMtimes.value, pos);
 }
 
 // Resolves a role CODE to its _roles.json "speaker" field EXACTLY as
@@ -223,11 +229,15 @@ watch(
 function rowHasAnyTake(index) {
     return latestFileFor(index) !== null;
 }
+// Strict check: does the EXACT file this row's current content would hash
+// to already exist (see src/shared/line_hash.js's hasExpectedFile) --
+// unlike rowHasAnyTake/latestFileFor, this doesn't care what else exists
+// at this position, only whether THIS content has already been rendered.
 function rowIsFresh(row, index) {
-    const latest = latestFileFor(index);
-    if (!latest) return false;
+    const pos = positionByIndex.value.get(index);
+    if (pos === undefined) return false;
     const expected = expectedHash.get(row.__key);
-    return expected !== undefined && latest.hash === expected;
+    return expected !== undefined && hasExpectedFile(lineFilesOnDisk.value, pos, expected);
 }
 
 const isCurrentlyReady = computed(() => readyScripts.value.includes(filename.value));
@@ -352,7 +362,7 @@ function playRowSequential(startIndex) {
         let audioFilename = null;
         while (idx < rows.value.length) {
             if (!rows.value[idx].malformed) {
-                audioFilename = latestFileFor(idx)?.filename ?? null;
+                audioFilename = latestFileFor(idx);
                 if (audioFilename) break;
             }
             idx++;
@@ -491,7 +501,7 @@ async function focusNewRow(key) {
 // ever trying to detect drift after the fact -- see nodes/_line_audio.py's
 // reorganize_lines. `deletes` are positions whose row no longer exists at
 // all; `moves` are [from, to] pairs for rows that merely shifted position,
-// their own version+hash untouched. Best-effort: a failure here just
+// their own hash untouched. Best-effort: a failure here just
 // leaves stray/misplaced files behind (recoverable -- worst case a row
 // shows the wrong voiced state until manually re-voiced), never blocks the
 // edit itself, which has already happened locally by the time this runs.
@@ -728,11 +738,31 @@ async function revoiceRow(row, index) {
         // linePosition is this row's CURRENT rank among non-malformed rows
         // (see positionByIndex) -- the backend writes/reads per-line files
         // addressed purely by that, not by any persisted id.
+        //
+        // contentHash is computed HERE, client-side, and stamped directly
+        // onto Post-Process's line_hashes_json input (see
+        // web/script_library.js's queueLineRevoice) rather than relying on
+        // Script Library's own line_hashes_json OUTPUT reaching it through
+        // an actual graph connection. That 4th output only exists for a
+        // FULL render (where nothing else could supply it) -- for a single-
+        // line re-voice, this editor already has the exact same resolved
+        // speaker/instruct/text script_library.py would hash from, so
+        // computing it here guarantees the file written now has EXACTLY
+        // the hash this editor's own rowIsFresh check will look for right
+        // after, with no dependency on whether the user has wired that new
+        // output/input pair in their canvas. Without this, an unwired graph
+        // silently falls back to hashing just the text (audio_post_process.
+        // py's line_hashes[i] fallback), which this editor's expected hash
+        // (voice+instruct+text) could never match -- the render would
+        // genuinely succeed but the row would look "still not voiced"
+        // forever, indistinguishable from re-voicing doing nothing at all.
+        const contentHash = await lineHash(resolvedSpeakerForHash(row.speaker), row.instruct, row.text);
         await props.revoiceApi.revoiceLine({
             linePosition: positionByIndex.value.get(index),
             speaker: row.speaker,
             instruct: row.instruct,
             text: row.text,
+            contentHash,
             file: filename.value,
             folder: props.folder,
             baseName: audioBaseName.value,
@@ -898,7 +928,12 @@ async function toggleDone() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     folder: props.folder, base_name: audioBaseName.value,
-                    line_count: nonMalformed.length, line_texts: nonMalformed.map((r) => r.text),
+                    // Each position's own current hash -- lets stitch_lines
+                    // read the EXACT file that content hashes to, no
+                    // directory-scan guessing (see nodes/_line_audio.py's
+                    // expected_path).
+                    line_hashes: nonMalformed.map((r) => expectedHash.get(r.__key)),
+                    line_texts: nonMalformed.map((r) => r.text),
                 }),
             });
             const stitchData = await stitchResp.json();
@@ -1122,7 +1157,6 @@ onBeforeUnmount(() => {
                 >{{ isPlayingAnything ? "⏸" : "▶" }}</span>
 
                 <template v-if="audioState.best">
-                    <div class="audio-label">{{ audioState.best }}</div>
                     <audio
                         ref="audioElRef"
                         controls
@@ -1210,7 +1244,7 @@ onBeforeUnmount(() => {
                         >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
 
                         <InputGroup class="speaker-group">
-                            <InputGroupAddon><i class="pi pi-user" /></InputGroupAddon>
+                            <InputGroupAddon><i class="pi pi-address-book" /></InputGroupAddon>
                             <Dropdown
                                 :model-value="row.speaker"
                                 :options="roleEntries"
@@ -1230,7 +1264,7 @@ onBeforeUnmount(() => {
                         </InputGroup>
 
                         <InputGroup class="instruct-group">
-                            <InputGroupAddon><i class="pi pi-list" /></InputGroupAddon>
+                            <InputGroupAddon><i class="pi pi-book" /></InputGroupAddon>
                             <Dropdown
                                 :model-value="row.instruct"
                                 :options="instructionEntries"
@@ -1249,13 +1283,16 @@ onBeforeUnmount(() => {
                             </Dropdown>
                         </InputGroup>
 
-                        <span
+                        <Button
                             v-if="revoiceApi && !isCurrentlyReady"
                             class="revoice-btn"
+                            text size="small"
+                            :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
                             :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
+                            :disabled="pendingRevoiceRows.has(row)"
                             :title="revoiceTitle(row, index)"
                             @click="revoiceRow(row, index)"
-                        >{{ pendingRevoiceRows.has(row) ? "⏳" : "🔁" }}</span>
+                        />
 
                         <Button
                             class="speaker-file-btn"
@@ -1269,7 +1306,7 @@ onBeforeUnmount(() => {
                         <span class="role-info-btn" @mouseenter="showRoleInfoPopover($event.target, row.speaker)" @mouseleave="hideRoleInfoPopover">ℹ</span>
 
                         <div class="spacer" />
-                        <Button icon="pi pi-trash" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
+                        <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
                     </div>
                     <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
 

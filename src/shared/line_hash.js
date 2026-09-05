@@ -5,11 +5,11 @@
 // substituted via _roles.json), not a raw role code -- see
 // resolvedSpeakerForHash in line_editor's LineEditorApp.vue.
 //
-// This is the entire replacement for _state.json's per-line
-// "voiced/unvoiced/stale" status: a line is voiced for its CURRENT content
-// exactly when this matches the hash baked into its latest-version file's
-// name (see parseLineFilename/latestByPosition below) -- recomputed live as
-// the user types or a role gets recast elsewhere, never stored anywhere.
+// Per-line audio lives at _audio\lines\<script>\<position>_<hash>.wav (see
+// nodes/_line_audio.py's module docstring) -- position+hash together are
+// the whole filename, deterministically, so "is this line voiced for its
+// current content" is just "does that exact name exist in the directory
+// listing", no separate state file and no directory scan needed.
 export async function lineHash(speaker, instruct, text) {
     const raw = `${(speaker || "").trim()}|${(instruct || "").trim()}|${(text || "").trim()}`;
     const bytes = new TextEncoder().encode(raw);
@@ -18,31 +18,46 @@ export async function lineHash(speaker, instruct, text) {
     return hex.slice(0, 8);
 }
 
-const LINE_FILE_RE = /^(\d+)_(\d+)_([0-9a-f]+)\.wav$/i;
+const LINE_FILE_RE = /^(\d+)_([0-9a-f]+)\.wav$/i;
 
-// filename -> {position, version, hash}, or null if it doesn't match this
-// scheme (an old id<N>.wav/NNNN.wav file from before it existed, or
-// _state.json) -- mirrors nodes/_line_audio.py's parse_line_filename.
+export function makeLineFilename(position, hash) {
+    return `${String(position).padStart(4, "0")}_${hash}.wav`;
+}
+
+// filename -> {position, hash}, or null if it doesn't match this scheme.
+// Mirrors nodes/_line_audio.py's parse_line_filename.
 export function parseLineFilename(name) {
     const m = LINE_FILE_RE.exec(name);
     if (!m) return null;
-    return { position: Number(m[1]), version: Number(m[2]), hash: m[3].toLowerCase() };
+    return { position: Number(m[1]), hash: m[2].toLowerCase() };
 }
 
-// Every file in `filenames` (e.g. the Set loadLineFiles() populates in
-// LineEditorApp.vue), reduced to the HIGHEST-version entry per position --
-// "the current take" for each line that's ever been rendered, regardless
-// of whether its hash still matches current content. Mirrors
-// _line_audio.py's latest_by_position.
-export function latestByPosition(filenames) {
-    const latest = new Map();
+// Whether `filenames` (e.g. the Set loadLineFiles() populates in
+// LineEditorApp.vue) already has the exact file a line at `position`
+// saying whatever hashes to `hash` would live at -- the entire "is this
+// line voiced right now" check, mirrors _line_audio.py's expected_path +
+// os.path.isfile.
+export function hasExpectedFile(filenames, position, hash) {
+    return filenames.has(makeLineFilename(position, hash));
+}
+
+// Whichever file at `position` was modified most recently, regardless of
+// whether its hash matches current content -- the mode 1 "nothing voiced
+// for what this line says right now, but play the last take anyway"
+// fallback. `fileMtimes` is the same {filename: unixSeconds} map
+// BROWSE_API already returns alongside `files`. null if this position has
+// no file at all. Mirrors _line_audio.py's most_recent_at_position.
+export function mostRecentAtPosition(filenames, fileMtimes, position) {
+    let best = null;
+    let bestMtime = -Infinity;
     for (const name of filenames) {
         const parsed = parseLineFilename(name);
-        if (!parsed) continue;
-        const current = latest.get(parsed.position);
-        if (!current || parsed.version > current.version) {
-            latest.set(parsed.position, { ...parsed, filename: name });
+        if (!parsed || parsed.position !== position) continue;
+        const mtime = fileMtimes?.[name] ?? 0;
+        if (best === null || mtime > bestMtime) {
+            best = name;
+            bestMtime = mtime;
         }
     }
-    return latest;
+    return best;
 }

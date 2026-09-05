@@ -15,14 +15,16 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
 - **Full-screen line editor** (opens from the Script Library tree) -- one
   row per script line: speaker, instruct text, spoken text, drag-to-merge,
   split, add, delete. Each line's own per-line audio file is named
-  `_audio/lines/<script>/<position>_<version>_<hash>.wav` -- `position` is
-  this line's current rank among the script's lines (the editor keeps it in
-  sync on every delete/merge/split), `version` is a plain "how many times
-  has this position ever been rendered" counter (a 🔁 re-voice adds a new
-  version rather than overwriting, so an old take is never lost), and
-  `hash` is a short fingerprint of that line's CURRENT voice+instruct+text.
-  A line is "voiced" exactly when its highest-version file's hash matches
-  what the line currently says -- computed live, nothing is ever stored, so
+  `_audio/lines/<script>/<position>_<hash>.wav` -- `position` is this
+  line's current rank among the script's lines (the editor keeps it in
+  sync on every delete/merge/split), and `hash` is a short fingerprint of
+  that line's CURRENT voice+instruct+text. A line is "voiced" exactly when
+  that exact file already exists -- computed live, nothing is ever stored,
+  and a 🔁 re-voice of unchanged content simply overwrites its one file in
+  place (a line has one current take per distinct wording it's ever said,
+  not a growing history -- if an edit is later reverted back to some
+  earlier wording, whatever was rendered for that wording, if still on
+  disk, is immediately "voiced" again with no re-render needed), so
   editing, merging, deleting, or reordering lines never desyncs playback
   the way relying on one script-wide timing offset (or a separate state
   file that can silently drift from what's actually on disk) would. A 🔁
@@ -54,9 +56,15 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   Process's `line_hashes_json` input (both nodes are in THIS addon, no
   upstream patch needed -- just a connection in your own workflow, the same
   way `folder_path`/`filename` already feed Post-Process's `script_folder`/
-  `script_base_name`). Without it, Post-Process falls back to hashing just
-  the text (no voice/instruct), so a role recast alone won't be detected as
-  making a line need re-voicing.
+  `script_base_name`). Only needed for a FULL script render (queueing a
+  whole checked script through your graph) -- the 🔁 per-line re-voice and
+  "🔁 Re-voice all pending" buttons already stamp the correct hash onto
+  Post-Process directly (they compute it from the exact same content
+  they're re-voicing, so there's nothing for a missing wire to break there).
+  Without this wire, a FULL render falls back to hashing just the text (no
+  voice/instruct), so a role recast alone won't be detected as making one
+  of its lines need re-voicing until it's re-voiced through the line editor
+  or the pending-all button at least once.
 
 ### Required patch: FL CosyVoice3 Speaker Instruct2 Dialog needs a 3rd output
 
@@ -105,7 +113,7 @@ MyPlay/                          <- Script Library's folder_path
     Act01/
         Scene 0101 Something_speakers.txt   <- "preset | instruct | line text", one turn per line
         _audio/                                        <- created automatically as you render
-            lines/<script>/<position>_<version>_<hash>.wav  <- per-line audio (see above)
+            lines/<script>/<position>_<hash>.wav  <- per-line audio (see above)
             timing/<script>.json                        <- per-line timing manifest for playback sync
             <script>_00001_.flac            <- final stitched track (Save Audio, or "✅ Done")
 ```

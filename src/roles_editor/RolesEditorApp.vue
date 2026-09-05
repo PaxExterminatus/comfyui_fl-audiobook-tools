@@ -23,7 +23,7 @@ import Message from "primevue/message";
 import Dropdown from "primevue/dropdown";
 import Textarea from "primevue/textarea";
 import { usePanelWidth } from "../shared/panel_width.js";
-import PanelWidthButtons from "../shared/PanelWidthButtons.vue";
+import DialogHeader from "../shared/DialogHeader.vue";
 import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -240,11 +240,7 @@ onBeforeUnmount(() => {
         class="roles-dialog"
     >
         <template #header>
-            <div class="header-row">
-                <div class="dialog-title">Roles</div>
-                <div class="status-el">{{ status }}</div>
-                <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
-            </div>
+            <DialogHeader title="Roles" :status="status" :width-presets="widthPresets" :set-width="setPanelWidth" />
         </template>
 
         <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>

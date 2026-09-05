@@ -3,14 +3,26 @@ import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
 import LineEditorApp from "../LineEditorApp.vue";
+import { lineHash } from "../../shared/line_hash.js";
 
 const SCRIPT_TEXT = "narrator | calm | First line.\nnarrator | calm | Second line.";
+
+// No _state.json any more -- a line's voiced/fresh state is purely
+// "does _audio\lines\<script>\ have a <position>_<version>_<hash>.wav
+// whose hash matches this row's CURRENT (role-resolved) content" (see
+// src/shared/line_hash.js). Builds a real filename the same way the app
+// itself will compute the EXPECTED one, so these tests exercise the actual
+// hashing path instead of a stand-in.
+async function lineFileName(position, version, speaker, instruct, text) {
+    const hash = await lineHash(speaker, instruct, text);
+    return `${String(position).padStart(4, "0")}_${String(version).padStart(2, "0")}_${hash}.wav`;
+}
 
 function mockFetch(overrides = {}) {
     const files = new Map([
         ["Test_speakers.txt", SCRIPT_TEXT],
     ]);
-    if (overrides.stateJson) files.set("_state.json", overrides.stateJson);
+    Object.entries(overrides.extraFiles || {}).forEach(([name, content]) => files.set(name, content));
 
     return vi.fn(async (url, opts) => {
         const u = typeof url === "string" ? url : url.toString();
@@ -54,6 +66,10 @@ function mockFetch(overrides = {}) {
         }
         if (u.startsWith("/fl_cosyvoice3/script_library/delete_audio")) {
             return { json: async () => ({ deleted: [] }) };
+        }
+        if (u.startsWith("/fl_cosyvoice3/script_library/reorganize_lines")) {
+            overrides.onReorganize?.(JSON.parse(opts.body));
+            return { json: async () => ({ deleted: [], moved: [] }) };
         }
         throw new Error(`unmocked fetch: ${u}`);
     });
@@ -124,8 +140,9 @@ describe("LineEditorApp", () => {
         wrapper.unmount();
     });
 
-    it("deletes a line after confirming", async () => {
-        const { wrapper } = await mountEditor();
+    it("deletes a line after confirming, and reorganizes the lines folder to close the gap", async () => {
+        const onReorganize = vi.fn();
+        const { wrapper } = await mountEditor({ onReorganize });
         const deleteBtns = [...document.querySelectorAll(".fl-line-row .p-button")].filter((b) => b.title === "Delete this line");
         deleteBtns[0].click();
 
@@ -135,18 +152,61 @@ describe("LineEditorApp", () => {
 
         await vi.waitFor(() => expect(document.querySelectorAll(".fl-line-row").length).toBe(1));
         expect(lineTexts()).toEqual(["Second line."]);
+        // Position 0 (the deleted row) is gone; position 1 (Second line.,
+        // now the only row) shifts down to 0 -- see reorganizeLines.
+        await vi.waitFor(() => expect(onReorganize).toHaveBeenCalledWith(
+            expect.objectContaining({ deletes: [0], moves: [[1, 0]] }),
+        ));
         wrapper.unmount();
     });
 
-    it("marks a line stale after editing it, and re-voicing it clears that", async () => {
+    it("re-voicing a fresh line is not offered as stale, but editing its text makes it so, and revoices with the new text at its position", async () => {
         const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
         const { wrapper } = await mountEditor({
             revoiceApi,
-            stateJson: JSON.stringify({ next_id: 3, lines: [{ id: 1, text: "First line.", status: "voiced" }, { id: 2, text: "Second line.", status: "voiced" }] }),
+            lineFiles: [
+                await lineFileName(0, 1, "narrator", "calm", "First line."),
+                await lineFileName(1, 1, "narrator", "calm", "Second line."),
+            ],
         });
+
+        const revoiceBtn = document.querySelector(".revoice-btn");
+        await vi.waitFor(() => expect(revoiceBtn.classList.contains("stale")).toBe(false));
 
         const textarea = [...document.querySelectorAll(".fl-textarea")][0];
         textarea.value = "First line, changed.";
+        textarea.dispatchEvent(new Event("input"));
+        await vi.waitFor(() => expect(revoiceBtn.classList.contains("stale")).toBe(true));
+
+        revoiceBtn.click();
+        await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
+            expect.objectContaining({ linePosition: 0, text: "First line, changed." }),
+        ));
+        wrapper.unmount();
+    });
+
+    it("re-voicing a line after Prev/Next passes the CURRENTLY open filename, not the one the editor first opened for", async () => {
+        // Regression test: ScriptLibraryPanel's editScript() builds
+        // revoiceApi.revoiceLine with a `file` closed over whatever script
+        // was passed to openLineEditor -- that closure never updates when
+        // this same editor instance switches to a different script via
+        // Prev/Next (switchToFile only touches this component's own
+        // filename ref). Re-voicing a line after navigating used to re-voice
+        // into the ORIGINAL script's _audio\lines\ folder while the line
+        // being edited (in the NEW script) kept showing its old audio.
+        const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
+        const { wrapper } = await mountEditor({
+            revoiceApi,
+            scriptList: ["Test_speakers.txt", "Second_speakers.txt"],
+            extraFiles: { "Second_speakers.txt": "narrator | calm | Third line.\nnarrator | calm | Fourth line." },
+        });
+
+        const nextBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim().startsWith("Next"));
+        nextBtn.click();
+        await vi.waitFor(() => expect(lineTexts()).toContain("Third line."));
+
+        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        textarea.value = "Third line, changed.";
         textarea.dispatchEvent(new Event("input"));
 
         const revoiceBtn = document.querySelector(".revoice-btn");
@@ -154,7 +214,28 @@ describe("LineEditorApp", () => {
         revoiceBtn.click();
 
         await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
-            expect.objectContaining({ lineId: 1, text: "First line, changed." }),
+            expect.objectContaining({ text: "Third line, changed.", file: "Second_speakers.txt" }),
+        ));
+        wrapper.unmount();
+    });
+
+    it("re-voicing pins the output location to the folder this editor actually reads lines from", async () => {
+        // The re-voiced file must land in the SAME _audio\lines\<base>\ this
+        // editor lists (linesDirPath). Letting the backend re-derive that from
+        // its own script_filter widget is a second, independent derivation of
+        // the same name -- when the two drifted, the audio was written to
+        // lines\<script>_speakers\ while the editor kept reading lines\<script>\,
+        // so the edited line played its old take and the render looked like a
+        // no-op despite completing without errors.
+        const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
+        const { wrapper } = await mountEditor({ revoiceApi });
+
+        document.querySelector(".revoice-btn").click();
+
+        await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
+            // "Test_speakers.txt" minus the "_speakers.txt" suffix -- the same
+            // base name audioBaseName/linesDirPath resolve to.
+            expect.objectContaining({ folder: "C:\\project\\Act01", baseName: "Test" }),
         ));
         wrapper.unmount();
     });
@@ -171,13 +252,16 @@ describe("LineEditorApp", () => {
         wrapper.unmount();
     });
 
-    it("marking Done stitches, marks ready, and unchecks the header checkbox", async () => {
+    it("marking Done stitches by line count, marks ready, and unchecks the header checkbox", async () => {
         const checkedApi = { isChecked: vi.fn(() => true), setChecked: vi.fn() };
         const onSetReady = vi.fn();
         const { wrapper } = await mountEditor({
             checkedApi,
             onSetReady,
-            stateJson: JSON.stringify({ next_id: 3, lines: [{ id: 1, text: "First line.", status: "voiced" }, { id: 2, text: "Second line.", status: "voiced" }] }),
+            lineFiles: [
+                await lineFileName(0, 1, "narrator", "calm", "First line."),
+                await lineFileName(1, 1, "narrator", "calm", "Second line."),
+            ],
         });
 
         const doneBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim().startsWith("Done"));
@@ -202,8 +286,10 @@ describe("LineEditorApp", () => {
 
     it("play button on a voiced line starts mode-1 playback, and clicking again stops it", async () => {
         const { wrapper } = await mountEditor({
-            stateJson: JSON.stringify({ next_id: 3, lines: [{ id: 1, text: "First line.", status: "voiced" }, { id: 2, text: "Second line.", status: "voiced" }] }),
-            lineFiles: ["id1.wav", "id2.wav"],
+            lineFiles: [
+                await lineFileName(0, 1, "narrator", "calm", "First line."),
+                await lineFileName(1, 1, "narrator", "calm", "Second line."),
+            ],
         });
 
         const playBtn = document.querySelectorAll(".play-btn")[0];
@@ -218,12 +304,15 @@ describe("LineEditorApp", () => {
         wrapper.unmount();
     });
 
-    it("play button works from positional files even when _state.json never got written (commit_full_render never ran)", async () => {
-        // No stateJson at all -- every row starts "unvoiced" server-side, exactly
-        // the state a fresh full render leaves things in if the id<N>.wav rename
-        // step silently didn't happen. The row's own audio still exists on disk,
-        // just under the positional name a full render writes it under.
-        const { wrapper } = await mountEditor({ lineFiles: ["0000.wav", "0001.wav"] });
+    it("play button still plays an old take even when its hash no longer matches the current text (stale, not absent)", async () => {
+        // A latest-version file that doesn't match current content isn't
+        // "nothing to play" -- rowHasAnyTake (position has SOME file) gates
+        // playability, rowIsFresh (Done, "stale" styling) is a separate,
+        // stricter check. Built from completely different text so its hash
+        // can't coincidentally match "First line.".
+        const { wrapper } = await mountEditor({
+            lineFiles: [await lineFileName(0, 1, "narrator", "calm", "Some older take entirely.")],
+        });
 
         const playBtn = document.querySelectorAll(".play-btn")[0];
         expect(playBtn.classList.contains("disabled")).toBe(false);

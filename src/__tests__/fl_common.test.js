@@ -57,11 +57,10 @@ describe("markRoleStale", () => {
         global.fetch = originalFetch;
     });
 
-    it("summarizes a mix of changed and untracked scripts", async () => {
+    it("summarizes affected scripts", async () => {
         global.fetch = vi.fn().mockResolvedValue({
             json: async () => ({
                 changed: [{ act: "Act01", file: "A_speakers.txt" }],
-                untracked: [{ act: "Act01", file: "B_speakers.txt" }, { act: "Act02", file: "C_speakers.txt" }],
             }),
         });
 
@@ -75,12 +74,11 @@ describe("markRoleStale", () => {
             }),
         );
         expect(result.changed).toHaveLength(1);
-        expect(result.untracked).toHaveLength(2);
-        expect(result.message).toBe('"voldemort" recast -- 1 script(s) marked for re-voice; 2 script(s) using "voldemort" haven\'t been opened in the line editor yet');
+        expect(result.message).toBe('"voldemort" recast -- 1 script(s) need re-voice');
     });
 
     it("reports when nothing uses the role", async () => {
-        global.fetch = vi.fn().mockResolvedValue({ json: async () => ({ changed: [], untracked: [] }) });
+        global.fetch = vi.fn().mockResolvedValue({ json: async () => ({ changed: [] }) });
 
         const result = await markRoleStale("C:\\project", "unused_role", "_speakers.txt");
 
@@ -94,7 +92,7 @@ describe("markRoleStale", () => {
 
         expect(result.error).toBe("not a folder: C:\\project");
         expect(result.changed).toEqual([]);
-        expect(result.message).toContain("couldn't mark affected scripts");
+        expect(result.message).toContain("couldn't check affected scripts");
     });
 
     it("surfaces a network failure without throwing", async () => {
@@ -103,6 +101,6 @@ describe("markRoleStale", () => {
         const result = await markRoleStale("C:\\project", "voldemort", "_speakers.txt");
 
         expect(result.error).toContain("fetch failed");
-        expect(result.message).toContain("couldn't mark affected scripts");
+        expect(result.message).toContain("couldn't check affected scripts");
     });
 });

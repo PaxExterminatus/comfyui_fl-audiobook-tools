@@ -3,15 +3,6 @@
 // still come from the theme via Card itself). Width itself is dynamic
 // (see panelWidthCss) -- the 900/1200/100% buttons in the header (see
 // src/shared/PanelWidthButtons.vue, shared with Line Editor).
-.header-row
-    @extend %dialog-header-row
-
-.dialog-title
-    @extend %dialog-title
-
-.status-el
-    @extend %header-status
-
 // Cards flow left-to-right and wrap, instead of stacking in one long
 // column -- auto-fill keeps every column the same width (each at least
 // 260px) and adds/removes columns as the dialog is resized, wrapping to

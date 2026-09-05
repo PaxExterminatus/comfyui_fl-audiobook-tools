@@ -23,7 +23,7 @@ function mockFetchResponses(overrides = {}) {
         }
         if (u.startsWith("/fl_cosyvoice3/script_library/mark_role_stale")) {
             overrides.onMarkStale?.(JSON.parse(opts.body));
-            return { json: async () => ({ changed: [], untracked: [] }) };
+            return { json: async () => ({ changed: [] }) };
         }
         throw new Error(`unmocked fetch: ${u}`);
     });

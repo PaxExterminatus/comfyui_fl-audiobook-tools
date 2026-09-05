@@ -44,6 +44,7 @@ try:
         trim_leading_silence,
         trim_trailing_silence,
     )
+    from . import _line_audio
 except (ImportError, ValueError):
     from _audio_utils import (
         fade_edges,
@@ -53,6 +54,7 @@ except (ImportError, ValueError):
         trim_leading_silence,
         trim_trailing_silence,
     )
+    import _line_audio
 
 
 class FL_CosyVoice3_AudioPostProcess:
@@ -147,12 +149,21 @@ class FL_CosyVoice3_AudioPostProcess:
                 "line_index_override": ("INT", {
                     "forceInput": True,
                     "tooltip": "Служебное поле для кнопки \"🔁 Переозвучить\" в редакторе строк -- "
-                               "когда пришёл ОДИН клип (переозвучка одной строки), это стабильный id "
-                               "этой строки (не позиция в сценарии), чтобы файл записался как "
-                               "_audio\\lines\\<script>\\id<N>.wav и редактор мог найти его снова после "
-                               "слияния/удаления/перестановки строк. Не подключён -- обычная нумерация "
-                               "по порядку (полный рендер). Управляется автоматически через очередь "
-                               "редактора -- подключать руками не нужно."
+                               "когда пришёл ОДИН клип (переозвучка одной строки), это ТЕКУЩАЯ позиция "
+                               "этой строки в сценарии (редактор сам следит, чтобы позиция не съезжала "
+                               "при удалении/слиянии/разбиении строк). Не подключён -- обычная "
+                               "нумерация по порядку (полный рендер). Управляется автоматически через "
+                               "очередь редактора -- подключать руками не нужно."
+                }),
+                "line_hashes_json": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": "Выход line_hashes_json от FL CosyVoice3 Script Library -- JSON-массив "
+                               "короткого хеша содержимого (голос+instruct+текст) каждой строки, тем "
+                               "же порядком, что и audio. Записывается в имя каждого файла "
+                               "(<позиция>_<версия>_<хеш>.wav) -- редактор строк сравнивает его с "
+                               "хешем ТЕКУЩЕГО содержимого строки, чтобы понять, нужна ли переозвучка, "
+                               "без отдельного файла состояния. Не подключён -- используется хеш "
+                               "только от текста (без голоса/instruct), это работает, но менее точно."
                 }),
             }
         }
@@ -171,6 +182,7 @@ class FL_CosyVoice3_AudioPostProcess:
         script_folder: List[str] = [""],
         script_base_name: List[str] = [""],
         line_index_override: List[int] = [-1],
+        line_hashes_json: List[str] = [""],
     ):
         # INPUT_IS_LIST=True wraps EVERY input in a list, including plain
         # widget scalars -- those are single settings for this whole call,
@@ -183,6 +195,7 @@ class FL_CosyVoice3_AudioPostProcess:
         target_db = target_rms_db[0]
         pause_s = pause_between_lines[0]
         line_texts_str = (line_texts_json[0] or "").strip()
+        line_hashes_str = (line_hashes_json[0] or "").strip()
         timing_folder = (script_folder[0] or "").strip()
         timing_base_name = (script_base_name[0] or "").strip()
         index_override = line_index_override[0] if line_index_override else -1
@@ -206,16 +219,21 @@ class FL_CosyVoice3_AudioPostProcess:
             line_texts = json.loads(line_texts_str) if line_texts_str else []
         except json.JSONDecodeError:
             line_texts = []
+        try:
+            line_hashes = json.loads(line_hashes_str) if line_hashes_str else []
+        except json.JSONDecodeError:
+            line_hashes = []
 
         # Per-line files, one clip per item -- lets the line editor's "🔁
         # Переозвучить" button resynthesize just ONE line later and re-stitch
-        # from these instead of re-running the whole script. index_override
-        # (>= 0) is set by that same feature when re-voicing a single line
-        # through this same node: audio always arrives as a length-1 list in
-        # that case, and the enumerate() position below (always 0) is NOT
-        # the line's real position in the script, so it overrides which
-        # filename gets written -- everything else about single-item
-        # processing is unaffected.
+        # from these instead of re-running the whole script (see
+        # nodes/_line_audio.py for the <position>_<version>_<hash>.wav naming
+        # this writes). index_override (>= 0) is set by that same feature
+        # when re-voicing a single line through this same node: audio always
+        # arrives as a length-1 list in that case, and the enumerate()
+        # position below (always 0) is NOT the line's real position in the
+        # script, so it overrides which position gets written -- everything
+        # else about single-item processing is unaffected.
         lines_dir = None
         if timing_folder and timing_base_name:
             lines_dir = os.path.join(timing_folder, "_audio", "lines", timing_base_name)
@@ -226,25 +244,25 @@ class FL_CosyVoice3_AudioPostProcess:
                 lines_dir = None
 
         # On a FULL render (never for a single re-voiced line -- that would
-        # wrongly nuke every other line's file), delete any leftover
-        # POSITIONAL file (0000.wav..) whose index is >= this run's line
-        # count -- pure disk hygiene at this point (nodes/script_library.py's
-        # commit_full_render/stitch_lines only ever touch the exact ids/
-        # positions the line editor tells them about, so a stray file here
-        # can't corrupt anything the way it used to before per-line files
-        # were addressed by stable id instead of raw directory contents),
-        # but a shortened script would otherwise leave these behind forever.
-        if lines_dir is not None and not (len(audio) == 1 and index_override >= 0):
+        # wrongly nuke every other line's file), delete every file whose
+        # POSITION is >= this run's line count -- pure disk hygiene, since a
+        # shortened script (edited outside the line editor's own
+        # delete/merge, which keeps positions in sync itself via
+        # reorganize_lines) would otherwise leave these behind forever.
+        # `len(audio) > 1` rather than "not a single re-voice": a 1-item run
+        # is AMBIGUOUS -- it's either a genuinely 1-line script's full render
+        # or a per-line re-voice whose index_override didn't reach us (a
+        # front-end/prompt-wiring failure, which has happened: see
+        # findPromptEntry in web/script_library.js). Reading the second case
+        # as the first deletes every OTHER position, i.e. the whole rest of
+        # the scene, to "clean up" after a render that never produced those
+        # lines. A 1-line script keeping a stale leftover file is a trivially
+        # recoverable cost next to that.
+        if lines_dir is not None and len(audio) > 1:
             try:
-                for f in os.listdir(lines_dir):
-                    if not f.lower().endswith(".wav"):
-                        continue
-                    try:
-                        idx = int(os.path.splitext(f)[0])
-                    except ValueError:
-                        continue
-                    if idx >= len(audio):
-                        os.remove(os.path.join(lines_dir, f))
+                for pos, _, _, name in _line_audio.list_lines_dir(lines_dir):
+                    if pos >= len(audio):
+                        os.remove(os.path.join(lines_dir, name))
             except OSError as e:
                 print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't clean up stale line files: {e}")
                 lines_dir = None
@@ -286,25 +304,27 @@ class FL_CosyVoice3_AudioPostProcess:
             print(f"[FL CosyVoice3 AudioPostProcess] {line}")
 
             is_single_override = len(audio) == 1 and index_override >= 0
-            file_index = index_override if is_single_override else i
-            # A single re-voiced line writes to the STABLE-id filename the
-            # line editor's per-line state addresses it by (id<N>.wav --
-            # deliberately a different shape than the plain positional
-            # name a full render uses, so the two naming schemes can never
-            # collide); a full render still writes positional names, later
-            # converted to id<N>.wav by the editor's commit step (see
-            # nodes/script_library.py's commit_full_render) once every
-            # line's file is in place.
+            position = index_override if is_single_override else i
             if lines_dir is not None:
-                filename = f"id{file_index}.wav" if is_single_override else f"{file_index:04d}.wav"
+                # Falls back to hashing just the text when line_hashes_json
+                # isn't wired (an older workflow that hasn't added the new
+                # connection yet) -- the file still gets written under this
+                # scheme, just without voice/instruct in its fingerprint, so
+                # a role recast alone wouldn't be detected as making it stale.
+                content_hash = (
+                    line_hashes[i] if i < len(line_hashes)
+                    else _line_audio.line_hash("", "", line_texts[i] if i < len(line_texts) else "")
+                )
+                version = _line_audio.next_version_at(lines_dir, position)
+                filename = _line_audio.make_line_filename(position, version, content_hash)
                 try:
                     save_wav(wav, sample_rate, os.path.join(lines_dir, filename))
                 except OSError as e:
-                    print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't save line {file_index}: {e}")
+                    print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't save line {position}: {e}")
 
             line_samples = wav.shape[-1]
             timing_lines.append({
-                "index": file_index,
+                "index": position,
                 "start": round(cursor_samples / sample_rate, 3),
                 "end": round((cursor_samples + line_samples) / sample_rate, 3),
                 "text": line_texts[i] if i < len(line_texts) else "",

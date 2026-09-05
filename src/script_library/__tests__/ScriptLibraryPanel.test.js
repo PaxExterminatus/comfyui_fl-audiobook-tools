@@ -39,10 +39,6 @@ function mockFetch(overrides = {}) {
         if (u.startsWith("/fl_cosyvoice3/script_library/pending_revoice")) {
             return { json: async () => (overrides.pendingRevoice ?? { scripts: [] }) };
         }
-        if (u.startsWith("/fl_cosyvoice3/script_library/mark_line_voiced")) {
-            overrides.onMarkLineVoiced?.(JSON.parse(opts.body));
-            return { json: async () => ({ found: true }) };
-        }
         throw new Error(`unmocked fetch: ${u}`);
     });
 }
@@ -146,16 +142,17 @@ describe("ScriptLibraryPanel", () => {
         wrapper.unmount();
     });
 
-    it("'Re-voice pending' runs queueLineRevoice for each pending line and marks it voiced", async () => {
-        const onMarkLineVoiced = vi.fn();
+    it("'Re-voice pending' runs queueLineRevoice for each pending line", async () => {
+        // No follow-up "mark voiced" call any more -- there's nothing to
+        // flip (see nodes/script_library.py's script_pending_lines): the
+        // next tree refresh just re-hashes and finds a match.
         const queueLineRevoice = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = mountPanel({
             queueLineRevoice,
-            onMarkLineVoiced,
             pendingRevoice: {
                 scripts: [{
                     act: "Act01", file: "Scene1_speakers.txt", folder: "C:\\project\\Act01", base_name: "Scene1",
-                    pending: [{ id: 3, speaker: "narrator", instruct: "calm", text: "Hello." }],
+                    pending: [{ position: 3, speaker: "narrator", instruct: "calm", text: "Hello." }],
                 }],
             },
         });
@@ -165,8 +162,84 @@ describe("ScriptLibraryPanel", () => {
         revoiceBtn.click();
 
         await vi.waitFor(() => expect(queueLineRevoice).toHaveBeenCalled());
-        expect(queueLineRevoice.mock.calls[0][1]).toMatchObject({ act: "Act01", file: "Scene1_speakers.txt", lineId: 3 });
-        await vi.waitFor(() => expect(onMarkLineVoiced).toHaveBeenCalledWith({ folder: "C:\\project\\Act01", base_name: "Scene1", line_id: 3 }));
+        expect(queueLineRevoice.mock.calls[0][1]).toMatchObject({ act: "Act01", file: "Scene1_speakers.txt", linePosition: 3 });
+        wrapper.unmount();
+    });
+
+    it("revoiceApi.revoiceLine forwards the CALLER's file, not the script it was opened for (Prev/Next in Line Editor)", async () => {
+        // editScript()'s revoiceApi.revoiceLine closes over `filename` as a
+        // fallback for scripts that never provide their own `file` -- but
+        // Line Editor's Prev/Next can switch the SAME open editor to a
+        // different script, and always passes its own current filename in
+        // opts.file. That must win over this closure's (now-stale) value --
+        // see LineEditorApp.vue's revoiceRow.
+        const queueLineRevoice = vi.fn().mockResolvedValue(undefined);
+        const { wrapper, openLineEditor } = mountPanel({ queueLineRevoice });
+        await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
+
+        const editBtn = [...document.body.querySelectorAll(".edit-btn")][0];
+        editBtn.click();
+        expect(openLineEditor).toHaveBeenCalled();
+
+        const { revoiceApi } = openLineEditor.mock.calls[0][0];
+        await revoiceApi.revoiceLine({ file: "Scene2_speakers.txt", linePosition: 1, speaker: "narrator", instruct: "calm", text: "Hi." });
+
+        expect(queueLineRevoice).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+            act: "Act01", file: "Scene2_speakers.txt", linePosition: 1,
+        }));
+        wrapper.unmount();
+    });
+
+    it("picks up a script_filter value set AFTER mount (the widget is a plain object Vue can't observe)", async () => {
+        // Root cause of a silent audio-loss bug: `suffix` used to be
+        // computed(() => props.filterWidget?.value) -- but filterWidget is a
+        // plain LiteGraph widget object, so Vue never sees a mutation to its
+        // .value and the computed served its FIRST reading for the whole
+        // session. The backend meanwhile serializes the widget's real current
+        // value into every prompt. Once the two drifted, this panel and
+        // nodes/script_library.py derived different base names for the same
+        // script, and a re-voice wrote its audio into a parallel
+        // _audio\lines\<script>_speakers\ tree that the editor never reads
+        // from -- the line kept playing its old take, with no error anywhere.
+        const filterWidget = makeWidget("");
+        const { wrapper, node, openLineEditor } = mountPanel({ filterWidget });
+        await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
+
+        // ComfyUI applies a saved workflow's widget values after the node
+        // (and this panel) already exists -- exactly the mutation Vue can't
+        // observe on its own.
+        filterWidget.value = "_speakers.txt";
+        node.onConfigure({});
+        await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
+
+        const editBtn = [...document.body.querySelectorAll(".edit-btn")][0];
+        editBtn.click();
+
+        expect(openLineEditor).toHaveBeenCalledWith(expect.objectContaining({ suffix: "_speakers.txt" }));
+        wrapper.unmount();
+    });
+
+    it("'Re-voice pending' pins each line's output folder to the scan's own folder/base_name", async () => {
+        // The backend must not re-derive where to write from its own
+        // script_filter widget -- see LineEditorApp's revoiceRow.
+        const queueLineRevoice = vi.fn().mockResolvedValue(undefined);
+        const { wrapper } = mountPanel({
+            queueLineRevoice,
+            pendingRevoice: {
+                scripts: [{
+                    act: "Act01", file: "Scene1_speakers.txt", folder: "C:\\project\\Act01", base_name: "Scene1",
+                    pending: [{ id: 3, speaker: "narrator", instruct: "calm", text: "Hello." }],
+                }],
+            },
+        });
+        await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
+
+        [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Re-voice pending")).click();
+
+        await vi.waitFor(() => expect(queueLineRevoice).toHaveBeenCalled());
+        expect(queueLineRevoice.mock.calls[0][1]).toMatchObject({
+            folder: "C:\\project\\Act01", baseName: "Scene1",
+        });
         wrapper.unmount();
     });
 

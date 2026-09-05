@@ -14,13 +14,21 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   project-wide, per-script ✅ Done / 🔊 has-audio / ⚠ needs-re-voice status.
 - **Full-screen line editor** (opens from the Script Library tree) -- one
   row per script line: speaker, instruct text, spoken text, drag-to-merge,
-  split, add, delete. Each line tracks its own voice status (`unvoiced` /
-  `voiced` / `stale`) and its own per-line audio file
-  (`_audio/lines/<script>/id<N>.wav`), so editing, merging, deleting, or
-  reordering lines never desyncs playback the way relying on one
-  script-wide timing offset would. A 🔁 button re-voices just one line
-  through your currently-open graph; ✅ Done stitches every line's file
-  into the final track once every line is voiced.
+  split, add, delete. Each line's own per-line audio file is named
+  `_audio/lines/<script>/<position>_<version>_<hash>.wav` -- `position` is
+  this line's current rank among the script's lines (the editor keeps it in
+  sync on every delete/merge/split), `version` is a plain "how many times
+  has this position ever been rendered" counter (a 🔁 re-voice adds a new
+  version rather than overwriting, so an old take is never lost), and
+  `hash` is a short fingerprint of that line's CURRENT voice+instruct+text.
+  A line is "voiced" exactly when its highest-version file's hash matches
+  what the line currently says -- computed live, nothing is ever stored, so
+  editing, merging, deleting, or reordering lines never desyncs playback
+  the way relying on one script-wide timing offset (or a separate state
+  file that can silently drift from what's actually on disk) would. A 🔁
+  button re-voices just one line through your currently-open graph; ✅ Done
+  stitches every line's latest file into the final track once every line
+  is voiced.
 - **FL CosyVoice3 Script Editor** -- a simple in-graph text box live-linked
   to one file on disk (two-way: edits here save to the file, external
   edits get pulled back in).
@@ -29,10 +37,12 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   output; also the node that writes each line's per-line file and the
   per-line timing manifest the line editor's playback sync reads.
 - **Roles editor** -- reassign a role's speaker (voice preset) for the
-  whole project; recasting a role automatically marks every already-voiced
-  line using that role stale across every act (and un-readies + deletes
-  the final file of any script that was marked Done), so nothing silently
-  ships with the old voice.
+  whole project; recasting a role changes what every line using that role
+  code resolves to, so the very next check (an open line editor, or the
+  tree's ⚠ icon) already finds that line's hash no longer matches its
+  rendered file -- no separate step "marks" anything. Any script that was
+  marked Done still gets un-readied and its now-invalid final file deleted,
+  since that frozen file can't invalidate itself the same way.
 
 ## Requirements
 
@@ -40,6 +50,13 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   Speaker Instruct2 Dialog, Speaker Clone, Zero-Shot, etc. -- that a
   workflow wires Script Library's output into).
 - One upstream patch, described below.
+- Script Library's `line_hashes_json` output wired into Audio Post-
+  Process's `line_hashes_json` input (both nodes are in THIS addon, no
+  upstream patch needed -- just a connection in your own workflow, the same
+  way `folder_path`/`filename` already feed Post-Process's `script_folder`/
+  `script_base_name`). Without it, Post-Process falls back to hashing just
+  the text (no voice/instruct), so a role recast alone won't be detected as
+  making a line need re-voicing.
 
 ### Required patch: FL CosyVoice3 Speaker Instruct2 Dialog needs a 3rd output
 
@@ -87,9 +104,9 @@ MyPlay/                          <- Script Library's folder_path
     _instructions.json           <- {"instructions": [{"role","text","note"}, ...]} (optional phrase bank)
     Act01/
         Scene 0101 Something_speakers.txt   <- "preset | instruct | line text", one turn per line
-        _audio/                             <- created automatically as you render
-            lines/<script>/id<N>.wav        <- per-line audio, one file per script line
-            timing/<script>.json            <- per-line timing manifest for playback sync
+        _audio/                                        <- created automatically as you render
+            lines/<script>/<position>_<version>_<hash>.wav  <- per-line audio (see above)
+            timing/<script>.json                        <- per-line timing manifest for playback sync
             <script>_00001_.flac            <- final stitched track (Save Audio, or "✅ Done")
 ```
 

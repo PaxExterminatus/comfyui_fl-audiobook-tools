@@ -16,7 +16,7 @@ import { ensureStylesLinked } from "../shared/styles_link.js";
  * @param {string} opts.filename
  * @param {string} [opts.suffix]
  * @param {Object} [opts.checkedApi] - {isChecked(fname), setChecked(fname, val)}
- * @param {Object} [opts.revoiceApi] - {revoiceLine({lineId, speaker, instruct, text}) => Promise}
+ * @param {Object} [opts.revoiceApi] - {revoiceLine({linePosition, speaker, instruct, text}) => Promise}
  */
 export function openLineEditor({ folder, filename, suffix = "_speakers.txt", checkedApi, revoiceApi }) {
     ensureStylesLinked(import.meta.url);

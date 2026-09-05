@@ -2086,7 +2086,7 @@ function On(e, t, n, r, i, s) {
   } finally {
     o && o._c && (o._d = !0);
   }
-  return a.scopeId && (a.slotScopeIds = [a.scopeId + "-s"]), a;
+  return !i && a.scopeId && (a.slotScopeIds = [a.scopeId + "-s"]), a;
 }
 function fo(e) {
   return e.some((t) => nn(t) ? !(t.type === ye || t.type === Pe && !fo(t.children)) : !0) ? e : null;
@@ -7550,13 +7550,11 @@ async function Df(e, t, n) {
       body: JSON.stringify({ root: e, role_code: t, suffix: n })
     })).json();
     if (i.error)
-      return { changed: [], untracked: [], error: i.error, message: `"${t}" recast, but couldn't mark affected scripts: ${i.error}` };
-    const s = i.changed || [], o = i.untracked || [], l = [];
-    s.length && l.push(`${s.length} script(s) marked for re-voice`), o.length && l.push(`${o.length} script(s) using "${t}" haven't been opened in the line editor yet`);
-    const a = l.length ? `"${t}" recast -- ${l.join("; ")}` : `"${t}" recast -- no script uses this role`;
-    return { changed: s, untracked: o, error: null, message: a };
+      return { changed: [], error: i.error, message: `"${t}" recast, but couldn't check affected scripts: ${i.error}` };
+    const s = i.changed || [], o = s.length ? `"${t}" recast -- ${s.length} script(s) need re-voice` : `"${t}" recast -- no script uses this role`;
+    return { changed: s, error: null, message: o };
   } catch (r) {
-    return { changed: [], untracked: [], error: String(r), message: `"${t}" recast, but couldn't mark affected scripts: ${r.message || r}` };
+    return { changed: [], error: String(r), message: `"${t}" recast, but couldn't check affected scripts: ${r.message || r}` };
   }
 }
 const df = 5;
@@ -7575,13 +7573,13 @@ function Nf(e) {
 }
 export {
   Rc as $,
-  yf as A,
+  On as A,
   jf as B,
-  On as C,
-  xe as D,
-  hf as E,
+  xe as C,
+  Ei as D,
+  yf as E,
   Pe as F,
-  gi as G,
+  hf as G,
   ce as H,
   Tf as I,
   sa as J,
@@ -7603,10 +7601,10 @@ export {
   Pf as Z,
   Of as _,
   Dl as a,
-  Wo as a0,
-  M as a1,
-  xf as a2,
-  bf as a3,
+  bf as a0,
+  Wo as a1,
+  M as a2,
+  xf as a3,
   k as a4,
   gf as a5,
   qe as b,
@@ -7633,5 +7631,5 @@ export {
   $n as w,
   xn as x,
   ft as y,
-  Ei as z
+  gi as z
 };

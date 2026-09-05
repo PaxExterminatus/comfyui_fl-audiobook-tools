@@ -72,17 +72,33 @@ const checked = reactive(new Set()); // keyOf(act, file) -- which scripts Run sh
 const expanded = reactive(new Set()); // act names
 const status = ref("");
 
-// NOT `|| "_speakers.txt"` -- an empty script_filter is a deliberate,
-// documented choice on the node ("leave empty to list every .txt file"),
-// and nodes/script_library.py's strip_suffix_and_ext treats "" as "don't
-// strip anything" too. Silently substituting a default here meant this
-// component's own audioBaseName/folder-path guesses (Line Editor's
-// linesDirPath, timing path, etc.) disagreed with what the backend
-// actually named things on disk whenever script_filter was really blank --
-// e.g. the backend keeps "_speakers" in a script's base name, but this
-// component would compute it stripped, and then can't find ANY of that
-// script's audio/timing files under the name it goes looking for.
-const suffix = computed(() => props.filterWidget?.value ?? "");
+// A plain REF re-synced from the widget, never `computed(() =>
+// props.filterWidget?.value)`. props.filterWidget is a plain LiteGraph
+// widget object, not a reactive one -- Vue can't observe a mutation to its
+// `.value` made from outside (the same hazard this component already works
+// around for folder/act/scriptFile), so a computed over it evaluates ONCE
+// and then serves that first value for the rest of the session no matter
+// what the widget actually holds later. Meanwhile the BACKEND always
+// serializes the widget's real current value into every prompt. When those
+// two drift apart, this component and nodes/script_library.py derive
+// DIFFERENT base names from the same script (strip_suffix_and_ext with
+// "_speakers.txt" vs with ""), and the project silently splits into two
+// parallel _audio\lines\ trees: a full render writes its per-line files
+// under one name while the editor -- and every re-voice it queues -- looks
+// under the other. Observed live: lines\<script>\0000..0007 from the full
+// render, but the re-voiced line landing in lines\<script>_speakers\id5.wav,
+// with no error anywhere.
+//
+// The value itself is still used verbatim ("" included) -- NOT defaulted to
+// "_speakers.txt": an empty script_filter is a deliberate, documented choice
+// on the node ("leave empty to list every .txt file"), and the backend's own
+// strip_suffix_and_ext treats "" as "don't strip anything" too. Substituting
+// a default here would re-introduce the very same front/back mismatch from
+// the other direction.
+const suffix = ref(props.filterWidget?.value ?? "");
+function syncSuffixFromWidget() {
+    if (props.filterWidget) suffix.value = props.filterWidget.value ?? "";
+}
 const browseLabel = computed(() => (folderPath.value ? `📁 ${folderPath.value}` : "📁 Click to browse for a project folder"));
 
 function setStatus(text) {
@@ -245,9 +261,16 @@ function editScript(act, filename) {
                 updateSelectionSummary();
             },
         },
-        // Backs the line editor's "Re-voice this line" button -- act/file
-        // are forced explicitly since the editor can be opened for any
-        // row, not just whichever one is "active" in the tree.
+        // Backs the line editor's "Re-voice this line" button -- act is
+        // forced explicitly since the editor can be opened for any row, not
+        // just whichever one is "active" in the tree. `file: filename` is
+        // only a fallback for THIS script (spread after it, so it wins):
+        // Line Editor's own Prev/Next can switch this same editor instance
+        // to a different script post-open, and it always passes ITS
+        // current filename in `opts.file` -- this closure's `filename`
+        // param is fixed at the moment editScript() ran and never updates,
+        // so relying on it after Prev/Next would re-voice into the WRONG
+        // script's _audio\lines\ folder (see LineEditorApp.vue's revoiceRow).
         revoiceApi: {
             revoiceLine: (opts) => props.queueLineRevoice(props.node, { act, file: filename, ...opts }),
         },
@@ -255,6 +278,13 @@ function editScript(act, filename) {
 }
 
 async function loadTree() {
+    // Re-read script_filter here rather than trusting a value cached at
+    // mount: this runs on mount, on every folder change, AND on the 3s poll
+    // tick, so however the widget's value changes (workflow configure(),
+    // a hidden-widget write, the user unhiding and editing it), this
+    // component converges on the backend's real value within one tick
+    // instead of silently disagreeing with it forever. See `suffix`.
+    syncSuffixFromWidget();
     if (!folderPath.value) {
         treeData.value = [];
         setStatus("No project folder set -- click below to browse for one");
@@ -324,17 +354,23 @@ async function revoiceAllPending() {
     for (const script of scripts) {
         for (const line of script.pending) {
             try {
+                // No "mark voiced" follow-up needed any more -- there's
+                // nothing to flip. The next loadTree()/pending_revoice scan
+                // just re-hashes this position's now-fresh file and finds
+                // it matches, same as an open line editor would (see
+                // nodes/script_library.py's script_pending_lines).
                 await props.queueLineRevoice(props.node, {
                     act: script.act, file: script.file,
-                    lineId: line.id, speaker: line.speaker, instruct: line.instruct, text: line.text,
-                });
-                await fetch(`${SCAN_API}/mark_line_voiced`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ folder: script.folder, base_name: script.base_name, line_id: line.id }),
+                    linePosition: line.position, speaker: line.speaker, instruct: line.instruct, text: line.text,
+                    // Same output-location pinning the line editor does (see
+                    // LineEditorApp's revoiceRow): folder/base_name here come
+                    // from the pending_revoice scan, which resolved them with
+                    // THIS panel's suffix -- so they're the same names the
+                    // scan itself checked against.
+                    folder: script.folder, baseName: script.base_name,
                 });
             } catch (err) {
-                console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${script.act}/${script.file} line ${line.id}`, err);
+                console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${script.act}/${script.file} position ${line.position}`, err);
             }
             done++;
             setStatus(`Re-voicing ${done}/${total}...`);
@@ -355,6 +391,9 @@ async function revoiceAllPending() {
 // refreshed the tree that was drawn before configure ran.
 function syncFolderAndReload() {
     restoreCheckedFromProperties();
+    // Also covers the "no folder set" path below, which returns before
+    // loadTree() (and its own sync) ever runs.
+    syncSuffixFromWidget();
     if (!folderPath.value) {
         const remembered = recallFolder();
         if (remembered) {

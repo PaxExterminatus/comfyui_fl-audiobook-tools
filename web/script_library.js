@@ -152,11 +152,24 @@ function findFlNode(index, promptId) {
 const flActiveItem = new WeakMap();
 
 // Set only during a re-voice request's synchronous submit window (see
-// queueLineRevoice) -- the STABLE id (not array position) of the ONE line
-// being re-rendered, stamped onto every Post-Process node found in the
-// prompt so it names that line's _audio/lines/ file as id<N>.wav instead
-// of always 0 (see nodes/audio_post_process.py's line_index_override).
+// queueLineRevoice) -- this line's CURRENT position among the script's
+// non-malformed rows (kept in sync by LineEditorApp.vue's
+// reorganizeLines), stamped onto every Post-Process node found in the
+// prompt so it names that line's _audio/lines/ file
+// "<position>_<version>_<hash>.wav" instead of always position 0 (see
+// nodes/_line_audio.py / nodes/audio_post_process.py's line_index_override).
 let pendingRevoiceLineIndex = null;
+
+// Set alongside pendingRevoiceLineIndex: {folder, baseName} naming the
+// EXACT _audio\lines\<baseName>\ folder the line editor that asked for this
+// re-voice reads its per-line files from. Stamped onto the Post-Process
+// node's script_folder/script_base_name so the re-voiced file can't land
+// anywhere else. Without it those two inputs come from Script Library's own
+// `filename` output -- strip_suffix_and_ext(script_file, script_filter) --
+// which is a SECOND, independent derivation of the same base name; when it
+// disagreed with the editor's (see ScriptLibraryPanel.vue's `suffix`), the
+// audio was written to a folder nothing ever read from.
+let pendingRevoiceTarget = null;
 
 // Same subgraph-safe walk as buildFlNodeIndex, but collecting every
 // Post-Process node instead of indexing by id (a re-voice run has no
@@ -181,13 +194,35 @@ function buildPostProcessList() {
     return found;
 }
 
+// Resolves a graph node to its entry in the SERIALIZED prompt. Same
+// composite-id hazard findFlNode handles: a node living inside a subgraph is
+// flattened into the prompt under an id like "5:12", so a plain
+// prompt[node.id] lookup silently misses it. That miss used to be quietly
+// destructive here rather than merely ineffective -- a re-voice whose
+// line_index_override never reached the Post-Process node makes
+// nodes/audio_post_process.py read the run as a FULL RENDER of one line,
+// which both writes it under position 0 instead of its real position AND
+// deletes every OTHER position's line file, i.e. the rest of the scene.
+function findPromptEntry(prompt, node, classType) {
+    const sId = String(node.id);
+    const direct = prompt[sId];
+    if (direct && direct.class_type === classType) return direct;
+    for (const key of Object.keys(prompt)) {
+        const entry = prompt[key];
+        if (!entry || entry.class_type !== classType) continue;
+        if (key.slice(key.lastIndexOf(":") + 1) === sId) return entry;
+    }
+    return null;
+}
+
 // Matches ComfyUI core's SaveAudio/SaveAudioMP3/SaveAudioOpus, VHS_SaveAudio,
 // and similar third-party audio-saver nodes by name, not by an exact class
 // list -- see stripDownstreamAudioSavers below.
 const AUDIO_SAVER_CLASS_RE = /saveaudio|audiosave/i;
 
 // A single-line re-voice only needs Post-Process's own per-line file write
-// (_audio\lines\<script>\id<N>.wav, via line_index_override) -- our own
+// (_audio\lines\<script>\<position>_<version>_<hash>.wav, via
+// line_index_override) -- our own
 // "✅ Done" (stitch_lines) owns producing the actual final scene file now,
 // entirely server-side. If the user's graph still has a Save Audio node
 // wired downstream of Post-Process (needed for a FULL render to produce a
@@ -250,10 +285,15 @@ if (!app._flScriptLibraryPatched) {
                 }
                 if (pendingRevoiceLineIndex !== null) {
                     for (const ppNode of buildPostProcessList()) {
-                        const ppEntry = prompt[String(ppNode.id)];
-                        if (!ppEntry || ppEntry.class_type !== POST_PROCESS_CLASS) continue;
+                        const ppEntry = findPromptEntry(prompt, ppNode, POST_PROCESS_CLASS);
+                        if (!ppEntry) continue;
                         ppEntry.inputs = ppEntry.inputs || {};
                         ppEntry.inputs.line_index_override = pendingRevoiceLineIndex;
+                        // Overrides the wired link with a literal: the
+                        // asking editor's own folder always wins over the
+                        // backend's independent re-derivation of it.
+                        if (pendingRevoiceTarget?.folder) ppEntry.inputs.script_folder = pendingRevoiceTarget.folder;
+                        if (pendingRevoiceTarget?.baseName) ppEntry.inputs.script_base_name = pendingRevoiceTarget.baseName;
                     }
                     stripDownstreamAudioSavers(prompt);
                 }
@@ -402,12 +442,11 @@ if (!app._flScriptLibraryPatched) {
     // can be opened for any row in the tree, not just whichever one is
     // "active", so folder_path/filename would otherwise resolve to a
     // DIFFERENT script than the one being re-voiced. Only saves that one
-    // line's own _audio/lines/<script>/id<N>.wav file (via
-    // line_index_override = lineId) -- it does NOT touch the script's
-    // final stitched file any more (see web/line_editor.js's per-line
-    // "voiced/stale" state model): that only happens once, when "✅ Done"
-    // stitches every line together.
-    queueLineRevoice = async function (node, { act, file, lineId, speaker, instruct, text }) {
+    // line's own _audio/lines/<script>/<position>_<version>_<hash>.wav file
+    // (via line_index_override = linePosition, see nodes/_line_audio.py) --
+    // it does NOT touch the script's final stitched file any more: that
+    // only happens once, when "✅ Done" stitches every line together.
+    queueLineRevoice = async function (node, { act, file, linePosition, speaker, instruct, text, folder, baseName }) {
         const lineOverride = `${speaker} | ${instruct} | ${text}`;
 
         // Lock covers ONLY building the prompt (act/file/line_override are
@@ -418,12 +457,14 @@ if (!app._flScriptLibraryPatched) {
         let promptResult;
         await withRevoiceSubmitLock(async () => {
             flActiveItem.set(node, { act, file, lineOverride });
-            pendingRevoiceLineIndex = lineId;
+            pendingRevoiceLineIndex = linePosition;
+            pendingRevoiceTarget = (folder && baseName) ? { folder, baseName } : null;
             try {
                 promptResult = await app.graphToPrompt();
             } finally {
                 flActiveItem.delete(node);
                 pendingRevoiceLineIndex = null;
+                pendingRevoiceTarget = null;
             }
         });
 

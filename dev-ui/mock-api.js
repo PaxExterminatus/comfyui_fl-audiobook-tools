@@ -119,13 +119,12 @@ export function mockComfyApiPlugin() {
                 if (url.pathname === "/fl_cosyvoice3/script_library/mark_role_stale" && req.method === "POST") {
                     const body = JSON.parse((await readBody(req)) || "{}");
                     console.log(`[mock-comfy-api] mark_role_stale for role "${body.role_code}"`);
-                    // A made-up but plausible response -- one script marked
-                    // changed, one reported untracked -- so the status
-                    // message's wording can actually be seen during dev
-                    // without a real project on disk.
+                    // A made-up but plausible response -- one script found
+                    // affected -- so the status message's wording can
+                    // actually be seen during dev without a real project on
+                    // disk (see nodes/script_library.py's mark_role_stale).
                     return sendJson(res, 200, {
-                        changed: [{ act: "Act01", file: "Test_speakers.txt", marked_ids: [1], was_ready: false, deleted_audio: [] }],
-                        untracked: [{ act: "Act02", file: "Other_speakers.txt", was_ready: false, deleted_audio: [] }],
+                        changed: [{ act: "Act01", file: "Test_speakers.txt", positions: [0], was_ready: false, deleted_audio: [] }],
                     });
                 }
 
@@ -156,15 +155,9 @@ export function mockComfyApiPlugin() {
                     return sendJson(res, 200, {
                         scripts: [{
                             act: "Act01", file: "Second_speakers.txt", folder: "C:\\fake\\project\\Act01", base_name: "Second",
-                            pending: [{ id: 1, speaker: "narrator", instruct: "calm", text: "A second, different test scene." }],
+                            pending: [{ position: 0, speaker: "narrator", instruct: "calm", text: "A second, different test scene." }],
                         }],
                     });
-                }
-
-                if (url.pathname === "/fl_cosyvoice3/script_library/mark_line_voiced" && req.method === "POST") {
-                    const body = JSON.parse((await readBody(req)) || "{}");
-                    console.log(`[mock-comfy-api] mark_line_voiced ${body.base_name} line ${body.line_id}`);
-                    return sendJson(res, 200, { found: true });
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/script_library/scan" && req.method === "GET") {
@@ -192,10 +185,10 @@ export function mockComfyApiPlugin() {
                     return sendJson(res, 200, { deleted: [] });
                 }
 
-                if (url.pathname === "/fl_cosyvoice3/script_library/commit_full_render" && req.method === "POST") {
+                if (url.pathname === "/fl_cosyvoice3/script_library/reorganize_lines" && req.method === "POST") {
                     const body = JSON.parse((await readBody(req)) || "{}");
-                    const ids = (body.row_ids || []).map((id, i) => (Number.isFinite(id) ? id : i + 1));
-                    return sendJson(res, 200, { ids, committed_ids: [], next_id: Math.max(0, ...ids) + 1 });
+                    console.log(`[mock-comfy-api] reorganize_lines ${body.base_name} deletes=${JSON.stringify(body.deletes)} moves=${JSON.stringify(body.moves)}`);
+                    return sendJson(res, 200, { deleted: [], moved: [] });
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/browse/list_dir" && req.method === "GET") {

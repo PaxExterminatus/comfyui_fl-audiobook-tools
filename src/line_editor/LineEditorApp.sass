@@ -8,17 +8,9 @@
         height: 100%
         padding: 0
 
-.header-row
-    @extend %dialog-header-row
-
-.dialog-title
-    @extend %dialog-title
-
-.status-el
-    @extend %header-status
-
-// .width-row itself lives in src/shared/PanelWidthButtons.sass now (see
-// that component) -- only .font-row is Line-Editor-specific.
+// The header row itself (title/status/width buttons) now lives in
+// src/shared/DialogHeader.vue -- only .font-row (this editor's own
+// header slot content, see #after) stays here.
 .font-row
     @include button-row(3px)
     margin-left: 10px
@@ -27,7 +19,12 @@
     flex: 0 0 auto
     cursor: pointer
 
-.audio-row
+// The audio mini-player and the line-tools/nav row used to be two
+// separate sticky blocks -- merged into one (see src/shared/
+// StickyPanel.vue for why sticky belongs on a wrapper like this at all)
+// so there's a single continuous panel, not two independently-pinned
+// strips stacked on top of each other.
+.line-editor-controls
     display: flex
     flex-direction: column
     flex: 0 0 auto
@@ -37,11 +34,6 @@
     @include button-row(8px)
     align-items: center
     padding: 6px 16px
-
-.muted-note
-    flex: 1
-    font-size: $font-sm
-    opacity: 0.7
 
 .audio-label
     @extend %ellipsis
@@ -64,7 +56,6 @@
     @include button-row(6px)
     align-items: center
     padding: 6px 16px
-    border-bottom: 1px solid $overlay-soft
 
 .actions-divider
     width: 1px
@@ -119,7 +110,7 @@
 .malformed-textarea
     border-color: rgba(224, 160, 48, 0.5)
 
-.top-line
+.line-controls-row
     display: flex
     gap: 4px
     align-items: center
@@ -143,6 +134,9 @@
         opacity: 0.35
         color: inherit
 
+.global-play-btn
+    font-size: 16px
+
 .revoice-btn
     cursor: pointer
     flex: 0 0 auto
@@ -153,12 +147,23 @@
         cursor: default
         opacity: 0.7
 
-.icon-btn
+// width/flex on the InputGroup wrapper itself, never on the Dropdown's own
+// root -- InputGroup already sets its OWN internal `display: flex` (an
+// unlayered scoped `display` here would fight it the same way the roles
+// editor's dropdown gotcha warns about elsewhere in this codebase).
+.speaker-group
+    width: 168px
     flex: 0 0 auto
 
-.speaker-input
-    width: 108px
-    flex: 0 0 auto
+.instruct-group
+    flex: 1 1 160px
+    min-width: 140px
+
+.dropdown-option-label
+    @extend %catalog-option-label
+
+.dropdown-option-sublabel
+    @extend %catalog-option-sublabel
 
 .speaker-file-btn
     @extend %ellipsis
@@ -171,14 +176,6 @@
     opacity: 0.7
 
 .spacer
-    flex: 1 1 auto
-
-.instruct-line
-    display: flex
-    gap: 4px
-    align-items: center
-
-.instruct-input
     flex: 1 1 auto
 
 .instruct-desc

@@ -1,20 +1,17 @@
 <script setup>
-// Vue port of web/line_editor.js -- full-screen, per-line script editor.
-// See that file's own top-of-file comment for the two-mode (per-line vs
-// stitched-final) playback model this preserves exactly; Vue's reactivity
-// replaces most of the original's manual DOM bookkeeping (rowEls/
-// timingRowEls/timingPlayBtns/refreshRowByObject all become unnecessary --
-// editing a row's own reactive fields re-renders just that row's template
-// bindings on its own).
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
-import InputText from "primevue/inputtext";
+import Dropdown from "primevue/dropdown";
+import InputGroup from "primevue/inputgroup";
+import InputGroupAddon from "primevue/inputgroupaddon";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import PickPanel from "./PickPanel.vue";
 import { usePanelWidth } from "../shared/panel_width.js";
-import PanelWidthButtons from "../shared/PanelWidthButtons.vue";
+import DialogHeader from "../shared/DialogHeader.vue";
+import StickyPanel from "../shared/StickyPanel.vue";
+import { lineHash, latestByPosition } from "../shared/line_hash.js";
 import {
     joinPath, stripSuffixAndExt, dirOf, markRoleStale,
     SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
@@ -26,7 +23,7 @@ const props = defineProps({
     filename: { type: String, required: true },
     suffix: { type: String, default: "_speakers.txt" },
     checkedApi: { type: Object, default: null }, // {isChecked(fname), setChecked(fname, val)}
-    revoiceApi: { type: Object, default: null }, // {revoiceLine({lineId, speaker, instruct, text}) => Promise}
+    revoiceApi: { type: Object, default: null }, // {revoiceLine({linePosition, speaker, instruct, text}) => Promise}
     onClose: { type: Function, required: true },
 });
 
@@ -132,9 +129,7 @@ const justAddedKey = ref(null);
 
 const pendingRevoiceRows = reactive(new Set());
 
-let nextLineId = 1;
 let lastSavedText = null;
-let lastSavedStatePayload = null;
 let lastLocalEditAt = 0;
 let lastAudioFingerprint = null;
 let lastTimingMtime = null;
@@ -156,19 +151,16 @@ const fullPath = computed(() => joinPath(props.folder, filename.value));
 const audioFolder = computed(() => joinPath(props.folder, "_audio"));
 const audioBaseName = computed(() => stripSuffixAndExt(filename.value, props.suffix));
 const linesDirPath = computed(() => joinPath(joinPath(audioFolder.value, "lines"), audioBaseName.value));
-const stateFilePath = computed(() => joinPath(linesDirPath.value, "_state.json"));
 
 // Ground truth for "does this row have audio to play" -- an actual listing
-// of _audio\lines\<script>\, not just _state.json's `status` field.
-// commit_full_render (server) is SUPPOSED to rename a full render's plain
-// positional files (0000.wav..) to the stable id<N>.wav scheme right after
-// rendering, and _state.json's "voiced" flag assumes that already
-// happened -- but that rename is a separate, fallible network round-trip
-// (timing manifest fetched, line count checked, POST sent), and if it
-// silently didn't run or didn't finish, the audio sits there under its
-// positional name while _state.json still says "unvoiced". Scanning the
-// folder directly and accepting EITHER name means playback never depends
-// on that rename having succeeded.
+// of _audio\lines\<script>\, no separate state file. See src/shared/
+// line_hash.js / nodes/_line_audio.py: each file's name is
+// "<position>_<version>_<hash>.wav" -- position addresses a row purely by
+// its CURRENT rank among non-malformed rows (kept in sync on every
+// structural edit by reorganizeLines below), version picks out the latest
+// take at that position, and hash is compared against this row's OWN
+// currently-typed content to decide "voiced" vs "needs re-voice" -- nothing
+// is ever stored, so it can't fall out of sync with what's actually here.
 const lineFilesOnDisk = ref(new Set());
 async function loadLineFiles() {
     try {
@@ -179,29 +171,79 @@ async function loadLineFiles() {
         // Transient fetch error -- leave whatever we already had.
     }
 }
-// The positional name is only a safe fallback for THIS row's CURRENT
-// position (same assumption commit_full_render itself makes) -- it's
-// whatever a full render last wrote at that position, not tied to this
-// row's stable id the way id<N>.wav is.
-function rowAudioFilename(row, index) {
-    const idName = `id${row.id}.wav`;
-    if (lineFilesOnDisk.value.has(idName)) return idName;
-    const posName = `${String(index).padStart(4, "0")}.wav`;
-    if (lineFilesOnDisk.value.has(posName)) return posName;
-    return null;
+const latestFiles = computed(() => latestByPosition(lineFilesOnDisk.value)); // position -> {position,version,hash,filename}
+
+// This row's rank among non-malformed rows -- the addressing scheme every
+// per-line file is named by (see lineFilesOnDisk's own comment). Malformed
+// rows never get one (never synthesized, never have audio).
+const positionByIndex = computed(() => {
+    const map = new Map();
+    let pos = 0;
+    rows.value.forEach((r, i) => {
+        if (!r.malformed) { map.set(i, pos); pos++; }
+    });
+    return map;
+});
+function latestFileFor(index) {
+    const pos = positionByIndex.value.get(index);
+    return pos === undefined ? null : (latestFiles.value.get(pos) || null);
 }
+
+// Resolves a role CODE to its _roles.json "speaker" field EXACTLY as
+// nodes/script_library.py's role_map_from_entries/resolve_roles do (raw,
+// no "#tag" stripped, no ".pt" appended) -- the value that actually gets
+// hashed server-side into a rendered file's name. Falls back to `code`
+// unchanged when it isn't a known role code, same as Python's
+// role_map.get(preset, preset). Deliberately separate from
+// resolveSpeakerFile below, which normalizes for DISPLAY/file-lookup
+// purposes instead.
+function resolvedSpeakerForHash(code) {
+    const entry = roleEntries.value.find((e) => e.code === code);
+    return (entry && entry.speaker) ? entry.speaker : (code || "");
+}
+
+// row.__key -> content hash (see src/shared/line_hash.js), recomputed
+// whenever any row's own fields OR the role catalog change (a role recast
+// resolves to a different value for every row using that role, without any
+// row's own fields changing). Compared against latestFileFor(index)'s own
+// hash, this Map IS the entire "is this line voiced for what it currently
+// says" check -- nothing is ever persisted.
+const expectedHash = reactive(new Map());
+watch(
+    [rows, roleEntries],
+    async () => {
+        const nonMalformed = rows.value.filter((r) => !r.malformed);
+        const hashes = await Promise.all(
+            nonMalformed.map((r) => lineHash(resolvedSpeakerForHash(r.speaker), r.instruct, r.text)),
+        );
+        nonMalformed.forEach((r, i) => expectedHash.set(r.__key, hashes[i]));
+    },
+    { deep: true, immediate: true },
+);
+function rowHasAnyTake(index) {
+    return latestFileFor(index) !== null;
+}
+function rowIsFresh(row, index) {
+    const latest = latestFileFor(index);
+    if (!latest) return false;
+    const expected = expectedHash.get(row.__key);
+    return expected !== undefined && latest.hash === expected;
+}
+
 const isCurrentlyReady = computed(() => readyScripts.value.includes(filename.value));
 const allRowsVoiced = computed(() => {
-    const nm = rows.value.filter((r) => !r.malformed);
-    return nm.length > 0 && nm.every((r) => r.status === "voiced");
+    const indices = [];
+    rows.value.forEach((r, i) => { if (!r.malformed) indices.push(i); });
+    return indices.length > 0 && indices.every((i) => rowIsFresh(rows.value[i], i));
 });
 function setStatus(text) {
     status.value = text;
 }
 
 // Resolves a role CODE (or a raw preset typed directly) to the real .pt
-// file Speaker Instruct2 Dialog will load -- mirrors nodes/
-// script_library.py's role_map_from_entries + resolve_roles.
+// file Speaker Instruct2 Dialog will load -- for DISPLAY (the
+// speaker-file-btn label) and looking up an existing preset's own file,
+// not for hashing (see resolvedSpeakerForHash above).
 function resolveSpeakerFile(code) {
     if (!code) return "";
     const entry = roleEntries.value.find((e) => e.code === code);
@@ -248,14 +290,15 @@ async function saveRolesJson() {
 
 // Recasting a role changes every line using that code, project-wide -- see
 // nodes/script_library.py's mark_role_stale. If THIS open script was
-// affected, reload right away instead of waiting for the next poll tick.
+// affected, refresh its role catalog right away -- that alone re-derives
+// every affected row's expected hash (see the watcher above) -- instead of
+// waiting for the next poll tick.
 async function notifyRoleSpeakerChanged(roleCode) {
     if (!rolesJsonPath.value) return;
     const root = dirOf(rolesJsonPath.value);
     const result = await markRoleStale(root, roleCode, props.suffix);
     setStatus(result.message);
-    if (result.changed.some((c) => c.file === filename.value) || result.untracked.some((c) => c.file === filename.value)) {
-        await loadAndReconcileState();
+    if (result.changed.some((c) => c.file === filename.value)) {
         await loadCatalog();
         lastAudioFingerprint = null;
         lastTimingMtime = null;
@@ -268,7 +311,7 @@ async function notifyRoleSpeakerChanged(roleCode) {
 // design: two clearly separate modes, not a blend.
 //   Not done ("первая озвучка"): the combined/stitched file doesn't exist
 //     yet and isn't even fetched -- every row plays its OWN individual
-//     id<N>.wav in sequence, one at a time, with its own play/pause.
+//     latest-take file in sequence, one at a time, with its own play/pause.
 //   Done: Done's own stitch just built ONE combined file + this timing
 //     manifest together, atomically -- so as long as the row count still
 //     matches it, the manifest is valid and every row gets a "seek to here
@@ -292,78 +335,6 @@ const currentRowToTimingIdx = computed(() => {
 });
 const timingWarningVisible = computed(() => Boolean(isCurrentlyReady.value && rawTimingLines.value && rawTimingLines.value.length && !lineTiming.value));
 
-function currentStatePayload() {
-    return JSON.stringify({
-        next_id: nextLineId,
-        lines: rows.value.filter((r) => !r.malformed).map((r) => ({ id: r.id, text: r.text, status: r.status })),
-    }, null, 2);
-}
-
-// Assigns each CURRENT (non-malformed) row a stable `id` + voice `status`,
-// reconciled against the last-saved _state.json -- see the original file's
-// own long comment on this function for the fast-path/fallback rationale;
-// unchanged here.
-function reconcileState(rowsArr, saved) {
-    const savedLines = (saved && Array.isArray(saved.lines)) ? saved.lines : [];
-    let nextId = (saved && Number.isFinite(saved.next_id)) ? saved.next_id : 1;
-    const nonMalformed = rowsArr.filter((r) => !r.malformed);
-
-    if (savedLines.length === nonMalformed.length) {
-        nonMalformed.forEach((row, i) => {
-            const s = savedLines[i];
-            row.id = Number.isFinite(s.id) ? s.id : nextId++;
-            const textMatches = (s.text || "") === row.text;
-            row.status = textMatches ? (s.status === "voiced" || s.status === "stale" ? s.status : "unvoiced")
-                : (s.status === "voiced" || s.status === "stale" ? "stale" : "unvoiced");
-        });
-        return Math.max(nextId, ...nonMalformed.map((r) => r.id + 1), 1);
-    }
-
-    const pools = new Map();
-    savedLines.forEach((s) => {
-        const key = (s.text || "").trim();
-        if (!pools.has(key)) pools.set(key, []);
-        pools.get(key).push(s);
-    });
-    const consumed = new Map();
-    nonMalformed.forEach((row) => {
-        const key = (row.text || "").trim();
-        const pool = pools.get(key);
-        const used = consumed.get(key) || 0;
-        if (pool && used < pool.length) {
-            const s = pool[used];
-            consumed.set(key, used + 1);
-            row.id = Number.isFinite(s.id) ? s.id : nextId++;
-            row.status = s.status === "voiced" ? "voiced" : "unvoiced";
-        } else {
-            row.id = nextId++;
-            row.status = "unvoiced";
-        }
-    });
-    return nextId;
-}
-
-async function loadAndReconcileState() {
-    let saved = null;
-    let rawContent = null;
-    try {
-        const resp = await fetch(`${FILE_API}/read?path=${encodeURIComponent(stateFilePath.value)}`);
-        const data = await resp.json();
-        if (data.exists) {
-            rawContent = data.content;
-            try { saved = JSON.parse(data.content); } catch (e) { saved = null; }
-        }
-    } catch (e) {
-        saved = null;
-    }
-    nextLineId = reconcileState(rows.value, saved);
-    lastSavedStatePayload = rawContent;
-}
-
-function markRowEdited(row) {
-    if (row.status === "voiced") row.status = "stale";
-}
-
 // ── mode 1 sequential playback ──────────────────────────────────────────
 function stopMode1Playback() {
     if (mode1AudioEl) {
@@ -378,20 +349,20 @@ function playRowSequential(startIndex) {
     stopMode1Playback();
     const dir = linesDirPath.value;
     const playIdx = (idx) => {
-        let filename = null;
+        let audioFilename = null;
         while (idx < rows.value.length) {
             if (!rows.value[idx].malformed) {
-                filename = rowAudioFilename(rows.value[idx], idx);
-                if (filename) break;
+                audioFilename = latestFileFor(idx)?.filename ?? null;
+                if (audioFilename) break;
             }
             idx++;
         }
-        if (idx >= rows.value.length || !filename) {
+        if (idx >= rows.value.length || !audioFilename) {
             mode1PlayingIdx.value = -1;
             return;
         }
         mode1PlayingIdx.value = idx;
-        const el = new Audio(`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(dir, filename))}&v=${Date.now()}`);
+        const el = new Audio(`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(dir, audioFilename))}&v=${Date.now()}`);
         mode1AudioEl = el;
         el.addEventListener("ended", () => playIdx(idx + 1));
         el.play().catch((e) => setStatus(`Playback failed: ${e}`));
@@ -442,46 +413,14 @@ async function loadTiming({ silent = false } = {}) {
         try { parsed = JSON.parse(data.content); } catch (e) { rawTimingLines.value = null; return; }
         rawTimingLines.value = Array.isArray(parsed.lines) ? parsed.lines : null;
 
-        // A genuinely NEW manifest whose line count matches the current
-        // script looks like a FULL render that just finished -- adopt its
-        // per-line files into the stable-id scheme mode 1 relies on.
-        const nonMalformed = rows.value.filter((r) => !r.malformed);
-        if (isFreshMtime && rawTimingLines.value && rawTimingLines.value.length === nonMalformed.length && nonMalformed.length > 0) {
-            await commitFullRenderIfNeeded(nonMalformed);
-        }
+        // A genuinely new manifest means Audio Post-Process just wrote
+        // fresh per-line files too (same run) -- refresh the directory
+        // listing so mode 1's play buttons/voiced state pick them up
+        // without waiting for the next 3s poll.
+        if (isFreshMtime) loadLineFiles();
         nextTick(syncActiveLine);
     } catch (e) {
         // Transient fetch error -- leave whatever timing state we already had.
-    }
-}
-
-// Converts a just-finished full render's positional per-line files to
-// id<N>.wav and marks every row "voiced", so mode 1's re-voice/play work
-// immediately after a normal full-script queue run too.
-async function commitFullRenderIfNeeded(nonMalformedRows) {
-    try {
-        const resp = await fetch(`${SCAN_API}/commit_full_render`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                folder: props.folder,
-                base_name: audioBaseName.value,
-                row_texts: nonMalformedRows.map((r) => r.text),
-                row_ids: nonMalformedRows.map((r) => (Number.isFinite(r.id) ? r.id : null)),
-            }),
-        });
-        const data = await resp.json();
-        if (data.error || !Array.isArray(data.ids)) return;
-        const committed = new Set(data.committed_ids || []);
-        nonMalformedRows.forEach((r, i) => {
-            r.id = data.ids[i];
-            if (committed.has(data.ids[i])) r.status = "voiced";
-        });
-        if (Number.isFinite(data.next_id)) nextLineId = Math.max(nextLineId, data.next_id);
-        if (committed.size) { flushSave(); loadLineFiles(); }
-    } catch (e) {
-        // Best-effort -- a transient failure just leaves these rows
-        // "unvoiced" until the next full render or a per-line re-voice.
     }
 }
 
@@ -505,29 +444,16 @@ function scheduleSave() {
 
 async function flushSave() {
     const text = serializeRows(rows.value);
-    const statePayload = currentStatePayload();
-    const textChanged = text !== lastSavedText;
-    const stateChanged = statePayload !== lastSavedStatePayload;
-    if (!textChanged && !stateChanged) return;
+    if (text === lastSavedText) return;
     try {
-        if (textChanged) {
-            const resp = await fetch(`${FILE_API}/write`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: fullPath.value, content: text }),
-            });
-            const data = await resp.json();
-            if (data.error) { setStatus(`Save error: ${data.error}`); return; }
-            lastSavedText = text;
-        }
-        if (stateChanged) {
-            await fetch(`${FILE_API}/write`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: stateFilePath.value, content: statePayload }),
-            });
-            lastSavedStatePayload = statePayload;
-        }
+        const resp = await fetch(`${FILE_API}/write`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: fullPath.value, content: text }),
+        });
+        const data = await resp.json();
+        if (data.error) { setStatus(`Save error: ${data.error}`); return; }
+        lastSavedText = text;
         setStatus(`Saved ${new Date().toLocaleTimeString()}`);
     } catch (e) {
         setStatus(`Save failed: ${e}`);
@@ -561,9 +487,33 @@ async function focusNewRow(key) {
     setTimeout(() => { if (justAddedKey.value === key) justAddedKey.value = null; }, 500);
 }
 
+// Keeps _audio\lines\<script>\ in sync with a structural edit instead of
+// ever trying to detect drift after the fact -- see nodes/_line_audio.py's
+// reorganize_lines. `deletes` are positions whose row no longer exists at
+// all; `moves` are [from, to] pairs for rows that merely shifted position,
+// their own version+hash untouched. Best-effort: a failure here just
+// leaves stray/misplaced files behind (recoverable -- worst case a row
+// shows the wrong voiced state until manually re-voiced), never blocks the
+// edit itself, which has already happened locally by the time this runs.
+async function reorganizeLines({ deletes = [], moves = [] } = {}) {
+    if (!deletes.length && !moves.length) return;
+    try {
+        await fetch(`${SCAN_API}/reorganize_lines`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folder: props.folder, base_name: audioBaseName.value, deletes, moves }),
+        });
+        await loadLineFiles();
+    } catch (e) {
+        // Best-effort, see above.
+    }
+}
+
 // Merges two non-malformed rows into the one at the LOWER index,
 // regardless of which was dragged onto which. Confirms first if the two
-// rows' speakers differ.
+// rows' speakers differ. The merged row's text differs from either
+// original, so its expected hash naturally stops matching whatever's on
+// disk (see rowIsFresh) -- no explicit "mark unvoiced" needed.
 async function mergeRows(idxA, idxB) {
     const rowA = rows.value[idxA];
     const rowB = rows.value[idxB];
@@ -585,10 +535,18 @@ async function mergeRows(idxA, idxB) {
         if (!ok) return;
     }
 
+    const secondPos = positionByIndex.value.get(secondIdx);
+    const totalPositions = positionByIndex.value.size;
+
     first.text = `${first.text} ${second.text}`.trim();
-    first.status = "unvoiced";
     rows.value.splice(secondIdx, 1);
     scheduleSave();
+
+    if (secondPos !== undefined) {
+        const moves = [];
+        for (let p = secondPos + 1; p < totalPositions; p++) moves.push([p, p - 1]);
+        reorganizeLines({ deletes: [secondPos], moves });
+    }
 }
 
 // Plain pointer-event drag (not native HTML5 drag-and-drop -- unreliable in
@@ -632,8 +590,17 @@ function attachDragHandlers(handleEl, index) {
 }
 
 function deleteRow(index) {
+    const pos = positionByIndex.value.get(index);
+    const totalPositions = positionByIndex.value.size;
+
     rows.value.splice(index, 1);
     scheduleSave();
+
+    if (pos !== undefined) {
+        const moves = [];
+        for (let p = pos + 1; p < totalPositions; p++) moves.push([p, p - 1]);
+        reorganizeLines({ deletes: [pos], moves });
+    }
 }
 async function confirmDeleteRow(index, previewText) {
     if (previewText && previewText.trim()) {
@@ -649,16 +616,13 @@ async function confirmDeleteRow(index, previewText) {
 }
 
 function onSpeakerInput(row) {
-    markRowEdited(row);
     scheduleSave();
 }
 function onInstructInput(row) {
-    markRowEdited(row);
     scheduleSave();
 }
 function onTextInput(row, el) {
     autoGrow(el);
-    markRowEdited(row);
     scheduleSave();
 }
 function onTextPaste(row, el, e) {
@@ -684,22 +648,11 @@ function instructNoteFor(row) {
     return entry && entry.note ? entry.note : null;
 }
 
-function openRolePicker(event, row) {
-    if (!roleEntries.value.length) {
-        setStatus("No roles catalog found for this project (_roles.json)");
-        return;
-    }
-    pickPanelRef.value.open(event, {
-        items: roleEntries.value,
-        getLabel: (e) => e.code || e.speaker || "",
-        getSubLabel: (e) => [e.name, e.speaker, e.description].filter(Boolean).join(" -- "),
-        onPick: (e) => {
-            const value = e.code || e.speaker || "";
-            row.speaker = value;
-            markRowEdited(row);
-            scheduleSave();
-        },
-    });
+// Sub-label line for the speaker Dropdown's #option template (see
+// template below) -- same fields the old openRolePicker's PickPanel
+// showed underneath each role's code.
+function roleOptionSubLabel(entry) {
+    return [entry.name, entry.speaker, entry.description].filter(Boolean).join(" -- ");
 }
 
 function openSpeakerRecastPicker(event, row) {
@@ -728,23 +681,6 @@ function openSpeakerRecastPicker(event, row) {
     });
 }
 
-function openInstructPicker(event, row) {
-    if (!instructionEntries.value.length) {
-        setStatus("No instructions catalog found for this project (_instructions.json)");
-        return;
-    }
-    pickPanelRef.value.open(event, {
-        items: instructionEntries.value,
-        getLabel: (e) => e.text,
-        getSubLabel: (e) => e.note || "",
-        onPick: (e) => {
-            row.instruct = e.text;
-            markRowEdited(row);
-            scheduleSave();
-        },
-    });
-}
-
 function showRoleInfoPopover(anchorEl, code) {
     const rect = anchorEl.getBoundingClientRect();
     roleInfoPopover.left = Math.min(rect.left, window.innerWidth - 280);
@@ -765,21 +701,44 @@ const roleInfoFields = computed(() => {
     return { fields };
 });
 
-function revoiceTitle(row) {
+function revoiceTitle(row, index) {
     if (pendingRevoiceRows.has(row)) return "Re-voicing...";
-    if (row.status === "stale") return "Text/speaker/instruct changed since this line's audio was last rendered -- click to re-voice with the current content";
-    if (row.status === "voiced") return "Re-voice just this line (uses the currently open workflow)";
+    if (rowHasAnyTake(index) && !rowIsFresh(row, index)) return "Text/speaker/instruct changed since this line's audio was last rendered -- click to re-voice with the current content";
+    if (rowIsFresh(row, index)) return "Re-voice just this line (uses the currently open workflow)";
     return "Not voiced yet -- click to render just this line";
 }
-async function revoiceRow(row) {
+async function revoiceRow(row, index) {
     if (pendingRevoiceRows.has(row)) return;
     pendingRevoiceRows.add(row);
     setStatus("Re-voicing...");
     try {
-        await props.revoiceApi.revoiceLine({ lineId: row.id, speaker: row.speaker, instruct: row.instruct, text: row.text });
-        row.status = "voiced";
+        // `file` must come from THIS editor's own current filename.value --
+        // ScriptLibraryPanel's editScript() builds revoiceApi.revoiceLine
+        // with a `file` closed over the script the editor was FIRST opened
+        // for, which goes stale the moment Prev/Next switches this same
+        // instance to a different script (switchToFile only ever updates
+        // filename.value, a purely local ref -- it can't reach back into
+        // that closure). Passing the current value here overrides it.
+        // folder/baseName pin the re-voice's OUTPUT location to exactly the
+        // folder this editor reads its per-line files from (linesDirPath),
+        // instead of letting the backend re-derive it from its own
+        // script_filter widget -- see nodes/script_library.py's
+        // strip_suffix_and_ext, which can disagree with this component's
+        // own resolution if the two ever see a different suffix.
+        // linePosition is this row's CURRENT rank among non-malformed rows
+        // (see positionByIndex) -- the backend writes/reads per-line files
+        // addressed purely by that, not by any persisted id.
+        await props.revoiceApi.revoiceLine({
+            linePosition: positionByIndex.value.get(index),
+            speaker: row.speaker,
+            instruct: row.instruct,
+            text: row.text,
+            file: filename.value,
+            folder: props.folder,
+            baseName: audioBaseName.value,
+        });
         setStatus("Line re-voiced");
-        loadLineFiles();
+        await loadLineFiles();
     } catch (e) {
         setStatus(`Re-voice failed: ${e.message || e}`);
     } finally {
@@ -788,10 +747,10 @@ async function revoiceRow(row) {
     }
 }
 
-// Not done: this row's own id<N>.wav, played in sequence (mode 1). Done:
-// a "jump to here" seek into the combined/stitched track (mode 2) -- the
-// mini player up top then drives highlight + auto-scroll as it plays on
-// from there. Strictly isCurrentlyReady, not "does a manifest happen to
+// Not done: this row's own latest-take file, played in sequence (mode 1).
+// Done: a "jump to here" seek into the combined/stitched track (mode 2) --
+// the mini player up top then drives highlight + auto-scroll as it plays
+// on from there. Strictly isCurrentlyReady, not "does a manifest happen to
 // exist" -- re-voicing a single line only ever rewrites ITS OWN file,
 // never the combined one (only Done's stitch touches that), so before
 // Done, seeking into the combined file would silently keep playing an
@@ -805,12 +764,10 @@ function isRowPlaying(index) {
 // The play button itself is always shown on every row (so its presence
 // doesn't silently depend on mode/ready state) -- this is just whether
 // there's actually audio for THIS row to play yet. Not-done checks the
-// actual folder listing (rowAudioFilename), NOT row.status -- status
-// tracks edit-staleness (see markRowEdited), it isn't a reliable signal
-// for "does a file exist on disk" if commit_full_render's rename never
-// completed.
+// actual folder listing (latestFileFor), not whether it's FRESH -- an old,
+// stale take is still something to play, just not something Done accepts.
 function canPlayRow(index, row) {
-    return isCurrentlyReady.value ? currentRowToTimingIdx.value.get(index) !== undefined : rowAudioFilename(row, index) !== null;
+    return isCurrentlyReady.value ? currentRowToTimingIdx.value.get(index) !== undefined : rowHasAnyTake(index);
 }
 
 function onPlayClick(row, index) {
@@ -825,6 +782,35 @@ function onPlayClick(row, index) {
         stopMode1Playback();
     } else {
         playRowSequential(index);
+    }
+}
+
+// One master play/pause for the sticky control panel -- just a different
+// view onto the SAME state each row's own play button already reads
+// (audioIsPlaying / mode1PlayingIdx), so it's automatically in sync with
+// every row's ▶/⏸ icon without any extra plumbing.
+const isPlayingAnything = computed(() => (isCurrentlyReady.value ? audioIsPlaying.value : mode1PlayingIdx.value !== -1));
+const canPlayGlobal = computed(() => (
+    isCurrentlyReady.value
+        ? Boolean(audioState.best)
+        : rows.value.some((r, i) => !r.malformed && rowHasAnyTake(i))
+));
+const globalPlayTitle = computed(() => {
+    if (!canPlayGlobal.value) return "Not voiced yet -- nothing to play";
+    if (isPlayingAnything.value) return "Pause";
+    return isCurrentlyReady.value ? "Play the full rendered file" : "Play every voiced line in sequence";
+});
+function toggleGlobalPlayback() {
+    if (!canPlayGlobal.value) return;
+    if (isCurrentlyReady.value) {
+        const el = audioElRef.value;
+        if (!el) return;
+        if (audioIsPlaying.value) el.pause();
+        else el.play();
+    } else if (mode1PlayingIdx.value !== -1) {
+        stopMode1Playback();
+    } else {
+        playRowSequential(0);
     }
 }
 
@@ -912,7 +898,7 @@ async function toggleDone() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     folder: props.folder, base_name: audioBaseName.value,
-                    line_ids: nonMalformed.map((r) => r.id), line_texts: nonMalformed.map((r) => r.text),
+                    line_count: nonMalformed.length, line_texts: nonMalformed.map((r) => r.text),
                 }),
             });
             const stitchData = await stitchResp.json();
@@ -976,19 +962,30 @@ function splitFocusedLine() {
         setStatus("Can't split a malformed/raw line -- fix it to plain text first");
         return;
     }
+    const posOfSplitRow = positionByIndex.value.get(index);
+    const totalPositions = positionByIndex.value.size;
+
     const pos = el.selectionStart;
     const before = row.text.slice(0, pos).trimEnd();
     const after = row.text.slice(pos).trimStart();
     row.text = before;
-    row.status = "unvoiced";
-    const newRow = freshRow({ speaker: row.speaker, instruct: row.instruct, text: after, raw: "", malformed: false, id: nextLineId++, status: "unvoiced" });
+    const newRow = freshRow({ speaker: row.speaker, instruct: row.instruct, text: after, raw: "", malformed: false });
     rows.value.splice(index + 1, 0, newRow);
     focusNewRow(newRow.__key);
     scheduleSave();
+
+    if (posOfSplitRow !== undefined) {
+        const newPos = posOfSplitRow + 1;
+        const moves = [];
+        for (let p = totalPositions - 1; p >= newPos; p--) moves.push([p, p + 1]);
+        reorganizeLines({ moves });
+    }
 }
 
 function addLine() {
-    const newRow = freshRow({ speaker: "", instruct: "", text: "", raw: "", malformed: false, id: nextLineId++, status: "unvoiced" });
+    // Appended past every existing position -- nothing to reorganize, this
+    // row simply has no file yet.
+    const newRow = freshRow({ speaker: "", instruct: "", text: "", raw: "", malformed: false });
     rows.value.push(newRow);
     focusNewRow(newRow.__key);
     scheduleSave();
@@ -1057,7 +1054,6 @@ async function loadFromDisk({ isPoll = false } = {}) {
             if (!isPoll) {
                 rows.value = [];
                 lastSavedText = "";
-                lastSavedStatePayload = null;
                 setStatus("File does not exist yet (will be created on first edit)");
             }
             return;
@@ -1066,7 +1062,6 @@ async function loadFromDisk({ isPoll = false } = {}) {
         if (data.content === lastSavedText) return;
         rows.value = parseScript(data.content);
         lastSavedText = data.content;
-        await loadAndReconcileState();
         if (!isPoll) setStatus(`Loaded ${rows.value.length} line(s)`);
     } catch (e) {
         setStatus(`Read failed: ${e}`);
@@ -1082,10 +1077,6 @@ onMounted(() => {
     loadAudio();
     loadLineFiles();
     audioPollTimer = setInterval(() => { loadAudio({ silent: true }); loadLineFiles(); }, POLL_MS);
-    // loadTiming() must not run before `rows` is populated -- see
-    // commitFullRenderIfNeeded: an empty `rows` would both wrongly skip it
-    // AND mark this mtime "already seen", losing the one chance to adopt a
-    // full render that finished before this editor was even opened.
     loadFromDisk().then(() => {
         pollTimer = setInterval(() => loadFromDisk({ isPoll: true }), POLL_MS);
         loadTiming();
@@ -1111,7 +1102,51 @@ onBeforeUnmount(() => {
         class="line-editor-dialog"
     >
         <template #header>
-            <div class="header-row">
+            <DialogHeader :title="filename" :status="status" :width-presets="widthPresets" :set-width="setPanelWidth">
+                <template #after>
+                    <div class="font-row">
+                        <Button label="A−" text size="small" title="Decrease line text font size" @click="textFontSizePx = Math.max(MIN_TEXT_FONT_SIZE, textFontSizePx - 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
+                        <Button label="A+" text size="small" title="Increase line text font size" @click="textFontSizePx = Math.min(MAX_TEXT_FONT_SIZE, textFontSizePx + 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
+                    </div>
+                </template>
+            </DialogHeader>
+        </template>
+
+        <StickyPanel class="line-editor-controls">
+            <div class="audio-content-row">
+                <span
+                    class="play-btn global-play-btn"
+                    :class="{ 'is-playing': isPlayingAnything, disabled: !canPlayGlobal }"
+                    :title="globalPlayTitle"
+                    @click="toggleGlobalPlayback"
+                >{{ isPlayingAnything ? "⏸" : "▶" }}</span>
+
+                <template v-if="audioState.best">
+                    <div class="audio-label">{{ audioState.best }}</div>
+                    <audio
+                        ref="audioElRef"
+                        controls
+                        class="audio-el"
+                        :src="`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(audioFolder, audioState.best))}&v=${encodeURIComponent(audioState.mtime || '')}`"
+                        @timeupdate="syncActiveLine"
+                        @play="audioIsPlaying = true"
+                        @pause="audioIsPlaying = false"
+                        @ended="audioIsPlaying = false"
+                    />
+                    <Button
+                        label="Delete audio" text size="small"
+                        :disabled="deleteAudioDisabled"
+                        :title="isCurrentlyReady ? 'Marked ready to release -- unmark it (Done) before deleting audio' : 'Delete the rendered audio for this script'"
+                        @click="deleteAudio"
+                        icon="pi pi-times-circle"
+                    />
+                </template>
+
+                <Button icon="pi pi-refresh" text size="small" title="Re-check _audio\ for this script's rendered audio" @click="loadAudio()" />
+            </div>
+            <div v-if="timingWarningVisible" class="timing-warning">⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер</div>
+
+            <div class="actions-row">
                 <input
                     type="checkbox"
                     class="row-checkbox"
@@ -1128,59 +1163,15 @@ onBeforeUnmount(() => {
                     :title="doneTitle"
                     @click="toggleDone"
                 />
-                <div class="dialog-title">{{ filename }}</div>
-                <div class="status-el">{{ status }}</div>
-                <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
-                <div class="font-row">
-                    <Button label="A−" text size="small" title="Decrease line text font size" @click="textFontSizePx = Math.max(MIN_TEXT_FONT_SIZE, textFontSizePx - 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
-                    <Button label="A+" text size="small" title="Increase line text font size" @click="textFontSizePx = Math.min(MAX_TEXT_FONT_SIZE, textFontSizePx + 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
-                </div>
+                <div class="actions-divider" />
+                <Button label="´ Stress mark" text size="small" title="Insert a stress mark at the cursor: click into a line's text, place the cursor right after the vowel to stress (факел|ов), then click this" @mousedown.prevent="insertStressMark" />
+                <Button label="✂ Split line" text size="small" title="Split this line into two at the cursor: click into a line's text, place the cursor where it should split, then click this" @mousedown.prevent="splitFocusedLine" />
+                <Button label="+ Add line" text size="small" title="Add a new empty line at the end of the script" @click="addLine" />
+                <div class="actions-divider" />
+                <Button label="◀ Prev" text size="small" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
+                <Button label="Next ▶" text size="small" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
             </div>
-        </template>
-
-        <div class="audio-row">
-            <div class="audio-content-row">
-                <template v-if="audioState.checking">
-                    <div class="muted-note">Checking for audio...</div>
-                </template>
-                <template v-else-if="audioState.error">
-                    <div class="muted-note">Audio check failed: {{ audioState.error }}</div>
-                </template>
-                <template v-else-if="audioState.best">
-                    <div class="audio-label">{{ audioState.best }}</div>
-                    <audio
-                        ref="audioElRef"
-                        controls
-                        class="audio-el"
-                        :src="`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(audioFolder, audioState.best))}&v=${encodeURIComponent(audioState.mtime || '')}`"
-                        @timeupdate="syncActiveLine"
-                        @play="audioIsPlaying = true"
-                        @pause="audioIsPlaying = false"
-                        @ended="audioIsPlaying = false"
-                    />
-                    <Button
-                        label="🗑 Delete audio" text size="small"
-                        :disabled="deleteAudioDisabled"
-                        :title="isCurrentlyReady ? 'Marked ready to release -- unmark it (Done) before deleting audio' : 'Delete the rendered audio for this script'"
-                        @click="deleteAudio"
-                    />
-                </template>
-                <template v-else>
-                    <div class="muted-note">No audio yet in {{ audioFolder }}</div>
-                </template>
-                <Button icon="pi pi-refresh" text size="small" title="Re-check _audio\ for this script's rendered audio" @click="loadAudio()" />
-            </div>
-            <div v-if="timingWarningVisible" class="timing-warning">⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер</div>
-        </div>
-
-        <div class="actions-row">
-            <Button label="´ Stress mark" text size="small" title="Insert a stress mark at the cursor: click into a line's text, place the cursor right after the vowel to stress (факел|ов), then click this" @mousedown.prevent="insertStressMark" />
-            <Button label="✂ Split line" text size="small" title="Split this line into two at the cursor: click into a line's text, place the cursor where it should split, then click this" @mousedown.prevent="splitFocusedLine" />
-            <Button label="+ Add line" text size="small" title="Add a new empty line at the end of the script" @click="addLine" />
-            <div class="actions-divider" />
-            <Button label="◀ Prev" text size="small" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
-            <Button label="Next ▶" text size="small" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
-        </div>
+        </StickyPanel>
 
         <div ref="rowsContainerEl" class="rows-container">
             <div
@@ -1208,7 +1199,7 @@ onBeforeUnmount(() => {
                     />
                 </template>
                 <template v-else>
-                    <div class="top-line">
+                    <div class="line-controls-row">
                         <span class="drag-handle" title="Drag onto another line to merge them" :ref="(el) => attachDragHandlers(el, index)">⠿</span>
 
                         <span
@@ -1218,22 +1209,53 @@ onBeforeUnmount(() => {
                             @click="onPlayClick(row, index)"
                         >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
 
+                        <InputGroup class="speaker-group">
+                            <InputGroupAddon><i class="pi pi-user" /></InputGroupAddon>
+                            <Dropdown
+                                :model-value="row.speaker"
+                                :options="roleEntries"
+                                option-label="code"
+                                option-value="code"
+                                editable
+                                filter
+                                placeholder="Speaker"
+                                title="Speaker (role code, or a literal preset/preset#tag)"
+                                @update:model-value="row.speaker = $event; onSpeakerInput(row)"
+                            >
+                                <template #option="{ option }">
+                                    <div class="dropdown-option-label">{{ option.code }}</div>
+                                    <div v-if="roleOptionSubLabel(option)" class="dropdown-option-sublabel">{{ roleOptionSubLabel(option) }}</div>
+                                </template>
+                            </Dropdown>
+                        </InputGroup>
+
+                        <InputGroup class="instruct-group">
+                            <InputGroupAddon><i class="pi pi-list" /></InputGroupAddon>
+                            <Dropdown
+                                :model-value="row.instruct"
+                                :options="instructionEntries"
+                                option-label="text"
+                                option-value="text"
+                                editable
+                                filter
+                                placeholder="Instruct"
+                                title="Instruct text"
+                                @update:model-value="row.instruct = $event; onInstructInput(row)"
+                            >
+                                <template #option="{ option }">
+                                    <div class="dropdown-option-label">{{ option.text }}</div>
+                                    <div v-if="option.note" class="dropdown-option-sublabel">{{ option.note }}</div>
+                                </template>
+                            </Dropdown>
+                        </InputGroup>
+
                         <span
                             v-if="revoiceApi && !isCurrentlyReady"
                             class="revoice-btn"
-                            :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && row.status === 'stale' }"
-                            :title="revoiceTitle(row)"
-                            @click="revoiceRow(row)"
+                            :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
+                            :title="revoiceTitle(row, index)"
+                            @click="revoiceRow(row, index)"
                         >{{ pendingRevoiceRows.has(row) ? "⏳" : "🔁" }}</span>
-
-                        <Button icon="pi pi-user" text size="small" class="icon-btn" title="Pick from _roles.json" @click="openRolePicker($event, row)" />
-
-                        <InputText
-                            class="speaker-input"
-                            :model-value="row.speaker"
-                            title="Speaker (preset or preset#tag)"
-                            @update:model-value="row.speaker = $event; onSpeakerInput(row)"
-                        />
 
                         <Button
                             class="speaker-file-btn"
@@ -1248,16 +1270,6 @@ onBeforeUnmount(() => {
 
                         <div class="spacer" />
                         <Button icon="pi pi-trash" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
-                    </div>
-
-                    <div class="instruct-line">
-                        <Button icon="pi pi-list" text size="small" class="icon-btn" title="Pick from the instructions catalog (_instructions.json)" @click="openInstructPicker($event, row)" />
-                        <InputText
-                            class="instruct-input"
-                            :model-value="row.instruct"
-                            title="Instruct text"
-                            @update:model-value="row.instruct = $event; onInstructInput(row)"
-                        />
                     </div>
                     <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
 

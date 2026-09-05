@@ -52,15 +52,15 @@ export function dirOf(path) {
 // Recasting a role (line_editor.js's "Change this role's speaker for the
 // whole play", or a direct edit in roles_editor.js) changes what EVERY
 // line using that role code resolves to, project-wide -- but a script
-// line's own row never changes, so nothing about the per-line state model
-// would otherwise notice. Marks every already-voiced line using
-// `roleCode` stale across every act (see nodes/script_library.py's
-// mark_role_stale), un-readying + wiping the final file for any DONE
-// script among them.
+// line's own row never changes, so nothing would otherwise notice on its
+// own. Read-only check (see nodes/script_library.py's mark_role_stale):
+// every script (any act) using `roleCode` gets its lines re-hashed against
+// the CURRENT _roles.json, and any script found ready to release gets
+// un-readied + has its now-invalid final file wiped.
 //
-// Returns the raw {changed, untracked} lists plus a ready-to-display
-// `message` summarizing the outcome -- both editors show the exact same
-// wording, worded once, here, rather than each re-deriving it.
+// Returns the raw `changed` list plus a ready-to-display `message`
+// summarizing the outcome -- both editors show the exact same wording,
+// worded once, here, rather than each re-deriving it.
 export async function markRoleStale(root, roleCode, suffix) {
     try {
         const resp = await fetch(`${SCAN_API}/mark_role_stale`, {
@@ -70,18 +70,14 @@ export async function markRoleStale(root, roleCode, suffix) {
         });
         const data = await resp.json();
         if (data.error) {
-            return { changed: [], untracked: [], error: data.error, message: `"${roleCode}" recast, but couldn't mark affected scripts: ${data.error}` };
+            return { changed: [], error: data.error, message: `"${roleCode}" recast, but couldn't check affected scripts: ${data.error}` };
         }
         const changed = data.changed || [];
-        const untracked = data.untracked || [];
-        const parts = [];
-        if (changed.length) parts.push(`${changed.length} script(s) marked for re-voice`);
-        if (untracked.length) parts.push(`${untracked.length} script(s) using "${roleCode}" haven't been opened in the line editor yet`);
-        const message = parts.length
-            ? `"${roleCode}" recast -- ${parts.join("; ")}`
+        const message = changed.length
+            ? `"${roleCode}" recast -- ${changed.length} script(s) need re-voice`
             : `"${roleCode}" recast -- no script uses this role`;
-        return { changed, untracked, error: null, message };
+        return { changed, error: null, message };
     } catch (e) {
-        return { changed: [], untracked: [], error: String(e), message: `"${roleCode}" recast, but couldn't mark affected scripts: ${e.message || e}` };
+        return { changed: [], error: String(e), message: `"${roleCode}" recast, but couldn't check affected scripts: ${e.message || e}` };
     }
 }

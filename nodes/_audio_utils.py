@@ -182,7 +182,9 @@ def fade_edges(wav: torch.Tensor, sample_rate: int, fade_ms: float = 8.0) -> tor
 
 def save_wav(waveform: torch.Tensor, sample_rate: int, path: str) -> None:
     """Writes a waveform tensor straight to an exact path (no tempfile
-    indirection) -- used for per-line _audio/lines/<script>/id<N>.wav files."""
+    indirection) -- used for per-line
+    _audio/lines/<script>/<position>_<version>_<hash>.wav files (see
+    nodes/_line_audio.py)."""
     if waveform.device != torch.device("cpu"):
         waveform = waveform.cpu()
     if waveform.ndim == 3:

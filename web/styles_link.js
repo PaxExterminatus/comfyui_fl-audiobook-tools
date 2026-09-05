@@ -7519,25 +7519,25 @@ function uf(e, t, n, r, i, s) {
   })], 16, af)), [[a]]);
 }
 lf.render = uf;
-const Of = "/fl_cosyvoice3/script_editor", cf = "/fl_cosyvoice3/script_library", Ef = "/fl_cosyvoice3/script_library/speaker_presets", ff = cf;
-function If(e, t) {
+const Of = "/fl_cosyvoice3/script_editor", cf = "/fl_cosyvoice3/script_library", Ef = "/fl_cosyvoice3/script_library/speaker_presets", If = "/fl_cosyvoice3/browse/list_dir", ff = cf;
+function jf(e, t) {
   if (!e) return t;
   if (!t) return e;
   const n = e.includes("\\") && !e.includes("/") ? "\\" : "/";
   return e.replace(/[\\/]+$/, "") + n + t;
 }
-function jf(e, t) {
+function Mf(e, t) {
   const n = (e || "").trim(), r = (t || "").trim();
   if (r && n.toLowerCase().endsWith(r.toLowerCase()))
     return n.slice(0, -r.length);
   const i = n.lastIndexOf(".");
   return i > 0 ? n.slice(0, i) : n;
 }
-function Mf(e) {
+function Lf(e) {
   const t = Math.max(e.lastIndexOf("\\"), e.lastIndexOf("/"));
   return t > 0 ? e.slice(0, t) : e;
 }
-async function Lf(e, t, n) {
+async function Ff(e, t, n) {
   try {
     const i = await (await fetch(`${ff}/mark_role_stale`, {
       method: "POST",
@@ -7554,14 +7554,14 @@ async function Lf(e, t, n) {
     return { changed: [], untracked: [], error: String(r), message: `"${t}" recast, but couldn't mark affected scripts: ${r.message || r}` };
   }
 }
-const Ff = (e, t) => {
+const Df = (e, t) => {
   const n = e.__vccOpts || e;
   for (const [r, i] of t)
     n[r] = i;
   return n;
-}, df = 4;
+}, df = 5;
 let ws = !1;
-function Df(e) {
+function Nf(e) {
   if (ws) return;
   ws = !0;
   const t = new URL(
@@ -7574,40 +7574,41 @@ function Df(e) {
   n.rel = "stylesheet", n.href = t, document.head.appendChild(n);
 }
 export {
-  Wo as $,
-  xe as A,
-  ft as B,
-  hf as C,
-  gi as D,
-  ce as E,
+  Rc as $,
+  On as A,
+  If as B,
+  xe as C,
+  hf as D,
+  gi as E,
   Pe as F,
-  Tf as G,
-  sa as H,
-  Nl as I,
-  Gs as J,
-  ao as K,
-  zr as L,
-  Ef as M,
-  Of as N,
-  Jn as O,
+  ce as G,
+  Tf as H,
+  sa as I,
+  Nl as J,
+  Gs as K,
+  ao as L,
+  zr as M,
+  Ef as N,
+  Of as O,
   $f as P,
-  jf as Q,
+  Jn as Q,
   Gc as R,
   cf as S,
   vf as T,
   Cf as U,
-  _f as V,
-  Mf as W,
+  Mf as V,
+  _f as W,
   Lf as X,
-  Rc as Y,
+  Ff as Y,
   Pf as Z,
-  Ff as _,
+  Df as _,
   Dl as a,
-  M as a0,
-  xf as a1,
-  bf as a2,
-  k as a3,
-  gf as a4,
+  Wo as a0,
+  M as a1,
+  xf as a2,
+  bf as a3,
+  k as a4,
+  gf as a5,
   Ua as b,
   tn as c,
   qe as d,
@@ -7618,8 +7619,8 @@ export {
   Rr as i,
   qt as j,
   mf as k,
-  If as l,
-  Df as m,
+  jf as l,
+  Nf as m,
   Zt as n,
   ii as o,
   wf as p,
@@ -7630,7 +7631,7 @@ export {
   xl as u,
   xn as v,
   $n as w,
-  Ei as x,
-  yf as y,
-  On as z
+  ft as x,
+  Ei as y,
+  yf as z
 };

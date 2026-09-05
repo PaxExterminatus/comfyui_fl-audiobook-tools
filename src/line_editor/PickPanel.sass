@@ -1,0 +1,31 @@
+.pick-panel
+    width: min(360px, 90vw)
+
+.pick-panel-filter
+    width: 100%
+    margin-bottom: 6px
+
+.pick-panel-rows
+    max-height: 280px
+    overflow-y: auto
+
+.pick-panel-empty
+    padding: 8px 10px
+    opacity: 0.55
+    font-size: $font-md
+
+.pick-panel-row
+    padding: 6px 8px
+    border-radius: 4px
+    cursor: pointer
+    &:hover
+        background: $overlay-soft
+
+.pick-panel-label
+    @extend %ellipsis
+    font-size: $font-md
+
+.pick-panel-sublabel
+    @extend %ellipsis
+    font-size: 10.5px
+    opacity: 0.55

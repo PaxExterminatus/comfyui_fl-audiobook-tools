@@ -1,0 +1,25 @@
+// Extend-only patterns repeated verbatim across 2+ editors' scoped
+// styles -- @extend these instead of retyping the same declarations.
+// (Sass placeholders never appear in compiled CSS on their own, only
+// wherever something @extends them -- unlike a real class, there's no
+// runtime cost to declaring one that only one file ends up using.)
+
+// Truncate to one line with an ellipsis -- found identically (same 3
+// declarations, same order) in at least 8 places across the 5 editors
+// before this existed: button/status labels, tree row names, dialog
+// titles, audio filenames.
+%ellipsis
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+
+// A flex row of small action buttons that shouldn't grow/shrink in
+// whatever flex column it sits in (width presets, bulk-select actions,
+// per-line tools). Only the properties EVERY call site already agreed
+// on -- gap varies (3px here, 5-6px there), and about half already add
+// their own align-items/padding on top of this, so those stay explicit
+// per component rather than guessed at here.
+@mixin button-row($gap: 4px)
+    display: flex
+    gap: $gap
+    flex: 0 0 auto

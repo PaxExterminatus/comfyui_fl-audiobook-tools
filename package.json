@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "clean:chunks": "node scripts/clean-chunks.mjs",
-    "dev": "npm run clean:chunks && vite build --watch --mode development",
+    "compile:vanilla-sass": "node scripts/compile-vanilla-sass.mjs",
+    "dev": "npm run clean:chunks && npm run compile:vanilla-sass && vite build --watch --mode development",
     "dev:ui": "vite",
-    "build": "npm run clean:chunks && vite build",
+    "build": "npm run clean:chunks && npm run compile:vanilla-sass && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "nvm list": "nvm list",
@@ -16,6 +17,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/test-utils": "^2.4.5",
     "happy-dom": "^14.12.0",
+    "sass": "^1.104.0",
     "vite": "^5.2.8",
     "vitest": "^1.6.0"
   },

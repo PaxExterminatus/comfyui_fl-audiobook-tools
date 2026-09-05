@@ -8,6 +8,13 @@ import vue from "@vitejs/plugin-vue";
 // into how tests transform/resolve modules.
 export default defineConfig({
     plugins: [vue()],
+    css: {
+        preprocessorOptions: {
+            sass: {
+                additionalData: `@import "../sass/variables"\n@import "../sass/placeholders"\n`,
+            },
+        },
+    },
     test: {
         environment: "happy-dom",
         globals: false,

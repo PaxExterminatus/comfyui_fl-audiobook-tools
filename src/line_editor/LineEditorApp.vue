@@ -14,9 +14,11 @@ import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import PickPanel from "./PickPanel.vue";
 import { usePanelWidth } from "../shared/panel_width.js";
+import PanelWidthButtons from "../shared/PanelWidthButtons.vue";
 import {
     joinPath, stripSuffixAndExt, dirOf, markRoleStale,
     SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
+    BROWSE_API,
 } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -763,7 +765,7 @@ function onPlayClick(row, index) {
 async function loadAudio({ silent = false } = {}) {
     if (!silent) audioState.checking = true;
     try {
-        const resp = await fetch(`/fl_cosyvoice3/browse/list_dir?path=${encodeURIComponent(audioFolder.value)}`);
+        const resp = await fetch(`${BROWSE_API}?path=${encodeURIComponent(audioFolder.value)}`);
         const data = await resp.json();
         const files = Array.isArray(data.files) ? data.files : [];
         const mtimes = data.file_mtimes || {};
@@ -1060,17 +1062,7 @@ onBeforeUnmount(() => {
                 />
                 <div class="title-el">{{ filename }}</div>
                 <div class="status-el">{{ status }}</div>
-                <div class="width-row">
-                    <Button
-                        v-for="px in widthPresets"
-                        :key="px"
-                        :label="String(px)"
-                        text size="small"
-                        :title="`Set editor width to ${px}px (capped to the window's width)`"
-                        @click="setPanelWidth(px)"
-                    />
-                    <Button label="100%" text size="small" title="Use the full available window width" @click="setPanelWidth('full')" />
-                </div>
+                <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
                 <div class="font-row">
                     <Button label="A−" text size="small" title="Decrease line text font size" @click="textFontSizePx = Math.max(MIN_TEXT_FONT_SIZE, textFontSizePx - 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
                     <Button label="A+" text size="small" title="Increase line text font size" @click="textFontSizePx = Math.min(MAX_TEXT_FONT_SIZE, textFontSizePx + 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
@@ -1229,255 +1221,5 @@ onBeforeUnmount(() => {
     </div>
 </template>
 
-<style scoped>
-.line-editor-dialog {
-    height: 92vh;
-}
-.line-editor-dialog :deep(.p-dialog-header) {
-    padding: 8px 12px;
-}
-.line-editor-dialog :deep(.p-dialog-content) {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 0;
-}
-.header-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-}
-.title-el {
-    font-weight: 600;
-    font-size: 14px;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.status-el {
-    flex: 0 0 auto;
-    font-size: 11px;
-    opacity: 0.75;
-    max-width: 260px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.width-row, .font-row {
-    display: flex;
-    gap: 3px;
-    flex: 0 0 auto;
-}
-.font-row {
-    margin-left: 10px;
-}
-.row-checkbox {
-    flex: 0 0 auto;
-    cursor: pointer;
-}
-.audio-row {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 auto;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-.audio-content-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 16px;
-    flex: 0 0 auto;
-}
-.muted-note {
-    flex: 1;
-    font-size: 11px;
-    opacity: 0.7;
-}
-.audio-label {
-    flex: 0 0 auto;
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 11px;
-    opacity: 0.85;
-}
-.audio-el {
-    flex: 1;
-    height: 32px;
-}
-.timing-warning {
-    color: #e0a030;
-    width: 100%;
-    font-size: 11px;
-    padding: 2px 16px 6px;
-}
-.actions-row {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    padding: 6px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    flex: 0 0 auto;
-}
-.actions-divider {
-    width: 1px;
-    align-self: stretch;
-    background: rgba(255, 255, 255, 0.12);
-    margin: 0 4px;
-    flex: 0 0 auto;
-}
-.rows-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.fl-line-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 6px 8px 6px 10px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.02);
-    border-left: 3px solid transparent;
-}
-.fl-line-row.row-playing {
-    background: rgba(90, 140, 255, 0.1);
-}
-.fl-line-row :global(.fl-row-dragging) {
-    opacity: 0.5;
-}
-.fl-line-row :global(.fl-row-drop-target) {
-    outline: 2px dashed rgba(90, 140, 255, 0.6);
-}
-.fl-line-row.row-enter {
-    animation: fl-row-enter 0.35s ease;
-}
-@keyframes fl-row-enter {
-    from { transform: scaleY(0.85); opacity: 0; }
-    to { transform: scaleY(1); opacity: 1; }
-}
-.malformed-warn-line {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.malformed-warn {
-    font-size: 10px;
-    color: #e0a030;
-    flex: 1;
-}
-.malformed-textarea {
-    border-color: rgba(224, 160, 48, 0.5);
-}
-.top-line {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-.drag-handle {
-    cursor: grab;
-    opacity: 0.6;
-    flex: 0 0 auto;
-    touch-action: none;
-}
-.play-btn {
-    cursor: pointer;
-    flex: 0 0 auto;
-    font-size: 13px;
-    color: #4caf50;
-}
-.play-btn.is-playing {
-    color: #e0b030;
-}
-.revoice-btn {
-    cursor: pointer;
-    flex: 0 0 auto;
-    font-size: 13px;
-}
-.revoice-btn.stale {
-    color: #e0a030;
-}
-.revoice-btn.pending {
-    cursor: default;
-    opacity: 0.7;
-}
-.icon-btn {
-    flex: 0 0 auto;
-}
-.speaker-input {
-    width: 108px;
-    flex: 0 0 auto;
-}
-.speaker-file-btn {
-    flex: 0 0 auto;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.role-info-btn {
-    flex: 0 0 auto;
-    cursor: help;
-    opacity: 0.7;
-}
-.spacer {
-    flex: 1 1 auto;
-}
-.instruct-line {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-.instruct-input {
-    flex: 1 1 auto;
-}
-.instruct-desc {
-    font-size: 11px;
-    opacity: 0.7;
-    padding-left: 22px;
-}
-.fl-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    resize: none;
-    overflow: hidden;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: inherit;
-    font-family: inherit;
-    padding: 6px 8px;
-}
-</style>
 
-<style>
-/* Unscoped -- Teleported/global elements this component controls the
-   visibility of but that don't live under its own scoped root. */
-.role-info-popover {
-    position: fixed;
-    z-index: 100000;
-    width: 260px;
-    padding: 8px 10px;
-    background: rgba(30, 30, 34, 0.97);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    font-size: 11px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-.role-info-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 2px 0;
-}
-.role-info-key {
-    opacity: 0.6;
-}
-</style>
+<style scoped lang="sass" src="./LineEditorApp.sass"></style>

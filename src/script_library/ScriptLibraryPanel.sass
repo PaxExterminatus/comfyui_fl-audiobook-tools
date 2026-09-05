@@ -1,0 +1,108 @@
+.script-library-panel
+    display: flex
+    flex-direction: column
+    height: 100%
+    gap: 5px
+
+.browse-button
+    @extend %ellipsis
+    flex: 0 0 auto
+    width: 100%
+    justify-content: flex-start
+
+.tools-row
+    @include button-row(5px)
+
+.tool-btn
+    @extend %ellipsis
+    flex: 1 1 auto
+
+.tree
+    flex: 1 1 auto
+    overflow-y: auto
+    display: flex
+    flex-direction: column
+    gap: 1px
+    padding: 4px
+    border: 1px solid $border-subtle
+    border-radius: 8px
+    background: $bg-recessed
+    box-sizing: border-box
+
+.tree-empty
+    opacity: 0.6
+    padding: 8px
+    font-size: $font-md
+
+.act-row,
+.script-row
+    display: flex
+    align-items: center
+    gap: 6px
+    padding: 4px 6px
+    border-radius: 6px
+    cursor: pointer
+
+.act-row-active
+    background: rgba($color-accent, 0.12)
+
+.script-row
+    padding-left: 24px
+    font-size: $font-sm
+
+.script-row-active
+    background: rgba($color-accent, 0.18)
+
+.row-checkbox
+    flex: 0 0 auto
+    cursor: pointer
+
+.chevron
+    font-size: $font-xs
+    opacity: 0.6
+    width: 10px
+    flex: 0 0 auto
+
+.act-name
+    @extend %ellipsis
+    font-weight: 600
+    font-size: $font-md
+    flex: 1
+
+.act-count
+    font-size: $font-xs
+    opacity: 0.5
+    flex: 0 0 auto
+
+.edit-btn
+    flex: 0 0 auto
+    font-size: $font-xs
+    background: transparent
+    border: 1px solid $border-subtle-strong
+    border-radius: 4px
+    cursor: pointer
+    padding: 1px 4px
+
+.script-name
+    @extend %ellipsis
+    flex: 1
+
+.script-name-active
+    font-weight: 600
+
+.row-icon
+    flex: 0 0 auto
+    font-size: $font-xs
+
+.row-icon-dim
+    opacity: 0.85
+
+.status-line
+    flex: 0 0 auto
+    width: 100%
+    box-sizing: border-box
+    padding: 2px
+    white-space: normal
+    font-size: $font-sm
+    opacity: 0.85
+    min-height: 14px

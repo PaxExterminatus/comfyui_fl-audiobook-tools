@@ -23,6 +23,19 @@ export default defineConfig(({ command }) => {
     return {
         root: isServe ? "dev-ui" : undefined,
         plugins: [vue(), ...(isServe ? [mockComfyApiPlugin()] : [])],
+        css: {
+            preprocessorOptions: {
+                // Auto-@import shared variables/placeholders into every
+                // .sass file this builds -- every component's own .sass
+                // lives at src/<editor>/Name.sass (one level under src/),
+                // so the relative path up to src/sass/ is the same for
+                // all of them. Indented-syntax content only (Sass, not
+                // SCSS) since it's prepended raw to a .sass file.
+                sass: {
+                    additionalData: `@import "../sass/variables"\n@import "../sass/placeholders"\n`,
+                },
+            },
+        },
         // Library mode doesn't auto-replace process.env.NODE_ENV the way
         // Vite's normal app build does -- Vue's own ESM build still checks
         // it internally, and without this it throws "process is not

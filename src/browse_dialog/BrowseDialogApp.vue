@@ -8,7 +8,7 @@ import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
-import { joinPath } from "../../web/fl_common.js";
+import { joinPath, BROWSE_API as LIST_API } from "../../web/fl_common.js";
 
 const props = defineProps({
     mode: { type: String, default: "folder" }, // "folder" | "file"
@@ -17,8 +17,6 @@ const props = defineProps({
     onSelect: { type: Function, required: true },
     onClose: { type: Function, required: true },
 });
-
-const LIST_API = "/fl_cosyvoice3/browse/list_dir";
 
 const visible = ref(true);
 const currentPath = ref("");
@@ -161,45 +159,4 @@ onMounted(() => load(props.startPath || ""));
     </Dialog>
 </template>
 
-<style scoped>
-.browse-dialog {
-    width: min(560px, 90vw);
-}
-.browse-dialog :deep(.p-dialog-content) {
-    display: flex;
-    flex-direction: column;
-}
-.browse-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-}
-.browse-path-input {
-    flex: 1;
-}
-.browse-list {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 280px;
-    max-height: 50vh;
-}
-.browse-row {
-    padding: 6px 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    border-radius: 4px;
-}
-.browse-row:not(.browse-row-note):hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-.browse-row-selected {
-    background: rgba(90, 150, 255, 0.25);
-}
-.browse-row-note {
-    opacity: 0.6;
-    cursor: default;
-}
-</style>
+<style scoped lang="sass" src="./BrowseDialogApp.sass"></style>

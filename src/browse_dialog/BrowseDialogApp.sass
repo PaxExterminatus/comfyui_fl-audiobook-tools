@@ -1,0 +1,34 @@
+.browse-dialog
+    width: min(560px, 90vw)
+    :deep(.p-dialog-content)
+        display: flex
+        flex-direction: column
+
+.browse-toolbar
+    @include button-row(6px)
+    align-items: center
+    margin-bottom: 8px
+
+.browse-path-input
+    flex: 1
+
+.browse-list
+    flex: 1
+    overflow-y: auto
+    min-height: 280px
+    max-height: 50vh
+
+.browse-row
+    @extend %ellipsis
+    padding: 6px 10px
+    cursor: pointer
+    border-radius: 4px
+    &:not(.browse-row-note):hover
+        background: $overlay-soft
+
+.browse-row-selected
+    background: rgba($color-accent, 0.25)
+
+.browse-row-note
+    opacity: 0.6
+    cursor: default

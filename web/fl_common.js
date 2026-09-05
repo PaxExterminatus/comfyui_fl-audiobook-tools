@@ -1,7 +1,8 @@
-// Small shared, DOM-free helpers used across FL CosyVoice3's script-library
-// front-end files (line_editor.js, roles_editor.js, script_library.js,
-// browse_dialog.js). Kept separate from ui_kit.js (DOM widget factories --
-// dropdowns, floating panels, dialogs) since nothing here touches the DOM.
+// Small shared, DOM-free helpers used across every FL CosyVoice3 editor --
+// the 4 Vue components under src/ (Roles Editor, Browse Dialog, Script
+// Library's tree panel, Line Editor) and the remaining hand-written
+// vanilla one (script_editor.js). Kept separate from ui_kit.js (DOM widget
+// factories) since nothing here touches the DOM.
 
 // Single source of truth for the plugin's REST endpoints (see
 // nodes/script_editor.py / nodes/script_library.py for the routes
@@ -10,6 +11,7 @@
 export const SCRIPT_EDITOR_API = "/fl_cosyvoice3/script_editor";
 export const SCRIPT_LIBRARY_API = "/fl_cosyvoice3/script_library";
 export const SPEAKER_PRESETS_API = "/fl_cosyvoice3/script_library/speaker_presets";
+export const BROWSE_API = "/fl_cosyvoice3/browse/list_dir";
 
 const SCAN_API = SCRIPT_LIBRARY_API;
 

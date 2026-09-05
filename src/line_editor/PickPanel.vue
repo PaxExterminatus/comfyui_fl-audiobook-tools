@@ -72,42 +72,4 @@ defineExpose({ open });
     </OverlayPanel>
 </template>
 
-<style scoped>
-.pick-panel {
-    width: min(360px, 90vw);
-}
-.pick-panel-filter {
-    width: 100%;
-    margin-bottom: 6px;
-}
-.pick-panel-rows {
-    max-height: 280px;
-    overflow-y: auto;
-}
-.pick-panel-empty {
-    padding: 8px 10px;
-    opacity: 0.55;
-    font-size: 12px;
-}
-.pick-panel-row {
-    padding: 6px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.pick-panel-row:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-.pick-panel-label {
-    font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.pick-panel-sublabel {
-    font-size: 10.5px;
-    opacity: 0.55;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-</style>
+<style scoped lang="sass" src="./PickPanel.sass"></style>

@@ -1,0 +1,57 @@
+// Pure layout for the grid of Cards -- nothing here overrides a PrimeVue
+// component's own internal styling (padding/background/border-radius all
+// still come from the theme via Card itself). Width itself is dynamic
+// (see panelWidthCss) -- the 900/1200/100% buttons in the header (see
+// src/shared/PanelWidthButtons.vue, shared with Line Editor).
+.header-row
+    display: flex
+    align-items: center
+    gap: 12px
+    width: 100%
+
+.dialog-title
+    font-weight: 600
+    flex: 1
+
+.roles-status
+    margin: 0 0 10px
+
+// Cards flow left-to-right and wrap, instead of stacking in one long
+// column -- auto-fill keeps every column the same width (each at least
+// 260px) and adds/removes columns as the dialog is resized, wrapping to
+// a new row only once the current one is full.
+.roles-list
+    max-height: 74vh
+    overflow-y: auto
+    display: grid
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))
+    gap: 10px
+    align-items: start
+
+.role-code
+    font-family: monospace
+    margin-right: 8px
+
+.role-name
+    font-size: 0.85em
+    font-weight: 400
+    opacity: 0.75
+
+// Card's #content slot stacks the Dropdown above the Textarea by default
+// (block flow) -- this is the one place a bit of spacing/width is needed
+// between them, not an override of either component's own look.
+// IMPORTANT: no `display` here. PrimeVue's theme.css declares
+// `.p-dropdown { display: inline-flex }` inside `@layer primevue`, and its
+// internal label relies on that flex context (`flex: 1 1 auto`) to stretch
+// to the dropdown's full width. This scoped style is NOT in a CSS layer,
+// so an unlayered `display` here would always win the cascade over the
+// theme's layered one regardless of specificity -- killing the flex
+// context and collapsing the label to a few px (its `width: 1%` applied
+// as a literal width instead of a flex-basis). `width` alone doesn't
+// conflict with anything the theme sets on this element, so it's safe.
+.role-speaker
+    width: 100%
+    margin-bottom: 8px
+
+.role-description
+    width: 100%

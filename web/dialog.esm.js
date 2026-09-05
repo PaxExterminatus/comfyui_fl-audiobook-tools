@@ -1,4 +1,4 @@
-import { a3 as A, E as r, a0 as K, d as u, j as h, A as l, e as C, Y as k, z as v, c as S, a4 as Z, i as y, B as Y, x as N, H as $, a as I, f as X, T as U, I as x, F as G, n as z, t as O, C as P, h as W, R as q, D as J, U as B, Z as F, b as Q } from "./styles_link.js";
+import { a4 as A, G as r, a1 as K, d as u, j as h, C as l, e as C, $ as k, A as v, c as S, a5 as Z, i as y, x as N, y as X, I as $, a as I, f as Y, T as U, J as x, F as G, n as z, t as O, D as P, h as W, R as q, E as J, U as F, Z as B, b as Q } from "./styles_link.js";
 var ee = {}, te = A.extend({
   style: ee
 });
@@ -257,7 +257,7 @@ var he = {
   closeButtonIcon: "p-dialog-header-close-icon",
   content: "p-dialog-content",
   footer: "p-dialog-footer"
-}, ye = Y.extend({
+}, ye = N.extend({
   name: "dialog",
   classes: ge,
   inlineStyles: he
@@ -406,7 +406,7 @@ var he = {
   },
   watch: {
     "$attrs.id": function(e) {
-      this.id = e || B();
+      this.id = e || F();
     }
   },
   documentKeydownListener: null,
@@ -427,10 +427,10 @@ var he = {
     this.visible && (this.containerVisible = this.visible);
   },
   beforeUnmount: function() {
-    this.unbindDocumentState(), this.unbindGlobalListeners(), this.destroyStyle(), this.mask && this.autoZIndex && F.clear(this.mask), this.container = null, this.mask = null;
+    this.unbindDocumentState(), this.unbindGlobalListeners(), this.destroyStyle(), this.mask && this.autoZIndex && B.clear(this.mask), this.container = null, this.mask = null;
   },
   mounted: function() {
-    this.id = this.id || B(), this.breakpoints && this.createStyle();
+    this.id = this.id || F(), this.breakpoints && this.createStyle();
   },
   methods: {
     close: function() {
@@ -440,7 +440,7 @@ var he = {
       e.setAttribute(this.attributeSelector, "");
     },
     onEnter: function() {
-      this.$emit("show"), this.target = document.activeElement, this.enableDocumentSettings(), this.bindGlobalListeners(), this.autoZIndex && F.set("modal", this.mask, this.baseZIndex + this.$primevue.config.zIndex.modal);
+      this.$emit("show"), this.target = document.activeElement, this.enableDocumentSettings(), this.bindGlobalListeners(), this.autoZIndex && B.set("modal", this.mask, this.baseZIndex + this.$primevue.config.zIndex.modal);
     },
     onAfterEnter: function() {
       this.focus();
@@ -452,7 +452,7 @@ var he = {
       this.$emit("hide"), r.focus(this.target), this.target = null, this.focusableClose = null, this.focusableMax = null;
     },
     onAfterLeave: function() {
-      this.autoZIndex && F.clear(this.mask), this.containerVisible = !1, this.unbindDocumentState(), this.unbindGlobalListeners(), this.$emit("after-hide");
+      this.autoZIndex && B.clear(this.mask), this.containerVisible = !1, this.unbindDocumentState(), this.unbindGlobalListeners(), this.$emit("after-hide");
     },
     onMaskClick: function(e) {
       this.dismissableMask && this.modal && this.mask === e.target && this.close();
@@ -565,7 +565,7 @@ var he = {
       return this.$primevue.config.locale.aria ? this.$primevue.config.locale.aria.close : void 0;
     },
     attributeSelector: function() {
-      return B();
+      return F();
     }
   },
   directives: {
@@ -626,8 +626,8 @@ function we(t, e) {
   return (e === "string" ? String : Number)(t);
 }
 var Se = ["aria-labelledby", "aria-modal"], De = ["id"], xe = ["autofocus", "tabindex"], ze = ["autofocus", "aria-label"];
-function Be(t, e, n, o, a, i) {
-  var p = N("Portal"), s = $("ripple"), c = $("focustrap");
+function Fe(t, e, n, o, a, i) {
+  var p = X("Portal"), s = $("ripple"), c = $("focustrap");
   return u(), S(p, {
     appendTo: t.appendTo
   }, {
@@ -643,7 +643,7 @@ function Be(t, e, n, o, a, i) {
         onClick: e[3] || (e[3] = function() {
           return i.onMaskClick && i.onMaskClick.apply(i, arguments);
         })
-      }, t.ptm("mask")), [X(U, l({
+      }, t.ptm("mask")), [Y(U, l({
         name: "p-dialog",
         onBeforeEnter: i.onBeforeEnter,
         onEnter: i.onEnter,
@@ -748,7 +748,7 @@ function Be(t, e, n, o, a, i) {
     _: 3
   }, 8, ["appendTo"]);
 }
-Ce.render = Be;
+Ce.render = Fe;
 export {
   ae as F,
   j as a,

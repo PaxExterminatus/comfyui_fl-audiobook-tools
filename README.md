@@ -125,6 +125,43 @@ npm run dev     # rebuilds web/*.js on save -- refresh ComfyUI's tab to see chan
 npm run build   # one-off production build
 ```
 
+### Styling (Sass, indented syntax -- not SCSS)
+
+Every component's CSS lives in its own co-located `.sass` file (e.g.
+`src/roles_editor/RolesEditorApp.sass`), wired in via
+`<style scoped lang="sass" src="./Name.sass">` -- Vue's SFC compiler
+treats a `src`-loaded style block exactly like an inline one (still
+scoped, still preprocessed), it just keeps the CSS in a real file with
+normal syntax highlighting instead of a giant string inside the `.vue`
+file.
+
+`src/sass/` holds what's shared across components:
+- `_variables.sass` -- design tokens (colors, borders, type scale),
+  named by ROLE rather than by whatever number first got typed --
+  an audit before this existed found the "same" selection-highlight
+  blue as two different RGB triples in two files, and half a dozen
+  near-identical `rgba(255,255,255, 0.08–0.16)` values with no real
+  distinction between them.
+- `_placeholders.sass` -- `%ellipsis` and a `button-row` mixin,
+  `@extend`/`@include`d wherever the exact same declarations were
+  previously retyped across 2+ components.
+- `global.sass` -- truly unscoped CSS (currently just Line Editor's
+  role-info hover popover), imported once via
+  `src/shared/styles_link.js` the same way the PrimeVue theme itself is.
+
+Both are auto-`@import`ed into every component's `.sass` file by
+`vite.config.js`/`vitest.config.js`'s `css.preprocessorOptions.sass.
+additionalData` -- no component needs to import them by hand.
+
+`web/fl_shared.sass` is the one exception: it styles the remaining
+hand-written vanilla widgets (`script_editor.js`'s browse button,
+`ui_kit.js`'s report viewer), which aren't part of Vite's module graph
+at all (linked at runtime via a plain `<link>` tag, not `import`ed) --
+`scripts/compile-vanilla-sass.mjs` compiles it to `web/fl_shared.css`
+as its own tiny build step (wired into `npm run build`/`dev`), and it
+`@import`s `src/sass/variables`/`placeholders` explicitly since it
+doesn't go through Vite's additionalData.
+
 ### Developing the UI without ComfyUI running
 
 `npm run dev:ui` starts a real Vite dev server (HMR, no rebuild-and-

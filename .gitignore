@@ -1,8 +1,21 @@
 # Node (Vue/PrimeVue build tooling for the migrated editors)
 node_modules/
 
-# Claude Code's own local skill packs -- not project content
-.claude/
+# This environment's own local skill packs get materialized under
+# .claude/skills/ regardless of the project -- not project content, and
+# the exact reason `git add -A` once swept 174 unrelated files into a
+# commit here. NOT a blanket `.claude/` ignore though: a skill actually
+# *written for this project* (e.g. one documenting its own frontend
+# conventions) belongs in .claude/skills/ and SHOULD be committed --
+# stage it by name (`git add .claude/skills/<name>`), never `-A` this
+# directory.
+.claude/skills/banner-design/
+.claude/skills/brand/
+.claude/skills/design/
+.claude/skills/design-system/
+.claude/skills/slides/
+.claude/skills/ui-styling/
+.claude/skills/ui-ux-pro-max/
 
 # Python
 __pycache__/

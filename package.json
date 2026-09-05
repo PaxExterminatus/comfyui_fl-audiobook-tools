@@ -3,9 +3,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vite build --watch --mode development",
+    "clean:chunks": "node scripts/clean-chunks.mjs",
+    "dev": "npm run clean:chunks && vite build --watch --mode development",
     "dev:ui": "vite",
-    "build": "vite build",
+    "build": "npm run clean:chunks && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "nvm list": "nvm list",

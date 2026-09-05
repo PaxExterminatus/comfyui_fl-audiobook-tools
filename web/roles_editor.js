@@ -2323,7 +2323,6 @@ const Nt = { class: "roles-list" }, $t = {
       visible: s.value,
       "onUpdate:visible": I[1] || (I[1] = (h) => s.value = h),
       modal: "",
-      "dismissable-mask": "",
       header: "Roles",
       class: "roles-dialog"
     }, {
@@ -2392,7 +2391,7 @@ const Nt = { class: "roles-list" }, $t = {
       _: 1
     }, 8, ["visible"]));
   }
-}, Jt = /* @__PURE__ */ Be(Zt, [["__scopeId", "data-v-2bee4121"]]);
+}, Jt = /* @__PURE__ */ Be(Zt, [["__scopeId", "data-v-a5eca5cd"]]);
 function ei({ root: t, suffix: e = "_speakers.txt" }) {
   $e(import.meta.url);
   const i = document.createElement("div");

@@ -64,6 +64,13 @@ describe("RolesEditorApp", () => {
         wrapper.unmount();
     });
 
+    it("shows every role's speaker/description fields at once, with no expand step", async () => {
+        const { wrapper } = await mountApp();
+        expect(document.body.querySelector(".role-speaker input").value).toBe("arestovich");
+        expect(document.body.querySelector("textarea.role-description").value).toBe("Calm.");
+        wrapper.unmount();
+    });
+
     it("saves after editing a description (debounced)", async () => {
         vi.useFakeTimers({ shouldAdvanceTime: true });
         const onWrite = vi.fn();

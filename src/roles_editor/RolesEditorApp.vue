@@ -10,9 +10,12 @@
 //
 // Built from PrimeVue's own structural components (Dialog, Card, Message)
 // rather than hand-rolled overlay/panel/card markup -- Dialog alone
-// already handles the backdrop, ESC-to-close, click-outside-to-close, and
-// its own close button, none of which this file needs to reimplement or
-// fight with custom CSS.
+// already handles the backdrop, ESC-to-close, and its own close button.
+// Cards flow left-to-right in a wrapping grid (see .roles-list) rather
+// than stacking in one long column, so a project with many roles reads
+// as a compact grid instead of a tall scrolling list -- every card stays
+// fully open (no collapse step) so editing a role is always a single
+// click, not click-to-expand-then-edit.
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import Dialog from "primevue/dialog";
 import Card from "primevue/card";
@@ -262,25 +265,27 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Pure layout for the list of Cards -- nothing here overrides a PrimeVue
+/* Pure layout for the grid of Cards -- nothing here overrides a PrimeVue
    component's own internal styling (padding/background/border-radius all
    still come from the theme via Card itself). */
 .roles-dialog {
-    width: 80vw;
-    max-width: 820px;
+    width: 90vw;
+    max-width: 1200px;
 }
 .roles-status {
     margin: 0 0 10px;
 }
+/* Cards flow left-to-right and wrap, instead of stacking in one long
+   column -- auto-fill keeps every column the same width (each at least
+   260px) and adds/removes columns as the dialog is resized, wrapping to
+   a new row only once the current one is full. */
 .roles-list {
     max-height: 74vh;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 10px;
-}
-.role-card {
-    flex: 0 0 auto;
+    align-items: start;
 }
 .role-code {
     font-family: monospace;

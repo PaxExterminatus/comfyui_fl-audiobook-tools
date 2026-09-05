@@ -1,6 +1,6 @@
-import { _ as A, w as N, o as T, c as S, a as C, u as d, b as h, r, d as i, e as P, f as w, g as R, h as q, t as k, i as $, j as m, F as V, k as K, n as z, l as B, m as M, p as G, P as H } from "./styles_link.js";
+import { _ as A, w as N, o as T, c as S, a as C, u as d, b as h, r, d as i, e as P, f as w, g as R, h as q, t as g, i as $, j as m, F as V, k as K, n as z, l as B, m as M, p as G, P as H } from "./styles_link.js";
 import { s as J } from "./dialog.esm.js";
-import { s as g } from "./button.esm.js";
+import { s as k } from "./button.esm.js";
 import { s as O } from "./inputtext.esm.js";
 import { s as Q } from "./message.esm.js";
 const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
@@ -66,18 +66,17 @@ const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
       visible: v.value,
       "onUpdate:visible": a[1] || (a[1] = (e) => v.value = e),
       modal: "",
-      "dismissable-mask": "",
       header: E.value,
       class: "browse-dialog"
     }, {
       footer: C(() => [
-        w(d(g), {
+        w(d(k), {
           label: "Cancel",
           severity: "secondary",
           text: "",
           onClick: y
         }),
-        w(d(g), {
+        w(d(k), {
           label: F.value,
           disabled: I.value,
           onClick: j
@@ -85,7 +84,7 @@ const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
       ]),
       default: C(() => [
         P("div", W, [
-          w(d(g), {
+          w(d(k), {
             icon: "pi pi-arrow-up",
             title: "Up one level",
             text: "",
@@ -105,7 +104,7 @@ const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
           closable: !1
         }, {
           default: C(() => [
-            q(k(u.value), 1)
+            q(g(u.value), 1)
           ]),
           _: 1
         })) : $("", !0),
@@ -115,7 +114,7 @@ const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
               key: `${e.type}:${e.name}`,
               class: z(["browse-row", { "browse-row-selected": e.type === "file" && e.path === f.value }]),
               onClick: (p) => D(e)
-            }, k(e.icon) + " " + k(e.name), 11, Z))), 128)),
+            }, g(e.icon) + " " + g(e.name), 11, Z))), 128)),
             !x.value.length && !u.value ? (i(), m("div", ee, "(empty)")) : $("", !0)
           ], 64))
         ])
@@ -123,7 +122,7 @@ const W = { class: "browse-toolbar" }, X = { class: "browse-list" }, Y = {
       _: 1
     }, 8, ["visible", "header"]));
   }
-}, ae = /* @__PURE__ */ A(oe, [["__scopeId", "data-v-e5da9418"]]);
+}, ae = /* @__PURE__ */ A(oe, [["__scopeId", "data-v-016f0af1"]]);
 function ue({ mode: b = "folder", startPath: l = "", ext: v = "", onSelect: s }) {
   M(import.meta.url);
   const n = document.createElement("div");

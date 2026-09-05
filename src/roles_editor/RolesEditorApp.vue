@@ -210,9 +210,10 @@ function close() {
 
 // Dialog owns ESC-to-close and its own header close button -- both just
 // flip v-model:visible to false, which lands here regardless of which one
-// triggered it. Deliberately NOT dismissable-mask (no close-on-outside-
-// click) -- same as every other dialog in this addon, so an accidental
-// click past the panel's edge can't silently lose in-progress edits.
+// triggered it. Non-modal (no backdrop, click-through to the canvas) and
+// never dismissable-mask -- same behavior as every dialog in this addon,
+// so an accidental click past the panel's edge can't lose in-progress
+// edits or close the editor unexpectedly.
 watch(visible, (v) => {
     if (!v) close();
 });
@@ -231,7 +232,10 @@ onBeforeUnmount(() => {
 <template>
     <Dialog
         v-model:visible="visible"
-        modal
+        :modal="false"
+        :draggable="false"
+        close-on-escape
+        header=" "
         :style="{ width: panelWidthCss }"
         class="roles-dialog"
     >

@@ -1,14 +1,14 @@
-import { _ as L, w as N, o as R, c as S, a as C, u as d, B as T, b as h, r, d as i, e as P, f as w, s as g, g as q, h as K, t as k, i as $, j as m, F as B, k as z, n as M, l as V, m as O, p as W, P as G } from "./styles_link.js";
-import { s as H } from "./dialog.esm.js";
-import { s as J } from "./inputtext.esm.js";
-import { s as Q } from "./message.esm.js";
-const X = { class: "browse-toolbar" }, Y = { class: "browse-list" }, Z = {
+import { _ as R, w as q, o as K, c as S, a as w, n as T, u as l, B as z, r as i, b as u, d as b, e as h, s as P, f as M, g as O, t as y, h as B, i as m, F as V, j as G, k as H, l as _, m as $, p as J, q as Q, P as X } from "./styles_link.js";
+import { u as Y, P as Z, s as ee } from "./PanelWidthButtons.js";
+import { s as te } from "./inputtext.esm.js";
+import { s as oe } from "./message.esm.js";
+const se = { class: "header-row" }, ae = { class: "dialog-title" }, le = { class: "browse-toolbar" }, ne = { class: "browse-list" }, re = {
   key: 0,
   class: "browse-row browse-row-note"
-}, ee = ["onClick"], te = {
+}, ie = ["onClick"], ue = {
   key: 0,
   class: "browse-row browse-row-note"
-}, oe = {
+}, ce = {
   __name: "BrowseDialogApp",
   props: {
     mode: { type: String, default: "folder" },
@@ -18,125 +18,144 @@ const X = { class: "browse-toolbar" }, Y = { class: "browse-list" }, Z = {
     onSelect: { type: Function, required: !0 },
     onClose: { type: Function, required: !0 }
   },
-  setup(b) {
-    const l = b, v = r(!0), s = r(""), n = r(""), o = r(null), f = r(null), y = r(!1), u = r(null), E = h(() => l.mode === "folder" ? "Choose a folder" : "Choose a file"), F = h(() => l.mode === "folder" ? "Select This Folder" : "Select File"), U = h(
-      () => l.mode === "folder" ? !s.value : !f.value
+  setup(g) {
+    const a = g, v = i(!0), n = i(""), r = i(""), o = i(null), f = i(null), C = i(!1), c = i(null), { cssWidth: E, setWidth: F, presets: W } = Y({
+      storageKey: "FL_CosyVoice3.BrowseDialog.widthPx",
+      defaultWidth: 560,
+      presets: [420, 700],
+      // A file picker never needs to fill nearly the whole window the way
+      // Line/Roles Editor's "100%" does -- capped much narrower.
+      fullVw: 70
+    }), D = _(() => a.mode === "folder" ? "Choose a folder" : "Choose a file"), U = _(() => a.mode === "folder" ? "Select This Folder" : "Select File"), I = _(
+      () => a.mode === "folder" ? !n.value : !f.value
     );
-    function D() {
-      o.value && o.value.parent ? c(o.value.parent) : (o.value && o.value.parent === "" || s.value) && c("");
+    function L() {
+      o.value && o.value.parent ? d(o.value.parent) : (o.value && o.value.parent === "" || n.value) && d("");
     }
-    const x = h(() => {
+    const x = _(() => {
       const t = o.value;
       if (!t) return [];
-      const a = [];
-      return (t.drives || []).forEach((e) => a.push({ type: "drive", name: e, icon: "💽", path: e })), (t.dirs || []).forEach((e) => a.push({ type: "dir", name: e, icon: "📁", path: V(s.value, e) })), l.mode === "file" && (t.files || []).forEach((e) => a.push({ type: "file", name: e, icon: "📄", path: V(s.value, e) })), a;
+      const s = [];
+      return (t.drives || []).forEach((e) => s.push({ type: "drive", name: e, icon: "💽", path: e })), (t.dirs || []).forEach((e) => s.push({ type: "dir", name: e, icon: "📁", path: $(n.value, e) })), a.mode === "file" && (t.files || []).forEach((e) => s.push({ type: "file", name: e, icon: "📄", path: $(n.value, e) })), s;
     });
-    function I(t) {
-      t.type === "file" ? f.value = t.path : c(t.path);
+    function j(t) {
+      t.type === "file" ? f.value = t.path : d(t.path);
     }
-    async function c(t) {
-      y.value = !0, u.value = null, f.value = null;
+    async function d(t) {
+      C.value = !0, c.value = null, f.value = null;
       try {
-        const a = `${T}?path=${encodeURIComponent(t)}${l.ext ? `&ext=${encodeURIComponent(l.ext)}` : ""}`, p = await (await fetch(a)).json();
+        const s = `${z}?path=${encodeURIComponent(t)}${a.ext ? `&ext=${encodeURIComponent(a.ext)}` : ""}`, p = await (await fetch(s)).json();
         if (p.error) {
-          u.value = p.error, o.value = null;
+          c.value = p.error, o.value = null;
           return;
         }
-        s.value = p.path, n.value = p.path || "", o.value = p;
-      } catch (a) {
-        u.value = String(a), o.value = null;
+        n.value = p.path, r.value = p.path || "", o.value = p;
+      } catch (s) {
+        c.value = String(s), o.value = null;
       } finally {
-        y.value = !1;
+        C.value = !1;
       }
     }
-    function j() {
-      c(n.value.trim());
-    }
     function A() {
-      const t = l.mode === "folder" ? s.value : f.value;
-      t && (l.onSelect(t), _());
+      d(r.value.trim());
     }
-    function _() {
-      l.onClose();
+    function N() {
+      const t = a.mode === "folder" ? n.value : f.value;
+      t && (a.onSelect(t), k());
     }
-    return N(v, (t) => {
-      t || _();
-    }), R(() => c(l.startPath || "")), (t, a) => (i(), S(d(H), {
+    function k() {
+      a.onClose();
+    }
+    return q(v, (t) => {
+      t || k();
+    }), K(() => d(a.startPath || "")), (t, s) => (u(), S(l(ee), {
       visible: v.value,
-      "onUpdate:visible": a[1] || (a[1] = (e) => v.value = e),
-      modal: "",
-      header: E.value,
+      "onUpdate:visible": s[1] || (s[1] = (e) => v.value = e),
+      modal: !1,
+      draggable: !1,
+      "close-on-escape": "",
+      header: " ",
+      style: T({ width: l(E) }),
       class: "browse-dialog"
     }, {
-      footer: C(() => [
-        w(d(g), {
+      header: w(() => [
+        b("div", se, [
+          b("div", ae, y(D.value), 1),
+          h(Z, {
+            presets: l(W),
+            "set-width": l(F)
+          }, null, 8, ["presets", "set-width"])
+        ])
+      ]),
+      footer: w(() => [
+        h(l(P), {
           label: "Cancel",
           severity: "secondary",
           text: "",
-          onClick: _
+          onClick: k
         }),
-        w(d(g), {
-          label: F.value,
-          disabled: U.value,
-          onClick: A
+        h(l(P), {
+          label: U.value,
+          disabled: I.value,
+          onClick: N
         }, null, 8, ["label", "disabled"])
       ]),
-      default: C(() => [
-        P("div", X, [
-          w(d(g), {
+      default: w(() => [
+        b("div", le, [
+          h(l(P), {
             icon: "pi pi-arrow-up",
             title: "Up one level",
             text: "",
-            onClick: D
+            onClick: L
           }),
-          w(d(J), {
-            modelValue: n.value,
-            "onUpdate:modelValue": a[0] || (a[0] = (e) => n.value = e),
+          h(l(te), {
+            modelValue: r.value,
+            "onUpdate:modelValue": s[0] || (s[0] = (e) => r.value = e),
             placeholder: "Path -- press Enter to jump here",
             class: "browse-path-input",
-            onKeydown: q(j, ["enter"])
+            onKeydown: M(A, ["enter"])
           }, null, 8, ["modelValue"])
         ]),
-        u.value ? (i(), S(d(Q), {
+        c.value ? (u(), S(l(oe), {
           key: 0,
           severity: "error",
           closable: !1
         }, {
-          default: C(() => [
-            K(k(u.value), 1)
+          default: w(() => [
+            O(y(c.value), 1)
           ]),
           _: 1
-        })) : $("", !0),
-        P("div", Y, [
-          y.value ? (i(), m("div", Z, "Loading...")) : (i(), m(B, { key: 1 }, [
-            (i(!0), m(B, null, z(x.value, (e) => (i(), m("div", {
+        })) : B("", !0),
+        b("div", ne, [
+          C.value ? (u(), m("div", re, "Loading...")) : (u(), m(V, { key: 1 }, [
+            (u(!0), m(V, null, G(x.value, (e) => (u(), m("div", {
               key: `${e.type}:${e.name}`,
-              class: M(["browse-row", { "browse-row-selected": e.type === "file" && e.path === f.value }]),
-              onClick: (p) => I(e)
-            }, k(e.icon) + " " + k(e.name), 11, ee))), 128)),
-            !x.value.length && !u.value ? (i(), m("div", te, "(empty)")) : $("", !0)
+              class: H(["browse-row", { "browse-row-selected": e.type === "file" && e.path === f.value }]),
+              onClick: (p) => j(e)
+            }, y(e.icon) + " " + y(e.name), 11, ie))), 128)),
+            !x.value.length && !c.value ? (u(), m("div", ue, "(empty)")) : B("", !0)
           ], 64))
         ])
       ]),
       _: 1
-    }, 8, ["visible", "header"]));
+    }, 8, ["visible", "style"]));
   }
-}, ae = /* @__PURE__ */ L(oe, [["__scopeId", "data-v-effaa217"]]);
-function ie({ mode: b = "folder", startPath: l = "", ext: v = "", onSelect: s }) {
-  O(import.meta.url);
-  const n = document.createElement("div");
-  document.body.appendChild(n);
-  const o = W(ae, {
-    mode: b,
-    startPath: l,
+}, de = /* @__PURE__ */ R(ce, [["__scopeId", "data-v-d2c8bc8b"]]);
+function me({ mode: g = "folder", startPath: a = "", ext: v = "", onSelect: n }) {
+  J(import.meta.url);
+  const r = document.createElement("div");
+  document.body.appendChild(r);
+  const o = Q(de, {
+    mode: g,
+    startPath: a,
     ext: v,
-    onSelect: s,
+    onSelect: n,
     onClose: () => {
-      o.unmount(), n.remove();
+      o.unmount(), r.remove();
     }
   });
-  o.use(G, { ripple: !0 }), o.mount(n);
+  o.use(X, { ripple: !0 }), o.mount(r);
 }
 export {
-  ie as openBrowseDialog
+  me as openBrowseDialog
 };

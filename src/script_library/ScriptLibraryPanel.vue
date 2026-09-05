@@ -72,7 +72,17 @@ const checked = reactive(new Set()); // keyOf(act, file) -- which scripts Run sh
 const expanded = reactive(new Set()); // act names
 const status = ref("");
 
-const suffix = computed(() => props.filterWidget?.value || "_speakers.txt");
+// NOT `|| "_speakers.txt"` -- an empty script_filter is a deliberate,
+// documented choice on the node ("leave empty to list every .txt file"),
+// and nodes/script_library.py's strip_suffix_and_ext treats "" as "don't
+// strip anything" too. Silently substituting a default here meant this
+// component's own audioBaseName/folder-path guesses (Line Editor's
+// linesDirPath, timing path, etc.) disagreed with what the backend
+// actually named things on disk whenever script_filter was really blank --
+// e.g. the backend keeps "_speakers" in a script's base name, but this
+// component would compute it stripped, and then can't find ANY of that
+// script's audio/timing files under the name it goes looking for.
+const suffix = computed(() => props.filterWidget?.value ?? "");
 const browseLabel = computed(() => (folderPath.value ? `📁 ${folderPath.value}` : "📁 Click to browse for a project folder"));
 
 function setStatus(text) {

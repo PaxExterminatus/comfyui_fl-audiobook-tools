@@ -43,7 +43,7 @@ function mockFetch(overrides = {}) {
             return { json: async () => ({ presets: overrides.presets || [] }) };
         }
         if (u.startsWith("/fl_cosyvoice3/browse/list_dir")) {
-            return { json: async () => ({ files: [], file_mtimes: {} }) };
+            return { json: async () => ({ files: overrides.lineFiles || [], file_mtimes: {} }) };
         }
         if (u.startsWith("/fl_cosyvoice3/script_library/set_ready")) {
             overrides.onSetReady?.(JSON.parse(opts.body));
@@ -186,6 +186,50 @@ describe("LineEditorApp", () => {
 
         await vi.waitFor(() => expect(onSetReady).toHaveBeenCalledWith(expect.objectContaining({ filename: "Test_speakers.txt", ready: true })));
         expect(checkedApi.setChecked).toHaveBeenCalledWith("Test_speakers.txt", false);
+        wrapper.unmount();
+    });
+
+    it("play button is present but disabled on an unvoiced line, and does nothing when clicked", async () => {
+        const { wrapper } = await mountEditor();
+        const playBtn = document.querySelectorAll(".play-btn")[0];
+        expect(playBtn).toBeTruthy();
+        expect(playBtn.classList.contains("disabled")).toBe(true);
+        playBtn.click();
+        await vi.waitFor(() => expect(document.querySelector(".fl-line-row").classList.contains("row-playing")).toBe(false));
+        expect(playBtn.classList.contains("is-playing")).toBe(false);
+        wrapper.unmount();
+    });
+
+    it("play button on a voiced line starts mode-1 playback, and clicking again stops it", async () => {
+        const { wrapper } = await mountEditor({
+            stateJson: JSON.stringify({ next_id: 3, lines: [{ id: 1, text: "First line.", status: "voiced" }, { id: 2, text: "Second line.", status: "voiced" }] }),
+            lineFiles: ["id1.wav", "id2.wav"],
+        });
+
+        const playBtn = document.querySelectorAll(".play-btn")[0];
+        expect(playBtn.classList.contains("disabled")).toBe(false);
+
+        playBtn.click();
+        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing")).toBe(true));
+        expect(document.querySelectorAll(".fl-line-row")[0].classList.contains("row-playing")).toBe(true);
+
+        playBtn.click();
+        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing")).toBe(false));
+        wrapper.unmount();
+    });
+
+    it("play button works from positional files even when _state.json never got written (commit_full_render never ran)", async () => {
+        // No stateJson at all -- every row starts "unvoiced" server-side, exactly
+        // the state a fresh full render leaves things in if the id<N>.wav rename
+        // step silently didn't happen. The row's own audio still exists on disk,
+        // just under the positional name a full render writes it under.
+        const { wrapper } = await mountEditor({ lineFiles: ["0000.wav", "0001.wav"] });
+
+        const playBtn = document.querySelectorAll(".play-btn")[0];
+        expect(playBtn.classList.contains("disabled")).toBe(false);
+
+        playBtn.click();
+        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing")).toBe(true));
         wrapper.unmount();
     });
 

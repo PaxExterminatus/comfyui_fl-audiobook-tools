@@ -1,8 +1,13 @@
 .browse-dialog
-    width: min(560px, 90vw)
     :deep(.p-dialog-content)
         display: flex
         flex-direction: column
+
+.header-row
+    @extend %dialog-header-row
+
+.dialog-title
+    @extend %dialog-title
 
 .browse-toolbar
     @include button-row(6px)

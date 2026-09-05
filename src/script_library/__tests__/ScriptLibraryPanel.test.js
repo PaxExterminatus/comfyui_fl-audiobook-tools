@@ -62,13 +62,14 @@ describe("ScriptLibraryPanel", () => {
         const folderWidget = overrides.folderWidget || makeWidget(overrides.folder ?? "C:\\project");
         const actWidget = makeWidget();
         const scriptFileWidget = makeWidget();
+        const filterWidget = overrides.filterWidget;
         const openBrowseDialog = vi.fn();
         const openRolesEditor = vi.fn();
         const openLineEditor = vi.fn();
         const queueLineRevoice = overrides.queueLineRevoice || vi.fn().mockResolvedValue(undefined);
         const wrapper = mount(ScriptLibraryPanel, {
             props: {
-                node, folderWidget, actWidget, scriptFileWidget,
+                node, folderWidget, actWidget, scriptFileWidget, filterWidget,
                 openBrowseDialog, openRolesEditor, openLineEditor, queueLineRevoice,
             },
             global: { plugins: [PrimeVue] },
@@ -166,6 +167,26 @@ describe("ScriptLibraryPanel", () => {
         await vi.waitFor(() => expect(queueLineRevoice).toHaveBeenCalled());
         expect(queueLineRevoice.mock.calls[0][1]).toMatchObject({ act: "Act01", file: "Scene1_speakers.txt", lineId: 3 });
         await vi.waitFor(() => expect(onMarkLineVoiced).toHaveBeenCalledWith({ folder: "C:\\project\\Act01", base_name: "Scene1", line_id: 3 }));
+        wrapper.unmount();
+    });
+
+    it("passes an empty script_filter through as-is to the Line Editor, not a hardcoded default", async () => {
+        // A blank script_filter is a deliberate, documented choice on the
+        // node (list every .txt file) -- and the backend's own
+        // strip_suffix_and_ext treats "" as "don't strip anything" when
+        // naming a script's audio/timing files on disk. Silently
+        // substituting "_speakers.txt" here made this component guess a
+        // DIFFERENT base name than the backend actually used, so the Line
+        // Editor could never find that script's audio/timing files (every
+        // per-line play button showing disabled) whenever a project left
+        // script_filter blank.
+        const { wrapper, openLineEditor } = mountPanel({ filterWidget: makeWidget("") });
+        await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
+
+        const editBtn = [...document.body.querySelectorAll(".edit-btn")][0];
+        editBtn.click();
+
+        expect(openLineEditor).toHaveBeenCalledWith(expect.objectContaining({ suffix: "" }));
         wrapper.unmount();
     });
 

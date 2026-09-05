@@ -1,7 +1,7 @@
-import { x as se, E as re, d as p, j as y, C as u, A as L, i as M, e as k, $ as ue, a0 as ge, G as g, y as Z, F as W, k as ne, f as q, R as Ve, a1 as E, a2 as ze, H as Fe, Z as oe, U as de, I as Pe, h as ie, t as H, c as U, D as le, n as ee, a as G, T as Te, z as Ee, J as Me, _ as xe, l as Be, w as De, o as Ae, L as Ke, M as He, u as $, N as Re, O as ce, K as je, r as te, Y as Ne, m as $e, p as Ue, P as Ge } from "./styles_link.js";
-import { a as We, b as qe, s as Ze } from "./dialog.esm.js";
-import { a as Je, s as Ye } from "./message.esm.js";
-import { O as Qe, u as Xe, P as _e } from "./PanelWidthButtons.js";
+import { y as se, G as re, b as p, i as y, D as u, C as L, h as M, d as k, $ as ue, a0 as ge, H as g, z as Z, F as W, j as ne, e as q, R as Ve, a1 as E, a2 as ze, I as Fe, Z as oe, U as de, J as Pe, g as ie, t as H, c as U, E as le, k as ee, a as G, T as Te, A as Ee, K as Me, _ as xe, m as Be, w as De, o as Ae, M as Ke, n as He, u as $, N as Re, O as ce, L as je, r as te, Y as Ne, p as $e, q as Ue, P as Ge } from "./styles_link.js";
+import { a as We, b as qe, u as Ze, P as Je, s as Ye } from "./PanelWidthButtons.js";
+import { a as Qe, s as Xe } from "./message.esm.js";
+import { O as _e } from "./overlayeventbus.esm.js";
 var et = {
   root: "p-card p-component",
   header: "p-card-header",
@@ -1410,7 +1410,7 @@ var Le = {
       this.overlayVisible && this.alignOverlay();
     },
     onOverlayClick: function(e) {
-      Qe.emit("overlay-click", {
+      _e.emit("overlay-click", {
         originalEvent: e,
         target: this.$el
       });
@@ -1747,7 +1747,7 @@ var Le = {
     ChevronDownIcon: Oe,
     SpinnerIcon: ge,
     SearchIcon: Ie,
-    CheckIcon: Je,
+    CheckIcon: Qe,
     BlankIcon: be
   }
 };
@@ -2224,7 +2224,7 @@ const Gt = { class: "header-row" }, Wt = { class: "status-el" }, qt = { class: "
     onClose: { type: Function, required: !0 }
   },
   setup(t) {
-    const e = t, i = Be(e.root, "_roles.json"), s = te(!0), r = te([]), n = te([]), o = te(""), { cssWidth: a, setWidth: d, presets: h } = Xe({
+    const e = t, i = Be(e.root, "_roles.json"), s = te(!0), r = te([]), n = te([]), o = te(""), { cssWidth: a, setWidth: d, presets: h } = Ze({
       storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
       defaultWidth: 1200,
       presets: [900, 1200]
@@ -2323,10 +2323,13 @@ const Gt = { class: "header-row" }, Wt = { class: "status-el" }, qt = { class: "
       j(), await N(), V = setInterval(() => N({ isPoll: !0 }), Qt);
     }), Ke(() => {
       V && clearInterval(V);
-    }), (c, w) => (p(), U($(Ze), {
+    }), (c, w) => (p(), U($(Ye), {
       visible: s.value,
       "onUpdate:visible": w[1] || (w[1] = (b) => s.value = b),
-      modal: "",
+      modal: !1,
+      draggable: !1,
+      "close-on-escape": "",
+      header: " ",
       style: He({ width: $(a) }),
       class: "roles-dialog"
     }, {
@@ -2334,14 +2337,14 @@ const Gt = { class: "header-row" }, Wt = { class: "status-el" }, qt = { class: "
         k("div", Gt, [
           w[2] || (w[2] = k("div", { class: "dialog-title" }, "Roles", -1)),
           k("div", Wt, H(o.value), 1),
-          q(_e, {
+          q(Je, {
             presets: $(h),
             "set-width": $(d)
           }, null, 8, ["presets", "set-width"])
         ])
       ]),
       default: G(() => [
-        r.value.length ? M("", !0) : (p(), U($(Ye), {
+        r.value.length ? M("", !0) : (p(), U($(Xe), {
           key: 0,
           severity: "info",
           closable: !1
@@ -2394,7 +2397,7 @@ const Gt = { class: "header-row" }, Wt = { class: "status-el" }, qt = { class: "
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, ei = /* @__PURE__ */ xe(_t, [["__scopeId", "data-v-4a9525a4"]]);
+}, ei = /* @__PURE__ */ xe(_t, [["__scopeId", "data-v-48ec5938"]]);
 function ri({ root: t, suffix: e = "_speakers.txt" }) {
   $e(import.meta.url);
   const i = document.createElement("div");

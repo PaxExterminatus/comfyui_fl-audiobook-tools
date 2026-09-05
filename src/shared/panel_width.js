@@ -9,7 +9,10 @@ import { ref, computed } from "vue";
 // @param {string} opts.storageKey - localStorage key this editor's width choice persists under.
 // @param {number} opts.defaultWidth - px width used the first time (nothing saved yet).
 // @param {number[]} opts.presets - px width buttons to offer, in the order shown.
-export function usePanelWidth({ storageKey, defaultWidth, presets }) {
+// @param {number} [opts.fullVw=94] - viewport-width % the "100%" button maps to. Line
+//   Editor/Roles Editor genuinely want to fill nearly the whole window; a simple file
+//   picker (Browse Dialog) doesn't need that much, so it passes a smaller value.
+export function usePanelWidth({ storageKey, defaultWidth, presets, fullVw = 94 }) {
     function load() {
         try {
             const raw = localStorage.getItem(storageKey);
@@ -23,11 +26,11 @@ export function usePanelWidth({ storageKey, defaultWidth, presets }) {
     function save(value) {
         try { localStorage.setItem(storageKey, String(value)); } catch (e) { /* localStorage unavailable -- persistence just won't work this session */ }
     }
-    // "full" is a sentinel (not a px number) for "use the whole window" --
-    // capped to 94vw either way so there's always a sliver of the ComfyUI
-    // canvas visible around the dialog's edge.
+    // "full" is a sentinel (not a px number) for "use (most of) the window" --
+    // fullVw still leaves a sliver of the ComfyUI canvas visible around the
+    // dialog's edge, and numeric presets stay capped to 94vw regardless.
     function toCss(value) {
-        return value === "full" ? "94vw" : `min(94vw, ${value}px)`;
+        return value === "full" ? `${fullVw}vw` : `min(94vw, ${value}px)`;
     }
 
     const widthPref = ref(load());

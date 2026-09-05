@@ -1,4 +1,4 @@
-import { _ as ce, r as x, o as ne, L as ae, j as h, f as b, u as m, e as p, i as E, F as W, k as N, M as le, t as R, S as A, b as z, Q as B, d as v, s as C, n as j, W as P, l as de, m as ue, p as pe, P as fe } from "./styles_link.js";
+import { _ as ce, r as x, o as ne, M as ae, i as h, e as b, u as m, d as p, h as E, F as W, j as N, n as le, t as R, S as A, l as z, Q as B, b as v, s as C, k as j, W as P, m as de, p as ue, q as pe, P as fe } from "./styles_link.js";
 const he = { class: "script-library-panel" }, ve = { class: "tools-row" }, ke = { class: "tools-row" }, ge = {
   key: 0,
   class: "tree-empty"
@@ -59,7 +59,7 @@ const he = { class: "script-library-panel" }, ve = { class: "tools-row" }, ke = 
     }
     const n = x(i.folderWidget.value || ""), d = x(i.actWidget.value || ""), a = x([]), r = B(/* @__PURE__ */ new Set()), f = B(/* @__PURE__ */ new Set()), g = x(""), y = z(() => {
       var e;
-      return ((e = i.filterWidget) == null ? void 0 : e.value) || "_speakers.txt";
+      return ((e = i.filterWidget) == null ? void 0 : e.value) ?? "";
     }), M = z(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
     function u(e) {
       g.value = e, i.node.setDirtyCanvas(!0, !0);
@@ -378,7 +378,7 @@ const he = { class: "script-library-panel" }, ve = { class: "tools-row" }, ke = 
       p("div", Le, R(g.value), 1)
     ]));
   }
-}, Pe = /* @__PURE__ */ ce(je, [["__scopeId", "data-v-885da3ed"]]);
+}, Pe = /* @__PURE__ */ ce(je, [["__scopeId", "data-v-77597f20"]]);
 function qe({ node: w, folderWidget: i, actWidget: l, filterWidget: F, scriptFileWidget: L, openBrowseDialog: n, openRolesEditor: d, openLineEditor: a, queueLineRevoice: r }) {
   ue(import.meta.url);
   const f = document.createElement("div");

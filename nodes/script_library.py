@@ -1196,12 +1196,18 @@ class FL_CosyVoice3_ScriptLibrary:
         lines = []
 
         if not root:
-            print("[FL CosyVoice3 ScriptLibrary] No folder_path set. Point it at your project's root folder, or click the browse button.")
-            return ("", "", "")
+            # Raising here (instead of the old silent `return ("", "", "")`)
+            # matters because folder_path/filename feed straight into a Save
+            # node downstream -- an empty string limps through and only
+            # surfaces as a confusing "Filename is empty" error several
+            # nodes away, with no indication it actually came from here.
+            raise ValueError(
+                "[FL CosyVoice3 ScriptLibrary] folder_path is not set -- point it at your "
+                "project's root folder (or click the browse button) before running."
+            )
 
         if not os.path.isdir(root):
-            print(f"[FL CosyVoice3 ScriptLibrary] folder_path is not a folder: {root}")
-            return ("", "", "")
+            raise ValueError(f"[FL CosyVoice3 ScriptLibrary] folder_path is not a folder: {root}")
 
         lines.append(f"Root: {root}")
 
@@ -1209,8 +1215,10 @@ class FL_CosyVoice3_ScriptLibrary:
         lines.append(f"Act: {act.strip() or '(none -- scanning root itself)'}")
 
         if not os.path.isdir(folder):
-            print(f"[FL CosyVoice3 ScriptLibrary] " + "\n".join(lines) + f"\nAct folder not found: {folder}")
-            return ("", "", "")
+            raise ValueError(
+                f"[FL CosyVoice3 ScriptLibrary] Act folder not found: {folder} -- it may have "
+                f"been moved/renamed/deleted since this script was checked in the tree."
+            )
 
         scripts, filter_applied = list_scripts(folder, script_filter)
         if script_filter.strip() and not filter_applied:

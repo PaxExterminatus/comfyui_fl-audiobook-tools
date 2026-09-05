@@ -4,14 +4,10 @@
 // (see panelWidthCss) -- the 900/1200/100% buttons in the header (see
 // src/shared/PanelWidthButtons.vue, shared with Line Editor).
 .header-row
-    display: flex
-    align-items: center
-    gap: 12px
-    width: 100%
+    @extend %dialog-header-row
 
 .dialog-title
-    font-weight: 600
-    flex: 1
+    @extend %dialog-title
 
 .status-el
     @extend %header-status

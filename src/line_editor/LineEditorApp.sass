@@ -9,16 +9,10 @@
         padding: 0
 
 .header-row
-    display: flex
-    align-items: center
-    gap: 6px
-    width: 100%
+    @extend %dialog-header-row
 
-.title-el
-    @extend %ellipsis
-    font-weight: 600
-    font-size: $font-lg
-    flex: 1
+.dialog-title
+    @extend %dialog-title
 
 .status-el
     @extend %header-status
@@ -144,6 +138,10 @@
     color: $color-success
     &.is-playing
         color: $color-active
+    &.disabled
+        cursor: default
+        opacity: 0.35
+        color: inherit
 
 .revoice-btn
     cursor: pointer

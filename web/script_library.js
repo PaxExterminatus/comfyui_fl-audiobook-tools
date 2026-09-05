@@ -235,7 +235,18 @@ if (!app._flScriptLibraryPatched) {
                     entry.inputs = entry.inputs || {};
                     if (item.act !== undefined) entry.inputs.act = item.act;
                     if (item.file !== undefined) entry.inputs.script_file = item.file;
-                    if (item.lineOverride !== undefined) entry.inputs.line_override = item.lineOverride;
+                    // Always force line_override for every checkbox-tree-driven run, even
+                    // to "" -- never leave it at whatever the raw widget's serialized value
+                    // happens to be. A workflow saved from an older version of this addon (or
+                    // from a genuine re-voice request) can leave real, non-empty text sitting
+                    // in that widget; since it's hidden from the UI, there's no way to notice
+                    // or clear it by hand. browse() in nodes/script_library.py treats ANY
+                    // non-empty line_override as "ignore script_file, use this instead" -- so
+                    // stale leftover text there silently replaces the real script on every
+                    // single normal run with that leftover snippet (observed: a whole scene's
+                    // dialogue replaced by the literal act name "Act01", producing a few
+                    // seconds of near-silent audio instead of the real narration).
+                    entry.inputs.line_override = item.lineOverride !== undefined ? item.lineOverride : "";
                 }
                 if (pendingRevoiceLineIndex !== null) {
                     for (const ppNode of buildPostProcessList()) {

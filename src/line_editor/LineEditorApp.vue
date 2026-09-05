@@ -157,6 +157,39 @@ const audioFolder = computed(() => joinPath(props.folder, "_audio"));
 const audioBaseName = computed(() => stripSuffixAndExt(filename.value, props.suffix));
 const linesDirPath = computed(() => joinPath(joinPath(audioFolder.value, "lines"), audioBaseName.value));
 const stateFilePath = computed(() => joinPath(linesDirPath.value, "_state.json"));
+
+// Ground truth for "does this row have audio to play" -- an actual listing
+// of _audio\lines\<script>\, not just _state.json's `status` field.
+// commit_full_render (server) is SUPPOSED to rename a full render's plain
+// positional files (0000.wav..) to the stable id<N>.wav scheme right after
+// rendering, and _state.json's "voiced" flag assumes that already
+// happened -- but that rename is a separate, fallible network round-trip
+// (timing manifest fetched, line count checked, POST sent), and if it
+// silently didn't run or didn't finish, the audio sits there under its
+// positional name while _state.json still says "unvoiced". Scanning the
+// folder directly and accepting EITHER name means playback never depends
+// on that rename having succeeded.
+const lineFilesOnDisk = ref(new Set());
+async function loadLineFiles() {
+    try {
+        const resp = await fetch(`${BROWSE_API}?path=${encodeURIComponent(linesDirPath.value)}`);
+        const data = await resp.json();
+        lineFilesOnDisk.value = new Set(Array.isArray(data.files) ? data.files : []);
+    } catch (e) {
+        // Transient fetch error -- leave whatever we already had.
+    }
+}
+// The positional name is only a safe fallback for THIS row's CURRENT
+// position (same assumption commit_full_render itself makes) -- it's
+// whatever a full render last wrote at that position, not tied to this
+// row's stable id the way id<N>.wav is.
+function rowAudioFilename(row, index) {
+    const idName = `id${row.id}.wav`;
+    if (lineFilesOnDisk.value.has(idName)) return idName;
+    const posName = `${String(index).padStart(4, "0")}.wav`;
+    if (lineFilesOnDisk.value.has(posName)) return posName;
+    return null;
+}
 const isCurrentlyReady = computed(() => readyScripts.value.includes(filename.value));
 const allRowsVoiced = computed(() => {
     const nm = rows.value.filter((r) => !r.malformed);
@@ -231,10 +264,18 @@ async function notifyRoleSpeakerChanged(roleCode) {
     }
 }
 
-// MODE 2 ONLY: validates a fetched timing manifest against CURRENT rows.
-// Requires only that the COUNT of real (non-malformed) rows still matches
-// the manifest's line count -- valid by construction right after a Done
-// stitch (mode 2 is only ever entered right after one).
+// MODE 2 ONLY -- strictly gated on isCurrentlyReady (the Done flag), by
+// design: two clearly separate modes, not a blend.
+//   Not done ("первая озвучка"): the combined/stitched file doesn't exist
+//     yet and isn't even fetched -- every row plays its OWN individual
+//     id<N>.wav in sequence, one at a time, with its own play/pause.
+//   Done: Done's own stitch just built ONE combined file + this timing
+//     manifest together, atomically -- so as long as the row count still
+//     matches it, the manifest is valid and every row gets a "seek to here
+//     in the combined file" jump button, with the mini player driving
+//     highlight + auto-scroll as it plays.
+// Also requires the manifest's line COUNT to still match the current
+// non-malformed row count (edits since the last Done would desync it).
 function computeLineTiming(rawLines, rowsArr) {
     if (!Array.isArray(rawLines) || !rawLines.length) return null;
     const rowIndexMap = [];
@@ -337,14 +378,20 @@ function playRowSequential(startIndex) {
     stopMode1Playback();
     const dir = linesDirPath.value;
     const playIdx = (idx) => {
-        while (idx < rows.value.length && (rows.value[idx].malformed || rows.value[idx].status === "unvoiced")) idx++;
-        if (idx >= rows.value.length) {
+        let filename = null;
+        while (idx < rows.value.length) {
+            if (!rows.value[idx].malformed) {
+                filename = rowAudioFilename(rows.value[idx], idx);
+                if (filename) break;
+            }
+            idx++;
+        }
+        if (idx >= rows.value.length || !filename) {
             mode1PlayingIdx.value = -1;
             return;
         }
         mode1PlayingIdx.value = idx;
-        const row = rows.value[idx];
-        const el = new Audio(`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(dir, `id${row.id}.wav`))}&v=${Date.now()}`);
+        const el = new Audio(`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(dir, filename))}&v=${Date.now()}`);
         mode1AudioEl = el;
         el.addEventListener("ended", () => playIdx(idx + 1));
         el.play().catch((e) => setStatus(`Playback failed: ${e}`));
@@ -431,7 +478,7 @@ async function commitFullRenderIfNeeded(nonMalformedRows) {
             if (committed.has(data.ids[i])) r.status = "voiced";
         });
         if (Number.isFinite(data.next_id)) nextLineId = Math.max(nextLineId, data.next_id);
-        if (committed.size) flushSave();
+        if (committed.size) { flushSave(); loadLineFiles(); }
     } catch (e) {
         // Best-effort -- a transient failure just leaves these rows
         // "unvoiced" until the next full render or a per-line re-voice.
@@ -732,6 +779,7 @@ async function revoiceRow(row) {
         await props.revoiceApi.revoiceLine({ lineId: row.id, speaker: row.speaker, instruct: row.instruct, text: row.text });
         row.status = "voiced";
         setStatus("Line re-voiced");
+        loadLineFiles();
     } catch (e) {
         setStatus(`Re-voice failed: ${e.message || e}`);
     } finally {
@@ -740,15 +788,34 @@ async function revoiceRow(row) {
     }
 }
 
+// Not done: this row's own id<N>.wav, played in sequence (mode 1). Done:
+// a "jump to here" seek into the combined/stitched track (mode 2) -- the
+// mini player up top then drives highlight + auto-scroll as it plays on
+// from there. Strictly isCurrentlyReady, not "does a manifest happen to
+// exist" -- re-voicing a single line only ever rewrites ITS OWN file,
+// never the combined one (only Done's stitch touches that), so before
+// Done, seeking into the combined file would silently keep playing an
+// OLD take right when hearing a fresh re-voice matters most.
 function isRowPlaying(index) {
-    return (isCurrentlyReady.value
-        ? activeTimingIdx.value === currentRowToTimingIdx.value.get(index)
-        : mode1PlayingIdx.value === index) && audioIsPlaying.value;
+    return isCurrentlyReady.value
+        ? activeTimingIdx.value === currentRowToTimingIdx.value.get(index) && audioIsPlaying.value
+        : mode1PlayingIdx.value === index;
+}
+
+// The play button itself is always shown on every row (so its presence
+// doesn't silently depend on mode/ready state) -- this is just whether
+// there's actually audio for THIS row to play yet. Not-done checks the
+// actual folder listing (rowAudioFilename), NOT row.status -- status
+// tracks edit-staleness (see markRowEdited), it isn't a reliable signal
+// for "does a file exist on disk" if commit_full_render's rename never
+// completed.
+function canPlayRow(index, row) {
+    return isCurrentlyReady.value ? currentRowToTimingIdx.value.get(index) !== undefined : rowAudioFilename(row, index) !== null;
 }
 
 function onPlayClick(row, index) {
-    const ready = isCurrentlyReady.value;
-    if (ready) {
+    if (!canPlayRow(index, row)) return;
+    if (isCurrentlyReady.value) {
         const timingIdx = currentRowToTimingIdx.value.get(index);
         const el = audioElRef.value;
         if (timingIdx === undefined || !el || !lineTiming.value) return;
@@ -1013,7 +1080,8 @@ onMounted(() => {
     loadCatalog();
     loadPresets();
     loadAudio();
-    audioPollTimer = setInterval(() => loadAudio({ silent: true }), POLL_MS);
+    loadLineFiles();
+    audioPollTimer = setInterval(() => { loadAudio({ silent: true }); loadLineFiles(); }, POLL_MS);
     // loadTiming() must not run before `rows` is populated -- see
     // commitFullRenderIfNeeded: an empty `rows` would both wrongly skip it
     // AND mark this mtime "already seen", losing the one chance to adopt a
@@ -1060,7 +1128,7 @@ onBeforeUnmount(() => {
                     :title="doneTitle"
                     @click="toggleDone"
                 />
-                <div class="title-el">{{ filename }}</div>
+                <div class="dialog-title">{{ filename }}</div>
                 <div class="status-el">{{ status }}</div>
                 <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
                 <div class="font-row">
@@ -1144,10 +1212,9 @@ onBeforeUnmount(() => {
                         <span class="drag-handle" title="Drag onto another line to merge them" :ref="(el) => attachDragHandlers(el, index)">⠿</span>
 
                         <span
-                            v-if="isCurrentlyReady ? currentRowToTimingIdx.get(index) !== undefined : row.status !== 'unvoiced'"
                             class="play-btn"
-                            :class="{ 'is-playing': isRowPlaying(index) }"
-                            :title="isCurrentlyReady ? 'Play from this line' : 'Play this line (and every voiced line after it)'"
+                            :class="{ 'is-playing': isRowPlaying(index), disabled: !canPlayRow(index, row) }"
+                            :title="canPlayRow(index, row) ? (isCurrentlyReady ? 'Jump to this line in the full render' : 'Play this line (and every voiced line after it)') : 'Not voiced yet -- nothing to play'"
                             @click="onPlayClick(row, index)"
                         >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
 

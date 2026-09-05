@@ -8,6 +8,8 @@ import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
+import { usePanelWidth } from "../shared/panel_width.js";
+import PanelWidthButtons from "../shared/PanelWidthButtons.vue";
 import { joinPath, BROWSE_API as LIST_API } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -25,6 +27,15 @@ const listing = ref(null); // {drives, dirs, files, parent}
 const selectedFilePath = ref(null);
 const loading = ref(false);
 const errorText = ref(null);
+
+const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
+    storageKey: "FL_CosyVoice3.BrowseDialog.widthPx",
+    defaultWidth: 560,
+    presets: [420, 700],
+    // A file picker never needs to fill nearly the whole window the way
+    // Line/Roles Editor's "100%" does -- capped much narrower.
+    fullVw: 70,
+});
 
 const title = computed(() => (props.mode === "folder" ? "Choose a folder" : "Choose a file"));
 const selectLabel = computed(() => (props.mode === "folder" ? "Select This Folder" : "Select File"));
@@ -107,9 +118,9 @@ function close() {
 
 // Dialog owns ESC-to-close and its own header close button -- both just
 // flip v-model:visible to false, which lands here regardless of which one
-// triggered it. Deliberately NOT dismissable-mask (no close-on-outside-
-// click) -- same as every other dialog in this addon, so an accidental
-// click past the panel's edge can't silently lose in-progress edits.
+// triggered it. Non-modal and never dismissable-mask -- same behavior as
+// every dialog in this addon, so an accidental click past the panel's
+// edge can't silently lose an in-progress pick or close it unexpectedly.
 watch(visible, (v) => {
     if (!v) close();
 });
@@ -120,10 +131,20 @@ onMounted(() => load(props.startPath || ""));
 <template>
     <Dialog
         v-model:visible="visible"
-        modal
-        :header="title"
+        :modal="false"
+        :draggable="false"
+        close-on-escape
+        header=" "
+        :style="{ width: panelWidthCss }"
         class="browse-dialog"
     >
+        <template #header>
+            <div class="header-row">
+                <div class="dialog-title">{{ title }}</div>
+                <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
+            </div>
+        </template>
+
         <div class="browse-toolbar">
             <Button icon="pi pi-arrow-up" title="Up one level" text @click="goUp" />
             <InputText

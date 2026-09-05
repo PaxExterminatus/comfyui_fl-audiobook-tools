@@ -24,6 +24,26 @@
     opacity: 0.75
     max-width: 260px
 
+// The header row itself -- title, status, width buttons laid out in a
+// single flex line. Found identical (down to the gap) in both Roles
+// Editor and Line Editor's custom #header slot once the status text
+// moved into the header in both -- no reason for those two numbers to
+// ever drift apart again.
+%dialog-header-row
+    display: flex
+    align-items: center
+    gap: 6px
+    width: 100%
+
+// The header's own title text (as opposed to %header-status, the
+// transient message next to it). Same weight/size/truncation in both
+// editors that define a custom header.
+%dialog-title
+    @extend %ellipsis
+    font-weight: 600
+    font-size: $font-lg
+    flex: 1
+
 // A flex row of small action buttons that shouldn't grow/shrink in
 // whatever flex column it sits in (width presets, bulk-select actions,
 // per-line tools). Only the properties EVERY call site already agreed

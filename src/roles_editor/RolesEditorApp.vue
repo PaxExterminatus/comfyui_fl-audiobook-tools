@@ -238,11 +238,11 @@ onBeforeUnmount(() => {
         <template #header>
             <div class="header-row">
                 <div class="dialog-title">Roles</div>
+                <div class="status-el">{{ status }}</div>
                 <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
             </div>
         </template>
 
-        <Message v-if="status" severity="secondary" :closable="false" class="roles-status">{{ status }}</Message>
         <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>
 
         <div class="roles-list">

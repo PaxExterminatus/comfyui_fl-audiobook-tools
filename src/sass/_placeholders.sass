@@ -13,6 +13,17 @@
     text-overflow: ellipsis
     white-space: nowrap
 
+// A dialog header's transient status text ("Loaded 3 role(s)", "Saved
+// 14:32:07", an error) -- sits between the title and the width-preset
+// buttons in every editor's header row. Muted and capped so a long
+// message can't push the width buttons out of the dialog.
+%header-status
+    @extend %ellipsis
+    flex: 0 0 auto
+    font-size: $font-sm
+    opacity: 0.75
+    max-width: 260px
+
 // A flex row of small action buttons that shouldn't grow/shrink in
 // whatever flex column it sits in (width presets, bulk-select actions,
 // per-line tools). Only the properties EVERY call site already agreed

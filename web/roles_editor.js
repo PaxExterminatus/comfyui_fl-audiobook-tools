@@ -2325,7 +2325,7 @@ const Nt = { class: "roles-list" }, $t = {
       modal: "",
       "dismissable-mask": "",
       header: "Roles",
-      style: { width: "80vw", maxWidth: "820px" }
+      class: "roles-dialog"
     }, {
       default: N(() => [
         o.value ? (f(), R(U(he), {
@@ -2392,7 +2392,7 @@ const Nt = { class: "roles-list" }, $t = {
       _: 1
     }, 8, ["visible"]));
   }
-}, Jt = /* @__PURE__ */ Be(Zt, [["__scopeId", "data-v-2048209e"]]);
+}, Jt = /* @__PURE__ */ Be(Zt, [["__scopeId", "data-v-2bee4121"]]);
 function ei({ root: t, suffix: e = "_speakers.txt" }) {
   $e(import.meta.url);
   const i = document.createElement("div");

@@ -759,6 +759,12 @@ async function revoiceRow(row) {
     }
 }
 
+function isRowPlaying(index) {
+    return (isCurrentlyReady.value
+        ? activeTimingIdx.value === currentRowToTimingIdx.value.get(index)
+        : mode1PlayingIdx.value === index) && audioIsPlaying.value;
+}
+
 function onPlayClick(row, index) {
     const ready = isCurrentlyReady.value;
     if (ready) {
@@ -1052,8 +1058,7 @@ onBeforeUnmount(() => {
         :draggable="false"
         close-on-escape
         header=" "
-        :style="{ width: panelWidthCss, height: '92vh' }"
-        :content-style="{ display: 'flex', flexDirection: 'column', height: '100%', padding: 0 }"
+        :style="{ width: panelWidthCss }"
         class="line-editor-dialog"
     >
         <template #header>
@@ -1170,16 +1175,15 @@ onBeforeUnmount(() => {
                         <span
                             v-if="isCurrentlyReady ? currentRowToTimingIdx.get(index) !== undefined : row.status !== 'unvoiced'"
                             class="play-btn"
-                            :style="{ color: (isCurrentlyReady ? activeTimingIdx === currentRowToTimingIdx.get(index) : mode1PlayingIdx === index) && audioIsPlaying ? '#e0b030' : '#4caf50' }"
+                            :class="{ 'is-playing': isRowPlaying(index) }"
                             :title="isCurrentlyReady ? 'Play from this line' : 'Play this line (and every voiced line after it)'"
                             @click="onPlayClick(row, index)"
-                        >{{ (isCurrentlyReady ? (activeTimingIdx === currentRowToTimingIdx.get(index)) : (mode1PlayingIdx === index)) && audioIsPlaying ? "⏸" : "▶" }}</span>
+                        >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
 
                         <span
                             v-if="revoiceApi && !isCurrentlyReady"
                             class="revoice-btn"
-                            :class="{ pending: pendingRevoiceRows.has(row) }"
-                            :style="{ color: !pendingRevoiceRows.has(row) && row.status === 'stale' ? '#e0a030' : '' }"
+                            :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && row.status === 'stale' }"
                             :title="revoiceTitle(row)"
                             @click="revoiceRow(row)"
                         >{{ pendingRevoiceRows.has(row) ? "⏳" : "🔁" }}</span>
@@ -1247,8 +1251,17 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.line-editor-dialog {
+    height: 92vh;
+}
 .line-editor-dialog :deep(.p-dialog-header) {
     padding: 8px 12px;
+}
+.line-editor-dialog :deep(.p-dialog-content) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
 }
 .header-row {
     display: flex;
@@ -1399,11 +1412,18 @@ onBeforeUnmount(() => {
     cursor: pointer;
     flex: 0 0 auto;
     font-size: 13px;
+    color: #4caf50;
+}
+.play-btn.is-playing {
+    color: #e0b030;
 }
 .revoice-btn {
     cursor: pointer;
     flex: 0 0 auto;
     font-size: 13px;
+}
+.revoice-btn.stale {
+    color: #e0a030;
 }
 .revoice-btn.pending {
     cursor: default;

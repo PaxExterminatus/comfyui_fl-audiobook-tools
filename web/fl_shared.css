@@ -10,7 +10,10 @@
    selected/hover state toggles) still get set directly via element.style.*
    in each file -- that's normal and correct; only the REPEATED, static
    boilerplate (what a button/input/textarea/panel looks like by default)
-   lives here. */
+   lives here. Only classes actually referenced by script_editor.js/
+   ui_kit.js belong here -- anything else is a leftover from a
+   since-migrated vanilla file and should be deleted, not kept "just in
+   case". */
 
 .fl-btn {
     cursor: pointer;
@@ -29,15 +32,6 @@
     opacity: 0.3;
     cursor: default;
 }
-.fl-btn-flex {
-    flex: 1;
-}
-.fl-btn-icon {
-    flex: 0 0 auto;
-    padding: 4px 6px;
-    border-radius: 5px;
-    border-color: rgba(255,255,255,0.14);
-}
 .fl-btn-round {
     width: 28px;
     padding: 6px 0;
@@ -46,26 +40,6 @@
 }
 .fl-btn-plain {
     background: transparent;
-}
-.fl-btn-done-active {
-    background: rgba(70,200,120,0.28);
-    border-color: rgba(70,200,120,0.6);
-    color: #eafff0;
-}
-.fl-btn-done-active:hover:not(:disabled) {
-    background: rgba(70,200,120,0.4);
-}
-
-.fl-input {
-    box-sizing: border-box;
-    padding: 4px 6px;
-    font-size: 11px;
-    background: rgba(255,255,255,0.05);
-    color: #eee;
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 5px;
-    outline: none;
-    height: auto;
 }
 
 .fl-textarea {
@@ -96,16 +70,6 @@
     font-size: 13px;
     color: #ddd;
 }
-/* Non-modal variant of .fl-overlay: transparent (no dimmed backdrop) and
-   click-through everywhere except the actual panel, so the graph behind
-   stays fully interactive while this window is open. */
-.fl-overlay-floating {
-    background: transparent;
-    pointer-events: none;
-}
-.fl-overlay-floating > .fl-panel {
-    pointer-events: auto;
-}
 
 .fl-panel {
     display: flex;
@@ -126,89 +90,14 @@
     flex: 0 0 auto;
 }
 
-.fl-float-panel {
-    position: fixed;
-    z-index: 100000;
-    background: rgba(28,28,32,0.94);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 10px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3);
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    opacity: 0;
-    transform: scale(0.98);
-    transition: opacity .12s ease, transform .12s ease;
-}
-.fl-float-panel-row {
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background .1s ease;
-}
-.fl-float-panel-row:hover {
-    background: rgba(255,255,255,0.08);
-}
-.fl-float-panel-filter {
-    margin: 2px 2px 6px 2px;
-    padding: 6px 8px;
-    font-size: 12px;
-    background: rgba(0,0,0,0.3);
-    color: #eee;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 6px;
-    outline: none;
-}
-
-/* Instant hover popover (role info) -- reuses .fl-float-panel's chrome but
-   shows immediately with no fade-in delay, since it's a passive on-hover
-   display rather than a click-opened menu. pointer-events:none so it never
-   steals the mouseleave that's supposed to dismiss it. */
-.fl-role-popover {
-    opacity: 1;
-    transform: none;
-    transition: none;
-    pointer-events: none;
-    padding: 8px 10px;
-}
-.fl-role-popover-row {
-    display: flex;
-    gap: 8px;
-    padding: 2px 0;
-    font-size: 11px;
-}
-.fl-role-popover-key {
-    flex: 0 0 auto;
-    min-width: 68px;
-    font-weight: 600;
-    color: var(--descrip-text, #999);
-    text-transform: uppercase;
-    font-size: 9.5px;
-    letter-spacing: 0.3px;
-    padding-top: 1px;
-}
-.fl-role-popover-value {
-    flex: 1;
-    color: #eee;
-    word-break: break-word;
-}
-
-.fl-status {
-    font-size: 10.5px;
-    color: var(--descrip-text, #999);
-    opacity: 0.85;
-}
-
-.fl-empty {
-    font-size: 11px;
-    opacity: 0.5;
-    padding: 6px;
-}
-
 .fl-browse-btn {
     width: 100%;
+    /* Both node.addDOMWidget-specific: min-height keeps the widget's row a
+       consistent height, and pointer-events:all is what lets clicks reach
+       this element at all over a canvas-drawn node (the only context this
+       class is ever used in). */
+    min-height: 28px;
+    pointer-events: all;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -230,128 +119,21 @@
     background: rgba(120,180,255,0.1);
 }
 
-.fl-dropdown-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 7px 10px;
-    font-size: 12px;
-    color: #eee;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background .15s ease, border-color .15s ease;
-    user-select: none;
-    white-space: nowrap;
-    overflow: hidden;
+/* openTextViewer only (ui_kit.js) -- Audio Post-Process's "Report" button. */
+.fl-text-viewer-panel {
+    width: min(90vw, 900px);
+    height: 80vh;
 }
-.fl-dropdown-trigger:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.28);
-}
-
-.fl-confirm-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100001;
-    background: rgba(0,0,0,0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.fl-confirm-box {
-    width: min(420px, 90vw);
-    background: var(--comfy-menu-bg, #1a1a1e);
-    color: var(--input-text, #ddd);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 10px;
-    box-shadow: 0 20px 48px rgba(0,0,0,0.55);
-    padding: 16px;
-}
-.fl-confirm-title {
+.fl-text-viewer-title {
     font-weight: 600;
     font-size: 14px;
-    margin-bottom: 8px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-.fl-confirm-msg {
-    font-size: 12px;
-    color: var(--descrip-text, #ccc);
-    line-height: 1.4;
-    margin-bottom: 16px;
-    white-space: pre-wrap;
-}
-.fl-confirm-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.fl-drag-handle {
-    flex: 0 0 auto;
-    cursor: grab;
-    opacity: 0.5;
-    font-size: 12px;
-    padding: 2px 4px;
-    user-select: none;
-}
-.fl-drag-handle:hover {
-    opacity: 0.9;
-}
-.fl-row-dragging {
-    opacity: 0.4;
-}
-.fl-row-drop-target {
-    outline: 2px dashed rgba(120,180,255,0.7);
-    outline-offset: -2px;
-}
-
-.fl-play-btn {
-    flex: 0 0 auto;
-    cursor: pointer;
-    font-size: 11px;
-    opacity: 0.6;
-    padding: 2px 4px;
-    user-select: none;
-}
-.fl-play-btn:hover {
-    opacity: 1;
-}
-.fl-row-playing {
-    background: rgba(90,200,140,0.16) !important;
-    outline: 1px solid rgba(90,200,140,0.45);
-    outline-offset: -1px;
-    /* ~2 lines' worth of breathing room when auto-scrolled into view, so
-       the active line doesn't land flush against the scroll container's
-       edge. */
-    scroll-margin-block: 48px;
-}
-
-/* New-row entrance: brief, precise, tied to the action that created it
-   (Design Guideline -- Motion > Providing feedback: "aim for brevity and
-   precision in feedback animations... it tends to feel lightweight and
-   unobtrusive"). Grows into place + fades in rather than just popping in,
-   so it reads as "a row was just created here" instead of the list simply
-   redrawing. Respects prefers-reduced-motion below. */
-.fl-row-enter {
-    animation: fl-row-enter-kf 220ms cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: top center;
-}
-@keyframes fl-row-enter-kf {
-    from {
-        opacity: 0;
-        transform: scaleY(0.85) translateY(-6px);
-    }
-    to {
-        opacity: 1;
-        transform: scaleY(1) translateY(0);
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    .fl-row-enter {
-        animation: none;
-    }
+.fl-text-viewer-body {
+    flex: 1;
+    margin: 12px;
+    resize: none;
 }

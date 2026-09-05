@@ -123,8 +123,7 @@ onMounted(() => load(props.startPath || ""));
         modal
         dismissable-mask
         :header="title"
-        :style="{ width: 'min(560px, 90vw)' }"
-        :content-style="{ display: 'flex', flexDirection: 'column' }"
+        class="browse-dialog"
     >
         <div class="browse-toolbar">
             <Button icon="pi pi-arrow-up" title="Up one level" text @click="goUp" />
@@ -162,6 +161,13 @@ onMounted(() => load(props.startPath || ""));
 </template>
 
 <style scoped>
+.browse-dialog {
+    width: min(560px, 90vw);
+}
+.browse-dialog :deep(.p-dialog-content) {
+    display: flex;
+    flex-direction: column;
+}
 .browse-toolbar {
     display: flex;
     align-items: center;

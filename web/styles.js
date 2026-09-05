@@ -12,7 +12,7 @@ const STYLE_ID = "fl-cosyvoice3-styles";
 // the URL, browsers cache it indefinitely (unversioned filename, no build
 // hash), so an edit would otherwise show stale/broken styling until a hard
 // refresh.
-const STYLE_VERSION = 1;
+const STYLE_VERSION = 2;
 
 export function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;

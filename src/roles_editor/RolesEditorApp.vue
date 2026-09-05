@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
         modal
         dismissable-mask
         header="Roles"
-        :style="{ width: '80vw', maxWidth: '820px' }"
+        class="roles-dialog"
     >
         <Message v-if="status" severity="secondary" :closable="false" class="roles-status">{{ status }}</Message>
         <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>
@@ -264,6 +264,10 @@ onBeforeUnmount(() => {
 /* Pure layout for the list of Cards -- nothing here overrides a PrimeVue
    component's own internal styling (padding/background/border-radius all
    still come from the theme via Card itself). */
+.roles-dialog {
+    width: 80vw;
+    max-width: 820px;
+}
 .roles-status {
     margin: 0 0 10px;
 }

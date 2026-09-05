@@ -142,7 +142,6 @@ app.registerExtension({
         const browseButtonEl = document.createElement("div");
         browseButtonEl.className = "fl-browse-btn";
         browseButtonEl.textContent = "📁 Click to browse for a script file";
-        browseButtonEl.style.cssText = "min-height:28px;pointer-events:all;";
         browseButtonEl.addEventListener("click", () => {
             // startPath must be a directory -- if file_path already points at
             // a file, start the dialog in its containing folder instead.

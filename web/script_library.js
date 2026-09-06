@@ -5,6 +5,7 @@ import { openLineEditor } from "./line_editor.js";
 import { openBrowseDialog } from "./browse_dialog.js";
 import { openRolesEditor } from "./roles_editor.js";
 import { mountScriptLibraryPanel } from "./script_library_panel.js";
+import { SCRIPT_LIBRARY_API } from "./fl_common.js";
 
 // FL CosyVoice3 Script Library: folder_path is a PROJECT ROOT. Shows every
 // "Act01"/"Act02"/... subfolder and its dialog scripts (every .txt file,
@@ -282,6 +283,7 @@ if (!app._flScriptLibraryPatched) {
             const prompt = result?.output;
             if (prompt && typeof prompt === "object") {
                 let index = null;
+                let drovePrompt = false;
                 for (const key of Object.keys(prompt)) {
                     const entry = prompt[key];
                     if (!entry || entry.class_type !== FL_CLASS) continue;
@@ -289,6 +291,7 @@ if (!app._flScriptLibraryPatched) {
                     const node = findFlNode(index, key);
                     if (!node || !flActiveItem.has(node)) continue;
                     const item = flActiveItem.get(node);
+                    drovePrompt = true;
                     entry.inputs = entry.inputs || {};
                     if (item.act !== undefined) entry.inputs.act = item.act;
                     if (item.file !== undefined) entry.inputs.script_file = item.file;
@@ -304,7 +307,71 @@ if (!app._flScriptLibraryPatched) {
                     // dialogue replaced by the literal act name "Act01", producing a few
                     // seconds of near-silent audio instead of the real narration).
                     entry.inputs.line_override = item.lineOverride !== undefined ? item.lineOverride : "";
+
+                    // A FULL render (this checkbox-tree queue -- item has no
+                    // lineOverride, unlike a single 🔁 re-voice) writes every
+                    // line's per-line file with a hash Audio Post-Process
+                    // computes from whatever reaches its OWN line_hashes_json
+                    // input, a real graph wire the user has to add by hand
+                    // (see this repo's README). Without it, Post-Process
+                    // falls back to hashing text alone, which
+                    // script_pending_lines' voice+instruct+text hash can
+                    // never match -- every line renders successfully yet
+                    // still shows "needs re-voice" right after. Fetching and
+                    // stamping the same resolved-hash array Script Library's
+                    // own 4th output would have computed removes that
+                    // dependency entirely, the same way a single re-voice
+                    // already never needed the wire either.
+                    if (item.lineOverride === undefined && item.act !== undefined && item.file !== undefined) {
+                        try {
+                            const rootPath = node.widgets?.find((w) => w.name === "folder_path")?.value || "";
+                            const suffixVal = node.widgets?.find((w) => w.name === "script_filter")?.value || "";
+                            const hashResp = await fetch(
+                                `${SCRIPT_LIBRARY_API}/line_hashes?root=${encodeURIComponent(rootPath)}` +
+                                `&act=${encodeURIComponent(item.act)}&file=${encodeURIComponent(item.file)}` +
+                                `&suffix=${encodeURIComponent(suffixVal)}`,
+                            );
+                            const hashData = await hashResp.json();
+                            if (Array.isArray(hashData.line_hashes)) {
+                                const lineHashesJson = JSON.stringify(hashData.line_hashes);
+                                for (const ppNode of buildPostProcessList()) {
+                                    const ppEntry = findPromptEntry(prompt, ppNode, POST_PROCESS_CLASS);
+                                    if (ppEntry) {
+                                        ppEntry.inputs = ppEntry.inputs || {};
+                                        ppEntry.inputs.line_hashes_json = lineHashesJson;
+                                    }
+                                }
+                                console.log(`[FL full-render] stamped ${hashData.line_hashes.length} line hash(es) for "${item.file}"`);
+                            } else {
+                                console.warn("FL_CosyVoice3.ScriptLibrary: couldn't fetch line_hashes for full render", hashData.error);
+                            }
+                        } catch (err) {
+                            console.error("FL_CosyVoice3.ScriptLibrary: line_hashes fetch failed", err);
+                        }
+                    }
                 }
+
+                // This addon's whole model is "the final combined file is
+                // written EXCLUSIVELY by ✅ Done (stitch_lines)" -- strip
+                // every prompt THIS addon actually drives (a full render
+                // through the checkbox tree, or a single 🔁 re-voice alike)
+                // of any downstream Save Audio/VHS_SaveAudio/etc. node, so a
+                // "quick listen while working" node left wired from an
+                // older workflow can't write straight into _audio\ under
+                // the script's own name/prefix. That stray file doesn't
+                // just look like clutter: scripts_ready/scripts_with_audio
+                // (nodes/script_library.py) now treat ANY file sitting
+                // there as the final track, so it makes the script look
+                // "done" before Done was ever clicked -- and the mini
+                // player's own prefix match (web/line_editor.js's loadAudio)
+                // picks it as the combined take, showing whatever the last
+                // thing that node happened to save was (one line, or
+                // however much of the batch it received) in place of the
+                // real thing. Previously only stripped for a re-voice --
+                // the exact same failure mode applies to a full render.
+                const stripped = drovePrompt ? stripDownstreamAudioSavers(prompt) : [];
+                if (stripped.length) console.log("[FL queue] stripped downstream audio-saver node(s):", stripped);
+
                 if (pendingRevoiceLineIndex !== null) {
                     // Every re-voice logs the whole prompt-side story: which
                     // Post-Process nodes were found in the GRAPH, which of
@@ -329,7 +396,6 @@ if (!app._flScriptLibraryPatched) {
                         if (pendingRevoiceContentHash) ppEntry.inputs.line_hashes_json = JSON.stringify([pendingRevoiceContentHash]);
                         stamped.push(ppEntry.inputs);
                     }
-                    const stripped = stripDownstreamAudioSavers(prompt);
                     console.log("[FL revoice] prompt built:", {
                         linePosition: pendingRevoiceLineIndex,
                         target: pendingRevoiceTarget,

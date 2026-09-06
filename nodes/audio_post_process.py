@@ -368,18 +368,25 @@ class FL_CosyVoice3_AudioPostProcess:
                 # Deterministic path -- re-voicing a line whose content
                 # (hence hash) hasn't changed overwrites this SAME file in
                 # place, on purpose (see nodes/_line_audio.py's module
-                # docstring): a line has one current file per distinct
-                # wording it's ever said, not a growing history of takes.
+                # docstring): a line has exactly ONE current file, never a
+                # growing history of every wording it's ever said.
                 out_path = _line_audio.expected_path(lines_dir, position, content_hash)
                 try:
                     save_wav(wav, sample_rate, out_path)
+                    # Only after the NEW take is confirmed on disk -- deleting
+                    # first and having the write fail would leave the line
+                    # with nothing at all. A plain re-roll of unchanged
+                    # content is a no-op here (the only file at this position
+                    # already IS content_hash).
+                    stale = _line_audio.delete_stale_at_position(lines_dir, position, content_hash)
                     # Confirms the write actually landed rather than assuming
                     # it did -- this exact path is what the line editor
                     # checks for to call the row voiced, so seeing it here is
                     # what makes "rendered but still shows unvoiced" a
                     # one-glance comparison instead of a guess.
                     print(f"[FL CosyVoice3 AudioPostProcess]   line {position}: wrote {out_path} "
-                          f"(hash {content_hash} from {hash_source}, exists={os.path.isfile(out_path)})")
+                          f"(hash {content_hash} from {hash_source}, exists={os.path.isfile(out_path)})"
+                          + (f" -- deleted stale {stale}" if stale else ""))
                 except OSError as e:
                     print(f"[FL CosyVoice3 AudioPostProcess] ERROR: couldn't save line {position} to {out_path}: {e}")
 

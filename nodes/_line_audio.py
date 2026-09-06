@@ -20,16 +20,17 @@ _audio\\lines\\<script>\\<position>_<line_hash(...)>.wav exist" -- no
 directory scan needed, no stored status, nothing to fall out of sync.
 Re-voicing a line whose text didn't change (a plain re-roll for a fresh
 take) writes to that SAME path, overwriting the previous take in place --
-deliberately, not "version 2": a line simply has one current file per
-distinct content it's ever said, and if an edit is later reverted back to
-some earlier wording, whatever file was rendered for that exact wording (if
-any, never deleted just for being superseded) is immediately "voiced"
-again, with no re-render needed. Editing text, or recasting a role
-elsewhere in the project, changes the EXPECTED hash, so the file the OLD
-content wrote (if not also matched by the new content) simply stops being
-what's looked for -- it isn't deleted, just orphaned, until reorganize_lines
-below removes it because its row was deleted/merged away, or a full render
-cleans up positions beyond the current line count.
+deliberately, not "version 2": a line has exactly ONE file at any time, not
+a history of every wording it's ever said. Editing text, or recasting a
+role elsewhere in the project, changes the EXPECTED hash -- the next
+successful re-voice of that line deletes whatever file used to be at this
+position (see delete_stale_at_position, called from
+nodes/audio_post_process.py right after a fresh take is written) before
+anything else can mistake a stale take for a current one. A malformed edit
+whose render never runs leaves the old file in place (nothing to replace it
+with yet); reorganize_lines below still removes a position's file(s)
+outright when its row is deleted/merged away, or a full render cleans up
+positions beyond the current line count.
 """
 import hashlib
 import os
@@ -101,6 +102,28 @@ def most_recent_at_position(lines_dir: str, position: int) -> Optional[str]:
     if not candidates:
         return None
     return max(candidates, key=lambda name: os.path.getmtime(os.path.join(lines_dir, name)))
+
+
+def delete_stale_at_position(lines_dir: str, position: int, keep_hash: str) -> List[str]:
+    """
+    Removes every file at `position` whose hash ISN'T `keep_hash` -- called
+    right after a fresh take is written, so a line keeps exactly one file at
+    a time (the one matching its CURRENT content) instead of accumulating
+    every wording it's ever said. A no-op when the only file already there
+    is `keep_hash` itself (a plain re-roll of unchanged content, or calling
+    this twice). Safe to call when `lines_dir` doesn't exist yet.
+    """
+    if not os.path.isdir(lines_dir):
+        return []
+    deleted = []
+    for pos, content_hash, name in list_lines_dir(lines_dir):
+        if pos == position and content_hash != keep_hash:
+            try:
+                os.remove(os.path.join(lines_dir, name))
+                deleted.append(name)
+            except OSError as e:
+                print(f"[FL CosyVoice3 ScriptLibrary] WARNING: couldn't delete stale {name}: {e}")
+    return deleted
 
 
 def reorganize_lines(lines_dir: str, deletes: List[int], moves: List[Tuple[int, int]]) -> Dict[str, list]:

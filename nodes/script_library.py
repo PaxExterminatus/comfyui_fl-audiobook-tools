@@ -281,11 +281,23 @@ def scripts_ready(act_folder: str, scripts: List[str], suffix: str) -> List[str]
     <act_folder>/_audio/. Nothing is persisted anywhere any more (no more
     _ready.json sidecar) -- un-marking is just deleting that file (see
     delete_final_audio/the "delete_audio" route), so this can never drift
-    from what's actually on disk the way a separate flag could. Same disk
-    check scripts_with_audio already does, since nothing else writes
-    directly into _audio/ any more.
+    from what's actually on disk the way a separate flag could.
+
+    Requires the matching timing manifest (_audio/timing/<base>.json) too,
+    not just scripts_with_audio's looser "some file starting with the
+    base name exists in _audio/" check -- stitch_lines always writes both
+    together, atomically, so anything landing in _audio/ WITHOUT one (a
+    stray Save Audio/VHS_SaveAudio node left wired downstream in the user's
+    own graph, still writing there on every render even after "quick
+    listen" nodes are meant to be stripped from this addon's own queued
+    prompts -- see web/script_library.js's stripDownstreamAudioSavers) is
+    never mistaken for the real thing, however plausible its name looks.
     """
-    return scripts_with_audio(act_folder, scripts, suffix)
+    candidates = scripts_with_audio(act_folder, scripts, suffix)
+    return [
+        f for f in candidates
+        if os.path.isfile(_timing_manifest_path(act_folder, strip_suffix_and_ext(f, suffix)))
+    ]
 
 
 def _line_uses_role(line: str, role_code: str) -> bool:
@@ -339,6 +351,36 @@ def script_pending_lines(act_folder: str, filename: str, suffix: str, role_map: 
             pending.append({"position": position, "speaker": resolved, "instruct": instruct, "text": text, "hash": expected})
         position += 1
     return base_name, pending
+
+
+def resolved_line_hashes(act_folder: str, filename: str, role_map: Dict[str, str]) -> List[str]:
+    """
+    Every parseable line's content hash, in script order -- same resolution
+    and hashing FL_CosyVoice3_ScriptLibrary.browse()'s own line_hashes_json
+    output computes for its script_content, just read straight from
+    `filename` on disk instead. Lets the "🔊 Voice Selected/Act/All" queue
+    (a FULL render of one or more checked scripts, never a single re-voiced
+    line -- see web/script_library.js's app.graphToPrompt hook) stamp this
+    directly onto Audio Post-Process's line_hashes_json input for the
+    script actually being rendered, instead of depending on a manual graph
+    wire from Script Library's own 4th output (see the /line_hashes route
+    below, and this repo's README). Without either, Post-Process falls back
+    to hashing text alone, which script_pending_lines' voice+instruct+text
+    hash can never match -- every line renders successfully yet still
+    shows "needs re-voice" right after.
+    """
+    path = os.path.join(act_folder, filename)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except OSError:
+        return []
+    resolved = resolve_roles(content, role_map)
+    return [
+        _line_audio.line_hash(*parsed)
+        for parsed in (_parse_script_line(line) for line in resolved.split("\n"))
+        if parsed is not None
+    ]
 
 
 def root_role_map(root: str) -> Dict[str, str]:
@@ -725,6 +767,32 @@ if _HAS_SERVER:
             "roles": {"path": roles_path, "count": roles_count, "entries": roles_list} if roles_path else None,
             "instructions": {"path": instructions_path, "count": instructions_count, "entries": instructions_list} if instructions_path else None,
         })
+
+    @routes.get("/fl_cosyvoice3/script_library/line_hashes")
+    async def fl_cosyvoice3_script_library_line_hashes(request):
+        """
+        Every line's resolved content hash for ONE script, in order -- see
+        resolved_line_hashes. Backs the checkbox-tree queue's own
+        auto-stamp of Audio Post-Process's line_hashes_json (web/
+        script_library.js's app.graphToPrompt hook), so a FULL render never
+        depends on the user having wired Script Library's own
+        line_hashes_json output to Post-Process by hand.
+        """
+        root = request.query.get("root", "").strip()
+        act = request.query.get("act", "").strip()
+        file = request.query.get("file", "").strip()
+
+        if not root or not os.path.isdir(root):
+            return web.json_response({"error": f"not a folder: {root}"})
+        if not file:
+            return web.json_response({"error": "file is required"})
+
+        act_folder = os.path.join(root, act) if act else root
+        if not os.path.isdir(act_folder):
+            return web.json_response({"error": f"not a folder: {act_folder}"})
+
+        role_map = root_role_map(root)
+        return web.json_response({"line_hashes": resolved_line_hashes(act_folder, file, role_map)})
 
     @routes.post("/fl_cosyvoice3/script_library/delete_audio")
     async def fl_cosyvoice3_script_library_delete_audio(request):

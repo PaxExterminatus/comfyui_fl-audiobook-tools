@@ -23,11 +23,11 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   sync on every delete/merge/split), and `hash` is a short fingerprint of
   that line's CURRENT voice+instruct+text. A line is "voiced" exactly when
   that exact file already exists -- computed live, nothing is ever stored,
-  and a 🔁 re-voice of unchanged content simply overwrites its one file in
-  place (a line has one current take per distinct wording it's ever said,
-  not a growing history -- if an edit is later reverted back to some
-  earlier wording, whatever was rendered for that wording, if still on
-  disk, is immediately "voiced" again with no re-render needed), so
+  and a 🔁 re-voice always leaves exactly ONE file behind: unchanged content
+  overwrites its one file in place, and changed content deletes whatever
+  used to be there the moment the fresh take is written (never a growing
+  history of every wording a line has ever said -- reverting text back to
+  an earlier wording needs a re-render, the same as any other edit), so
   editing, merging, deleting, or reordering lines never desyncs playback
   the way relying on one script-wide timing offset (or a separate state
   file that can silently drift from what's actually on disk) would. A 🔁
@@ -62,15 +62,16 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   Process's `line_hashes_json` input (both nodes are in THIS addon, no
   upstream patch needed -- just a connection in your own workflow, the same
   way `folder_path`/`filename` already feed Post-Process's `script_folder`/
-  `script_base_name`). Only needed for a FULL script render (queueing a
-  whole checked script through your graph) -- the 🔁 per-line re-voice and
-  "🔁 Re-voice all pending" buttons already stamp the correct hash onto
-  Post-Process directly (they compute it from the exact same content
-  they're re-voicing, so there's nothing for a missing wire to break there).
-  Without this wire, a FULL render falls back to hashing just the text (no
-  voice/instruct), so a role recast alone won't be detected as making one
-  of its lines need re-voicing until it's re-voiced through the line editor
-  or the pending-all button at least once.
+  `script_base_name`). The 🔁 per-line re-voice, "🔁 Re-voice all pending",
+  and the checkbox tree's "🔊 Voice Selected/Act/All" queue all stamp the
+  correct hash onto Post-Process directly already (they fetch/compute it
+  from the exact same content they're rendering, so there's nothing for a
+  missing wire to break there) -- this wire is only still needed for a
+  plain "Run" with nothing checked in the tree (whatever script is
+  currently "active"). Without it, that one path falls back to hashing
+  just the text (no voice/instruct), so a role recast alone won't be
+  detected as making one of its lines need re-voicing until it's re-voiced
+  some other way at least once.
 
 ### Required patch: FL CosyVoice3 Speaker Instruct2 Dialog needs a 3rd output
 

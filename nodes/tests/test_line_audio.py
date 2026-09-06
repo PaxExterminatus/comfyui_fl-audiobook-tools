@@ -55,20 +55,37 @@ def test_revoicing_same_content_overwrites_in_place_not_a_new_file():
         shutil.rmtree(d)
 
 
-def test_reverting_text_to_a_previously_rendered_wording_is_voiced_again_without_rerendering():
+def test_revoicing_a_changed_line_deletes_the_old_wording_file():
     d = tempfile.mkdtemp()
     try:
         hash_hello = la.line_hash("narrator", "calm", "Hello.")
         hash_hi = la.line_hash("narrator", "calm", "Hi.")
         open(la.expected_path(d, 0, hash_hello), "w").close()
-        # Edit to "Hi." and revoice -- a SECOND file appears, "Hello."'s is
-        # simply orphaned, not deleted.
+        # Edit to "Hi." and revoice: the new take is written, THEN
+        # delete_stale_at_position cleans up -- "Hello."'s file is gone,
+        # not left as an orphan (see nodes/audio_post_process.py, which
+        # calls this right after the write succeeds).
         open(la.expected_path(d, 0, hash_hi), "w").close()
-        assert os.path.isfile(la.expected_path(d, 0, hash_hello))
+        deleted = la.delete_stale_at_position(d, 0, hash_hi)
+        assert deleted == [la.make_line_filename(0, hash_hello)]
+        assert not os.path.isfile(la.expected_path(d, 0, hash_hello))
         assert os.path.isfile(la.expected_path(d, 0, hash_hi))
-        # Revert the text back to "Hello." -- its file never went away, so
-        # it's immediately voiced again with no re-render.
-        assert os.path.isfile(la.expected_path(d, 0, la.line_hash("narrator", "calm", "Hello.")))
+        assert len(la.list_lines_dir(d)) == 1
+    finally:
+        shutil.rmtree(d)
+
+
+def test_delete_stale_at_position_ignores_other_positions_and_missing_dir():
+    d = tempfile.mkdtemp()
+    try:
+        assert la.delete_stale_at_position(d, 0, "aaaaaaaa") == []
+        open(la.expected_path(d, 0, "aaaaaaaa"), "w").close()
+        open(la.expected_path(d, 1, "bbbbbbbb"), "w").close()
+        deleted = la.delete_stale_at_position(d, 0, "aaaaaaaa")
+        assert deleted == []
+        assert os.path.isfile(la.expected_path(d, 0, "aaaaaaaa"))
+        assert os.path.isfile(la.expected_path(d, 1, "bbbbbbbb"))
+        assert la.delete_stale_at_position(os.path.join(d, "missing"), 0, "aaaaaaaa") == []
     finally:
         shutil.rmtree(d)
 

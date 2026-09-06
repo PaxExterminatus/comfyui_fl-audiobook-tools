@@ -74,12 +74,12 @@
 
 .fl-line-row
     display: flex
-    flex-direction: column
-    gap: 4px
-    padding: 6px 8px 6px 10px
+    // Clips .line-rail's own background to this row's rounded corners --
+    // without this it'd poke out square at the top/bottom-left the moment
+    // it's a real fill instead of the old 3px border.
+    overflow: hidden
     border-radius: 6px
     background: rgba(255, 255, 255, 0.02)
-    border-left: 3px solid transparent
     &.row-playing
         background: rgba($color-accent, 0.1)
     :global(.fl-row-dragging)
@@ -88,6 +88,36 @@
         outline: 2px dashed rgba($color-accent, 0.6)
     &.row-enter
         animation: fl-row-enter 0.35s ease
+
+// The whole rail is the drag handle now (see attachDragHandlers), not just
+// the ⠿ glyph inside it -- widened from the old 3px accent border so the
+// line number has somewhere to live, and grabbing it is a bigger, easier
+// target than that glyph alone ever was.
+.line-rail
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: start
+    gap: 4px
+    flex: 0 0 auto
+    width: 28px
+    padding: 6px 0
+    cursor: grab
+    touch-action: none
+    user-select: none
+
+.line-number
+    font-size: 10px
+    opacity: 0.75
+    font-variant-numeric: tabular-nums
+
+.line-body
+    flex: 1
+    min-width: 0
+    display: flex
+    flex-direction: column
+    gap: 4px
+    padding: 6px 8px 6px 6px
 
 @keyframes fl-row-enter
     from
@@ -117,10 +147,7 @@
     flex-wrap: wrap
 
 .drag-handle
-    cursor: grab
     opacity: 0.6
-    flex: 0 0 auto
-    touch-action: none
 
 .play-btn
     cursor: pointer
@@ -148,6 +175,9 @@
 .instruct-group
     flex: 1 1 160px
     min-width: 140px
+
+.apply-instruct-btn
+    flex: 0 0 auto
 
 .dropdown-option-label
     @extend %catalog-option-label

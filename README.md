@@ -177,17 +177,24 @@ file.
 - `_placeholders.sass` -- `%ellipsis` and a `button-row` mixin,
   `@extend`/`@include`d wherever the exact same declarations were
   previously retyped across 2+ components.
-- `app.sass` -- the manifest: just `@import "variables"` +
-  `@import "placeholders"`, in the order they should be available.
-  This is the ONE file that decides which shared partials exist and
-  in what order -- `vite.config.js`/`vitest.config.js`'s
-  `css.preprocessorOptions.sass.additionalData` both auto-`@import`
-  THIS one file into every component's own `.sass` (no component
-  imports it by hand), and `web/fl_shared.sass` (below) imports it
-  too, so that list is written once instead of copied three times.
-  Only declarations belong here (variables, placeholders, mixins --
-  nothing that compiles to real CSS output on its own), since it's
-  re-injected into every component's bundle; anything with actual
+- `app.sass` -- the manifest: `@forward "variables"` + `@forward
+  "placeholders"`, in the order they should be available (`@forward`,
+  not `@use` -- see the file's own comment for why: `@use` alone would
+  keep their members private to app.sass itself). This is the ONE file
+  that decides which shared modules exist and in what order --
+  `vite.config.js`/`vitest.config.js`'s
+  `css.preprocessorOptions.sass.additionalData` both auto-`@use "../sass/
+  app" as *` THIS one file into every component's own `.sass` (the
+  wildcard drops the namespace prefix `@use` would otherwise require,
+  reproducing `@import`'s old "just works" ergonomics without its
+  global-namespace-collision risk -- see [Dart Sass's own migration
+  guide](https://sass-lang.com/documentation/breaking-changes/import/)),
+  and `web/fl_shared.sass` (below) does the same, so that list is
+  written once instead of copied three times. Only declarations belong
+  here (variables, placeholders, mixins -- nothing that compiles to
+  real CSS output on its own), since `@forward`'s styles ride along
+  wherever this file is loaded -- every component's own separate
+  compilation, for the additionalData path -- so anything with actual
   unscoped rules belongs in `global.sass` instead.
 - `global.sass` -- truly unscoped CSS (currently just Line Editor's
   role-info hover popover), imported once via
@@ -202,8 +209,8 @@ hand-written vanilla widgets (`script_editor.js`'s browse button,
 at all (linked at runtime via a plain `<link>` tag, not `import`ed) --
 `scripts/compile-vanilla-sass.mjs` compiles it to `web/fl_shared.css`
 as its own tiny build step (wired into `npm run build`/`dev`), and it
-`@import`s `src/sass/app` explicitly since it doesn't go through Vite's
-additionalData.
+`@use`s `src/sass/app` (`as *`, same reasoning as above) explicitly
+since it doesn't go through Vite's additionalData.
 
 ### Developing the UI without ComfyUI running
 

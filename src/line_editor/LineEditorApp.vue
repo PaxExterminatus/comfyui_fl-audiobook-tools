@@ -3,6 +3,7 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } 
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
+import Textarea from "primevue/textarea";
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import { useConfirm } from "primevue/useconfirm";
@@ -77,12 +78,15 @@ function serializeRows(rowsArr) {
 }
 
 // Stable, cheap hash -> hue, so each distinct speaker gets a consistent
-// accent color across the whole editor.
+// accent color across the whole editor -- backs .line-rail's own
+// background, so kept translucent (a full-strength fill behind the line
+// number/drag-handle glyphs would fight their own text color at this
+// width, unlike the old 3px border this replaced).
 function speakerAccent(name) {
-    if (!name) return "rgba(255,255,255,0.15)";
+    if (!name) return "rgba(255,255,255,0.1)";
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-    return `hsl(${hash % 360}, 55%, 55%)`;
+    return `hsl(${hash % 360}, 55%, 55%, 0.3)`;
 }
 
 const confirm = useConfirm();
@@ -634,11 +638,46 @@ function onSpeakerInput(row) {
 function onInstructInput(row) {
     scheduleSave();
 }
+
+// How many OTHER rows in this same script share `row`'s current speaker --
+// backs both the "apply to all" button's enabled state and its tooltip.
+// Scoped to this script only (never across files, unlike the project-wide
+// role recast in Roles Editor): a role code can resolve to a different
+// real speaker in another script's own context, so "same role" only means
+// something within one script's own lines.
+function sameRoleCount(row) {
+    const code = (row.speaker || "").trim();
+    if (!code) return 0;
+    return rows.value.filter((r) => r !== row && !r.malformed && (r.speaker || "").trim() === code).length;
+}
+function applyInstructTitle(row) {
+    const count = sameRoleCount(row);
+    return count > 0
+        ? `Apply this instruct to every other "${row.speaker.trim()}" line in this script (${count})`
+        : "No other lines in this script use this speaker";
+}
+function applyInstructToSameRole(row) {
+    const count = sameRoleCount(row);
+    if (!count) return;
+    const code = row.speaker.trim();
+    rows.value.forEach((r) => {
+        if (r !== row && !r.malformed && (r.speaker || "").trim() === code) r.instruct = row.instruct;
+    });
+    scheduleSave();
+    setStatus(`Applied instruct to ${count} other "${code}" line(s) in this script`);
+}
+// Only still needed for the paste path below -- PrimeVue's own Textarea
+// (auto-resize) already resizes itself on every normal keystroke before it
+// emits update:model-value, so a plain typed edit never reaches this.
 function onTextInput(row, el) {
     autoGrow(el);
     scheduleSave();
 }
 function onTextPaste(row, el, e) {
+    // Writes el.value directly and skips PrimeVue's own onInput handler
+    // entirely (preventDefault stops the native paste from ever firing an
+    // `input` event) -- auto-resize's own resize() never runs for this
+    // change, so autoGrow(el) above is still required here specifically.
     e.preventDefault();
     const pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/[\r\n]+/g, " ");
     const start = el.selectionStart, end = el.selectionEnd;
@@ -1252,27 +1291,34 @@ onBeforeUnmount(() => {
                 :class="{ 'row-enter': justAddedKey === row.__key, 'row-playing': (isCurrentlyReady ? currentRowToTimingIdx.get(index) === activeTimingIdx : mode1PlayingIdx === index) }"
                 :data-row-index="index"
                 :ref="(el) => setRowRef(row.__key, el)"
-                :style="row.malformed ? {} : { borderLeftColor: speakerAccent(row.speaker) }"
             >
-                <template v-if="row.malformed">
-                    <div class="malformed-warn-line">
-                        <div class="malformed-warn">⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:</div>
-                        <Button icon="pi pi-trash" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.raw)" />
-                    </div>
-                    <textarea
-                        class="fl-textarea malformed-textarea"
-                        :style="{ fontSize: `${textFontSizePx}px` }"
-                        :value="row.raw"
-                        rows="1"
-                        :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(el)); }"
-                        @input="row.raw = $event.target.value; autoGrow($event.target); scheduleSave()"
-                        @keydown.enter.prevent
-                    />
-                </template>
-                <template v-else>
+                <div class="line-rail"
+                    :style="row.malformed ? {} : { backgroundColor: speakerAccent(row.speaker) }"
+                    title="Drag onto another line to merge them"
+                    :ref="(el) => attachDragHandlers(el, index)"
+                >
+                  <span class="line-number">{{ index + 1 }}</span>
+                  <i class="pi pi-arrows-v"></i>
+                </div>
+                <div class="line-body">
+                    <template v-if="row.malformed">
+                        <div class="malformed-warn-line">
+                            <div class="malformed-warn">⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:</div>
+                            <Button icon="pi pi-trash" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.raw)" />
+                        </div>
+                        <Textarea
+                            v-model="row.raw"
+                            auto-resize
+                            class="fl-textarea malformed-textarea"
+                            :style="{ fontSize: `${textFontSizePx}px` }"
+                            rows="1"
+                            :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(textareaEls.get(row.__key))); }"
+                            @update:model-value="scheduleSave()"
+                            @keydown.enter.prevent
+                        />
+                    </template>
+                    <template v-else>
                     <div class="line-controls-row">
-                        <span class="drag-handle" title="Drag onto another line to merge them" :ref="(el) => attachDragHandlers(el, index)">⠿</span>
-
                         <span
                             class="play-btn"
                             :class="{ 'is-playing': isRowPlaying(index), disabled: !canPlayRow(index, row) }"
@@ -1314,10 +1360,21 @@ onBeforeUnmount(() => {
                                 @update:model-value="row.instruct = $event; onInstructInput(row)"
                             >
                                 <template #option="{ option }">
-                                    <div class="dropdown-option-label">{{ option.text }}</div>
-                                    <div v-if="option.note" class="dropdown-option-sublabel">{{ option.note }}</div>
+                                    <div>
+                                      <div class="dropdown-option-label">{{ option.text }}</div>
+                                      <div v-if="option.note" class="dropdown-option-sublabel">{{ option.note }}</div>
+                                    </div>
                                 </template>
                             </Dropdown>
+                            <Button
+                                icon="pi pi-users"
+                                text size="small"
+                                class="apply-instruct-btn"
+                                :disabled="sameRoleCount(row) === 0"
+                                :title="applyInstructTitle(row)"
+                                @click="applyInstructToSameRole(row)"
+                            />
+                          <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
                         </InputGroup>
 
                         <InputGroup class="speaker-file-group">
@@ -1357,19 +1414,20 @@ onBeforeUnmount(() => {
                         <div class="spacer" />
                         <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
                     </div>
-                    <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
 
-                    <textarea
+                    <Textarea
+                        v-model="row.text"
+                        auto-resize
                         class="fl-textarea"
                         :style="{ fontSize: `${textFontSizePx}px` }"
-                        :value="row.text"
                         rows="1"
-                        :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(el)); }"
-                        @input="row.text = $event.target.value; onTextInput(row, $event.target)"
+                        :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(textareaEls.get(row.__key))); }"
+                        @update:model-value="scheduleSave()"
                         @keydown.enter.prevent
                         @paste="onTextPaste(row, $event.target, $event)"
                     />
                 </template>
+                </div>
             </div>
         </div>
     </Dialog>

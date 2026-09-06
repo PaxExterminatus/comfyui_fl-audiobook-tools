@@ -61,12 +61,15 @@ function setStatus(text) {
     status.value = text;
 }
 
-// PrimeVue's own `auto-resize` measured scrollHeight unreliably in this
-// embedding (mounted into an arbitrary page's DOM, not a full standalone
-// app) -- wildly overshooting on first render. This is the same plain
-// manual auto-grow the vanilla-JS editors already use successfully:
-// collapse to "auto" first so scrollHeight reflects the CURRENT content
-// (not whatever height was set last), then set the real height from that.
+// PrimeVue's own `auto-resize` (see the Textarea) now handles growth on
+// every keystroke -- no more manual @input handler needed for that. Its
+// resize only runs on its OWN mounted/updated hooks though, each firing
+// exactly once per trigger; a role loaded right as this dialog is still
+// settling into its final size can still get measured mid-layout (an
+// inflated scrollHeight that never gets recalculated afterward, since
+// nothing else changes to fire `updated` again) -- kept a settling pass
+// after loadFromDisk populates `roles` for exactly that race, same fix
+// that already worked here before switching to auto-resize.
 const textareaEls = new Map(); // role.code -> the underlying <textarea> DOM node
 function setTextareaRef(code, el) {
     if (!el) {
@@ -267,10 +270,11 @@ onBeforeUnmount(() => {
                     <Textarea
                         v-model="role.description"
                         :ref="(el) => setTextareaRef(role.code, el)"
+                        auto-resize
                         rows="1"
                         placeholder="Description..."
                         class="role-description"
-                        @input="scheduleSave(); autoGrow(textareaEls.get(role.code))"
+                        @input="scheduleSave()"
                     />
                 </template>
             </Card>

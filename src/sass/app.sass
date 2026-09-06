@@ -1,4 +1,36 @@
-@import "variables"
-@import "placeholders"
+// Single manifest for the shared Sass modules loaded into every
+// component's own .sass file -- vite.config.js/vitest.config.js's
+// css.preprocessorOptions.sass.additionalData both point here (one
+// `@use "../sass/app" as *` instead of listing partials by hand), and
+// web/fl_shared.sass (which sits outside Vite's module graph entirely)
+// uses this same file too, so there's exactly one place that decides
+// which shared modules exist and in what order, instead of that list
+// being copied three times.
+//
+// @forward, not @use: @use alone keeps a module's members private to the
+// file that used them -- a plain `@use "variables"` here would make
+// $font-sm etc. usable WITHIN this file only, invisible to whoever loads
+// app.sass itself. @forward re-exports a module's members to whatever
+// loads THIS file, which combined with the consumer's own
+// `@use "../sass/app" as *` (the wildcard drops the "app." prefix
+// @use would otherwise require, e.g. `app.$font-sm`) reproduces the old
+// @import-based "just works, no prefix" ergonomics every component's own
+// .sass file already relies on -- without @import's global-namespace-
+// collision risk that's why Dart Sass deprecated it in the first place
+// (https://sass-lang.com/documentation/breaking-changes/import/).
+//
+// Add a new shared module here, in the order it should be available --
+// nowhere else needs to change. Declarations-only content belongs here
+// (variables, placeholders, mixins -- nothing that itself compiles to
+// real CSS output), since @forward's styles ride along wherever this
+// file is loaded, and additionalData means that's EVERY component's own
+// separate compilation -- something with real output would get
+// duplicated once per component instead of loaded a single time.
+// override-vueprime is the one exception already here (a couple of tiny
+// global PrimeVue overrides) -- anything larger belongs in global.sass
+// instead (loaded once at runtime via src/shared/styles_link.js, not
+// forwarded into every component's own bundle).
+@forward "variables"
+@forward "placeholders"
 
-@import "override-vueprime"
+@forward "override-vueprime"

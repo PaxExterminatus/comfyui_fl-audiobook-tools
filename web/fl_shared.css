@@ -1,4 +1,4 @@
-.fl-text-viewer-title, .fl-browse-btn {
+.fl-browse-btn, .fl-text-viewer-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

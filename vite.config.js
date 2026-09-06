@@ -11,7 +11,7 @@ export default defineConfig(({ command }) => {
         css: {
             preprocessorOptions: {
                 sass: {
-                    additionalData: `@import "../sass/app"\n`,
+                    additionalData: `@use "../sass/app" as *\n`,
                 },
             },
         },

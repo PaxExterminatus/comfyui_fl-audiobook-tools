@@ -1,7 +1,7 @@
-import { B as U, s as F, o as l, c as h, m as f, C as S, k as m, f as b, _ as Y, v as X, w as Z, a as _, H as ee, b as P, d as w, n as te, u as c, I as se, K as N, J as ae, r as I, j as oe, F as re, l as ne, g as R, t as j, Q as ie, x as le, y as de, P as ue } from "./styles_link.js";
-import { u as pe, s as ce } from "./PanelWidthButtons.js";
-import { s as fe } from "./message.esm.js";
-import { s as he, D as me } from "./DialogHeader.js";
+import { B as x, s as G, o as r, c as f, m as d, C as S, k as m, f as g, _ as Q, v as _, w as X, a as Y, H as Z, b as R, d as w, n as ee, u as c, I as te, K as j, J as se, r as b, j as ae, F as oe, l as re, g as V, t as U, Q as ne, x as le, y as ie, P as de } from "./styles_link.js";
+import { u as ce, s as ue } from "./PanelWidthButtons.js";
+import { s as pe } from "./message.esm.js";
+import { a as fe, s as me, D as he } from "./DialogHeader.js";
 var ve = {
   root: "p-card p-component",
   header: "p-card-header",
@@ -11,294 +11,216 @@ var ve = {
   subtitle: "p-card-subtitle",
   content: "p-card-content",
   footer: "p-card-footer"
-}, ye = U.extend({
+}, ye = x.extend({
   name: "card",
   classes: ve
 }), $e = {
   name: "BaseCard",
-  extends: F,
+  extends: G,
   style: ye
 }, L = {
   name: "Card",
   extends: $e,
   inheritAttrs: !1
 };
-function ge(e, o, i, r, d, u) {
-  return l(), h("div", f({
-    class: e.cx("root")
-  }, e.ptmi("root")), [e.$slots.header ? (l(), h("div", f({
+function Se(t, u, p, i, n, k) {
+  return r(), f("div", d({
+    class: t.cx("root")
+  }, t.ptmi("root")), [t.$slots.header ? (r(), f("div", d({
     key: 0,
-    class: e.cx("header")
-  }, e.ptm("header")), [S(e.$slots, "header")], 16)) : m("", !0), b("div", f({
-    class: e.cx("body")
-  }, e.ptm("body")), [e.$slots.title || e.$slots.subtitle ? (l(), h("div", f({
+    class: t.cx("header")
+  }, t.ptm("header")), [S(t.$slots, "header")], 16)) : m("", !0), g("div", d({
+    class: t.cx("body")
+  }, t.ptm("body")), [t.$slots.title || t.$slots.subtitle ? (r(), f("div", d({
     key: 0,
-    class: e.cx("caption")
-  }, e.ptm("caption")), [e.$slots.title ? (l(), h("div", f({
+    class: t.cx("caption")
+  }, t.ptm("caption")), [t.$slots.title ? (r(), f("div", d({
     key: 0,
-    class: e.cx("title")
-  }, e.ptm("title")), [S(e.$slots, "title")], 16)) : m("", !0), e.$slots.subtitle ? (l(), h("div", f({
+    class: t.cx("title")
+  }, t.ptm("title")), [S(t.$slots, "title")], 16)) : m("", !0), t.$slots.subtitle ? (r(), f("div", d({
     key: 1,
-    class: e.cx("subtitle")
-  }, e.ptm("subtitle")), [S(e.$slots, "subtitle")], 16)) : m("", !0)], 16)) : m("", !0), b("div", f({
-    class: e.cx("content")
-  }, e.ptm("content")), [S(e.$slots, "content")], 16), e.$slots.footer ? (l(), h("div", f({
+    class: t.cx("subtitle")
+  }, t.ptm("subtitle")), [S(t.$slots, "subtitle")], 16)) : m("", !0)], 16)) : m("", !0), g("div", d({
+    class: t.cx("content")
+  }, t.ptm("content")), [S(t.$slots, "content")], 16), t.$slots.footer ? (r(), f("div", d({
     key: 1,
-    class: e.cx("footer")
-  }, e.ptm("footer")), [S(e.$slots, "footer")], 16)) : m("", !0)], 16)], 16);
+    class: t.cx("footer")
+  }, t.ptm("footer")), [S(t.$slots, "footer")], 16)) : m("", !0)], 16)], 16);
 }
-L.render = ge;
-var Se = {
-  root: function(o) {
-    var i = o.instance, r = o.props;
-    return ["p-inputtextarea p-inputtext p-component", {
-      "p-filled": i.filled,
-      "p-inputtextarea-resizable ": r.autoResize,
-      "p-invalid": r.invalid,
-      "p-variant-filled": r.variant ? r.variant === "filled" : i.$primevue.config.inputStyle === "filled"
-    }];
-  }
-}, we = U.extend({
-  name: "textarea",
-  classes: Se
-}), be = {
-  name: "BaseTextarea",
-  extends: F,
-  props: {
-    modelValue: null,
-    autoResize: Boolean,
-    invalid: {
-      type: Boolean,
-      default: !1
-    },
-    variant: {
-      type: String,
-      default: null
-    }
-  },
-  style: we,
-  provide: function() {
-    return {
-      $parentInstance: this
-    };
-  }
-}, O = {
-  name: "Textarea",
-  extends: be,
-  inheritAttrs: !1,
-  emits: ["update:modelValue"],
-  mounted: function() {
-    this.$el.offsetParent && this.autoResize && this.resize();
-  },
-  updated: function() {
-    this.$el.offsetParent && this.autoResize && this.resize();
-  },
-  methods: {
-    resize: function() {
-      this.$el.style.height = "auto", this.$el.style.height = this.$el.scrollHeight + "px", parseFloat(this.$el.style.height) >= parseFloat(this.$el.style.maxHeight) ? (this.$el.style.overflowY = "scroll", this.$el.style.height = this.$el.style.maxHeight) : this.$el.style.overflow = "hidden";
-    },
-    onInput: function(o) {
-      this.autoResize && this.resize(), this.$emit("update:modelValue", o.target.value);
-    }
-  },
-  computed: {
-    filled: function() {
-      return this.modelValue != null && this.modelValue.toString().length > 0;
-    },
-    ptmParams: function() {
-      return {
-        context: {
-          disabled: this.$attrs.disabled || this.$attrs.disabled === ""
-        }
-      };
-    }
-  }
-}, ke = ["value", "aria-invalid"];
-function Ie(e, o, i, r, d, u) {
-  return l(), h("textarea", f({
-    class: e.cx("root"),
-    value: e.modelValue,
-    "aria-invalid": e.invalid || void 0,
-    onInput: o[0] || (o[0] = function() {
-      return u.onInput && u.onInput.apply(u, arguments);
-    })
-  }, e.ptmi("root", u.ptmParams)), null, 16, ke);
-}
-O.render = Ie;
-const Ve = { class: "roles-list" }, Ce = {
+L.render = Se;
+const we = { class: "roles-list" }, ge = {
   class: "role-code",
   title: "Role code (read-only here -- renaming would orphan script lines that already use it)"
-}, Ee = { class: "role-name" }, Pe = 600, Re = 3e3, Te = 1500, xe = {
+}, ke = { class: "role-name" }, be = 600, Ce = 3e3, Ee = 1500, Te = {
   __name: "RolesEditorApp",
   props: {
     root: { type: String, required: !0 },
     suffix: { type: String, default: "" },
     onClose: { type: Function, required: !0 }
   },
-  setup(e) {
-    const o = e, i = X(o.root, "_roles.json"), r = I(!0), d = I([]), u = I([]), T = I(""), { cssWidth: H, setWidth: M, presets: W } = pe({
+  setup(t) {
+    const u = t, p = _(u.root, "_roles.json"), i = b(!0), n = b([]), k = b([]), I = b(""), { cssWidth: O, setWidth: F, presets: M } = ce({
       storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
       defaultWidth: 1200,
       presets: [900, 1200]
     });
-    let v = null, x = 0, y = null, $ = null;
-    const V = /* @__PURE__ */ new Map();
-    function p(t) {
-      T.value = t;
+    let h = null, A = 0, v = null, y = null;
+    const C = /* @__PURE__ */ new Map();
+    function l(e) {
+      I.value = e;
     }
-    const k = /* @__PURE__ */ new Map();
-    function J(t, a) {
+    const E = /* @__PURE__ */ new Map();
+    function W(e, a) {
       if (!a) {
-        k.delete(t);
+        E.delete(e);
         return;
       }
-      k.set(t, a.$el ?? a);
+      E.set(e, a.$el ?? a);
     }
-    function A(t) {
-      t && (t.style.height = "auto", t.style.height = `${t.scrollHeight}px`);
+    function J(e) {
+      e && (e.style.height = "auto", e.style.height = `${e.scrollHeight}px`);
     }
     function B() {
-      k.forEach(A);
+      E.forEach(J);
     }
     function q() {
-      return JSON.stringify({ roles: d.value }, null, 2);
+      return JSON.stringify({ roles: n.value }, null, 2);
     }
-    async function z() {
-      const t = q();
-      if (t !== v)
+    async function D() {
+      const e = q();
+      if (e !== h)
         try {
-          const s = await (await fetch(`${N}/write`, {
+          const s = await (await fetch(`${j}/write`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: i, content: t })
+            body: JSON.stringify({ path: p, content: e })
           })).json();
           if (s.error) {
-            p(`Save error: ${s.error}`);
+            l(`Save error: ${s.error}`);
             return;
           }
-          v = t, p(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+          h = e, l(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
         } catch (a) {
-          p(`Save failed: ${a}`);
+          l(`Save failed: ${a}`);
         }
     }
-    function C() {
-      x = Date.now(), y && clearTimeout(y), y = setTimeout(z, Pe);
+    function T() {
+      A = Date.now(), v && clearTimeout(v), v = setTimeout(D, be);
     }
-    function E(t) {
-      !t.code || V.get(t.code) === t.speaker || (V.set(t.code, t.speaker), ie(o.root, t.code, o.suffix).then((s) => p(s.message)));
+    function P(e) {
+      !e.code || C.get(e.code) === e.speaker || (C.set(e.code, e.speaker), ne(u.root, e.code, u.suffix).then((s) => l(s.message)));
     }
-    function K(t) {
-      C(), E(t);
+    function z(e) {
+      T(), P(e);
     }
-    async function G() {
+    async function H() {
       try {
-        const a = await (await fetch(se)).json();
-        u.value = a.presets || [];
+        const a = await (await fetch(te)).json();
+        k.value = a.presets || [];
       } catch {
-        u.value = [];
+        k.value = [];
       }
     }
-    async function D({ isPoll: t = !1 } = {}) {
+    async function N({ isPoll: e = !1 } = {}) {
       try {
-        const s = await (await fetch(`${N}/read?path=${encodeURIComponent(i)}`)).json();
+        const s = await (await fetch(`${j}/read?path=${encodeURIComponent(p)}`)).json();
         if (s.error) {
-          p(`Read error: ${s.error}`);
+          l(`Read error: ${s.error}`);
           return;
         }
         if (!s.exists) {
-          t || (d.value = [], v = "", p("_roles.json does not exist yet"));
+          e || (n.value = [], h = "", l("_roles.json does not exist yet"));
           return;
         }
-        if (t && Date.now() - x < Te || s.content === v) return;
-        let n;
+        if (e && Date.now() - A < Ee || s.content === h) return;
+        let o;
         try {
-          n = JSON.parse(s.content);
-        } catch (g) {
-          p(`_roles.json is not valid JSON: ${g}`);
+          o = JSON.parse(s.content);
+        } catch ($) {
+          l(`_roles.json is not valid JSON: ${$}`);
           return;
         }
-        d.value = Array.isArray(n.roles) ? n.roles : [], d.value.forEach((g) => {
-          g.code && V.set(g.code, g.speaker);
-        }), v = s.content, t || p(`Loaded ${d.value.length} role(s)`), ae(() => {
+        n.value = Array.isArray(o.roles) ? o.roles : [], n.value.forEach(($) => {
+          $.code && C.set($.code, $.speaker);
+        }), h = s.content, e || l(`Loaded ${n.value.length} role(s)`), se(() => {
           B(), requestAnimationFrame(B);
         });
       } catch (a) {
-        p(`Read failed: ${a}`);
+        l(`Read failed: ${a}`);
       }
     }
-    function Q() {
-      y && (clearTimeout(y), z()), d.value.forEach((t) => E(t)), $ && clearInterval($), o.onClose();
+    function K() {
+      v && (clearTimeout(v), D()), n.value.forEach((e) => P(e)), y && clearInterval(y), u.onClose();
     }
-    return Z(r, (t) => {
-      t || Q();
-    }), _(async () => {
-      G(), await D(), $ = setInterval(() => D({ isPoll: !0 }), Re);
-    }), ee(() => {
-      $ && clearInterval($);
-    }), (t, a) => (l(), P(c(ce), {
-      visible: r.value,
-      "onUpdate:visible": a[1] || (a[1] = (s) => r.value = s),
+    return X(i, (e) => {
+      e || K();
+    }), Y(async () => {
+      H(), await N(), y = setInterval(() => N({ isPoll: !0 }), Ce);
+    }), Z(() => {
+      y && clearInterval(y);
+    }), (e, a) => (r(), R(c(ue), {
+      visible: i.value,
+      "onUpdate:visible": a[2] || (a[2] = (s) => i.value = s),
       modal: !1,
       draggable: !1,
       "close-on-escape": "",
       header: " ",
-      style: te({ width: c(H) }),
+      style: ee({ width: c(O) }),
       class: "roles-dialog"
     }, {
       header: w(() => [
-        R(me, {
+        V(he, {
           title: "Roles",
-          status: T.value,
-          "width-presets": c(W),
-          "set-width": c(M)
+          status: I.value,
+          "width-presets": c(M),
+          "set-width": c(F)
         }, null, 8, ["status", "width-presets", "set-width"])
       ]),
       default: w(() => [
-        d.value.length ? m("", !0) : (l(), P(c(fe), {
+        n.value.length ? m("", !0) : (r(), R(c(pe), {
           key: 0,
           severity: "info",
           closable: !1
         }, {
-          default: w(() => [...a[2] || (a[2] = [
-            oe("No roles found", -1)
+          default: w(() => [...a[3] || (a[3] = [
+            ae("No roles found", -1)
           ])]),
           _: 1
         })),
-        b("div", Ve, [
-          (l(!0), h(re, null, ne(d.value, (s) => (l(), P(c(L), {
+        g("div", we, [
+          (r(!0), f(oe, null, re(n.value, (s) => (r(), R(c(L), {
             key: s.code,
             class: "role-card"
           }, {
             title: w(() => [
-              b("span", Ce, j(s.code), 1),
-              b("span", Ee, j(s.name), 1)
+              g("span", ge, U(s.code), 1),
+              g("span", ke, U(s.name), 1)
             ]),
             content: w(() => [
-              R(c(he), {
+              V(c(fe), {
                 modelValue: s.speaker,
-                "onUpdate:modelValue": (n) => s.speaker = n,
-                options: u.value,
+                "onUpdate:modelValue": (o) => s.speaker = o,
+                options: k.value,
                 editable: "",
                 filter: "",
                 placeholder: "Speaker preset",
                 title: "Real CosyVoice preset this role resolves to",
                 class: "role-speaker",
-                onInput: a[0] || (a[0] = (n) => C()),
-                onChange: (n) => K(s),
-                onBlur: (n) => E(s)
+                onInput: a[0] || (a[0] = (o) => T()),
+                onChange: (o) => z(s),
+                onBlur: (o) => P(s)
               }, null, 8, ["modelValue", "onUpdate:modelValue", "options", "onChange", "onBlur"]),
-              R(c(O), {
+              V(c(me), {
                 modelValue: s.description,
-                "onUpdate:modelValue": (n) => s.description = n,
+                "onUpdate:modelValue": (o) => s.description = o,
                 ref_for: !0,
-                ref: (n) => J(s.code, n),
+                ref: (o) => W(s.code, o),
+                "auto-resize": "",
                 rows: "1",
                 placeholder: "Description...",
                 class: "role-description",
-                onInput: (n) => {
-                  C(), A(c(k).get(s.code));
-                }
-              }, null, 8, ["modelValue", "onUpdate:modelValue", "onInput"])
+                onInput: a[1] || (a[1] = (o) => T())
+              }, null, 8, ["modelValue", "onUpdate:modelValue"])
             ]),
             _: 2
           }, 1024))), 128))
@@ -307,20 +229,20 @@ const Ve = { class: "roles-list" }, Ce = {
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, Ae = /* @__PURE__ */ Y(xe, [["__scopeId", "data-v-36603fd6"]]);
-function je({ root: e, suffix: o = "" }) {
+}, Pe = /* @__PURE__ */ Q(Te, [["__scopeId", "data-v-936d83fe"]]);
+function Be({ root: t, suffix: u = "" }) {
   le(import.meta.url);
-  const i = document.createElement("div");
-  document.body.appendChild(i);
-  const r = de(Ae, {
-    root: e,
-    suffix: o,
+  const p = document.createElement("div");
+  document.body.appendChild(p);
+  const i = ie(Pe, {
+    root: t,
+    suffix: u,
     onClose: () => {
-      r.unmount(), i.remove();
+      i.unmount(), p.remove();
     }
   });
-  r.use(ue, { ripple: !0 }), r.mount(i);
+  i.use(de, { ripple: !0 }), i.mount(p);
 }
 export {
-  je as openRolesEditor
+  Be as openRolesEditor
 };

@@ -10,7 +10,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import { usePanelWidth } from "../shared/panel_width.js";
 import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
-import { lineHash, hasExpectedFile, mostRecentAtPosition } from "../shared/line_hash.js";
+import { lineHash, makeLineFilename, hasExpectedFile, mostRecentAtPosition } from "../shared/line_hash.js";
 import {
     joinPath, stripSuffixAndExt, dirOf, markRoleStale,
     SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
@@ -370,6 +370,11 @@ function playRowSequential(startIndex) {
             return;
         }
         mode1PlayingIdx.value = idx;
+        // Mode 2's syncActiveLine does this same scroll for the stitched
+        // player -- mode 1 (sequential per-line files, before Done) never
+        // had the equivalent, so the highlighted row silently ran off the
+        // bottom of a long script during playback.
+        rowEls.get(rows.value[idx]?.__key)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
         const el = new Audio(`${SCAN_API}/audio?path=${encodeURIComponent(joinPath(dir, audioFilename))}&v=${Date.now()}`);
         mode1AudioEl = el;
         el.addEventListener("ended", () => playIdx(idx + 1));
@@ -766,8 +771,22 @@ async function revoiceRow(row, index) {
             folder: props.folder,
             baseName: audioBaseName.value,
         });
-        setStatus("Line re-voiced");
         await loadLineFiles();
+        // Closes the loop the two other logs open (web/script_library.js's
+        // "[FL revoice]" and audio_post_process.py's per-run block): those
+        // say what was ASKED for and what was WRITTEN, this says whether the
+        // file the row will now be judged by is actually there. All three
+        // agreeing while the row still reads "not voiced" would mean the
+        // mismatch is in the hash, not the plumbing.
+        const position = positionByIndex.value.get(index);
+        const expectedName = makeLineFilename(position, contentHash);
+        const landed = lineFilesOnDisk.value.has(expectedName);
+        console.log("[FL revoice] after render:", {
+            position, expectedFile: expectedName, foundOnDisk: landed,
+            linesDir: linesDirPath.value,
+            filesInDir: [...lineFilesOnDisk.value],
+        });
+        setStatus(landed ? "Line re-voiced" : `Re-voice finished but ${expectedName} is not in ${linesDirPath.value} -- see the console`);
     } catch (e) {
         setStatus(`Re-voice failed: ${e.message || e}`);
     } finally {

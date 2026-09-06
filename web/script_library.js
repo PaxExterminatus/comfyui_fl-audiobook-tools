@@ -250,13 +250,20 @@ const AUDIO_SAVER_CLASS_RE = /saveaudio|audiosave/i;
 // queued prompt (never from the graph itself) avoids that -- these are
 // always terminal/sink nodes (no outputs), so nothing else in the prompt
 // can be depending on one being present.
+// Returns the class_types actually removed -- stripping the node that
+// happened to be the branch's only execution root is exactly how a re-voice
+// silently renders nothing (see nodes/audio_post_process.py's OUTPUT_NODE),
+// so the caller logs this rather than letting it happen invisibly.
 function stripDownstreamAudioSavers(prompt) {
+    const stripped = [];
     for (const key of Object.keys(prompt)) {
         const entry = prompt[key];
         if (entry && AUDIO_SAVER_CLASS_RE.test(entry.class_type || "")) {
+            stripped.push(entry.class_type);
             delete prompt[key];
         }
     }
+    return stripped;
 }
 
 // Assigned inside the patch guard below (needs closure access to
@@ -299,7 +306,17 @@ if (!app._flScriptLibraryPatched) {
                     entry.inputs.line_override = item.lineOverride !== undefined ? item.lineOverride : "";
                 }
                 if (pendingRevoiceLineIndex !== null) {
-                    for (const ppNode of buildPostProcessList()) {
+                    // Every re-voice logs the whole prompt-side story: which
+                    // Post-Process nodes were found in the GRAPH, which of
+                    // those resolved to an entry in the SERIALIZED prompt
+                    // (the composite-subgraph-id hazard findPromptEntry
+                    // exists for), and what was stamped onto each. A re-voice
+                    // that renders nothing is otherwise indistinguishable at
+                    // the UI from one that renders into the wrong place --
+                    // and the counts below are what separate the two.
+                    const ppNodes = buildPostProcessList();
+                    const stamped = [];
+                    for (const ppNode of ppNodes) {
                         const ppEntry = findPromptEntry(prompt, ppNode, POST_PROCESS_CLASS);
                         if (!ppEntry) continue;
                         ppEntry.inputs = ppEntry.inputs || {};
@@ -310,8 +327,24 @@ if (!app._flScriptLibraryPatched) {
                         if (pendingRevoiceTarget?.folder) ppEntry.inputs.script_folder = pendingRevoiceTarget.folder;
                         if (pendingRevoiceTarget?.baseName) ppEntry.inputs.script_base_name = pendingRevoiceTarget.baseName;
                         if (pendingRevoiceContentHash) ppEntry.inputs.line_hashes_json = JSON.stringify([pendingRevoiceContentHash]);
+                        stamped.push(ppEntry.inputs);
                     }
-                    stripDownstreamAudioSavers(prompt);
+                    const stripped = stripDownstreamAudioSavers(prompt);
+                    console.log("[FL revoice] prompt built:", {
+                        linePosition: pendingRevoiceLineIndex,
+                        target: pendingRevoiceTarget,
+                        contentHash: pendingRevoiceContentHash,
+                        postProcessNodesInGraph: ppNodes.length,
+                        postProcessEntriesStamped: stamped.length,
+                        stampedInputs: stamped,
+                        strippedAudioSavers: stripped,
+                        promptClassTypes: Object.values(prompt).map((e) => e?.class_type),
+                    });
+                    if (ppNodes.length === 0) {
+                        console.warn("[FL revoice] no FL CosyVoice3 Audio Post-Process node in this graph -- nothing will write a per-line file.");
+                    } else if (stamped.length === 0) {
+                        console.warn("[FL revoice] Post-Process node(s) present in the graph but none matched an entry in the serialized prompt (muted/bypassed, or not reachable from an output node).");
+                    }
                 }
             }
         } catch (err) {
@@ -486,7 +519,14 @@ if (!app._flScriptLibraryPatched) {
             }
         });
 
+        console.log("[FL revoice] requested:", { act, file, linePosition, folder, baseName, contentHash, lineOverride });
         const promptId = await submitAndTrackPromptId(promptResult);
-        await pollPromptCompletion(promptId);
+        console.log("[FL revoice] queued as prompt_id", promptId, "-- waiting for it to finish");
+        const entry = await pollPromptCompletion(promptId);
+        // The per-node prints from nodes/audio_post_process.py are the other
+        // half of this trail: seeing this line WITHOUT an
+        // "[FL CosyVoice3 AudioPostProcess] ---- run:" block in the ComfyUI
+        // console means the node never executed, not that it failed to save.
+        console.log("[FL revoice] prompt", promptId, "finished:", entry?.status?.status_str ?? "completed");
     };
 }

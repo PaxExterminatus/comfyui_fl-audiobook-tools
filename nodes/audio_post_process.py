@@ -68,6 +68,23 @@ class FL_CosyVoice3_AudioPostProcess:
     RETURN_TYPES = ("AUDIO", "STRING")
     RETURN_NAMES = ("audio", "report")
     OUTPUT_IS_LIST = (True, False)
+    # This node's REAL product is a file on disk (_audio\lines\<script>\
+    # <position>_<hash>.wav), exactly like core's SaveAudio/SaveImage -- and
+    # in ComfyUI only an OUTPUT_NODE is an execution root. Without this,
+    # whether this node runs at all depends on something downstream of it
+    # being an output node.
+    #
+    # A single-line re-voice deliberately strips every audio-saver node out
+    # of its prompt (see web/script_library.js's stripDownstreamAudioSavers
+    # -- otherwise that saver writes one 12-second line into _audio\ under
+    # the script's own prefix, where it masquerades as the full scene take).
+    # In a graph shaped Script Library -> Dialog -> Post-Process -> Save
+    # Audio, that saver WAS the only output node on this branch, so
+    # stripping it left the whole branch with nothing to pull it: ComfyUI
+    # walked back from whatever other output node the graph had, never
+    # reached Post-Process, and reported the prompt as executed
+    # successfully having written nothing at all.
+    OUTPUT_NODE = True
     OUTPUT_TOOLTIPS = (
         "The processed audio, one item per input item -- NOT concatenated (see the "
         "node's own docstring for why stitching moved to the \"✅ Done\" button).",
@@ -165,6 +182,18 @@ class FL_CosyVoice3_AudioPostProcess:
             }
         }
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        # This node's output isn't just the AUDIO it returns -- it's the
+        # per-line file it writes. ComfyUI's cache only knows about node
+        # INPUTS, so an identical prompt after that file was deleted OUTSIDE
+        # the graph (the line editor's 🗑, or by hand in Explorer -- both
+        # normal here) would be served straight from cache: no execution, no
+        # re-write, and a "Prompt executed" that restored nothing. NaN never
+        # equals itself, so this node always re-runs and the file on disk is
+        # always brought back in line with what the graph says it should be.
+        return float("nan")
+
     def process(
         self,
         audio: List[Dict[str, Any]],
@@ -194,6 +223,22 @@ class FL_CosyVoice3_AudioPostProcess:
         timing_folder = (script_folder[0] or "").strip()
         timing_base_name = (script_base_name[0] or "").strip()
         index_override = line_index_override[0] if line_index_override else -1
+
+        # Unconditional per-run diagnostics. "The re-voice finished fine but
+        # no file appeared" looks identical at the UI for at least four
+        # different causes -- this node never executing at all (nothing in
+        # the prompt pulled it), script_folder/script_base_name never
+        # arriving (so nothing is written), the position landing somewhere
+        # other than the row being re-voiced, or the hash differing from the
+        # one the editor will look for. Only the first of those is even
+        # visible from outside, and only by this block being absent. One
+        # short header per queue is a cheap price for telling them apart.
+        print(f"[FL CosyVoice3 AudioPostProcess] ---- run: {len(audio)} audio item(s) ----")
+        print(f"[FL CosyVoice3 AudioPostProcess]   script_folder       = {timing_folder!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   script_base_name    = {timing_base_name!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   line_index_override = {index_override!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   line_hashes_json    = {line_hashes_str[:200]!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   line_texts_json     = {line_texts_str[:120]!r}")
 
         if not audio:
             raise ValueError("FL CosyVoice3 Audio Post-Process: no audio received.")
@@ -228,6 +273,23 @@ class FL_CosyVoice3_AudioPostProcess:
             except OSError as e:
                 print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't create lines dir: {e}")
                 lines_dir = None
+        if lines_dir is None:
+            print("[FL CosyVoice3 AudioPostProcess]   lines_dir = <none> -- NO per-line file will be "
+                  "written this run. Wire Script Library's folder_path -> script_folder and "
+                  "filename -> script_base_name.")
+        else:
+            print(f"[FL CosyVoice3 AudioPostProcess]   lines_dir = {lines_dir}")
+
+        if len(audio) == 1 and index_override < 0:
+            # A per-line re-voice always stamps its real position (see
+            # web/script_library.js's queueLineRevoice); a 1-item run
+            # WITHOUT one is either a genuinely 1-line script or that stamp
+            # failing to reach here, and the two are indistinguishable from
+            # this side -- so say which assumption is being made rather than
+            # silently writing over position 0.
+            print("[FL CosyVoice3 AudioPostProcess]   NOTE: single item and no line_index_override "
+                  "-- writing at position 0 (if this was a 🔁 re-voice, its position never reached "
+                  "this node).")
 
         # On a FULL render (never for a single re-voiced line -- that would
         # wrongly nuke every other line's file), delete every file whose
@@ -298,6 +360,7 @@ class FL_CosyVoice3_AudioPostProcess:
                 # connection yet) -- the file still gets written under this
                 # scheme, just without voice/instruct in its fingerprint, so
                 # a role recast alone wouldn't be detected as making it stale.
+                hash_source = "line_hashes_json" if i < len(line_hashes) else "text-only fallback"
                 content_hash = (
                     line_hashes[i] if i < len(line_hashes)
                     else _line_audio.line_hash("", "", line_texts[i] if i < len(line_texts) else "")
@@ -307,10 +370,18 @@ class FL_CosyVoice3_AudioPostProcess:
                 # place, on purpose (see nodes/_line_audio.py's module
                 # docstring): a line has one current file per distinct
                 # wording it's ever said, not a growing history of takes.
+                out_path = _line_audio.expected_path(lines_dir, position, content_hash)
                 try:
-                    save_wav(wav, sample_rate, _line_audio.expected_path(lines_dir, position, content_hash))
+                    save_wav(wav, sample_rate, out_path)
+                    # Confirms the write actually landed rather than assuming
+                    # it did -- this exact path is what the line editor
+                    # checks for to call the row voiced, so seeing it here is
+                    # what makes "rendered but still shows unvoiced" a
+                    # one-glance comparison instead of a guess.
+                    print(f"[FL CosyVoice3 AudioPostProcess]   line {position}: wrote {out_path} "
+                          f"(hash {content_hash} from {hash_source}, exists={os.path.isfile(out_path)})")
                 except OSError as e:
-                    print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't save line {position}: {e}")
+                    print(f"[FL CosyVoice3 AudioPostProcess] ERROR: couldn't save line {position} to {out_path}: {e}")
 
             total_samples += wav.shape[-1]
             result_audios.append(tensor_to_comfyui_audio(wav, sample_rate))

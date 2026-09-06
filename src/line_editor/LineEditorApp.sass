@@ -142,12 +142,7 @@
     &.stale
         color: $color-warning
 
-// width/flex on the InputGroup wrapper itself, never on the Dropdown's own
-// root -- InputGroup already sets its OWN internal `display: flex` (an
-// unlayered scoped `display` here would fight it the same way the roles
-// editor's dropdown gotcha warns about elsewhere in this codebase).
 .speaker-group
-    width: 168px
     flex: 0 0 auto
 
 .instruct-group
@@ -160,13 +155,13 @@
 .dropdown-option-sublabel
     @extend %catalog-option-sublabel
 
-.speaker-file-btn
-    @extend %ellipsis
+.speaker-file-group
     flex: 0 0 auto
+
+.speaker-file-dropdown
     max-width: 150px
 
 .role-info-btn
-    flex: 0 0 auto
     cursor: help
     opacity: 0.7
 

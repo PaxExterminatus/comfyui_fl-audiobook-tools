@@ -57,14 +57,12 @@ function mockFetch(overrides = {}) {
         if (u.startsWith("/fl_cosyvoice3/browse/list_dir")) {
             return { json: async () => ({ files: overrides.lineFiles || [], file_mtimes: {} }) };
         }
-        if (u.startsWith("/fl_cosyvoice3/script_library/set_ready")) {
-            overrides.onSetReady?.(JSON.parse(opts.body));
-            return { json: async () => ({ ready: true, ready_scripts: ["Test_speakers.txt"] }) };
-        }
         if (u.startsWith("/fl_cosyvoice3/script_library/stitch_lines")) {
+            overrides.onStitch?.(JSON.parse(opts.body));
             return { json: async () => ({ ok: true }) };
         }
         if (u.startsWith("/fl_cosyvoice3/script_library/delete_audio")) {
+            overrides.onDeleteAudio?.(JSON.parse(opts.body));
             return { json: async () => ({ deleted: [] }) };
         }
         if (u.startsWith("/fl_cosyvoice3/script_library/reorganize_lines")) {
@@ -274,12 +272,12 @@ describe("LineEditorApp", () => {
         wrapper.unmount();
     });
 
-    it("marking Done stitches by line count, marks ready, and unchecks the header checkbox", async () => {
+    it("marking Done stitches the final file, marks ready (no separate flag -- just the file existing), and unchecks the header checkbox", async () => {
         const checkedApi = { isChecked: vi.fn(() => true), setChecked: vi.fn() };
-        const onSetReady = vi.fn();
+        const onStitch = vi.fn();
         const { wrapper } = await mountEditor({
             checkedApi,
-            onSetReady,
+            onStitch,
             lineFiles: [
                 await lineFileName(0, "narrator", "calm", "First line."),
                 await lineFileName(1, "narrator", "calm", "Second line."),
@@ -290,7 +288,8 @@ describe("LineEditorApp", () => {
         await vi.waitFor(() => expect(doneBtn.disabled).toBe(false));
         doneBtn.click();
 
-        await vi.waitFor(() => expect(onSetReady).toHaveBeenCalledWith(expect.objectContaining({ filename: "Test_speakers.txt", ready: true })));
+        await vi.waitFor(() => expect(onStitch).toHaveBeenCalledWith(expect.objectContaining({ base_name: "Test" })));
+        await vi.waitFor(() => expect(doneBtn.textContent.trim()).toBe("Done ✓"));
         expect(checkedApi.setChecked).toHaveBeenCalledWith("Test_speakers.txt", false);
         wrapper.unmount();
     });

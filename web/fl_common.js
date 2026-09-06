@@ -30,7 +30,9 @@ export function joinPath(base, name) {
 }
 
 // Mirrors nodes/script_library.py's strip_suffix_and_ext: e.g.
-// "Manacled 0101 X_speakers.txt" + "_speakers.txt" -> "Manacled 0101 X".
+// "Manacled 0101 X.txt" + "" -> "Manacled 0101 X" (an empty suffix just
+// strips the extension); with a non-empty script_filter, e.g.
+// "Manacled 0101 X_dialog.txt" + "_dialog.txt" -> "Manacled 0101 X".
 export function stripSuffixAndExt(name, suffix) {
     const trimmed = (name || "").trim();
     const suf = (suffix || "").trim();

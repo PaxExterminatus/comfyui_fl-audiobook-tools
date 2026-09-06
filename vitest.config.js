@@ -11,7 +11,11 @@ export default defineConfig({
     css: {
         preprocessorOptions: {
             sass: {
-                additionalData: `@import "../sass/variables"\n@import "../sass/placeholders"\n`,
+                // Kept in sync with vite.config.js's own additionalData --
+                // see that file's comment for why this points at the one
+                // src/sass/app.sass manifest instead of listing partials
+                // here directly.
+                additionalData: `@import "../sass/app"\n`,
             },
         },
     },

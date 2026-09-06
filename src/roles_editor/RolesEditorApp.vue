@@ -28,7 +28,7 @@ import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS
 
 const props = defineProps({
     root: { type: String, required: true },
-    suffix: { type: String, default: "_speakers.txt" },
+    suffix: { type: String, default: "" },
     onClose: { type: Function, required: true },
 });
 

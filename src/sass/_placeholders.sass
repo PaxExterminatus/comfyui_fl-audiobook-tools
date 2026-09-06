@@ -55,10 +55,9 @@
     gap: $gap
     flex: 0 0 auto
 
-// A picked-from-a-catalog row's own label + secondary detail line --
-// PickPanel's role/instruct/speaker-preset rows and a Dropdown's custom
-// #option template (LineEditorApp's role/instruct dropdowns) render the
-// exact same two-line shape, just via different PrimeVue components.
+// A picked-from-a-catalog row's own label + secondary detail line -- every
+// Dropdown's custom #option template in LineEditorApp (role/instruct/
+// speaker-file) renders this exact same two-line shape.
 %catalog-option-label
     @extend %ellipsis
     font-size: $font-md

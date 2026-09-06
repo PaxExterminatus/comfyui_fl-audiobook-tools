@@ -11,11 +11,10 @@ for a real example):
         _roles.json                  <- catalog of characters (see below)
         _instructions.json           <- catalog of instruct2 phrases already used, per role
         Act01/
-            Scene 0101 Something.txt            (raw prose, not a script)
-            Scene 0101 Something_speakers.txt    (the actual dialog script:
-                                                   "preset | instruct | line text")
+            Scene 0101 Something.txt    (a dialog script: "preset | instruct | line text",
+                                          one turn per line)
         Act02/
-            Scene 0201 Other_speakers.txt        (the "act" input picks this subfolder)
+            Scene 0201 Other.txt        (the "act" input picks this subfolder)
 
 _roles.json shape: {"roles": [{"code", "name", "description", "speaker"},
 ...]} -- "code" is the stable role identifier a script line's preset field
@@ -98,11 +97,11 @@ def list_scripts(folder: str, suffix: str = "") -> Tuple[List[str], bool]:
     .txt files directly in folder (non-recursive), excluding _-prefixed db
     files, sorted with dialog-script-looking files first, then alphabetically.
 
-    suffix (e.g. "_speakers.txt") filters down to matching filenames -- the
-    project's convention for "this is a ready-to-use dialog script" as
-    opposed to raw prose or older-naming leftovers. If nothing matches (e.g.
-    an older chapter folder that used "_dialog.txt" or no suffix at all),
-    falls back to the unfiltered list rather than showing nothing.
+    suffix, if given, filters down to filenames ending with it -- an escape
+    hatch for a project that still names its scripts with some older
+    convention (e.g. "_dialog.txt"). Empty (the default) lists every .txt
+    file, same as when nothing matches a non-empty suffix -- falls back to
+    the unfiltered list rather than showing nothing.
 
     Returns (names, filter_applied).
     """
@@ -228,11 +227,12 @@ def resolve_roles(script_content: str, role_map: Dict[str, str]) -> str:
 
 def strip_suffix_and_ext(filename: str, suffix: str) -> str:
     """
-    'Manacled 0101 X_speakers.txt' + '_speakers.txt' -> 'Manacled 0101 X'.
-    Strips the script_filter suffix if the filename ends with it (case-
-    insensitive); otherwise just strips the file extension (e.g. a filename
-    that didn't actually match the filter -- the fallback "show every .txt"
-    case in list_scripts). Used for the "filename" output.
+    'Manacled 0101 X.txt' + '' -> 'Manacled 0101 X'; with a non-empty
+    script_filter, e.g. 'Manacled 0101 X_dialog.txt' + '_dialog.txt' ->
+    'Manacled 0101 X'. Strips the suffix if the filename ends with it
+    (case-insensitive); otherwise just strips the file extension (also
+    what an empty suffix does -- "don't strip anything" beyond the
+    extension). Used for the "filename" output.
     """
     name = filename.strip()
     suf = suffix.strip()
@@ -270,6 +270,22 @@ def scripts_with_audio(act_folder: str, scripts: List[str], suffix: str) -> List
         if any(base.startswith(needle) for base in audio_bases):
             result.append(script)
     return result
+
+
+def scripts_ready(act_folder: str, scripts: List[str], suffix: str) -> List[str]:
+    """
+    Which of `scripts` are "done / ready to release" -- true exactly when
+    their final stitched track (written by stitch_lines, the "✅ Done"
+    button, and only by it -- per-line takes live one level deeper, in
+    _audio/lines/<base_name>/, never directly in _audio/) already exists in
+    <act_folder>/_audio/. Nothing is persisted anywhere any more (no more
+    _ready.json sidecar) -- un-marking is just deleting that file (see
+    delete_final_audio/the "delete_audio" route), so this can never drift
+    from what's actually on disk the way a separate flag could. Same disk
+    check scripts_with_audio already does, since nothing else writes
+    directly into _audio/ any more.
+    """
+    return scripts_with_audio(act_folder, scripts, suffix)
 
 
 def _line_uses_role(line: str, role_code: str) -> bool:
@@ -397,7 +413,7 @@ def mark_role_stale(root: str, role_code: str, suffix: str) -> Dict[str, list]:
     for act in acts:
         act_folder = os.path.join(root, act)
         scripts, _ = list_scripts(act_folder, suffix)
-        ready_set = set(scripts_ready(act_folder))  # read once per act, not once per matching script
+        ready_set = set(scripts_ready(act_folder, scripts, suffix))  # read once per act, not once per matching script
         for filename in scripts:
             path = os.path.join(act_folder, filename)
             try:
@@ -415,7 +431,6 @@ def mark_role_stale(root: str, role_code: str, suffix: str) -> Dict[str, list]:
             was_ready = filename in ready_set
             deleted_audio = []
             if was_ready:
-                set_script_ready(act_folder, filename, False)
                 deleted_audio = delete_final_audio(act_folder, base_name)
 
             changed.append({
@@ -447,44 +462,6 @@ def find_pending_revoice(root: str, suffix: str) -> List[dict]:
                     "act": act, "file": filename, "folder": act_folder,
                     "base_name": base_name, "pending": pending,
                 })
-    return result
-
-
-def _ready_file_path(act_folder: str) -> str:
-    return os.path.join(act_folder, "_ready.json")
-
-
-def scripts_ready(act_folder: str) -> List[str]:
-    """
-    Which scripts in this act are marked "done / ready to release" -- set via
-    the line editor's ✅ Done button, persisted per-act in _ready.json
-    ({"ready": [filename, ...]}), the same "_"-prefixed sidecar convention as
-    _roles.json/_instructions.json. Backs the green checkmark in the script
-    tree (web/script_library.js), which also refuses to keep a ready script
-    checked for queueing.
-    """
-    path = _ready_file_path(act_folder)
-    if not os.path.isfile(path):
-        return []
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return []
-    ready = data.get("ready", []) if isinstance(data, dict) else []
-    return [r for r in ready if isinstance(r, str)]
-
-
-def set_script_ready(act_folder: str, filename: str, ready: bool) -> List[str]:
-    """Adds/removes `filename` from _ready.json, returns the updated list."""
-    current = set(scripts_ready(act_folder))
-    if ready:
-        current.add(filename)
-    else:
-        current.discard(filename)
-    result = sorted(current)
-    with open(_ready_file_path(act_folder), "w", encoding="utf-8") as f:
-        json.dump({"ready": result}, f, ensure_ascii=False, indent=2)
     return result
 
 
@@ -689,7 +666,7 @@ if _HAS_SERVER:
         selection for "Voice Act" / "Voice All" / "Voice Selected".
         """
         root = request.query.get("path", "").strip()
-        suffix = request.query.get("suffix", "_speakers.txt")
+        suffix = request.query.get("suffix", "")
         if not root:
             return web.json_response({"error": "path is required"})
         if not os.path.isdir(root):
@@ -702,7 +679,7 @@ if _HAS_SERVER:
             act_folder = os.path.join(root, act)
             scripts, act_filter_applied = list_scripts(act_folder, suffix)
             audio_scripts = scripts_with_audio(act_folder, scripts, suffix)
-            ready_scripts = scripts_ready(act_folder)
+            ready_scripts = scripts_ready(act_folder, scripts, suffix)
             pending_scripts = scripts_pending_revoice(act_folder, scripts, suffix, role_map)
             tree.append({
                 "act": act,
@@ -719,7 +696,7 @@ if _HAS_SERVER:
     async def fl_cosyvoice3_script_library_scan(request):
         root = request.query.get("path", "").strip()
         act = request.query.get("act", "").strip()
-        suffix = request.query.get("suffix", "_speakers.txt")
+        suffix = request.query.get("suffix", "")
         if not root:
             return web.json_response({"error": "path is required"})
 
@@ -733,7 +710,7 @@ if _HAS_SERVER:
             return web.json_response({"error": f"not a folder: {folder}"})
 
         scripts, filter_applied = list_scripts(folder, suffix)
-        ready_scripts = scripts_ready(folder)
+        ready_scripts = scripts_ready(folder, scripts, suffix)
         roles_path, roles_count, _, roles_list = find_db_file(folder, "_roles.json", "roles")
         instructions_path, instructions_count, _, instructions_list = find_db_file(folder, "_instructions.json", "instructions")
 
@@ -749,46 +726,17 @@ if _HAS_SERVER:
             "instructions": {"path": instructions_path, "count": instructions_count, "entries": instructions_list} if instructions_path else None,
         })
 
-    @routes.post("/fl_cosyvoice3/script_library/set_ready")
-    async def fl_cosyvoice3_script_library_set_ready(request):
-        """
-        Toggles a script's "done / ready to release" flag -- the line
-        editor's ✅ Done button. Persisted in <act folder>/_ready.json so it
-        survives reloads and shows as a green checkmark back in the script
-        tree, which also refuses to keep a ready script checked for
-        queueing (see web/script_library.js's renderTree pruning).
-        """
-        try:
-            data = await request.json()
-        except Exception as e:
-            return web.json_response({"error": f"invalid request body: {e}"})
-
-        folder = data.get("folder", "").strip()
-        filename = data.get("filename", "").strip()
-        ready = bool(data.get("ready"))
-
-        if not folder or not os.path.isdir(folder):
-            return web.json_response({"error": f"not a folder: {folder}"})
-        if not filename:
-            return web.json_response({"error": "filename is required"})
-
-        try:
-            ready_scripts = set_script_ready(folder, filename, ready)
-        except OSError as e:
-            return web.json_response({"error": str(e)})
-
-        return web.json_response({"ready": ready, "ready_scripts": ready_scripts})
-
     @routes.post("/fl_cosyvoice3/script_library/delete_audio")
     async def fl_cosyvoice3_script_library_delete_audio(request):
         """
         Deletes every rendered-audio file matching this script's base name in
         <folder>/_audio/ -- same prefix match as scripts_with_audio / the
         line editor's mini player (a Save Audio node's filename_prefix
-        produces "<base>_00001_.flac", never one exact file). The "🗑 Delete
-        audio" button next to the mini player, for clearing a take before
-        re-rendering. Refused server-side too (not just grayed out in the
-        UI) when the script is marked ready -- see scripts_ready.
+        produces "<base>_00001_.flac", never one exact file). Backs both the
+        "🗑 Delete audio" button and the line editor's "Done" button when
+        un-marking a script (see scripts_ready -- deleting this IS how a
+        script goes from ready back to editable, there's no separate flag
+        to flip any more).
         """
         try:
             data = await request.json()
@@ -797,14 +745,11 @@ if _HAS_SERVER:
 
         folder = data.get("folder", "").strip()
         base_name = data.get("base_name", "").strip()
-        filename = data.get("filename", "").strip()
 
         if not folder or not os.path.isdir(folder):
             return web.json_response({"error": f"not a folder: {folder}"})
         if not base_name:
             return web.json_response({"error": "base_name is required"})
-        if filename and filename in scripts_ready(folder):
-            return web.json_response({"error": f'"{filename}" is marked ready to release -- unmark it first'})
 
         return web.json_response({"deleted": delete_final_audio(folder, base_name)})
 
@@ -824,7 +769,7 @@ if _HAS_SERVER:
 
         root = data.get("root", "").strip()
         role_code = data.get("role_code", "").strip()
-        suffix = data.get("suffix", "_speakers.txt")
+        suffix = data.get("suffix", "")
 
         if not root or not os.path.isdir(root):
             return web.json_response({"error": f"not a folder: {root}"})
@@ -840,7 +785,7 @@ if _HAS_SERVER:
         backs the project-wide "🔁 Re-voice all pending" button. See
         find_pending_revoice."""
         root = request.query.get("path", "").strip()
-        suffix = request.query.get("suffix", "_speakers.txt")
+        suffix = request.query.get("suffix", "")
         if not root:
             return web.json_response({"error": "path is required"})
         if not os.path.isdir(root):
@@ -933,7 +878,7 @@ if _HAS_SERVER:
         folder = data.get("folder", "").strip()
         old = data.get("old", "").strip()
         new = data.get("new", "").strip()
-        suffix = data.get("suffix", "_speakers.txt")
+        suffix = data.get("suffix", "")
 
         if not folder or not os.path.isdir(folder):
             return web.json_response({"error": f"not a folder: {folder}"})
@@ -985,9 +930,10 @@ class FL_CosyVoice3_ScriptLibrary:
     """
     Browse a play/project folder: folder_path is the PROJECT ROOT; act picks
     one of its "Act01"/"Act02"/... subfolders (see module docstring), and
-    that act's dialog scripts (filtered to script_filter, e.g.
-    "_speakers.txt") are listed. Also surfaces the shared _roles.json /
-    _instructions.json catalogs, which live at the project root.
+    that act's dialog scripts (every .txt file by default, or only those
+    ending with script_filter if it's set) are listed. Also surfaces the
+    shared _roles.json / _instructions.json catalogs, which live at the
+    project root.
 
     The "🔊 Selected/Act/All" buttons (web/script_library.js) don't
     concatenate multiple scripts into one output -- each script gets its
@@ -1010,8 +956,8 @@ class FL_CosyVoice3_ScriptLibrary:
     OUTPUT_TOOLTIPS = (
         "The active script's content (role codes resolved to real speaker presets).",
         "Full path to the active act's folder (folder_path input + act, joined).",
-        "The active script_file's name, without the script_filter suffix (e.g. "
-        "\"_speakers.txt\") and without its extension.",
+        "The active script_file's name, without the script_filter suffix (if any) "
+        "and without its extension.",
         "JSON array of a short content hash (voice+instruct+text) per line, same "
         "order as `script`'s lines -- wire into FL CosyVoice3 Audio Post-Process's "
         "line_hashes_json so per-line files are named with a fingerprint the line "
@@ -1037,12 +983,12 @@ class FL_CosyVoice3_ScriptLibrary:
                                    "empty to scan folder_path itself (no Act subfolder)."
                 }),
                 "script_filter": ("STRING", {
-                    "default": "_speakers.txt",
-                    "description": "Only list .txt files ending with this suffix (the project's "
-                                   "convention for a ready-to-use dialog script, as opposed to raw "
-                                   "prose or older-naming leftovers). If nothing matches, falls back "
-                                   "to listing every .txt file instead of showing nothing. Leave "
-                                   "empty to always list every .txt file."
+                    "default": "",
+                    "description": "Only list .txt files ending with this suffix -- an escape hatch "
+                                   "for a project using some older per-script naming convention. If "
+                                   "nothing matches, falls back to listing every .txt file instead of "
+                                   "showing nothing. Leave empty (the default) to always list every "
+                                   ".txt file."
                 }),
                 "script_file": ("STRING", {
                     "default": "",

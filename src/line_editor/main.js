@@ -18,7 +18,7 @@ import { ensureStylesLinked } from "../shared/styles_link.js";
  * @param {Object} [opts.checkedApi] - {isChecked(fname), setChecked(fname, val)}
  * @param {Object} [opts.revoiceApi] - {revoiceLine({linePosition, speaker, instruct, text}) => Promise}
  */
-export function openLineEditor({ folder, filename, suffix = "_speakers.txt", checkedApi, revoiceApi }) {
+export function openLineEditor({ folder, filename, suffix = "", checkedApi, revoiceApi }) {
     ensureStylesLinked(import.meta.url);
 
     const container = document.createElement("div");

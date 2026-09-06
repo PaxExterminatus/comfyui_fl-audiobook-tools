@@ -8,10 +8,13 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
 ## What's in here
 
 - **FL CosyVoice3 Script Library** -- browse a project (root folder with
-  `Act01/`, `Act02/`, ... subfolders, each holding `*_speakers.txt` dialog
-  scripts). Checkbox-queue one/many/all scripts through your own graph, a
-  role catalog (`_roles.json`) for reassigning a character's voice
-  project-wide, per-script ✅ Done / 🔊 has-audio / ⚠ needs-re-voice status.
+  `Act01/`, `Act02/`, ... subfolders, each holding `*.txt` dialog scripts).
+  Checkbox-queue one/many/all scripts through your own graph, a role
+  catalog (`_roles.json`) for reassigning a character's voice project-wide,
+  per-script ✅ Done / 🔊 has-audio / ⚠ needs-re-voice status. ✅ Done is a
+  plain disk fact, not a stored flag: a script is "done" exactly when its
+  final stitched track already exists in `_audio/` (written only by "✅
+  Done" itself), and un-marking it just deletes that file.
 - **Full-screen line editor** (opens from the Script Library tree) -- one
   row per script line: speaker, instruct text, spoken text, drag-to-merge,
   split, add, delete. Each line's own per-line audio file is named
@@ -34,10 +37,13 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
 - **FL CosyVoice3 Script Editor** -- a simple in-graph text box live-linked
   to one file on disk (two-way: edits here save to the file, external
   edits get pulled back in).
-- **FL CosyVoice3 Audio Post-Process** -- onset-click/tail trim, fade,
-  loudness normalization, and list-stitching for any synthesis node's
-  output; also the node that writes each line's per-line file and the
-  per-line timing manifest the line editor's playback sync reads.
+- **FL CosyVoice3 Audio Post-Process** -- onset-click/tail trim, fade, and
+  loudness normalization for any synthesis node's output, one item at a
+  time (never concatenated); also the node that writes each line's
+  per-line file. Building the final scene track is exclusively "✅ Done"'s
+  job (see below) -- this node used to also stitch every run into one
+  track + write a timing manifest, which was pure duplicate work Done's
+  own stitch already did correctly.
 - **Roles editor** -- reassign a role's speaker (voice preset) for the
   whole project; recasting a role changes what every line using that role
   code resolves to, so the very next check (an open line editor, or the
@@ -111,11 +117,11 @@ MyPlay/                          <- Script Library's folder_path
     _roles.json                  <- {"roles": [{"code","name","description","speaker"}, ...]}
     _instructions.json           <- {"instructions": [{"role","text","note"}, ...]} (optional phrase bank)
     Act01/
-        Scene 0101 Something_speakers.txt   <- "preset | instruct | line text", one turn per line
+        Scene 0101 Something.txt   <- "preset | instruct | line text", one turn per line
         _audio/                                        <- created automatically as you render
             lines/<script>/<position>_<hash>.wav  <- per-line audio (see above)
             timing/<script>.json                        <- per-line timing manifest for playback sync
-            <script>_00001_.flac            <- final stitched track (Save Audio, or "✅ Done")
+            <script>.wav                    <- final stitched track (written ONLY by "✅ Done")
 ```
 
 ## Frontend development
@@ -170,13 +176,24 @@ file.
 - `_placeholders.sass` -- `%ellipsis` and a `button-row` mixin,
   `@extend`/`@include`d wherever the exact same declarations were
   previously retyped across 2+ components.
+- `app.sass` -- the manifest: just `@import "variables"` +
+  `@import "placeholders"`, in the order they should be available.
+  This is the ONE file that decides which shared partials exist and
+  in what order -- `vite.config.js`/`vitest.config.js`'s
+  `css.preprocessorOptions.sass.additionalData` both auto-`@import`
+  THIS one file into every component's own `.sass` (no component
+  imports it by hand), and `web/fl_shared.sass` (below) imports it
+  too, so that list is written once instead of copied three times.
+  Only declarations belong here (variables, placeholders, mixins --
+  nothing that compiles to real CSS output on its own), since it's
+  re-injected into every component's bundle; anything with actual
+  unscoped rules belongs in `global.sass` instead.
 - `global.sass` -- truly unscoped CSS (currently just Line Editor's
   role-info hover popover), imported once via
-  `src/shared/styles_link.js` the same way the PrimeVue theme itself is.
-
-Both are auto-`@import`ed into every component's `.sass` file by
-`vite.config.js`/`vitest.config.js`'s `css.preprocessorOptions.sass.
-additionalData` -- no component needs to import them by hand.
+  `src/shared/styles_link.js` the same way the PrimeVue theme itself
+  is -- deliberately NOT part of `app.sass`'s additionalData injection,
+  since that would duplicate its actual output into every Vue entry's
+  own compiled CSS instead of loading it once.
 
 `web/fl_shared.sass` is the one exception: it styles the remaining
 hand-written vanilla widgets (`script_editor.js`'s browse button,
@@ -184,8 +201,8 @@ hand-written vanilla widgets (`script_editor.js`'s browse button,
 at all (linked at runtime via a plain `<link>` tag, not `import`ed) --
 `scripts/compile-vanilla-sass.mjs` compiles it to `web/fl_shared.css`
 as its own tiny build step (wired into `npm run build`/`dev`), and it
-`@import`s `src/sass/variables`/`placeholders` explicitly since it
-doesn't go through Vite's additionalData.
+`@import`s `src/sass/app` explicitly since it doesn't go through Vite's
+additionalData.
 
 ### Developing the UI without ComfyUI running
 

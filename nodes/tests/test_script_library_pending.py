@@ -106,10 +106,12 @@ def test_role_recast_makes_a_previously_fresh_line_pending_again():
 
 
 def test_mark_role_stale_unreadies_and_deletes_final_file_for_affected_ready_script():
+    """"Ready" is now purely a disk fact -- a script is ready exactly when
+    its final stitched file already sits in _audio/, no separate flag to
+    set (see scripts_ready)."""
     root, act_folder = _make_project()
     try:
         _write_script(act_folder, "Scene_speakers.txt", ["narrator | calm | Hello."])
-        sl.set_script_ready(act_folder, "Scene_speakers.txt", True)
         audio_dir = os.path.join(act_folder, "_audio")
         os.makedirs(audio_dir)
         open(os.path.join(audio_dir, "Scene.wav"), "w").close()
@@ -120,7 +122,7 @@ def test_mark_role_stale_unreadies_and_deletes_final_file_for_affected_ready_scr
         result = sl.mark_role_stale(root, "narrator", "_speakers.txt")
         assert len(result["changed"]) == 1
         assert result["changed"][0]["was_ready"] is True
-        assert "Scene_speakers.txt" not in sl.scripts_ready(act_folder)
+        assert "Scene_speakers.txt" not in sl.scripts_ready(act_folder, ["Scene_speakers.txt"], "_speakers.txt")
         assert not os.path.isfile(os.path.join(audio_dir, "Scene.wav"))
     finally:
         shutil.rmtree(root)

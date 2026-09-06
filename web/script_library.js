@@ -7,9 +7,10 @@ import { openRolesEditor } from "./roles_editor.js";
 import { mountScriptLibraryPanel } from "./script_library_panel.js";
 
 // FL CosyVoice3 Script Library: folder_path is a PROJECT ROOT. Shows every
-// "Act01"/"Act02"/... subfolder and its "_speakers.txt" scripts as a
-// checkbox tree. Clicking a script's name previews it (this node always
-// outputs exactly one script's content).
+// "Act01"/"Act02"/... subfolder and its dialog scripts (every .txt file,
+// unless script_filter narrows that down) as a checkbox tree. Clicking a
+// script's name previews it (this node always outputs exactly one script's
+// content).
 //
 // Checkboxes (plus the All/None/Invert row) mark which scripts to queue.
 // There is deliberately NO separate "queue" button -- the ordinary
@@ -235,20 +236,20 @@ function findPromptEntry(prompt, node, classType) {
 const AUDIO_SAVER_CLASS_RE = /saveaudio|audiosave/i;
 
 // A single-line re-voice only needs Post-Process's own per-line file write
-// (_audio\lines\<script>\<position>_<hash>.wav, via
-// line_index_override) -- our own
-// "✅ Done" (stitch_lines) owns producing the actual final scene file now,
-// entirely server-side. If the user's graph still has a Save Audio node
-// wired downstream of Post-Process (needed for a FULL render to produce a
-// usable draft file), queuing the WHOLE graph for just one line makes that
-// SAME Save Audio node fire too -- writing this one short line's audio into
-// _audio\ under the script's own filename_prefix, where the mini player's
-// "latest file wins" match (see nodes/script_library.py's scripts_with_audio
-// / web/line_editor.js's loadAudio) then mistakes it for the actual
-// full-scene take. Dropping any audio-saver node from THIS ONE queued
-// prompt (never from the graph itself) avoids that -- these are always
-// terminal/sink nodes (no outputs), so nothing else in the prompt can be
-// depending on one being present.
+// (_audio\lines\<script>\<position>_<hash>.wav, via line_index_override) --
+// "✅ Done" (stitch_lines) owns producing the actual final scene file,
+// entirely server-side; Post-Process itself never stitches anything (see
+// nodes/audio_post_process.py's own docstring). If the user's graph still
+// has a Save Audio node wired downstream of Post-Process (e.g. for a quick
+// listen while working), queuing the WHOLE graph for just one line makes
+// that SAME Save Audio node fire too -- writing this one short line's audio
+// into _audio\ under the script's own filename_prefix, where the mini
+// player's "latest file wins" match (see nodes/script_library.py's
+// scripts_with_audio / web/line_editor.js's loadAudio) then mistakes it for
+// the actual full-scene take. Dropping any audio-saver node from THIS ONE
+// queued prompt (never from the graph itself) avoids that -- these are
+// always terminal/sink nodes (no outputs), so nothing else in the prompt
+// can be depending on one being present.
 function stripDownstreamAudioSavers(prompt) {
     for (const key of Object.keys(prompt)) {
         const entry = prompt[key];

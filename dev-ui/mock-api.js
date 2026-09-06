@@ -85,9 +85,21 @@ function fakeParentOf(norm) {
     return idx > 0 ? norm.slice(0, idx) : null;
 }
 
+// Mirrors nodes/script_library.py's strip_suffix_and_ext against this
+// dev fixture set's own "_speakers.txt" naming -- just enough to derive a
+// base_name a script's own readiness can be looked up by, same as the real
+// backend does from stitch_lines/delete_audio's own base_name.
+function fixtureBaseName(filename) {
+    return filename.replace(/_speakers\.txt$/i, "").replace(/\.txt$/i, "");
+}
+
 export function mockComfyApiPlugin() {
     const files = makeFileStore();
-    let readyScripts = [];
+    // "Ready" is a disk fact now (see nodes/script_library.py's
+    // scripts_ready) -- no more /set_ready flag to flip, so this mock
+    // tracks it the same way: stitch_lines adds a base_name, delete_audio
+    // removes one.
+    const readyBaseNames = new Set();
 
     return {
         name: "mock-comfy-api",
@@ -161,27 +173,26 @@ export function mockComfyApiPlugin() {
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/script_library/scan" && req.method === "GET") {
+                    const scripts = ["Second_speakers.txt", "Test_speakers.txt"];
                     return sendJson(res, 200, {
                         instructions: { entries: readFixtureJson("_instructions.json", { instructions: [] }).instructions || [] },
                         roles: { entries: readFixtureJson("_roles.json", { roles: [] }).roles || [], path: "C:\\fake\\project\\_roles.json" },
-                        scripts: ["Second_speakers.txt", "Test_speakers.txt"],
-                        ready_scripts: readyScripts,
+                        scripts,
+                        ready_scripts: scripts.filter((f) => readyBaseNames.has(fixtureBaseName(f))),
                     });
                 }
 
-                if (url.pathname === "/fl_cosyvoice3/script_library/set_ready" && req.method === "POST") {
-                    const body = JSON.parse((await readBody(req)) || "{}");
-                    if (body.ready) readyScripts = [...new Set([...readyScripts, body.filename])];
-                    else readyScripts = readyScripts.filter((f) => f !== body.filename);
-                    console.log(`[mock-comfy-api] set_ready ${body.filename} -> ${body.ready}`);
-                    return sendJson(res, 200, { ready: body.ready, ready_scripts: readyScripts });
-                }
-
                 if (url.pathname === "/fl_cosyvoice3/script_library/stitch_lines" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    readyBaseNames.add(body.base_name);
+                    console.log(`[mock-comfy-api] stitch_lines -> ${body.base_name} marked ready`);
                     return sendJson(res, 200, { ok: true });
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/script_library/delete_audio" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    readyBaseNames.delete(body.base_name);
+                    console.log(`[mock-comfy-api] delete_audio -> ${body.base_name} un-marked`);
                     return sendJson(res, 200, { deleted: [] });
                 }
 

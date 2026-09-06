@@ -11,7 +11,9 @@
 // through Vite's component pipeline -- this file isn't part of any Vue
 // SFC or JS import graph Vite processes, so it can't rely on
 // vite.config.js's additionalData auto-import the way every component's
-// own .sass can; it @imports the same shared tokens explicitly instead.
+// own .sass can; it @imports the same src/sass/app.sass manifest
+// explicitly instead (see that file for why it's the one place this list
+// lives).
 //
 // Per-instance/dynamic values (computed positions, per-row accent colors,
 // selected/hover state toggles) still get set directly via element.style.*
@@ -21,8 +23,7 @@
 // ui_kit.js belong here -- anything else is a leftover from a
 // since-migrated vanilla file and should be deleted, not kept "just in
 // case".
-@import "../src/sass/variables"
-@import "../src/sass/placeholders"
+@import "../src/sass/app"
 
 .fl-btn
     cursor: pointer

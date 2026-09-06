@@ -15,7 +15,7 @@ import { ensureStylesLinked } from "../shared/styles_link.js";
  * @param {string} opts.root - absolute path to the project root (contains _roles.json).
  * @param {string} [opts.suffix] - script_filter, passed through to the project-wide stale-marking scan.
  */
-export function openRolesEditor({ root, suffix = "_speakers.txt" }) {
+export function openRolesEditor({ root, suffix = "" }) {
     ensureStylesLinked(import.meta.url);
 
     const container = document.createElement("div");

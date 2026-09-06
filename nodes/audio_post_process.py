@@ -6,18 +6,21 @@ tends to leave at the start (and often the end) of a clip (see
 COSYVOICE_ONSET_CLICK.md), smooths the cut with a short fade, and
 normalizes loudness to a target RMS (with a peak safety ceiling).
 
-Works the same way whether `audio` is:
-- a single AUDIO from any synthesis node (Zero-Shot, Cross-Lingual, Speaker
-  Clone, Instruct2, Voice Conversion, Speaker Instruct2) -- processed and
-  returned as-is, nothing to stitch.
-- a LIST of AUDIO, e.g. FL CosyVoice3 Speaker Instruct2 Dialog's per-line
-  output (one item per script line) -- each item is trimmed/faded/
-  normalized individually, then all of them are concatenated back-to-back
-  with pause_between_lines of silence inserted between each, into one
-  track.
+Works the same way whether `audio` is a single AUDIO from any synthesis
+node, or a LIST of AUDIO (e.g. FL CosyVoice3 Speaker Instruct2 Dialog's
+per-line output, one item per script line) -- each item is trimmed/faded/
+normalized and written to its own per-line file INDEPENDENTLY, never
+concatenated. Building the one final scene track is exclusively the "✅
+Done" button's job now (nodes/script_library.py's stitch_lines, reading
+these per-line files back once every one of them matches its line's
+current content) -- this node used to ALSO concatenate every item into one
+track + write a timing manifest on every run, which was pure duplicate
+work stitch_lines already does correctly (reading the verified, hash-
+matched file per position, not whatever this node happened to be handed
+this particular run), and just needed to be kept in sync by hand.
 
-This is what lets the same trim/normalize/stitch logic serve every
-synthesis node in the plugin instead of being locked inside Dialog alone.
+This is what lets the same trim/normalize logic serve every synthesis node
+in the plugin instead of being locked inside Dialog alone.
 
 The one thing this node can NOT do that Dialog's own internal onset trim
 still does: catch a click sitting at an INTERNAL chunk boundary inside one
@@ -59,13 +62,15 @@ except (ImportError, ValueError):
 
 class FL_CosyVoice3_AudioPostProcess:
     """Trim onset click (start + end) + fade edges + normalize loudness for one
-    AUDIO, or a whole list of them (auto-stitched with pause_between_lines into
-    a single track). Also reports what it did per item via the `report` output."""
+    AUDIO, or a whole list of them, EACH INDEPENDENTLY -- never concatenated.
+    Also reports what it did per item via the `report` output."""
 
     RETURN_TYPES = ("AUDIO", "STRING")
     RETURN_NAMES = ("audio", "report")
+    OUTPUT_IS_LIST = (True, False)
     OUTPUT_TOOLTIPS = (
-        "The processed (and, if given a list, stitched) audio.",
+        "The processed audio, one item per input item -- NOT concatenated (see the "
+        "node's own docstring for why stitching moved to the \"✅ Done\" button).",
         "Per-item report: how much was trimmed off each end, whether it was faded, "
         "and the loudness gain applied. Also viewable full-screen via the node's own "
         "\"📄 Report\" button, no need to wire this up just to read it.",
@@ -80,8 +85,9 @@ class FL_CosyVoice3_AudioPostProcess:
             "required": {
                 "audio": ("AUDIO", {
                     "tooltip": "Одно аудио с любой ноды синтеза, или список (например, выход FL "
-                               "CosyVoice3 Speaker Instruct2 Dialog) — тогда каждый элемент "
-                               "обрабатывается отдельно, а затем все склеиваются в один трек."
+                               "CosyVoice3 Speaker Instruct2 Dialog) — каждый элемент "
+                               "обрабатывается и сохраняется НЕЗАВИСИМО, без склейки в один трек "
+                               "(склейка теперь только по кнопке «✅ Done»)."
                 }),
                 "trim_line_onset": ("BOOLEAN", {
                     "default": True,
@@ -111,17 +117,12 @@ class FL_CosyVoice3_AudioPostProcess:
                 "normalize_loudness": ("BOOLEAN", {
                     "default": True,
                     "tooltip": "Выравнивает громкость каждого клипа к общему целевому RMS (с "
-                               "потолком по пикам, чтобы не клипповало) -- до склейки."
+                               "потолком по пикам, чтобы не клипповало)."
                 }),
                 "target_rms_db": ("FLOAT", {
                     "default": -20.0, "min": -40.0, "max": -6.0, "step": 1.0,
                     "tooltip": "Целевой уровень громкости (RMS, dBFS), к которому приводится "
                                "каждый клип."
-                }),
-                "pause_between_lines": ("FLOAT", {
-                    "default": 0.3, "min": 0.0, "max": 3.0, "step": 0.05,
-                    "tooltip": "Тишина между клипами при склейке. Ни на что не влияет, если "
-                               "пришёл всего один клип -- склеивать не с чем."
                 }),
             },
             "optional": {
@@ -129,22 +130,18 @@ class FL_CosyVoice3_AudioPostProcess:
                     "forceInput": True,
                     "tooltip": "Выход line_texts_json от FL CosyVoice3 Speaker Instruct2 Dialog "
                                "(JSON-массив текста каждой строки, тем же порядком, что и audio). "
-                               "Нужен только вместе с script_folder + script_base_name ниже -- "
-                               "тогда узел пишет файл тайминга по строкам (используется для "
-                               "синхронизации проигрывания со списком строк в редакторе). Без него "
-                               "склейка/обработка работает как обычно, файл тайминга просто не "
-                               "создаётся."
+                               "Используется как запасной источник для хеша имени файла, если "
+                               "line_hashes_json ниже не подключён."
                 }),
                 "script_folder": ("STRING", {
                     "forceInput": True,
                     "tooltip": "Выход folder_path от FL CosyVoice3 Script Library -- папка акта, "
-                               "где лежит _audio\\. Файл тайминга пишется в "
-                               "<script_folder>\\_audio\\timing\\<script_base_name>.json."
+                               "где лежит _audio\\lines\\<script>\\, куда пишется файл каждой строки."
                 }),
                 "script_base_name": ("STRING", {
                     "forceInput": True,
                     "tooltip": "Выход filename от FL CosyVoice3 Script Library -- имя скрипта без "
-                               "суффикса/расширения, используется как имя файла тайминга."
+                               "суффикса/расширения, задаёт папку _audio\\lines\\<это имя>\\."
                 }),
                 "line_index_override": ("INT", {
                     "forceInput": True,
@@ -160,10 +157,10 @@ class FL_CosyVoice3_AudioPostProcess:
                     "tooltip": "Выход line_hashes_json от FL CosyVoice3 Script Library -- JSON-массив "
                                "короткого хеша содержимого (голос+instruct+текст) каждой строки, тем "
                                "же порядком, что и audio. Записывается в имя каждого файла "
-                               "(<позиция>_<версия>_<хеш>.wav) -- редактор строк сравнивает его с "
-                               "хешем ТЕКУЩЕГО содержимого строки, чтобы понять, нужна ли переозвучка, "
-                               "без отдельного файла состояния. Не подключён -- используется хеш "
-                               "только от текста (без голоса/instruct), это работает, но менее точно."
+                               "(<позиция>_<хеш>.wav) -- редактор строк сравнивает его с хешем "
+                               "ТЕКУЩЕГО содержимого строки, чтобы понять, нужна ли переозвучка, без "
+                               "отдельного файла состояния. Не подключён -- используется хеш только "
+                               "от текста (без голоса/instruct), это работает, но менее точно."
                 }),
             }
         }
@@ -177,7 +174,6 @@ class FL_CosyVoice3_AudioPostProcess:
         fade_ms: List[float],
         normalize_loudness: List[bool],
         target_rms_db: List[float],
-        pause_between_lines: List[float],
         line_texts_json: List[str] = [""],
         script_folder: List[str] = [""],
         script_base_name: List[str] = [""],
@@ -193,7 +189,6 @@ class FL_CosyVoice3_AudioPostProcess:
         fade_len_ms = fade_ms[0]
         do_normalize = normalize_loudness[0]
         target_db = target_rms_db[0]
-        pause_s = pause_between_lines[0]
         line_texts_str = (line_texts_json[0] or "").strip()
         line_hashes_str = (line_hashes_json[0] or "").strip()
         timing_folder = (script_folder[0] or "").strip()
@@ -204,17 +199,7 @@ class FL_CosyVoice3_AudioPostProcess:
             raise ValueError("FL CosyVoice3 Audio Post-Process: no audio received.")
 
         sample_rate = audio[0]["sample_rate"]
-        pause_samples = int(pause_s * sample_rate)
 
-        # Per-line start/end (seconds) in the FINAL stitched track, so the
-        # line editor can highlight/auto-scroll to the currently-playing
-        # line and let a "▶" jump straight to it. Cheap to collect here --
-        # this loop already walks every item to build `pieces` below, this
-        # just also tracks a running sample cursor alongside it. Written out
-        # near the end of this function, only if the caller wired enough
-        # info to know where/what to name the file (see INPUT_TYPES).
-        cursor_samples = 0
-        timing_lines = []
         try:
             line_texts = json.loads(line_texts_str) if line_texts_str else []
         except json.JSONDecodeError:
@@ -225,11 +210,12 @@ class FL_CosyVoice3_AudioPostProcess:
             line_hashes = []
 
         # Per-line files, one clip per item -- lets the line editor's "🔁
-        # Переозвучить" button resynthesize just ONE line later and re-stitch
-        # from these instead of re-running the whole script (see
-        # nodes/_line_audio.py for the <position>_<version>_<hash>.wav naming
-        # this writes). index_override (>= 0) is set by that same feature
-        # when re-voicing a single line through this same node: audio always
+        # Переозвучить" button resynthesize just ONE line later, and "✅
+        # Done" stitch every line's file into the final track (see
+        # nodes/_line_audio.py for the <position>_<hash>.wav naming this
+        # writes, and nodes/script_library.py's stitch_lines for the actual
+        # stitch). index_override (>= 0) is set by the re-voice feature when
+        # re-voicing a single line through this same node: audio always
         # arrives as a length-1 list in that case, and the enumerate()
         # position below (always 0) is NOT the line's real position in the
         # script, so it overrides which position gets written -- everything
@@ -267,8 +253,9 @@ class FL_CosyVoice3_AudioPostProcess:
                 print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't clean up stale line files: {e}")
                 lines_dir = None
 
-        pieces = []
+        result_audios = []
         report_lines = [f"{len(audio)} item(s), sample_rate={sample_rate}"]
+        total_samples = 0
         for i, item in enumerate(audio):
             wav = item["waveform"]
             if wav.device != torch.device("cpu"):
@@ -325,54 +312,17 @@ class FL_CosyVoice3_AudioPostProcess:
                 except OSError as e:
                     print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't save line {position}: {e}")
 
-            line_samples = wav.shape[-1]
-            timing_lines.append({
-                "index": position,
-                "start": round(cursor_samples / sample_rate, 3),
-                "end": round((cursor_samples + line_samples) / sample_rate, 3),
-                "text": line_texts[i] if i < len(line_texts) else "",
-            })
-            cursor_samples += line_samples
+            total_samples += wav.shape[-1]
+            result_audios.append(tensor_to_comfyui_audio(wav, sample_rate))
 
-            pieces.append(wav)
-            if pause_samples > 0 and i < len(audio) - 1:
-                pause_shape = wav.shape[:-1] + (pause_samples,)
-                pieces.append(wav.new_zeros(pause_shape))
-                cursor_samples += pause_samples
-
-        combined = torch.cat(pieces, dim=-1) if len(pieces) > 1 else pieces[0]
-        duration = combined.shape[-1] / sample_rate
-        report_lines.append(f"Total: {duration:.2f}s")
+        report_lines.append(f"Total (no gaps, not stitched): {total_samples / sample_rate:.2f}s")
         report = "\n".join(report_lines)
-        print(f"[FL CosyVoice3 AudioPostProcess] Processed {len(audio)} item(s) -> {duration:.2f}s")
+        print(f"[FL CosyVoice3 AudioPostProcess] Processed {len(audio)} item(s), not stitched")
 
-        # Timing manifest for the line editor's playback sync (highlight +
-        # auto-scroll + "▶ jump to this line", see web/line_editor.js).
-        # Written under a fixed name per SCRIPT (not per rendered take,
-        # which Save Audio names independently and this node has no way to
-        # predict) -- so it's always "the timing for the latest render of
-        # this script", overwritten each time. Silently skipped if the
-        # caller didn't wire enough to know where/what to name it (e.g. a
-        # single non-Dialog clip with nothing to time-sync), AND skipped
-        # for a single re-voiced line (index_override >= 0): this run only
-        # ever sees ONE line, so a manifest built from it would clobber
-        # every other line's timing -- the re-voice merge endpoint
-        # (nodes/script_library.py) rebuilds the full manifest afterward
-        # from every line's actual file once this one is back in place.
-        if line_texts and timing_folder and timing_base_name and not (len(audio) == 1 and index_override >= 0):
-            try:
-                timing_dir = os.path.join(timing_folder, "_audio", "timing")
-                os.makedirs(timing_dir, exist_ok=True)
-                timing_path = os.path.join(timing_dir, f"{timing_base_name}.json")
-                with open(timing_path, "w", encoding="utf-8") as f:
-                    json.dump({"lines": timing_lines}, f, ensure_ascii=False, indent=2)
-                print(f"[FL CosyVoice3 AudioPostProcess] Wrote timing manifest: {timing_path}")
-            except OSError as e:
-                print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't write timing manifest: {e}")
-
-        result_audio = tensor_to_comfyui_audio(combined, sample_rate)
         # "ui" surfaces the report to the node's own "📄 Report" full-screen
         # viewer (web/audio_post_process.js, via onExecuted) without forcing
         # the user to wire the `report` output into a separate text node
         # just to read it -- "result" is the normal (audio, report) tuple.
-        return {"ui": {"report": [report]}, "result": (result_audio, report)}
+        # `audio` is a LIST here (OUTPUT_IS_LIST[0] = True) -- one item per
+        # input item, never concatenated (see this node's own docstring).
+        return {"ui": {"report": [report]}, "result": (result_audios, report)}

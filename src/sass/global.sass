@@ -1,15 +1,3 @@
-// Truly global (unscoped) CSS -- imported exactly once via
-// src/shared/styles_link.js, the same way the PrimeVue theme itself is.
-//
-// This exists because Vue's `<style scoped>` only reaches elements
-// actually rendered under that component's own template root -- the role
-// info popover (Line Editor) is a small `v-if`-toggled div at the END of
-// LineEditorApp's template, which IS under its scoped root, so in
-// principle scoping would work fine for it. It lives here instead, in one
-// clearly-labeled place, because a future editor showing a similar
-// hover-info popover shouldn't have to duplicate these rules again --
-// see _placeholders.sass's own reasoning for the same "don't let visually
-// identical patterns drift apart across files" motivation.
 .role-info-popover
     position: fixed
     z-index: 100000

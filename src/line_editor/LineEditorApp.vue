@@ -7,7 +7,6 @@ import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
-import PickPanel from "./PickPanel.vue";
 import { usePanelWidth } from "../shared/panel_width.js";
 import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
@@ -21,7 +20,7 @@ import {
 const props = defineProps({
     folder: { type: String, required: true },
     filename: { type: String, required: true },
-    suffix: { type: String, default: "_speakers.txt" },
+    suffix: { type: String, default: "" },
     checkedApi: { type: Object, default: null }, // {isChecked(fname), setChecked(fname, val)}
     revoiceApi: { type: Object, default: null }, // {revoiceLine({linePosition, speaker, instruct, text}) => Promise}
     onClose: { type: Function, required: true },
@@ -145,7 +144,6 @@ const audioElRef = ref(null); // mode 2's <audio> element
 const rowsContainerEl = ref(null);
 const rowEls = new Map(); // row.__key -> row root element (scroll/focus on add)
 const textareaEls = new Map(); // row.__key -> the .fl-textarea DOM node
-const pickPanelRef = ref(null);
 
 const fullPath = computed(() => joinPath(props.folder, filename.value));
 const audioFolder = computed(() => joinPath(props.folder, "_audio"));
@@ -645,12 +643,24 @@ function onTextPaste(row, el, e) {
     onTextInput(row, el);
 }
 
+function roleEntryFor(row) {
+    return roleEntries.value.find((e) => e.code === row.speaker);
+}
+
 function speakerFileTitle(row) {
-    const entry = roleEntries.value.find((e) => e.code === row.speaker);
+    const entry = roleEntryFor(row);
     const file = resolveSpeakerFile(row.speaker);
     if (entry) return `Change "${entry.code}"'s speaker for the whole play (currently ${file || "unset"})`;
     if (file) return `"${row.speaker}" is a literal preset, not a role code -- edit it directly in the speaker field to change it`;
     return "No speaker set on this line yet";
+}
+
+// Sub-label line for the speaker-file Dropdown's #option template -- which
+// role(s) already use this preset, same info openSpeakerRecastPicker's old
+// PickPanel showed underneath each preset (see speakerUsageIndex above).
+function speakerUsageSubLabel(preset) {
+    const codes = speakerUsageIndex()[preset] || [];
+    return codes.length ? `used by: ${codes.join(", ")} -- ${codes.length} role(s)` : "not used by any role yet";
 }
 
 function instructNoteFor(row) {
@@ -665,30 +675,19 @@ function roleOptionSubLabel(entry) {
     return [entry.name, entry.speaker, entry.description].filter(Boolean).join(" -- ");
 }
 
-function openSpeakerRecastPicker(event, row) {
-    const entry = roleEntries.value.find((e) => e.code === row.speaker);
+// Reassigns a role's voice for the WHOLE project (see saveRolesJson) --
+// triggered by picking/typing a new value in the speaker-file Dropdown.
+// No-op if `row.speaker` isn't a known role code (the Dropdown is disabled
+// in that case, see the template).
+async function onSpeakerFileRecast(row, newPreset) {
+    const entry = roleEntryFor(row);
     if (!entry) return;
-    if (!presets.value.length) {
-        setStatus("No saved speaker presets found (FL CosyVoice3 Save Speaker)");
-        return;
+    entry.speaker = newPreset;
+    const ok = await saveRolesJson();
+    if (ok) {
+        setStatus(`"${entry.code}" now uses "${newPreset}" for the whole play`);
+        await notifyRoleSpeakerChanged(entry.code);
     }
-    const usage = speakerUsageIndex();
-    pickPanelRef.value.open(event, {
-        items: presets.value,
-        getLabel: (p) => p,
-        getSubLabel: (p) => {
-            const codes = usage[p] || [];
-            return codes.length ? `used by: ${codes.join(", ")} -- ${codes.length} role(s)` : "not used by any role yet";
-        },
-        onPick: async (p) => {
-            entry.speaker = p;
-            const ok = await saveRolesJson();
-            if (ok) {
-                setStatus(`"${entry.code}" now uses "${p}" for the whole play`);
-                await notifyRoleSpeakerChanged(entry.code);
-            }
-        },
-    });
 }
 
 function showRoleInfoPopover(anchorEl, code) {
@@ -876,13 +875,18 @@ async function loadAudio({ silent = false } = {}) {
     }
 }
 
-const deleteAudioDisabled = computed(() => !audioState.best || isCurrentlyReady.value);
+// A script is "ready" purely because its final stitched file exists in
+// _audio\ (see nodes/script_library.py's scripts_ready -- no more separate
+// _ready.json flag), so deleting that file here IS un-marking done, not
+// just a "before Done" convenience any more -- readyScripts gets the same
+// update toggleDone's un-mark path makes.
+const deleteAudioDisabled = computed(() => !audioState.best);
 
 async function deleteAudio() {
-    if (!audioState.best || isCurrentlyReady.value) return;
+    if (!audioState.best) return;
     const ok = await confirmAsync({
         title: "Delete rendered audio?",
-        message: `Deletes every _audio\\ file matching "${audioBaseName.value}" (currently: ${audioState.best}).`,
+        message: `Deletes every _audio\\ file matching "${audioBaseName.value}" (currently: ${audioState.best})${isCurrentlyReady.value ? " -- this also un-marks the script as done" : ""}.`,
         okText: "Delete",
         cancelText: "Cancel",
     });
@@ -896,6 +900,7 @@ async function deleteAudio() {
         const data = await resp.json();
         if (data.error) { setStatus(`Error: ${data.error}`); return; }
         setStatus(`Deleted ${data.deleted.length} audio file(s)`);
+        readyScripts.value = readyScripts.value.filter((f) => f !== filename.value);
         lastAudioFingerprint = null;
         loadAudio();
     } catch (e) {
@@ -913,6 +918,10 @@ const doneTitle = computed(() => (
         : allRowsVoiced.value ? "Stitch every line into the final file and mark this script done / ready to release"
         : "Every line needs to be voiced first"
 ));
+// "Done" has no separate flag any more (see nodes/script_library.py's
+// scripts_ready) -- readiness IS the final stitched file existing in
+// _audio\, so marking done just stitches it, and un-marking just deletes
+// it (the same operation "Delete audio" above performs).
 async function toggleDone() {
     const newReady = !isCurrentlyReady.value;
     if (newReady && !allRowsVoiced.value) {
@@ -942,27 +951,36 @@ async function toggleDone() {
             setStatus(`Stitch failed: ${e}`);
             return;
         }
+        readyScripts.value = [...new Set([...readyScripts.value, filename.value])];
+        props.checkedApi?.setChecked(filename.value, false);
+        selectChecked.value = false;
+        setStatus("Stitched and marked done");
+        lastAudioFingerprint = null;
+        lastTimingMtime = null;
+        loadAudio();
+        loadTiming();
+        return;
     }
+
+    const ok = await confirmAsync({
+        title: "Unmark done?",
+        message: "Deletes the final stitched file (its per-line takes are untouched) so this script goes back to editable.",
+        okText: "Unmark",
+        cancelText: "Cancel",
+    });
+    if (!ok) return;
     try {
-        const resp = await fetch(`${SCAN_API}/set_ready`, {
+        const resp = await fetch(`${SCAN_API}/delete_audio`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folder: props.folder, filename: filename.value, ready: newReady }),
+            body: JSON.stringify({ folder: props.folder, base_name: audioBaseName.value, filename: filename.value }),
         });
         const data = await resp.json();
         if (data.error) { setStatus(`Error: ${data.error}`); return; }
-        readyScripts.value = data.ready_scripts || [];
-        if (newReady) {
-            props.checkedApi?.setChecked(filename.value, false);
-            selectChecked.value = false;
-        }
-        setStatus(newReady ? "Stitched and marked done" : "Unmarked -- can be edited/re-voiced again");
-        if (newReady) {
-            lastAudioFingerprint = null;
-            lastTimingMtime = null;
-            loadAudio();
-            loadTiming();
-        }
+        readyScripts.value = readyScripts.value.filter((f) => f !== filename.value);
+        setStatus("Unmarked -- can be edited/re-voiced again");
+        lastAudioFingerprint = null;
+        loadAudio();
     } catch (e) {
         setStatus(`Error: ${e}`);
     }
@@ -1170,7 +1188,7 @@ onBeforeUnmount(() => {
                     <Button
                         label="Delete audio" text size="small"
                         :disabled="deleteAudioDisabled"
-                        :title="isCurrentlyReady ? 'Marked ready to release -- unmark it (Done) before deleting audio' : 'Delete the rendered audio for this script'"
+                        :title="isCurrentlyReady ? 'Delete the final file -- this also un-marks the script as done' : 'Delete the rendered audio for this script'"
                         @click="deleteAudio"
                         icon="pi pi-times-circle"
                     />
@@ -1283,27 +1301,39 @@ onBeforeUnmount(() => {
                             </Dropdown>
                         </InputGroup>
 
-                        <Button
-                            v-if="revoiceApi && !isCurrentlyReady"
-                            class="revoice-btn"
-                            text size="small"
-                            :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
-                            :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
-                            :disabled="pendingRevoiceRows.has(row)"
-                            :title="revoiceTitle(row, index)"
-                            @click="revoiceRow(row, index)"
-                        />
-
-                        <Button
-                            class="speaker-file-btn"
-                            text size="small"
-                            :label="resolveSpeakerFile(row.speaker) || '(no speaker)'"
-                            :disabled="!roleEntries.find((e) => e.code === row.speaker)"
-                            :title="speakerFileTitle(row)"
-                            @click="openSpeakerRecastPicker($event, row)"
-                        />
-
-                        <span class="role-info-btn" @mouseenter="showRoleInfoPopover($event.target, row.speaker)" @mouseleave="hideRoleInfoPopover">ℹ</span>
+                        <InputGroup class="speaker-file-group">
+                            <Button
+                                v-if="revoiceApi && !isCurrentlyReady"
+                                class="revoice-btn"
+                                text size="small"
+                                :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
+                                :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
+                                :disabled="pendingRevoiceRows.has(row)"
+                                :title="revoiceTitle(row, index)"
+                                @click="revoiceRow(row, index)"
+                            />
+                            <Dropdown
+                                :model-value="roleEntryFor(row)?.speaker || ''"
+                                :options="presets"
+                                editable
+                                filter
+                                placeholder="(no speaker)"
+                                class="speaker-file-dropdown"
+                                :disabled="!roleEntryFor(row)"
+                                :title="speakerFileTitle(row)"
+                                @update:model-value="onSpeakerFileRecast(row, $event)"
+                            >
+                                <template #option="{ option }">
+                                    <div class="dropdown-option-label">{{ option }}</div>
+                                    <div class="dropdown-option-sublabel">{{ speakerUsageSubLabel(option) }}</div>
+                                </template>
+                            </Dropdown>
+                            <InputGroupAddon
+                                class="role-info-btn"
+                                @mouseenter="showRoleInfoPopover($event.target, row.speaker)"
+                                @mouseleave="hideRoleInfoPopover"
+                            ><i class="pi pi-info-circle" /></InputGroupAddon>
+                        </InputGroup>
 
                         <div class="spacer" />
                         <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
@@ -1325,7 +1355,6 @@ onBeforeUnmount(() => {
         </div>
     </Dialog>
 
-    <PickPanel ref="pickPanelRef" />
     <ConfirmDialog />
 
     <div v-if="roleInfoPopover.visible" class="role-info-popover" :style="{ left: `${roleInfoPopover.left}px`, top: `${roleInfoPopover.top}px` }">

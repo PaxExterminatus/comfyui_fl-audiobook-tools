@@ -9,7 +9,7 @@ for a real example):
 
     MyPlay/                          <- folder_path points here
         _roles.json                  <- catalog of characters (see below)
-        _instructions.json           <- catalog of instruct2 phrases already used, per role
+        _instruct_categories.json    <- catalog of instruct2 phrases by emotional register (see below)
         Act01/
             Scene 0101 Something.txt    (a dialog script: "preset | instruct | line text",
                                           one turn per line)
@@ -28,10 +28,17 @@ needs to know role codes exist. Edit "speaker" per role -- e.g. to re-cast
 a character to a different voice -- via the "Roles" button (opens
 web/roles_editor.js), which writes straight back to this file.
 
-_instructions.json shape: {"instructions": [{"role", "text", "note",
-"used_in"}, ...]} -- "role" matches a role "code" from _roles.json; this is
-a phrase bank of instruct2 text already used for that role, for consistency
-when writing new lines, not something auto-substituted into scripts.
+_instruct_categories.json shape: {"categories": [{"name", "title", "when",
+"examples"}, ...]} -- a phrase bank grouped by emotional register rather
+than by role (the same register fits any character in the right moment,
+e.g. "cold_menace" or "fear_panic_horror"): "name" is a stable machine key,
+"title" the human-readable label, "when" a short guide for which scene/beat
+calls for this register, "examples" a list of ready-to-use instruct2
+phrases in that register. Purely a picker aid for the line editor's
+instruct field (see src/line_editor/LineEditorApp.vue's instruct Dropdown)
+-- never auto-substituted into a script, and a line's own instruct text is
+free-form either way, whether or not it happens to match one of these
+examples.
 
 This node is read-only browsing: it re-scans <folder_path>/<act> and
 re-reads script_file fresh from disk on every run (see IS_CHANGED), the same
@@ -754,7 +761,7 @@ if _HAS_SERVER:
         scripts, filter_applied = list_scripts(folder, suffix)
         ready_scripts = scripts_ready(folder, scripts, suffix)
         roles_path, roles_count, _, roles_list = find_db_file(folder, "_roles.json", "roles")
-        instructions_path, instructions_count, _, instructions_list = find_db_file(folder, "_instructions.json", "instructions")
+        categories_path, categories_count, _, categories_list = find_db_file(folder, "_instruct_categories.json", "categories")
 
         return web.json_response({
             "root": root,
@@ -765,7 +772,7 @@ if _HAS_SERVER:
             "ready_scripts": ready_scripts,
             "filter_applied": filter_applied,
             "roles": {"path": roles_path, "count": roles_count, "entries": roles_list} if roles_path else None,
-            "instructions": {"path": instructions_path, "count": instructions_count, "entries": instructions_list} if instructions_path else None,
+            "instruct_categories": {"path": categories_path, "count": categories_count, "entries": categories_list} if categories_path else None,
         })
 
     @routes.get("/fl_cosyvoice3/script_library/line_hashes")
@@ -1000,8 +1007,8 @@ class FL_CosyVoice3_ScriptLibrary:
     one of its "Act01"/"Act02"/... subfolders (see module docstring), and
     that act's dialog scripts (every .txt file by default, or only those
     ending with script_filter if it's set) are listed. Also surfaces the
-    shared _roles.json / _instructions.json catalogs, which live at the
-    project root.
+    shared _roles.json / _instruct_categories.json catalogs, which live at
+    the project root.
 
     The "🔊 Selected/Act/All" buttons (web/script_library.js) don't
     concatenate multiple scripts into one output -- each script gets its
@@ -1041,9 +1048,9 @@ class FL_CosyVoice3_ScriptLibrary:
                 "folder_path": ("STRING", {
                     "default": "",
                     "description": "Path to the PROJECT ROOT folder (the one containing Act01, "
-                                   "Act02, ... subfolders, plus _roles.json / _instructions.json) -- "
-                                   "not a chapter folder directly. Click the browse button below to "
-                                   "pick it, or type the path directly."
+                                   "Act02, ... subfolders, plus _roles.json / "
+                                   "_instruct_categories.json) -- not a chapter folder directly. "
+                                   "Click the browse button below to pick it, or type the path directly."
                 }),
                 "act": ("STRING", {
                     "default": "",

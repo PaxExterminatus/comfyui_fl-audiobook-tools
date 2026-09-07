@@ -108,7 +108,7 @@ function confirmAsync({ title = "Confirm", message = "", okText = "OK", cancelTe
 const visible = ref(true);
 const filename = ref(props.filename);
 const rows = ref([]);
-const instructionEntries = ref([]);
+const instructCategories = ref([]); // [{name, title, when, examples}, ...] from _instruct_categories.json
 const roleEntries = ref([]);
 const rolesJsonPath = ref(null);
 const presets = ref([]);
@@ -707,9 +707,16 @@ function speakerUsageSubLabel(preset) {
     return codes.length ? `used by: ${codes.join(", ")} -- ${codes.length} role(s)` : "not used by any role yet";
 }
 
+// Shows which register a row's CURRENT instruct belongs to, if it happens
+// to match one of _instruct_categories.json's example phrases exactly --
+// purely informational, never required: a line's instruct is free text
+// either way (see that file's docstring in nodes/script_library.py), so a
+// non-matching value (hand-typed, or a phrase from the retired
+// _instructions.json catalog) is left alone and this just returns null.
 function instructNoteFor(row) {
-    const entry = instructionEntries.value.find((e) => (e.text || "").trim() === row.instruct.trim());
-    return entry && entry.note ? entry.note : null;
+    const text = row.instruct.trim();
+    const category = instructCategories.value.find((c) => (c.examples || []).some((ex) => ex.trim() === text));
+    return category ? category.title : null;
 }
 
 // Sub-label line for the speaker Dropdown's #option template (see
@@ -1123,13 +1130,13 @@ async function loadCatalog() {
         const url = `${SCAN_API}/scan?path=${encodeURIComponent(props.folder)}&act=&suffix=${encodeURIComponent(props.suffix)}`;
         const resp = await fetch(url);
         const data = await resp.json();
-        instructionEntries.value = data.instructions?.entries || [];
+        instructCategories.value = data.instruct_categories?.entries || [];
         roleEntries.value = data.roles?.entries || [];
         rolesJsonPath.value = data.roles?.path || null;
         scriptList.value = Array.isArray(data.scripts) ? data.scripts : [];
         readyScripts.value = Array.isArray(data.ready_scripts) ? data.ready_scripts : [];
     } catch (e) {
-        instructionEntries.value = [];
+        instructCategories.value = [];
         roleEntries.value = [];
         rolesJsonPath.value = null;
         scriptList.value = [];
@@ -1350,20 +1357,20 @@ onBeforeUnmount(() => {
                             <InputGroupAddon><i class="pi pi-book" /></InputGroupAddon>
                             <Dropdown
                                 :model-value="row.instruct"
-                                :options="instructionEntries"
-                                option-label="text"
-                                option-value="text"
+                                :options="instructCategories"
+                                option-group-label="title"
+                                option-group-children="examples"
                                 editable
                                 filter
                                 placeholder="Instruct"
                                 title="Instruct text"
                                 @update:model-value="row.instruct = $event; onInstructInput(row)"
                             >
-                                <template #option="{ option }">
-                                    <div>
-                                      <div class="dropdown-option-label">{{ option.text }}</div>
-                                      <div v-if="option.note" class="dropdown-option-sublabel">{{ option.note }}</div>
-                                    </div>
+                                <template #optiongroup="{ option: category }">
+                                    <div class="dropdown-optiongroup-label" :title="category.when">{{ category.title }}</div>
+                                </template>
+                                <template #option="{ option: example }">
+                                    <div class="dropdown-option-label">{{ example }}</div>
                                 </template>
                             </Dropdown>
                             <Button
@@ -1374,7 +1381,6 @@ onBeforeUnmount(() => {
                                 :title="applyInstructTitle(row)"
                                 @click="applyInstructToSameRole(row)"
                             />
-                          <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
                         </InputGroup>
 
                         <InputGroup class="speaker-file-group">
@@ -1414,6 +1420,7 @@ onBeforeUnmount(() => {
                         <div class="spacer" />
                         <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
                     </div>
+                    <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
 
                     <Textarea
                         v-model="row.text"

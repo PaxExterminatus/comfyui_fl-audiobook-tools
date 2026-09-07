@@ -185,6 +185,18 @@
 .dropdown-option-sublabel
     @extend %catalog-option-sublabel
 
+// The instruct Dropdown's category header (see option-group-label) --
+// bolder than a plain option so it reads as a heading over its examples,
+// not just another pickable row. `title` carries the category's "when"
+// guidance as a native tooltip instead of a second visible line, since a
+// group header repeats on every scroll and a full sentence there would
+// dominate the list.
+.dropdown-optiongroup-label
+    @extend %ellipsis
+    font-size: $font-sm
+    font-weight: 600
+    opacity: 0.85
+
 .speaker-file-group
     flex: 0 0 auto
 

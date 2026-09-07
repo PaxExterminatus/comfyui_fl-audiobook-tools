@@ -53,10 +53,10 @@ function readFixtureText(filename, fallback) {
 
 function makeFileStore() {
     const roles = readFixtureJson("_roles.json", { roles: [] });
-    const instructions = readFixtureJson("_instructions.json", { instructions: [] });
+    const instructCategories = readFixtureJson("_instruct_categories.json", { categories: [] });
     return new Map([
         ["_roles.json", JSON.stringify(roles, null, 2)],
-        ["_instructions.json", JSON.stringify(instructions, null, 2)],
+        ["_instruct_categories.json", JSON.stringify(instructCategories, null, 2)],
         ["Test_speakers.txt", readFixtureText("Test_speakers.txt", "")],
     ]);
 }
@@ -70,7 +70,7 @@ const FAKE_FS = {
     "": { dirs: [], files: [], drives: ["C:\\"] },
     "C:\\": { dirs: ["fake"], files: [] },
     "C:\\fake": { dirs: ["project"], files: [] },
-    "C:\\fake\\project": { dirs: ["Act01"], files: ["_roles.json", "_instructions.json"] },
+    "C:\\fake\\project": { dirs: ["Act01"], files: ["_roles.json", "_instruct_categories.json"] },
     "C:\\fake\\project\\Act01": { dirs: [], files: ["Test_speakers.txt"] },
 };
 
@@ -175,7 +175,7 @@ export function mockComfyApiPlugin() {
                 if (url.pathname === "/fl_cosyvoice3/script_library/scan" && req.method === "GET") {
                     const scripts = ["Second_speakers.txt", "Test_speakers.txt"];
                     return sendJson(res, 200, {
-                        instructions: { entries: readFixtureJson("_instructions.json", { instructions: [] }).instructions || [] },
+                        instruct_categories: { entries: readFixtureJson("_instruct_categories.json", { categories: [] }).categories || [] },
                         roles: { entries: readFixtureJson("_roles.json", { roles: [] }).roles || [], path: "C:\\fake\\project\\_roles.json" },
                         scripts,
                         ready_scripts: scripts.filter((f) => readyBaseNames.has(fixtureBaseName(f))),

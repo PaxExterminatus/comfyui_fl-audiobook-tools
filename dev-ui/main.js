@@ -9,7 +9,7 @@ import { mountScriptLibraryPanel } from "../src/script_library/main.js";
 import { openLineEditor } from "../src/line_editor/main.js";
 
 // Any string works -- the mock backend matches requests by filename
-// suffix (_roles.json, _instructions.json, ...), not the literal path.
+// suffix (_roles.json, _instruct_categories.json, ...), not the literal path.
 const FAKE_PROJECT_ROOT = "C:\\fake\\project";
 
 function open() {

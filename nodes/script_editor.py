@@ -48,7 +48,7 @@ if _HAS_SERVER:
             # -Encoding utf8`, Notepad, ...) write UTF-8 WITH a BOM, which
             # a plain "utf-8" read would hand back as a literal U+FEFF
             # character at the start of `content` -- silently breaking
-            # JSON.parse() for _roles.json/_instructions.json with a
+            # JSON.parse() for _roles.json/_instruct_categories.json with a
             # confusing "unexpected token" error nowhere near the real
             # (nonexistent) problem.
             with open(path, "r", encoding="utf-8-sig") as f:

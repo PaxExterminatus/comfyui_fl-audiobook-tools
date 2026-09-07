@@ -1,0 +1,32 @@
+{
+  "categories": [
+    {
+      "name": "cold_menace",
+      "title": "Cold menace / calculation",
+      "when": "A powerful, dangerous character stays in control -- threatens, gives orders, or thinks through next steps without raising their voice.",
+      "examples": [
+        "Speak coldly, calculating his next move.",
+        "Speak coldly, issuing a curt command.",
+        "Speak in a low hiss, seething with menace."
+      ]
+    },
+    {
+      "name": "fear_panic_horror",
+      "title": "Fear / panic / horror",
+      "when": "A character in immediate danger or shock -- a physical fear reaction, not a reflection on it.",
+      "examples": [
+        "Speak breathlessly, panic rising.",
+        "Speak in horrified disbelief.",
+        "Speak in a trembling whisper, choking back a sob."
+      ]
+    },
+    {
+      "name": "calm_resolve",
+      "title": "Calm resolve",
+      "when": "A character has made a decision and speaks firmly, without fear or aggression.",
+      "examples": [
+        "Speak calmly and confidently, everything is decided."
+      ]
+    }
+  ]
+}

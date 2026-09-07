@@ -44,7 +44,7 @@ function mockFetch(overrides = {}) {
         if (u.startsWith("/fl_cosyvoice3/script_library/scan")) {
             return {
                 json: async () => ({
-                    instructions: { entries: overrides.instructions || [] },
+                    instruct_categories: { entries: overrides.instructCategories || [] },
                     roles: { entries: overrides.roles || [], path: "C:\\project\\_roles.json" },
                     scripts: overrides.scriptList || ["Test_speakers.txt"],
                     ready_scripts: overrides.readyScripts || [],

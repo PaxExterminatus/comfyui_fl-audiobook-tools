@@ -116,7 +116,7 @@ re-voice-this-line/Done workflow need it.
 ```
 MyPlay/                          <- Script Library's folder_path
     _roles.json                  <- {"roles": [{"code","name","description","speaker"}, ...]}
-    _instructions.json           <- {"instructions": [{"role","text","note"}, ...]} (optional phrase bank)
+    _instruct_categories.json    <- {"categories": [{"name","title","when","examples"}, ...]} (optional phrase bank, by register)
     Act01/
         Scene 0101 Something.txt   <- "preset | instruct | line text", one turn per line
         _audio/                                        <- created automatically as you render

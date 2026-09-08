@@ -125,7 +125,28 @@ export function mockComfyApiPlugin() {
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/script_library/speaker_presets" && req.method === "GET") {
-                    return sendJson(res, 200, { presets: readFixtureJson("presets.json", []) });
+                    return sendJson(res, 200, { presets: readFixtureJson("presets.json", []), dir: "C:\\fake\\cosyvoice\\speaker" });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/script_library/audio" && req.method === "GET") {
+                    // Real backend streams whatever file the path points at
+                    // (see nodes/script_library.py's audio route) -- there's
+                    // no such file on disk under the FAKE_FS's made-up
+                    // "C:\fake\..." paths, so this always answers with the
+                    // one real fixture WAV, and only for a ".wav" request --
+                    // a ".mp3" request 404s every time, same as a preset
+                    // that only ever shipped a .wav sample would, so the
+                    // player's own mp3-then-wav fallback is what's actually
+                    // exercised here, not a magic mock shortcut.
+                    const reqPath = url.searchParams.get("path") || "";
+                    if (!reqPath.toLowerCase().endsWith(".wav")) {
+                        return sendJson(res, 404, { error: `not a file: ${reqPath}` });
+                    }
+                    const wav = fs.readFileSync(path.join(FIXTURES_DIR, "sample.wav"));
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "audio/wav");
+                    res.setHeader("Content-Length", wav.length);
+                    return res.end(wav);
                 }
 
                 if (url.pathname === "/fl_cosyvoice3/script_library/mark_role_stale" && req.method === "POST") {

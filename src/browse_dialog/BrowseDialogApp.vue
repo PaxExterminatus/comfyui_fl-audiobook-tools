@@ -9,7 +9,8 @@ import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
 import { usePanelWidth } from "../shared/panel_width.js";
-import PanelWidthButtons from "../shared/PanelWidthButtons.vue";
+import { useFontSize } from "../shared/font_size.js";
+import DialogHeader from "../shared/DialogHeader.vue";
 import { joinPath, BROWSE_API as LIST_API } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -35,6 +36,10 @@ const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets 
     // A file picker never needs to fill nearly the whole window the way
     // Line/Roles Editor's "100%" does -- capped much narrower.
     fullVw: 70,
+});
+const { fontSizePx: listFontSizePx, decrease: decreaseListFontSize, increase: increaseListFontSize } = useFontSize({
+    storageKey: "FL_CosyVoice3.BrowseDialog.fontSizePx",
+    defaultSize: 13,
 });
 
 const title = computed(() => (props.mode === "folder" ? "Choose a folder" : "Choose a file"));
@@ -139,10 +144,11 @@ onMounted(() => load(props.startPath || ""));
         class="browse-dialog"
     >
         <template #header>
-            <div class="header-row">
-                <div class="dialog-title">{{ title }}</div>
-                <PanelWidthButtons :presets="widthPresets" :set-width="setPanelWidth" />
-            </div>
+            <DialogHeader
+                :title="title"
+                :width-presets="widthPresets" :set-width="setPanelWidth"
+                :font-size-decrease="decreaseListFontSize" :font-size-increase="increaseListFontSize"
+            />
         </template>
 
         <div class="browse-toolbar">
@@ -157,7 +163,7 @@ onMounted(() => load(props.startPath || ""));
 
         <Message v-if="errorText" severity="error" :closable="false">{{ errorText }}</Message>
 
-        <div class="browse-list">
+        <div class="browse-list" :style="{ fontSize: `${listFontSizePx}px` }">
             <div v-if="loading" class="browse-row browse-row-note">Loading...</div>
             <template v-else>
                 <div

@@ -8,13 +8,6 @@
         height: 100%
         padding: 0
 
-// The header row itself (title/status/width buttons) now lives in
-// src/shared/DialogHeader.vue -- only .font-row (this editor's own
-// header slot content, see #after) stays here.
-.font-row
-    @include button-row(3px)
-    margin-left: 10px
-
 .row-checkbox
     flex: 0 0 auto
     cursor: pointer
@@ -179,28 +172,19 @@
 .apply-instruct-btn
     flex: 0 0 auto
 
+.instruct-undo-btn
+    flex: 0 0 auto
+
 .dropdown-option-label
     @extend %catalog-option-label
 
 .dropdown-option-sublabel
     @extend %catalog-option-sublabel
 
-// The instruct Dropdown's category header (see option-group-label) --
-// bolder than a plain option so it reads as a heading over its examples,
-// not just another pickable row. `title` carries the category's "when"
-// guidance as a native tooltip instead of a second visible line, since a
-// group header repeats on every scroll and a full sentence there would
-// dominate the list.
-.dropdown-optiongroup-label
-    @extend %ellipsis
-    font-size: $font-sm
-    font-weight: 600
-    opacity: 0.85
-
 .speaker-file-group
     flex: 0 0 auto
 
-.speaker-file-dropdown
+.speaker-file-input
     max-width: 150px
 
 .role-info-btn

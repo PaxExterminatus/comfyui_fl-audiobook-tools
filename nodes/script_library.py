@@ -70,9 +70,9 @@ except (ImportError, AttributeError):
     _HAS_SERVER = False
 
 try:
-    from ._speaker_presets import list_speaker_presets
+    from ._speaker_presets import list_speaker_presets, get_speaker_dir
 except (ImportError, ValueError):
-    from _speaker_presets import list_speaker_presets
+    from _speaker_presets import list_speaker_presets, get_speaker_dir
 
 try:
     from . import _line_audio
@@ -690,11 +690,18 @@ if _HAS_SERVER:
     @routes.get("/fl_cosyvoice3/script_library/speaker_presets")
     async def fl_cosyvoice3_script_library_speaker_presets(request):
         """Saved CosyVoice speaker presets (.pt files) -- backs the "pick a
-        speaker" control in web/roles_editor.js, so assigning a voice to a
-        role picks from what's actually available instead of free-typing a
-        name that might not exist yet."""
+        speaker" control in web/roles_editor.js / the line editor's speaker
+        picker dialog, so assigning a voice to a role picks from what's
+        actually available instead of free-typing a name that might not
+        exist yet. `dir` (the same folder list_speaker_presets() itself
+        scans) lets the frontend build a sample-audio URL for each preset
+        via the existing generic /audio route -- <dir>/<preset>.mp3 or
+        .wav, whichever exists (there's no server-side existence check
+        here; the frontend's <audio> element just tries one, then the
+        other, same as it already does for a "no take yet" line).
+        """
         presets = [p for p in list_speaker_presets() if p != "[none]"]
-        return web.json_response({"presets": presets})
+        return web.json_response({"presets": presets, "dir": get_speaker_dir()})
 
     @routes.get("/fl_cosyvoice3/script_library/acts")
     async def fl_cosyvoice3_script_library_acts(request):

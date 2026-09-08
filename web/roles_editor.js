@@ -1,248 +1,210 @@
-import { B as x, s as G, o as r, c as f, m as d, C as S, k as m, f as g, _ as Q, v as _, w as X, a as Y, H as Z, b as R, d as w, n as ee, u as c, I as te, K as j, J as se, r as b, j as ae, F as oe, l as re, g as V, t as U, Q as ne, x as le, y as ie, P as de } from "./styles_link.js";
-import { u as ce, s as ue } from "./PanelWidthButtons.js";
-import { s as pe } from "./message.esm.js";
-import { a as fe, s as me, D as he } from "./DialogHeader.js";
-var ve = {
-  root: "p-card p-component",
-  header: "p-card-header",
-  body: "p-card-body",
-  caption: "p-card-caption",
-  title: "p-card-title",
-  subtitle: "p-card-subtitle",
-  content: "p-card-content",
-  footer: "p-card-footer"
-}, ye = x.extend({
-  name: "card",
-  classes: ve
-}), $e = {
-  name: "BaseCard",
-  extends: G,
-  style: ye
-}, L = {
-  name: "Card",
-  extends: $e,
-  inheritAttrs: !1
-};
-function Se(t, u, p, i, n, k) {
-  return r(), f("div", d({
-    class: t.cx("root")
-  }, t.ptmi("root")), [t.$slots.header ? (r(), f("div", d({
-    key: 0,
-    class: t.cx("header")
-  }, t.ptm("header")), [S(t.$slots, "header")], 16)) : m("", !0), g("div", d({
-    class: t.cx("body")
-  }, t.ptm("body")), [t.$slots.title || t.$slots.subtitle ? (r(), f("div", d({
-    key: 0,
-    class: t.cx("caption")
-  }, t.ptm("caption")), [t.$slots.title ? (r(), f("div", d({
-    key: 0,
-    class: t.cx("title")
-  }, t.ptm("title")), [S(t.$slots, "title")], 16)) : m("", !0), t.$slots.subtitle ? (r(), f("div", d({
-    key: 1,
-    class: t.cx("subtitle")
-  }, t.ptm("subtitle")), [S(t.$slots, "subtitle")], 16)) : m("", !0)], 16)) : m("", !0), g("div", d({
-    class: t.cx("content")
-  }, t.ptm("content")), [S(t.$slots, "content")], 16), t.$slots.footer ? (r(), f("div", d({
-    key: 1,
-    class: t.cx("footer")
-  }, t.ptm("footer")), [S(t.$slots, "footer")], 16)) : m("", !0)], 16)], 16);
-}
-L.render = Se;
-const we = { class: "roles-list" }, ge = {
+import { _ as q, m as K, w as G, o as H, I as Q, c as $, a as m, n as x, u as o, J as X, L as b, K as Y, r as h, b as v, g as Z, h as ee, d as C, i as te, F as se, j as ae, e as k, t as A, Q as oe, p as ne, q as re, P as ie } from "./styles_link.js";
+import { u as le, a as ce, s as de, D as ue, b as pe } from "./DialogHeader.js";
+import { s as fe, b as me, a as he } from "./card.esm.js";
+const ve = {
   class: "role-code",
   title: "Role code (read-only here -- renaming would orphan script lines that already use it)"
-}, ke = { class: "role-name" }, be = 600, Ce = 3e3, Ee = 1500, Te = {
+}, ye = { class: "role-name" }, Se = 600, we = 3e3, ge = 1500, _e = {
   __name: "RolesEditorApp",
   props: {
     root: { type: String, required: !0 },
     suffix: { type: String, default: "" },
     onClose: { type: Function, required: !0 }
   },
-  setup(t) {
-    const u = t, p = _(u.root, "_roles.json"), i = b(!0), n = b([]), k = b([]), I = b(""), { cssWidth: O, setWidth: F, presets: M } = ce({
+  setup(y) {
+    const l = y, c = K(l.root, "_roles.json"), i = h(!0), r = h([]), S = h([]), P = h(""), { cssWidth: D, setWidth: F, presets: N } = le({
       storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
       defaultWidth: 1200,
       presets: [900, 1200]
+    }), { fontSizePx: R, decrease: L, increase: j } = ce({
+      storageKey: "FL_CosyVoice3.RolesEditor.fontSizePx",
+      defaultSize: 13
     });
-    let h = null, A = 0, v = null, y = null;
-    const C = /* @__PURE__ */ new Map();
-    function l(e) {
-      I.value = e;
+    let d = null, T = 0, u = null, p = null;
+    const w = /* @__PURE__ */ new Map();
+    function n(e) {
+      P.value = e;
     }
-    const E = /* @__PURE__ */ new Map();
-    function W(e, a) {
-      if (!a) {
-        E.delete(e);
+    const g = /* @__PURE__ */ new Map();
+    function U(e, s) {
+      if (!s) {
+        g.delete(e);
         return;
       }
-      E.set(e, a.$el ?? a);
+      g.set(e, s.$el ?? s);
     }
-    function J(e) {
+    function B(e) {
       e && (e.style.height = "auto", e.style.height = `${e.scrollHeight}px`);
     }
-    function B() {
-      E.forEach(J);
+    function V() {
+      g.forEach(B);
     }
-    function q() {
-      return JSON.stringify({ roles: n.value }, null, 2);
+    function O() {
+      return JSON.stringify({ roles: r.value }, null, 2);
     }
-    async function D() {
-      const e = q();
-      if (e !== h)
+    async function z() {
+      const e = O();
+      if (e !== d)
         try {
-          const s = await (await fetch(`${j}/write`, {
+          const t = await (await fetch(`${b}/write`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: p, content: e })
+            body: JSON.stringify({ path: c, content: e })
           })).json();
-          if (s.error) {
-            l(`Save error: ${s.error}`);
+          if (t.error) {
+            n(`Save error: ${t.error}`);
             return;
           }
-          h = e, l(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
-        } catch (a) {
-          l(`Save failed: ${a}`);
+          d = e, n(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+        } catch (s) {
+          n(`Save failed: ${s}`);
         }
     }
-    function T() {
-      A = Date.now(), v && clearTimeout(v), v = setTimeout(D, be);
+    function _() {
+      T = Date.now(), u && clearTimeout(u), u = setTimeout(z, Se);
     }
-    function P(e) {
-      !e.code || C.get(e.code) === e.speaker || (C.set(e.code, e.speaker), ne(u.root, e.code, u.suffix).then((s) => l(s.message)));
+    function E(e) {
+      !e.code || w.get(e.code) === e.speaker || (w.set(e.code, e.speaker), oe(l.root, e.code, l.suffix).then((t) => n(t.message)));
     }
-    function z(e) {
-      T(), P(e);
+    function M(e) {
+      _(), E(e);
     }
-    async function H() {
+    async function W() {
       try {
-        const a = await (await fetch(te)).json();
-        k.value = a.presets || [];
+        const s = await (await fetch(X)).json();
+        S.value = s.presets || [];
       } catch {
-        k.value = [];
+        S.value = [];
       }
     }
-    async function N({ isPoll: e = !1 } = {}) {
+    async function I({ isPoll: e = !1 } = {}) {
       try {
-        const s = await (await fetch(`${j}/read?path=${encodeURIComponent(p)}`)).json();
-        if (s.error) {
-          l(`Read error: ${s.error}`);
+        const t = await (await fetch(`${b}/read?path=${encodeURIComponent(c)}`)).json();
+        if (t.error) {
+          n(`Read error: ${t.error}`);
           return;
         }
-        if (!s.exists) {
-          e || (n.value = [], h = "", l("_roles.json does not exist yet"));
+        if (!t.exists) {
+          e || (r.value = [], d = "", n("_roles.json does not exist yet"));
           return;
         }
-        if (e && Date.now() - A < Ee || s.content === h) return;
-        let o;
+        if (e && Date.now() - T < ge || t.content === d) return;
+        let a;
         try {
-          o = JSON.parse(s.content);
-        } catch ($) {
-          l(`_roles.json is not valid JSON: ${$}`);
+          a = JSON.parse(t.content);
+        } catch (f) {
+          n(`_roles.json is not valid JSON: ${f}`);
           return;
         }
-        n.value = Array.isArray(o.roles) ? o.roles : [], n.value.forEach(($) => {
-          $.code && C.set($.code, $.speaker);
-        }), h = s.content, e || l(`Loaded ${n.value.length} role(s)`), se(() => {
-          B(), requestAnimationFrame(B);
+        r.value = Array.isArray(a.roles) ? a.roles : [], r.value.forEach((f) => {
+          f.code && w.set(f.code, f.speaker);
+        }), d = t.content, e || n(`Loaded ${r.value.length} role(s)`), Y(() => {
+          V(), requestAnimationFrame(V);
         });
-      } catch (a) {
-        l(`Read failed: ${a}`);
+      } catch (s) {
+        n(`Read failed: ${s}`);
       }
     }
-    function K() {
-      v && (clearTimeout(v), D()), n.value.forEach((e) => P(e)), y && clearInterval(y), u.onClose();
+    function J() {
+      u && (clearTimeout(u), z()), r.value.forEach((e) => E(e)), p && clearInterval(p), l.onClose();
     }
-    return X(i, (e) => {
-      e || K();
-    }), Y(async () => {
-      H(), await N(), y = setInterval(() => N({ isPoll: !0 }), Ce);
-    }), Z(() => {
-      y && clearInterval(y);
-    }), (e, a) => (r(), R(c(ue), {
+    return G(i, (e) => {
+      e || J();
+    }), H(async () => {
+      W(), await I(), p = setInterval(() => I({ isPoll: !0 }), we);
+    }), Q(() => {
+      p && clearInterval(p);
+    }), (e, s) => (v(), $(o(pe), {
       visible: i.value,
-      "onUpdate:visible": a[2] || (a[2] = (s) => i.value = s),
+      "onUpdate:visible": s[2] || (s[2] = (t) => i.value = t),
       modal: !1,
       draggable: !1,
       "close-on-escape": "",
       header: " ",
-      style: ee({ width: c(O) }),
+      style: x({ width: o(D) }),
       class: "roles-dialog"
     }, {
-      header: w(() => [
-        V(he, {
+      header: m(() => [
+        k(ue, {
           title: "Roles",
-          status: I.value,
-          "width-presets": c(M),
-          "set-width": c(F)
-        }, null, 8, ["status", "width-presets", "set-width"])
+          status: P.value,
+          "width-presets": o(N),
+          "set-width": o(F),
+          "font-size-decrease": o(L),
+          "font-size-increase": o(j)
+        }, null, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
       ]),
-      default: w(() => [
-        n.value.length ? m("", !0) : (r(), R(c(pe), {
+      default: m(() => [
+        r.value.length ? ee("", !0) : (v(), $(o(de), {
           key: 0,
           severity: "info",
           closable: !1
         }, {
-          default: w(() => [...a[3] || (a[3] = [
-            ae("No roles found", -1)
+          default: m(() => [...s[3] || (s[3] = [
+            Z("No roles found", -1)
           ])]),
           _: 1
         })),
-        g("div", we, [
-          (r(!0), f(oe, null, re(n.value, (s) => (r(), R(c(L), {
-            key: s.code,
+        C("div", {
+          class: "roles-list",
+          style: x({ fontSize: `${o(R)}px` })
+        }, [
+          (v(!0), te(se, null, ae(r.value, (t) => (v(), $(o(fe), {
+            key: t.code,
             class: "role-card"
           }, {
-            title: w(() => [
-              g("span", ge, U(s.code), 1),
-              g("span", ke, U(s.name), 1)
+            title: m(() => [
+              C("span", ve, A(t.code), 1),
+              C("span", ye, A(t.name), 1)
             ]),
-            content: w(() => [
-              V(c(fe), {
-                modelValue: s.speaker,
-                "onUpdate:modelValue": (o) => s.speaker = o,
-                options: k.value,
+            content: m(() => [
+              k(o(me), {
+                modelValue: t.speaker,
+                "onUpdate:modelValue": (a) => t.speaker = a,
+                options: S.value,
                 editable: "",
                 filter: "",
                 placeholder: "Speaker preset",
                 title: "Real CosyVoice preset this role resolves to",
                 class: "role-speaker",
-                onInput: a[0] || (a[0] = (o) => T()),
-                onChange: (o) => z(s),
-                onBlur: (o) => P(s)
+                onInput: s[0] || (s[0] = (a) => _()),
+                onChange: (a) => M(t),
+                onBlur: (a) => E(t)
               }, null, 8, ["modelValue", "onUpdate:modelValue", "options", "onChange", "onBlur"]),
-              V(c(me), {
-                modelValue: s.description,
-                "onUpdate:modelValue": (o) => s.description = o,
+              k(o(he), {
+                modelValue: t.description,
+                "onUpdate:modelValue": (a) => t.description = a,
                 ref_for: !0,
-                ref: (o) => W(s.code, o),
+                ref: (a) => U(t.code, a),
                 "auto-resize": "",
                 rows: "1",
                 placeholder: "Description...",
                 class: "role-description",
-                onInput: a[1] || (a[1] = (o) => T())
-              }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                style: x({ fontSize: `${o(R)}px` }),
+                onInput: s[1] || (s[1] = (a) => _())
+              }, null, 8, ["modelValue", "onUpdate:modelValue", "style"])
             ]),
             _: 2
           }, 1024))), 128))
-        ])
+        ], 4)
       ]),
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, Pe = /* @__PURE__ */ Q(Te, [["__scopeId", "data-v-936d83fe"]]);
-function Be({ root: t, suffix: u = "" }) {
-  le(import.meta.url);
-  const p = document.createElement("div");
-  document.body.appendChild(p);
-  const i = ie(Pe, {
-    root: t,
-    suffix: u,
+}, Ee = /* @__PURE__ */ q(_e, [["__scopeId", "data-v-8df44b62"]]);
+function ke({ root: y, suffix: l = "" }) {
+  ne(import.meta.url);
+  const c = document.createElement("div");
+  document.body.appendChild(c);
+  const i = re(Ee, {
+    root: y,
+    suffix: l,
     onClose: () => {
-      i.unmount(), p.remove();
+      i.unmount(), c.remove();
     }
   });
-  i.use(de, { ripple: !0 }), i.mount(p);
+  i.use(ie, { ripple: !0 }), i.mount(c);
 }
 export {
-  Be as openRolesEditor
+  ke as openRolesEditor
 };

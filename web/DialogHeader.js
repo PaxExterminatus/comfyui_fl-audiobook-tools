@@ -1,2192 +1,1170 @@
-import { R as re, o as f, c as v, m as c, f as C, z as Ie, B as le, Y as fe, s as oe, Z as p, D as G, C as I, F as N, l as ne, k as D, g as q, T as Se, $ as V, a0 as we, a1 as Ce, a2 as ee, a3 as ae, U as Le, j as te, t as M, b as j, G as ie, p as Q, d as _, X as ze, E as Ve, V as Fe, _ as ke } from "./styles_link.js";
-import { a as Pe, b as Te, c as xe, P as Me } from "./PanelWidthButtons.js";
-var me = {
-  name: "BlankIcon",
-  extends: re
-}, Be = /* @__PURE__ */ C("rect", {
-  width: "1",
-  height: "1",
-  fill: "currentColor",
-  "fill-opacity": "0"
-}, null, -1), De = [Be];
-function Ee(t, e, i, s, r, n) {
-  return f(), v("svg", c({
-    width: "14",
-    height: "14",
-    viewBox: "0 0 14 14",
-    fill: "none",
-    xmlns: "http://www.w3.org/2000/svg"
-  }, t.pti()), De, 16);
+import { a3 as ae, U as l, W as le, R as S, b as s, i as f, C as u, d as b, A as C, c as y, a4 as ue, h as g, y as q, V as G, z as J, $ as P, Z as _, l as Q, D as ee, a0 as j, a as V, e as E, a1 as te, a2 as L, F as ne, k as M, t as k, G as H, g as ce, a5 as de, r as oe, w as fe, _ as K, j as me, u as B, s as F } from "./styles_link.js";
+var pe = {}, he = ae.extend({
+  style: pe
+});
+function D(e) {
+  "@babel/helpers - typeof";
+  return D = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(t) {
+    return typeof t;
+  } : function(t) {
+    return t && typeof Symbol == "function" && t.constructor === Symbol && t !== Symbol.prototype ? "symbol" : typeof t;
+  }, D(e);
 }
-me.render = Ee;
-var ge = {
-  name: "ChevronDownIcon",
-  extends: re
-}, Ke = /* @__PURE__ */ C("path", {
-  d: "M7.01744 10.398C6.91269 10.3985 6.8089 10.378 6.71215 10.3379C6.61541 10.2977 6.52766 10.2386 6.45405 10.1641L1.13907 4.84913C1.03306 4.69404 0.985221 4.5065 1.00399 4.31958C1.02276 4.13266 1.10693 3.95838 1.24166 3.82747C1.37639 3.69655 1.55301 3.61742 1.74039 3.60402C1.92777 3.59062 2.11386 3.64382 2.26584 3.75424L7.01744 8.47394L11.769 3.75424C11.9189 3.65709 12.097 3.61306 12.2748 3.62921C12.4527 3.64535 12.6199 3.72073 12.7498 3.84328C12.8797 3.96582 12.9647 4.12842 12.9912 4.30502C13.0177 4.48162 12.9841 4.662 12.8958 4.81724L7.58083 10.1322C7.50996 10.2125 7.42344 10.2775 7.32656 10.3232C7.22968 10.3689 7.12449 10.3944 7.01744 10.398Z",
+function N(e, t) {
+  var n = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    t && (o = o.filter(function(r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), n.push.apply(n, o);
+  }
+  return n;
+}
+function U(e) {
+  for (var t = 1; t < arguments.length; t++) {
+    var n = arguments[t] != null ? arguments[t] : {};
+    t % 2 ? N(Object(n), !0).forEach(function(o) {
+      be(e, o, n[o]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : N(Object(n)).forEach(function(o) {
+      Object.defineProperty(e, o, Object.getOwnPropertyDescriptor(n, o));
+    });
+  }
+  return e;
+}
+function be(e, t, n) {
+  return t = Ce(t), t in e ? Object.defineProperty(e, t, { value: n, enumerable: !0, configurable: !0, writable: !0 }) : e[t] = n, e;
+}
+function Ce(e) {
+  var t = ve(e, "string");
+  return D(t) == "symbol" ? t : String(t);
+}
+function ve(e, t) {
+  if (D(e) != "object" || !e) return e;
+  var n = e[Symbol.toPrimitive];
+  if (n !== void 0) {
+    var o = n.call(e, t);
+    if (D(o) != "object") return o;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return (t === "string" ? String : Number)(e);
+}
+var ge = he.extend("focustrap", {
+  mounted: function(t, n) {
+    var o = n.value || {}, r = o.disabled;
+    r || (this.createHiddenFocusableElements(t, n), this.bind(t, n), this.autoElementFocus(t, n)), t.setAttribute("data-pd-focustrap", !0), this.$el = t;
+  },
+  updated: function(t, n) {
+    var o = n.value || {}, r = o.disabled;
+    r && this.unbind(t);
+  },
+  unmounted: function(t) {
+    this.unbind(t);
+  },
+  methods: {
+    getComputedSelector: function(t) {
+      return ':not(.p-hidden-focusable):not([data-p-hidden-focusable="true"])'.concat(t ?? "");
+    },
+    bind: function(t, n) {
+      var o = this, r = n.value || {}, i = r.onFocusIn, d = r.onFocusOut;
+      t.$_pfocustrap_mutationobserver = new MutationObserver(function(c) {
+        c.forEach(function(p) {
+          if (p.type === "childList" && !t.contains(document.activeElement)) {
+            var m = function a(h) {
+              var v = l.isFocusableElement(h) ? l.isFocusableElement(h, o.getComputedSelector(t.$_pfocustrap_focusableselector)) ? h : l.getFirstFocusableElement(t, o.getComputedSelector(t.$_pfocustrap_focusableselector)) : l.getFirstFocusableElement(h);
+              return le.isNotEmpty(v) ? v : h.nextSibling && a(h.nextSibling);
+            };
+            l.focus(m(p.nextSibling));
+          }
+        });
+      }), t.$_pfocustrap_mutationobserver.disconnect(), t.$_pfocustrap_mutationobserver.observe(t, {
+        childList: !0
+      }), t.$_pfocustrap_focusinlistener = function(c) {
+        return i && i(c);
+      }, t.$_pfocustrap_focusoutlistener = function(c) {
+        return d && d(c);
+      }, t.addEventListener("focusin", t.$_pfocustrap_focusinlistener), t.addEventListener("focusout", t.$_pfocustrap_focusoutlistener);
+    },
+    unbind: function(t) {
+      t.$_pfocustrap_mutationobserver && t.$_pfocustrap_mutationobserver.disconnect(), t.$_pfocustrap_focusinlistener && t.removeEventListener("focusin", t.$_pfocustrap_focusinlistener) && (t.$_pfocustrap_focusinlistener = null), t.$_pfocustrap_focusoutlistener && t.removeEventListener("focusout", t.$_pfocustrap_focusoutlistener) && (t.$_pfocustrap_focusoutlistener = null);
+    },
+    autoFocus: function(t) {
+      this.autoElementFocus(this.$el, {
+        value: U(U({}, t), {}, {
+          autoFocus: !0
+        })
+      });
+    },
+    autoElementFocus: function(t, n) {
+      var o = n.value || {}, r = o.autoFocusSelector, i = r === void 0 ? "" : r, d = o.firstFocusableSelector, c = d === void 0 ? "" : d, p = o.autoFocus, m = p === void 0 ? !1 : p, a = l.getFirstFocusableElement(t, "[autofocus]".concat(this.getComputedSelector(i)));
+      m && !a && (a = l.getFirstFocusableElement(t, this.getComputedSelector(c))), l.focus(a);
+    },
+    onFirstHiddenElementFocus: function(t) {
+      var n, o = t.currentTarget, r = t.relatedTarget, i = r === o.$_pfocustrap_lasthiddenfocusableelement || !((n = this.$el) !== null && n !== void 0 && n.contains(r)) ? l.getFirstFocusableElement(o.parentElement, this.getComputedSelector(o.$_pfocustrap_focusableselector)) : o.$_pfocustrap_lasthiddenfocusableelement;
+      l.focus(i);
+    },
+    onLastHiddenElementFocus: function(t) {
+      var n, o = t.currentTarget, r = t.relatedTarget, i = r === o.$_pfocustrap_firsthiddenfocusableelement || !((n = this.$el) !== null && n !== void 0 && n.contains(r)) ? l.getLastFocusableElement(o.parentElement, this.getComputedSelector(o.$_pfocustrap_focusableselector)) : o.$_pfocustrap_firsthiddenfocusableelement;
+      l.focus(i);
+    },
+    createHiddenFocusableElements: function(t, n) {
+      var o = this, r = n.value || {}, i = r.tabIndex, d = i === void 0 ? 0 : i, c = r.firstFocusableSelector, p = c === void 0 ? "" : c, m = r.lastFocusableSelector, a = m === void 0 ? "" : m, h = function(O) {
+        return l.createElement("span", {
+          class: "p-hidden-accessible p-hidden-focusable",
+          tabIndex: d,
+          role: "presentation",
+          "aria-hidden": !0,
+          "data-p-hidden-accessible": !0,
+          "data-p-hidden-focusable": !0,
+          onFocus: O == null ? void 0 : O.bind(o)
+        });
+      }, v = h(this.onFirstHiddenElementFocus), w = h(this.onLastHiddenElementFocus);
+      v.$_pfocustrap_lasthiddenfocusableelement = w, v.$_pfocustrap_focusableselector = p, v.setAttribute("data-pc-section", "firstfocusableelement"), w.$_pfocustrap_firsthiddenfocusableelement = v, w.$_pfocustrap_focusableselector = a, w.setAttribute("data-pc-section", "lastfocusableelement"), t.prepend(v), t.append(w);
+    }
+  }
+}), W = {
+  name: "TimesIcon",
+  extends: S
+}, ye = /* @__PURE__ */ b("path", {
+  d: "M8.01186 7.00933L12.27 2.75116C12.341 2.68501 12.398 2.60524 12.4375 2.51661C12.4769 2.42798 12.4982 2.3323 12.4999 2.23529C12.5016 2.13827 12.4838 2.0419 12.4474 1.95194C12.4111 1.86197 12.357 1.78024 12.2884 1.71163C12.2198 1.64302 12.138 1.58893 12.0481 1.55259C11.9581 1.51625 11.8617 1.4984 11.7647 1.50011C11.6677 1.50182 11.572 1.52306 11.4834 1.56255C11.3948 1.60204 11.315 1.65898 11.2488 1.72997L6.99067 5.98814L2.7325 1.72997C2.59553 1.60234 2.41437 1.53286 2.22718 1.53616C2.03999 1.53946 1.8614 1.61529 1.72901 1.74767C1.59663 1.88006 1.5208 2.05865 1.5175 2.24584C1.5142 2.43303 1.58368 2.61419 1.71131 2.75116L5.96948 7.00933L1.71131 11.2675C1.576 11.403 1.5 11.5866 1.5 11.7781C1.5 11.9696 1.576 12.1532 1.71131 12.2887C1.84679 12.424 2.03043 12.5 2.2219 12.5C2.41338 12.5 2.59702 12.424 2.7325 12.2887L6.99067 8.03052L11.2488 12.2887C11.3843 12.424 11.568 12.5 11.7594 12.5C11.9509 12.5 12.1346 12.424 12.27 12.2887C12.4053 12.1532 12.4813 11.9696 12.4813 11.7781C12.4813 11.5866 12.4053 11.403 12.27 11.2675L8.01186 7.00933Z",
   fill: "currentColor"
-}, null, -1), He = [Ke];
-function Ae(t, e, i, s, r, n) {
-  return f(), v("svg", c({
+}, null, -1), we = [ye];
+function $e(e, t, n, o, r, i) {
+  return s(), f("svg", u({
     width: "14",
     height: "14",
     viewBox: "0 0 14 14",
     fill: "none",
     xmlns: "http://www.w3.org/2000/svg"
-  }, t.pti()), He, 16);
+  }, e.pti()), we, 16);
 }
-ge.render = Ae;
-var ve = {
-  name: "SearchIcon",
-  extends: re
-}, Re = /* @__PURE__ */ C("path", {
+W.render = $e;
+var ie = {
+  name: "WindowMaximizeIcon",
+  extends: S
+}, Se = /* @__PURE__ */ b("path", {
   "fill-rule": "evenodd",
   "clip-rule": "evenodd",
-  d: "M2.67602 11.0265C3.6661 11.688 4.83011 12.0411 6.02086 12.0411C6.81149 12.0411 7.59438 11.8854 8.32483 11.5828C8.87005 11.357 9.37808 11.0526 9.83317 10.6803L12.9769 13.8241C13.0323 13.8801 13.0983 13.9245 13.171 13.9548C13.2438 13.985 13.3219 14.0003 13.4007 14C13.4795 14.0003 13.5575 13.985 13.6303 13.9548C13.7031 13.9245 13.7691 13.8801 13.8244 13.8241C13.9367 13.7116 13.9998 13.5592 13.9998 13.4003C13.9998 13.2414 13.9367 13.089 13.8244 12.9765L10.6807 9.8328C11.053 9.37773 11.3573 8.86972 11.5831 8.32452C11.8857 7.59408 12.0414 6.81119 12.0414 6.02056C12.0414 4.8298 11.6883 3.66579 11.0268 2.67572C10.3652 1.68564 9.42494 0.913972 8.32483 0.45829C7.22472 0.00260857 6.01418 -0.116618 4.84631 0.115686C3.67844 0.34799 2.60568 0.921393 1.76369 1.76338C0.921698 2.60537 0.348296 3.67813 0.115991 4.84601C-0.116313 6.01388 0.00291375 7.22441 0.458595 8.32452C0.914277 9.42464 1.68595 10.3649 2.67602 11.0265ZM3.35565 2.0158C4.14456 1.48867 5.07206 1.20731 6.02086 1.20731C7.29317 1.20731 8.51338 1.71274 9.41304 2.6124C10.3127 3.51206 10.8181 4.73226 10.8181 6.00457C10.8181 6.95337 10.5368 7.88088 10.0096 8.66978C9.48251 9.45868 8.73328 10.0736 7.85669 10.4367C6.98011 10.7997 6.01554 10.8947 5.08496 10.7096C4.15439 10.5245 3.2996 10.0676 2.62869 9.39674C1.95778 8.72583 1.50089 7.87104 1.31579 6.94046C1.13068 6.00989 1.22568 5.04532 1.58878 4.16874C1.95187 3.29215 2.56675 2.54292 3.35565 2.0158Z",
+  d: "M7 14H11.8C12.3835 14 12.9431 13.7682 13.3556 13.3556C13.7682 12.9431 14 12.3835 14 11.8V2.2C14 1.61652 13.7682 1.05694 13.3556 0.644365C12.9431 0.231785 12.3835 0 11.8 0H2.2C1.61652 0 1.05694 0.231785 0.644365 0.644365C0.231785 1.05694 0 1.61652 0 2.2V7C0 7.15913 0.063214 7.31174 0.175736 7.42426C0.288258 7.53679 0.44087 7.6 0.6 7.6C0.75913 7.6 0.911742 7.53679 1.02426 7.42426C1.13679 7.31174 1.2 7.15913 1.2 7V2.2C1.2 1.93478 1.30536 1.68043 1.49289 1.49289C1.68043 1.30536 1.93478 1.2 2.2 1.2H11.8C12.0652 1.2 12.3196 1.30536 12.5071 1.49289C12.6946 1.68043 12.8 1.93478 12.8 2.2V11.8C12.8 12.0652 12.6946 12.3196 12.5071 12.5071C12.3196 12.6946 12.0652 12.8 11.8 12.8H7C6.84087 12.8 6.68826 12.8632 6.57574 12.9757C6.46321 13.0883 6.4 13.2409 6.4 13.4C6.4 13.5591 6.46321 13.7117 6.57574 13.8243C6.68826 13.9368 6.84087 14 7 14ZM9.77805 7.42192C9.89013 7.534 10.0415 7.59788 10.2 7.59995C10.3585 7.59788 10.5099 7.534 10.622 7.42192C10.7341 7.30985 10.798 7.15844 10.8 6.99995V3.94242C10.8066 3.90505 10.8096 3.86689 10.8089 3.82843C10.8079 3.77159 10.7988 3.7157 10.7824 3.6623C10.756 3.55552 10.701 3.45698 10.622 3.37798C10.5099 3.2659 10.3585 3.20202 10.2 3.19995H7.00002C6.84089 3.19995 6.68828 3.26317 6.57576 3.37569C6.46324 3.48821 6.40002 3.64082 6.40002 3.79995C6.40002 3.95908 6.46324 4.11169 6.57576 4.22422C6.68828 4.33674 6.84089 4.39995 7.00002 4.39995H8.80006L6.19997 7.00005C6.10158 7.11005 6.04718 7.25246 6.04718 7.40005C6.04718 7.54763 6.10158 7.69004 6.19997 7.80005C6.30202 7.91645 6.44561 7.98824 6.59997 8.00005C6.75432 7.98824 6.89791 7.91645 6.99997 7.80005L9.60002 5.26841V6.99995C9.6021 7.15844 9.66598 7.30985 9.77805 7.42192ZM1.4 14H3.8C4.17066 13.9979 4.52553 13.8498 4.78763 13.5877C5.04973 13.3256 5.1979 12.9707 5.2 12.6V10.2C5.1979 9.82939 5.04973 9.47452 4.78763 9.21242C4.52553 8.95032 4.17066 8.80215 3.8 8.80005H1.4C1.02934 8.80215 0.674468 8.95032 0.412371 9.21242C0.150274 9.47452 0.00210008 9.82939 0 10.2V12.6C0.00210008 12.9707 0.150274 13.3256 0.412371 13.5877C0.674468 13.8498 1.02934 13.9979 1.4 14ZM1.25858 10.0586C1.29609 10.0211 1.34696 10 1.4 10H3.8C3.85304 10 3.90391 10.0211 3.94142 10.0586C3.97893 10.0961 4 10.147 4 10.2V12.6C4 12.6531 3.97893 12.704 3.94142 12.7415C3.90391 12.779 3.85304 12.8 3.8 12.8H1.4C1.34696 12.8 1.29609 12.779 1.25858 12.7415C1.22107 12.704 1.2 12.6531 1.2 12.6V10.2C1.2 10.147 1.22107 10.0961 1.25858 10.0586Z",
   fill: "currentColor"
-}, null, -1), je = [Re];
-function Ge(t, e, i, s, r, n) {
-  return f(), v("svg", c({
+}, null, -1), Le = [Se];
+function Ee(e, t, n, o, r, i) {
+  return s(), f("svg", u({
     width: "14",
     height: "14",
     viewBox: "0 0 14 14",
     fill: "none",
     xmlns: "http://www.w3.org/2000/svg"
-  }, t.pti()), je, 16);
+  }, e.pti()), Le, 16);
 }
-ve.render = Ge;
-var Ne = Ie(), We = `
-@layer primevue {
-    .p-virtualscroller {
-        position: relative;
-        overflow: auto;
-        contain: strict;
-        transform: translateZ(0);
-        will-change: scroll-position;
-        outline: 0 none;
-    }
-
-    .p-virtualscroller-content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        /* contain: content; */
-        min-height: 100%;
-        min-width: 100%;
-        will-change: transform;
-    }
-
-    .p-virtualscroller-spacer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 1px;
-        width: 1px;
-        transform-origin: 0 0;
-        pointer-events: none;
-    }
-
-    .p-virtualscroller .p-virtualscroller-loader {
-        position: sticky;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-
-    .p-virtualscroller-loader.p-component-overlay {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .p-virtualscroller-loading-icon {
-        font-size: 2rem;
-    }
-
-    .p-virtualscroller-loading-icon.p-icon {
-        width: 2rem;
-        height: 2rem;
-    }
-
-    .p-virtualscroller-horizontal > .p-virtualscroller-content {
-        display: flex;
-    }
-
-    /* Inline */
-    .p-virtualscroller-inline .p-virtualscroller-content {
-        position: static;
-    }
+ie.render = Ee;
+var re = {
+  name: "WindowMinimizeIcon",
+  extends: S
+}, De = /* @__PURE__ */ b("path", {
+  "fill-rule": "evenodd",
+  "clip-rule": "evenodd",
+  d: "M11.8 0H2.2C1.61652 0 1.05694 0.231785 0.644365 0.644365C0.231785 1.05694 0 1.61652 0 2.2V7C0 7.15913 0.063214 7.31174 0.175736 7.42426C0.288258 7.53679 0.44087 7.6 0.6 7.6C0.75913 7.6 0.911742 7.53679 1.02426 7.42426C1.13679 7.31174 1.2 7.15913 1.2 7V2.2C1.2 1.93478 1.30536 1.68043 1.49289 1.49289C1.68043 1.30536 1.93478 1.2 2.2 1.2H11.8C12.0652 1.2 12.3196 1.30536 12.5071 1.49289C12.6946 1.68043 12.8 1.93478 12.8 2.2V11.8C12.8 12.0652 12.6946 12.3196 12.5071 12.5071C12.3196 12.6946 12.0652 12.8 11.8 12.8H7C6.84087 12.8 6.68826 12.8632 6.57574 12.9757C6.46321 13.0883 6.4 13.2409 6.4 13.4C6.4 13.5591 6.46321 13.7117 6.57574 13.8243C6.68826 13.9368 6.84087 14 7 14H11.8C12.3835 14 12.9431 13.7682 13.3556 13.3556C13.7682 12.9431 14 12.3835 14 11.8V2.2C14 1.61652 13.7682 1.05694 13.3556 0.644365C12.9431 0.231785 12.3835 0 11.8 0ZM6.368 7.952C6.44137 7.98326 6.52025 7.99958 6.6 8H9.8C9.95913 8 10.1117 7.93678 10.2243 7.82426C10.3368 7.71174 10.4 7.55913 10.4 7.4C10.4 7.24087 10.3368 7.08826 10.2243 6.97574C10.1117 6.86321 9.95913 6.8 9.8 6.8H8.048L10.624 4.224C10.73 4.11026 10.7877 3.95982 10.7849 3.80438C10.7822 3.64894 10.7192 3.50063 10.6093 3.3907C10.4994 3.28077 10.3511 3.2178 10.1956 3.21506C10.0402 3.21232 9.88974 3.27002 9.776 3.376L7.2 5.952V4.2C7.2 4.04087 7.13679 3.88826 7.02426 3.77574C6.91174 3.66321 6.75913 3.6 6.6 3.6C6.44087 3.6 6.28826 3.66321 6.17574 3.77574C6.06321 3.88826 6 4.04087 6 4.2V7.4C6.00042 7.47975 6.01674 7.55862 6.048 7.632C6.07656 7.70442 6.11971 7.7702 6.17475 7.82524C6.2298 7.88029 6.29558 7.92344 6.368 7.952ZM1.4 8.80005H3.8C4.17066 8.80215 4.52553 8.95032 4.78763 9.21242C5.04973 9.47452 5.1979 9.82939 5.2 10.2V12.6C5.1979 12.9707 5.04973 13.3256 4.78763 13.5877C4.52553 13.8498 4.17066 13.9979 3.8 14H1.4C1.02934 13.9979 0.674468 13.8498 0.412371 13.5877C0.150274 13.3256 0.00210008 12.9707 0 12.6V10.2C0.00210008 9.82939 0.150274 9.47452 0.412371 9.21242C0.674468 8.95032 1.02934 8.80215 1.4 8.80005ZM3.94142 12.7415C3.97893 12.704 4 12.6531 4 12.6V10.2C4 10.147 3.97893 10.0961 3.94142 10.0586C3.90391 10.0211 3.85304 10 3.8 10H1.4C1.34696 10 1.29609 10.0211 1.25858 10.0586C1.22107 10.0961 1.2 10.147 1.2 10.2V12.6C1.2 12.6531 1.22107 12.704 1.25858 12.7415C1.29609 12.779 1.34696 12.8 1.4 12.8H3.8C3.85304 12.8 3.90391 12.779 3.94142 12.7415Z",
+  fill: "currentColor"
+}, null, -1), Ie = [De];
+function xe(e, t, n, o, r, i) {
+  return s(), f("svg", u({
+    width: "14",
+    height: "14",
+    viewBox: "0 0 14 14",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, e.pti()), Ie, 16);
 }
-`, ue = le.extend({
-  name: "virtualscroller",
-  css: We
-}), Ue = {
-  name: "BaseVirtualScroller",
-  extends: oe,
+re.render = xe;
+var se = {
+  name: "Portal",
   props: {
-    id: {
-      type: String,
-      default: null
-    },
-    style: null,
-    class: null,
-    items: {
-      type: Array,
-      default: null
-    },
-    itemSize: {
-      type: [Number, Array],
-      default: 0
-    },
-    scrollHeight: null,
-    scrollWidth: null,
-    orientation: {
-      type: String,
-      default: "vertical"
-    },
-    numToleratedItems: {
-      type: Number,
-      default: null
-    },
-    delay: {
-      type: Number,
-      default: 0
-    },
-    resizeDelay: {
-      type: Number,
-      default: 10
-    },
-    lazy: {
-      type: Boolean,
-      default: !1
+    appendTo: {
+      type: [String, Object],
+      default: "body"
     },
     disabled: {
       type: Boolean,
       default: !1
-    },
-    loaderDisabled: {
-      type: Boolean,
-      default: !1
-    },
-    columns: {
-      type: Array,
+    }
+  },
+  data: function() {
+    return {
+      mounted: !1
+    };
+  },
+  mounted: function() {
+    this.mounted = l.isClient();
+  },
+  computed: {
+    inline: function() {
+      return this.disabled || this.appendTo === "self";
+    }
+  }
+};
+function ze(e, t, n, o, r, i) {
+  return i.inline ? C(e.$slots, "default", {
+    key: 0
+  }) : r.mounted ? (s(), y(ue, {
+    key: 1,
+    to: n.appendTo
+  }, [C(e.$slots, "default")], 8, ["to"])) : g("", !0);
+}
+se.render = ze;
+var ke = {
+  mask: function(t) {
+    var n = t.position, o = t.modal;
+    return {
+      position: "fixed",
+      height: "100%",
+      width: "100%",
+      left: 0,
+      top: 0,
+      display: "flex",
+      justifyContent: n === "left" || n === "topleft" || n === "bottomleft" ? "flex-start" : n === "right" || n === "topright" || n === "bottomright" ? "flex-end" : "center",
+      alignItems: n === "top" || n === "topleft" || n === "topright" ? "flex-start" : n === "bottom" || n === "bottomleft" || n === "bottomright" ? "flex-end" : "center",
+      pointerEvents: o ? "auto" : "none"
+    };
+  },
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    pointerEvents: "auto"
+  }
+}, Be = {
+  mask: function(t) {
+    var n = t.props, o = ["left", "right", "top", "topleft", "topright", "bottom", "bottomleft", "bottomright"], r = o.find(function(i) {
+      return i === n.position;
+    });
+    return ["p-dialog-mask", {
+      "p-component-overlay p-component-overlay-enter": n.modal
+    }, r ? "p-dialog-".concat(r) : ""];
+  },
+  root: function(t) {
+    var n = t.props, o = t.instance;
+    return ["p-dialog p-component", {
+      "p-dialog-rtl": n.rtl,
+      "p-dialog-maximized": n.maximizable && o.maximized,
+      "p-ripple-disabled": o.$primevue.config.ripple === !1
+    }];
+  },
+  header: "p-dialog-header",
+  title: "p-dialog-title",
+  icons: "p-dialog-header-icons",
+  maximizableButton: "p-dialog-header-icon p-dialog-header-maximize p-link",
+  maximizableIcon: "p-dialog-header-maximize-icon",
+  closeButton: "p-dialog-header-icon p-dialog-header-close p-link",
+  closeButtonIcon: "p-dialog-header-close-icon",
+  content: "p-dialog-content",
+  footer: "p-dialog-footer"
+}, Fe = q.extend({
+  name: "dialog",
+  classes: Be,
+  inlineStyles: ke
+}), Oe = {
+  name: "BaseDialog",
+  extends: J,
+  props: {
+    header: {
+      type: null,
       default: null
     },
-    loading: {
+    footer: {
+      type: null,
+      default: null
+    },
+    visible: {
       type: Boolean,
       default: !1
     },
-    showSpacer: {
+    modal: {
+      type: Boolean,
+      default: null
+    },
+    contentStyle: {
+      type: null,
+      default: null
+    },
+    contentClass: {
+      type: String,
+      default: null
+    },
+    contentProps: {
+      type: null,
+      default: null
+    },
+    rtl: {
+      type: Boolean,
+      default: null
+    },
+    maximizable: {
+      type: Boolean,
+      default: !1
+    },
+    dismissableMask: {
+      type: Boolean,
+      default: !1
+    },
+    closable: {
       type: Boolean,
       default: !0
     },
-    showLoader: {
+    closeOnEscape: {
+      type: Boolean,
+      default: !0
+    },
+    showHeader: {
+      type: Boolean,
+      default: !0
+    },
+    blockScroll: {
       type: Boolean,
       default: !1
     },
-    tabindex: {
+    baseZIndex: {
       type: Number,
       default: 0
     },
-    inline: {
+    autoZIndex: {
       type: Boolean,
-      default: !1
+      default: !0
     },
-    step: {
+    position: {
+      type: String,
+      default: "center"
+    },
+    breakpoints: {
+      type: Object,
+      default: null
+    },
+    draggable: {
+      type: Boolean,
+      default: !0
+    },
+    keepInViewport: {
+      type: Boolean,
+      default: !0
+    },
+    minX: {
       type: Number,
       default: 0
     },
-    appendOnly: {
-      type: Boolean,
-      default: !1
-    },
-    autoSize: {
-      type: Boolean,
-      default: !1
-    }
-  },
-  style: ue,
-  provide: function() {
-    return {
-      $parentInstance: this
-    };
-  },
-  beforeMount: function() {
-    var e;
-    ue.loadStyle({
-      nonce: (e = this.$primevueConfig) === null || e === void 0 || (e = e.csp) === null || e === void 0 ? void 0 : e.nonce
-    });
-  }
-};
-function Z(t) {
-  "@babel/helpers - typeof";
-  return Z = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
-    return typeof e;
-  } : function(e) {
-    return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-  }, Z(t);
-}
-function de(t, e) {
-  var i = Object.keys(t);
-  if (Object.getOwnPropertySymbols) {
-    var s = Object.getOwnPropertySymbols(t);
-    e && (s = s.filter(function(r) {
-      return Object.getOwnPropertyDescriptor(t, r).enumerable;
-    })), i.push.apply(i, s);
-  }
-  return i;
-}
-function U(t) {
-  for (var e = 1; e < arguments.length; e++) {
-    var i = arguments[e] != null ? arguments[e] : {};
-    e % 2 ? de(Object(i), !0).forEach(function(s) {
-      ye(t, s, i[s]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(t, Object.getOwnPropertyDescriptors(i)) : de(Object(i)).forEach(function(s) {
-      Object.defineProperty(t, s, Object.getOwnPropertyDescriptor(i, s));
-    });
-  }
-  return t;
-}
-function ye(t, e, i) {
-  return e = qe(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
-}
-function qe(t) {
-  var e = Ze(t, "string");
-  return Z(e) == "symbol" ? e : String(e);
-}
-function Ze(t, e) {
-  if (Z(t) != "object" || !t) return t;
-  var i = t[Symbol.toPrimitive];
-  if (i !== void 0) {
-    var s = i.call(t, e);
-    if (Z(s) != "object") return s;
-    throw new TypeError("@@toPrimitive must return a primitive value.");
-  }
-  return (e === "string" ? String : Number)(t);
-}
-var be = {
-  name: "VirtualScroller",
-  extends: Ue,
-  inheritAttrs: !1,
-  emits: ["update:numToleratedItems", "scroll", "scroll-index-change", "lazy-load"],
-  data: function() {
-    var e = this.isBoth();
-    return {
-      first: e ? {
-        rows: 0,
-        cols: 0
-      } : 0,
-      last: e ? {
-        rows: 0,
-        cols: 0
-      } : 0,
-      page: e ? {
-        rows: 0,
-        cols: 0
-      } : 0,
-      numItemsInViewport: e ? {
-        rows: 0,
-        cols: 0
-      } : 0,
-      lastScrollPos: e ? {
-        top: 0,
-        left: 0
-      } : 0,
-      d_numToleratedItems: this.numToleratedItems,
-      d_loading: this.loading,
-      loaderArr: [],
-      spacerStyle: {},
-      contentStyle: {}
-    };
-  },
-  element: null,
-  content: null,
-  lastScrollPos: null,
-  scrollTimeout: null,
-  resizeTimeout: null,
-  defaultWidth: 0,
-  defaultHeight: 0,
-  defaultContentWidth: 0,
-  defaultContentHeight: 0,
-  isRangeChanged: !1,
-  lazyLoadState: {},
-  resizeListener: null,
-  initialized: !1,
-  watch: {
-    numToleratedItems: function(e) {
-      this.d_numToleratedItems = e;
-    },
-    loading: function(e, i) {
-      this.lazy && e !== i && e !== this.d_loading && (this.d_loading = e);
-    },
-    items: function(e, i) {
-      (!i || i.length !== (e || []).length) && (this.init(), this.calculateAutoSize());
-    },
-    itemSize: function() {
-      this.init(), this.calculateAutoSize();
-    },
-    orientation: function() {
-      this.lastScrollPos = this.isBoth() ? {
-        top: 0,
-        left: 0
-      } : 0;
-    },
-    scrollHeight: function() {
-      this.init(), this.calculateAutoSize();
-    },
-    scrollWidth: function() {
-      this.init(), this.calculateAutoSize();
-    }
-  },
-  mounted: function() {
-    this.viewInit(), this.lastScrollPos = this.isBoth() ? {
-      top: 0,
-      left: 0
-    } : 0, this.lazyLoadState = this.lazyLoadState || {};
-  },
-  updated: function() {
-    !this.initialized && this.viewInit();
-  },
-  unmounted: function() {
-    this.unbindResizeListener(), this.initialized = !1;
-  },
-  methods: {
-    viewInit: function() {
-      p.isVisible(this.element) && (this.setContentEl(this.content), this.init(), this.calculateAutoSize(), this.bindResizeListener(), this.defaultWidth = p.getWidth(this.element), this.defaultHeight = p.getHeight(this.element), this.defaultContentWidth = p.getWidth(this.content), this.defaultContentHeight = p.getHeight(this.content), this.initialized = !0);
-    },
-    init: function() {
-      this.disabled || (this.setSize(), this.calculateOptions(), this.setSpacerSize());
-    },
-    isVertical: function() {
-      return this.orientation === "vertical";
-    },
-    isHorizontal: function() {
-      return this.orientation === "horizontal";
-    },
-    isBoth: function() {
-      return this.orientation === "both";
-    },
-    scrollTo: function(e) {
-      this.element && this.element.scrollTo(e);
-    },
-    scrollToIndex: function(e) {
-      var i = this, s = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "auto", r = this.isBoth(), n = this.isHorizontal(), l = r ? e.every(function(K) {
-        return K > -1;
-      }) : e > -1;
-      if (l) {
-        var a = this.first, u = this.element, d = u.scrollTop, o = d === void 0 ? 0 : d, h = u.scrollLeft, g = h === void 0 ? 0 : h, L = this.calculateNumItems(), S = L.numToleratedItems, O = this.getContentPosition(), b = this.itemSize, F = function() {
-          var T = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : 0, H = arguments.length > 1 ? arguments[1] : void 0;
-          return T <= H ? 0 : T;
-        }, z = function(T, H, R) {
-          return T * H + R;
-        }, y = function() {
-          var T = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : 0, H = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
-          return i.scrollTo({
-            left: T,
-            top: H,
-            behavior: s
-          });
-        }, m = r ? {
-          rows: 0,
-          cols: 0
-        } : 0, E = !1, k = !1;
-        r ? (m = {
-          rows: F(e[0], S[0]),
-          cols: F(e[1], S[1])
-        }, y(z(m.cols, b[1], O.left), z(m.rows, b[0], O.top)), k = this.lastScrollPos.top !== o || this.lastScrollPos.left !== g, E = m.rows !== a.rows || m.cols !== a.cols) : (m = F(e, S), n ? y(z(m, b, O.left), o) : y(g, z(m, b, O.top)), k = this.lastScrollPos !== (n ? g : o), E = m !== a), this.isRangeChanged = E, k && (this.first = m);
-      }
-    },
-    scrollInView: function(e, i) {
-      var s = this, r = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : "auto";
-      if (i) {
-        var n = this.isBoth(), l = this.isHorizontal(), a = n ? e.every(function(b) {
-          return b > -1;
-        }) : e > -1;
-        if (a) {
-          var u = this.getRenderedRange(), d = u.first, o = u.viewport, h = function() {
-            var F = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : 0, z = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
-            return s.scrollTo({
-              left: F,
-              top: z,
-              behavior: r
-            });
-          }, g = i === "to-start", L = i === "to-end";
-          if (g) {
-            if (n)
-              o.first.rows - d.rows > e[0] ? h(o.first.cols * this.itemSize[1], (o.first.rows - 1) * this.itemSize[0]) : o.first.cols - d.cols > e[1] && h((o.first.cols - 1) * this.itemSize[1], o.first.rows * this.itemSize[0]);
-            else if (o.first - d > e) {
-              var S = (o.first - 1) * this.itemSize;
-              l ? h(S, 0) : h(0, S);
-            }
-          } else if (L) {
-            if (n)
-              o.last.rows - d.rows <= e[0] + 1 ? h(o.first.cols * this.itemSize[1], (o.first.rows + 1) * this.itemSize[0]) : o.last.cols - d.cols <= e[1] + 1 && h((o.first.cols + 1) * this.itemSize[1], o.first.rows * this.itemSize[0]);
-            else if (o.last - d <= e + 1) {
-              var O = (o.first + 1) * this.itemSize;
-              l ? h(O, 0) : h(0, O);
-            }
-          }
-        }
-      } else
-        this.scrollToIndex(e, r);
-    },
-    getRenderedRange: function() {
-      var e = function(h, g) {
-        return Math.floor(h / (g || h));
-      }, i = this.first, s = 0;
-      if (this.element) {
-        var r = this.isBoth(), n = this.isHorizontal(), l = this.element, a = l.scrollTop, u = l.scrollLeft;
-        if (r)
-          i = {
-            rows: e(a, this.itemSize[0]),
-            cols: e(u, this.itemSize[1])
-          }, s = {
-            rows: i.rows + this.numItemsInViewport.rows,
-            cols: i.cols + this.numItemsInViewport.cols
-          };
-        else {
-          var d = n ? u : a;
-          i = e(d, this.itemSize), s = i + this.numItemsInViewport;
-        }
-      }
-      return {
-        first: this.first,
-        last: this.last,
-        viewport: {
-          first: i,
-          last: s
-        }
-      };
-    },
-    calculateNumItems: function() {
-      var e = this.isBoth(), i = this.isHorizontal(), s = this.itemSize, r = this.getContentPosition(), n = this.element ? this.element.offsetWidth - r.left : 0, l = this.element ? this.element.offsetHeight - r.top : 0, a = function(g, L) {
-        return Math.ceil(g / (L || g));
-      }, u = function(g) {
-        return Math.ceil(g / 2);
-      }, d = e ? {
-        rows: a(l, s[0]),
-        cols: a(n, s[1])
-      } : a(i ? n : l, s), o = this.d_numToleratedItems || (e ? [u(d.rows), u(d.cols)] : u(d));
-      return {
-        numItemsInViewport: d,
-        numToleratedItems: o
-      };
-    },
-    calculateOptions: function() {
-      var e = this, i = this.isBoth(), s = this.first, r = this.calculateNumItems(), n = r.numItemsInViewport, l = r.numToleratedItems, a = function(o, h, g) {
-        var L = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : !1;
-        return e.getLast(o + h + (o < g ? 2 : 3) * g, L);
-      }, u = i ? {
-        rows: a(s.rows, n.rows, l[0]),
-        cols: a(s.cols, n.cols, l[1], !0)
-      } : a(s, n, l);
-      this.last = u, this.numItemsInViewport = n, this.d_numToleratedItems = l, this.$emit("update:numToleratedItems", this.d_numToleratedItems), this.showLoader && (this.loaderArr = i ? Array.from({
-        length: n.rows
-      }).map(function() {
-        return Array.from({
-          length: n.cols
-        });
-      }) : Array.from({
-        length: n
-      })), this.lazy && Promise.resolve().then(function() {
-        var d;
-        e.lazyLoadState = {
-          first: e.step ? i ? {
-            rows: 0,
-            cols: s.cols
-          } : 0 : s,
-          last: Math.min(e.step ? e.step : u, ((d = e.items) === null || d === void 0 ? void 0 : d.length) || 0)
-        }, e.$emit("lazy-load", e.lazyLoadState);
-      });
-    },
-    calculateAutoSize: function() {
-      var e = this;
-      this.autoSize && !this.d_loading && Promise.resolve().then(function() {
-        if (e.content) {
-          var i = e.isBoth(), s = e.isHorizontal(), r = e.isVertical();
-          e.content.style.minHeight = e.content.style.minWidth = "auto", e.content.style.position = "relative", e.element.style.contain = "none";
-          var n = [p.getWidth(e.element), p.getHeight(e.element)], l = n[0], a = n[1];
-          (i || s) && (e.element.style.width = l < e.defaultWidth ? l + "px" : e.scrollWidth || e.defaultWidth + "px"), (i || r) && (e.element.style.height = a < e.defaultHeight ? a + "px" : e.scrollHeight || e.defaultHeight + "px"), e.content.style.minHeight = e.content.style.minWidth = "", e.content.style.position = "", e.element.style.contain = "";
-        }
-      });
-    },
-    getLast: function() {
-      var e, i, s = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : 0, r = arguments.length > 1 ? arguments[1] : void 0;
-      return this.items ? Math.min(r ? ((e = this.columns || this.items[0]) === null || e === void 0 ? void 0 : e.length) || 0 : ((i = this.items) === null || i === void 0 ? void 0 : i.length) || 0, s) : 0;
-    },
-    getContentPosition: function() {
-      if (this.content) {
-        var e = getComputedStyle(this.content), i = parseFloat(e.paddingLeft) + Math.max(parseFloat(e.left) || 0, 0), s = parseFloat(e.paddingRight) + Math.max(parseFloat(e.right) || 0, 0), r = parseFloat(e.paddingTop) + Math.max(parseFloat(e.top) || 0, 0), n = parseFloat(e.paddingBottom) + Math.max(parseFloat(e.bottom) || 0, 0);
-        return {
-          left: i,
-          right: s,
-          top: r,
-          bottom: n,
-          x: i + s,
-          y: r + n
-        };
-      }
-      return {
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        x: 0,
-        y: 0
-      };
-    },
-    setSize: function() {
-      var e = this;
-      if (this.element) {
-        var i = this.isBoth(), s = this.isHorizontal(), r = this.element.parentElement, n = this.scrollWidth || "".concat(this.element.offsetWidth || r.offsetWidth, "px"), l = this.scrollHeight || "".concat(this.element.offsetHeight || r.offsetHeight, "px"), a = function(d, o) {
-          return e.element.style[d] = o;
-        };
-        i || s ? (a("height", l), a("width", n)) : a("height", l);
-      }
-    },
-    setSpacerSize: function() {
-      var e = this, i = this.items;
-      if (i) {
-        var s = this.isBoth(), r = this.isHorizontal(), n = this.getContentPosition(), l = function(u, d, o) {
-          var h = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : 0;
-          return e.spacerStyle = U(U({}, e.spacerStyle), ye({}, "".concat(u), (d || []).length * o + h + "px"));
-        };
-        s ? (l("height", i, this.itemSize[0], n.y), l("width", this.columns || i[1], this.itemSize[1], n.x)) : r ? l("width", this.columns || i, this.itemSize, n.x) : l("height", i, this.itemSize, n.y);
-      }
-    },
-    setContentPosition: function(e) {
-      var i = this;
-      if (this.content && !this.appendOnly) {
-        var s = this.isBoth(), r = this.isHorizontal(), n = e ? e.first : this.first, l = function(o, h) {
-          return o * h;
-        }, a = function() {
-          var o = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : 0, h = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
-          return i.contentStyle = U(U({}, i.contentStyle), {
-            transform: "translate3d(".concat(o, "px, ").concat(h, "px, 0)")
-          });
-        };
-        if (s)
-          a(l(n.cols, this.itemSize[1]), l(n.rows, this.itemSize[0]));
-        else {
-          var u = l(n, this.itemSize);
-          r ? a(u, 0) : a(0, u);
-        }
-      }
-    },
-    onScrollPositionChange: function(e) {
-      var i = this, s = e.target, r = this.isBoth(), n = this.isHorizontal(), l = this.getContentPosition(), a = function(w, P) {
-        return w ? w > P ? w - P : w : 0;
-      }, u = function(w, P) {
-        return Math.floor(w / (P || w));
-      }, d = function(w, P, W, X, B, A) {
-        return w <= B ? B : A ? W - X - B : P + B - 1;
-      }, o = function(w, P, W, X, B, A, J) {
-        return w <= A ? 0 : Math.max(0, J ? w < P ? W : w - A : w > P ? W : w - 2 * A);
-      }, h = function(w, P, W, X, B, A) {
-        var J = P + X + 2 * B;
-        return w >= B && (J += B + 1), i.getLast(J, A);
-      }, g = a(s.scrollTop, l.top), L = a(s.scrollLeft, l.left), S = r ? {
-        rows: 0,
-        cols: 0
-      } : 0, O = this.last, b = !1, F = this.lastScrollPos;
-      if (r) {
-        var z = this.lastScrollPos.top <= g, y = this.lastScrollPos.left <= L;
-        if (!this.appendOnly || this.appendOnly && (z || y)) {
-          var m = {
-            rows: u(g, this.itemSize[0]),
-            cols: u(L, this.itemSize[1])
-          }, E = {
-            rows: d(m.rows, this.first.rows, this.last.rows, this.numItemsInViewport.rows, this.d_numToleratedItems[0], z),
-            cols: d(m.cols, this.first.cols, this.last.cols, this.numItemsInViewport.cols, this.d_numToleratedItems[1], y)
-          };
-          S = {
-            rows: o(m.rows, E.rows, this.first.rows, this.last.rows, this.numItemsInViewport.rows, this.d_numToleratedItems[0], z),
-            cols: o(m.cols, E.cols, this.first.cols, this.last.cols, this.numItemsInViewport.cols, this.d_numToleratedItems[1], y)
-          }, O = {
-            rows: h(m.rows, S.rows, this.last.rows, this.numItemsInViewport.rows, this.d_numToleratedItems[0]),
-            cols: h(m.cols, S.cols, this.last.cols, this.numItemsInViewport.cols, this.d_numToleratedItems[1], !0)
-          }, b = S.rows !== this.first.rows || O.rows !== this.last.rows || S.cols !== this.first.cols || O.cols !== this.last.cols || this.isRangeChanged, F = {
-            top: g,
-            left: L
-          };
-        }
-      } else {
-        var k = n ? L : g, K = this.lastScrollPos <= k;
-        if (!this.appendOnly || this.appendOnly && K) {
-          var T = u(k, this.itemSize), H = d(T, this.first, this.last, this.numItemsInViewport, this.d_numToleratedItems, K);
-          S = o(T, H, this.first, this.last, this.numItemsInViewport, this.d_numToleratedItems, K), O = h(T, S, this.last, this.numItemsInViewport, this.d_numToleratedItems), b = S !== this.first || O !== this.last || this.isRangeChanged, F = k;
-        }
-      }
-      return {
-        first: S,
-        last: O,
-        isRangeChanged: b,
-        scrollPos: F
-      };
-    },
-    onScrollChange: function(e) {
-      var i = this.onScrollPositionChange(e), s = i.first, r = i.last, n = i.isRangeChanged, l = i.scrollPos;
-      if (n) {
-        var a = {
-          first: s,
-          last: r
-        };
-        if (this.setContentPosition(a), this.first = s, this.last = r, this.lastScrollPos = l, this.$emit("scroll-index-change", a), this.lazy && this.isPageChanged(s)) {
-          var u, d, o = {
-            first: this.step ? Math.min(this.getPageByFirst(s) * this.step, (((u = this.items) === null || u === void 0 ? void 0 : u.length) || 0) - this.step) : s,
-            last: Math.min(this.step ? (this.getPageByFirst(s) + 1) * this.step : r, ((d = this.items) === null || d === void 0 ? void 0 : d.length) || 0)
-          }, h = this.lazyLoadState.first !== o.first || this.lazyLoadState.last !== o.last;
-          h && this.$emit("lazy-load", o), this.lazyLoadState = o;
-        }
-      }
-    },
-    onScroll: function(e) {
-      var i = this;
-      if (this.$emit("scroll", e), this.delay) {
-        if (this.scrollTimeout && clearTimeout(this.scrollTimeout), this.isPageChanged()) {
-          if (!this.d_loading && this.showLoader) {
-            var s = this.onScrollPositionChange(e), r = s.isRangeChanged, n = r || (this.step ? this.isPageChanged() : !1);
-            n && (this.d_loading = !0);
-          }
-          this.scrollTimeout = setTimeout(function() {
-            i.onScrollChange(e), i.d_loading && i.showLoader && (!i.lazy || i.loading === void 0) && (i.d_loading = !1, i.page = i.getPageByFirst());
-          }, this.delay);
-        }
-      } else
-        this.onScrollChange(e);
-    },
-    onResize: function() {
-      var e = this;
-      this.resizeTimeout && clearTimeout(this.resizeTimeout), this.resizeTimeout = setTimeout(function() {
-        if (p.isVisible(e.element)) {
-          var i = e.isBoth(), s = e.isVertical(), r = e.isHorizontal(), n = [p.getWidth(e.element), p.getHeight(e.element)], l = n[0], a = n[1], u = l !== e.defaultWidth, d = a !== e.defaultHeight, o = i ? u || d : r ? u : s ? d : !1;
-          o && (e.d_numToleratedItems = e.numToleratedItems, e.defaultWidth = l, e.defaultHeight = a, e.defaultContentWidth = p.getWidth(e.content), e.defaultContentHeight = p.getHeight(e.content), e.init());
-        }
-      }, this.resizeDelay);
-    },
-    bindResizeListener: function() {
-      this.resizeListener || (this.resizeListener = this.onResize.bind(this), window.addEventListener("resize", this.resizeListener), window.addEventListener("orientationchange", this.resizeListener));
-    },
-    unbindResizeListener: function() {
-      this.resizeListener && (window.removeEventListener("resize", this.resizeListener), window.removeEventListener("orientationchange", this.resizeListener), this.resizeListener = null);
-    },
-    getOptions: function(e) {
-      var i = (this.items || []).length, s = this.isBoth() ? this.first.rows + e : this.first + e;
-      return {
-        index: s,
-        count: i,
-        first: s === 0,
-        last: s === i - 1,
-        even: s % 2 === 0,
-        odd: s % 2 !== 0
-      };
-    },
-    getLoaderOptions: function(e, i) {
-      var s = this.loaderArr.length;
-      return U({
-        index: e,
-        count: s,
-        first: e === 0,
-        last: e === s - 1,
-        even: e % 2 === 0,
-        odd: e % 2 !== 0
-      }, i);
-    },
-    getPageByFirst: function(e) {
-      return Math.floor(((e ?? this.first) + this.d_numToleratedItems * 4) / (this.step || 1));
-    },
-    isPageChanged: function(e) {
-      return this.step ? this.page !== this.getPageByFirst(e ?? this.first) : !0;
-    },
-    setContentEl: function(e) {
-      this.content = e || this.content || p.findSingle(this.element, '[data-pc-section="content"]');
-    },
-    elementRef: function(e) {
-      this.element = e;
-    },
-    contentRef: function(e) {
-      this.content = e;
-    }
-  },
-  computed: {
-    containerClass: function() {
-      return ["p-virtualscroller", this.class, {
-        "p-virtualscroller-inline": this.inline,
-        "p-virtualscroller-both p-both-scroll": this.isBoth(),
-        "p-virtualscroller-horizontal p-horizontal-scroll": this.isHorizontal()
-      }];
-    },
-    contentClass: function() {
-      return ["p-virtualscroller-content", {
-        "p-virtualscroller-loading": this.d_loading
-      }];
-    },
-    loaderClass: function() {
-      return ["p-virtualscroller-loader", {
-        "p-component-overlay": !this.$slots.loader
-      }];
-    },
-    loadedItems: function() {
-      var e = this;
-      return this.items && !this.d_loading ? this.isBoth() ? this.items.slice(this.appendOnly ? 0 : this.first.rows, this.last.rows).map(function(i) {
-        return e.columns ? i : i.slice(e.appendOnly ? 0 : e.first.cols, e.last.cols);
-      }) : this.isHorizontal() && this.columns ? this.items : this.items.slice(this.appendOnly ? 0 : this.first, this.last) : [];
-    },
-    loadedRows: function() {
-      return this.d_loading ? this.loaderDisabled ? this.loaderArr : [] : this.loadedItems;
-    },
-    loadedColumns: function() {
-      if (this.columns) {
-        var e = this.isBoth(), i = this.isHorizontal();
-        if (e || i)
-          return this.d_loading && this.loaderDisabled ? e ? this.loaderArr[0] : this.loaderArr : this.columns.slice(e ? this.first.cols : this.first, e ? this.last.cols : this.last);
-      }
-      return this.columns;
-    }
-  },
-  components: {
-    SpinnerIcon: fe
-  }
-}, $e = ["tabindex"];
-function Ye(t, e, i, s, r, n) {
-  var l = G("SpinnerIcon");
-  return t.disabled ? (f(), v(N, {
-    key: 1
-  }, [I(t.$slots, "default"), I(t.$slots, "content", {
-    items: t.items,
-    rows: t.items,
-    columns: n.loadedColumns
-  })], 64)) : (f(), v("div", c({
-    key: 0,
-    ref: n.elementRef,
-    class: n.containerClass,
-    tabindex: t.tabindex,
-    style: t.style,
-    onScroll: e[0] || (e[0] = function() {
-      return n.onScroll && n.onScroll.apply(n, arguments);
-    })
-  }, t.ptmi("root")), [I(t.$slots, "content", {
-    styleClass: n.contentClass,
-    items: n.loadedItems,
-    getItemOptions: n.getOptions,
-    loading: r.d_loading,
-    getLoaderOptions: n.getLoaderOptions,
-    itemSize: t.itemSize,
-    rows: n.loadedRows,
-    columns: n.loadedColumns,
-    contentRef: n.contentRef,
-    spacerStyle: r.spacerStyle,
-    contentStyle: r.contentStyle,
-    vertical: n.isVertical(),
-    horizontal: n.isHorizontal(),
-    both: n.isBoth()
-  }, function() {
-    return [C("div", c({
-      ref: n.contentRef,
-      class: n.contentClass,
-      style: r.contentStyle
-    }, t.ptm("content")), [(f(!0), v(N, null, ne(n.loadedItems, function(a, u) {
-      return I(t.$slots, "item", {
-        key: u,
-        item: a,
-        options: n.getOptions(u)
-      });
-    }), 128))], 16)];
-  }), t.showSpacer ? (f(), v("div", c({
-    key: 0,
-    class: "p-virtualscroller-spacer",
-    style: r.spacerStyle
-  }, t.ptm("spacer")), null, 16)) : D("", !0), !t.loaderDisabled && t.showLoader && r.d_loading ? (f(), v("div", c({
-    key: 1,
-    class: n.loaderClass
-  }, t.ptm("loader")), [t.$slots && t.$slots.loader ? (f(!0), v(N, {
-    key: 0
-  }, ne(r.loaderArr, function(a, u) {
-    return I(t.$slots, "loader", {
-      key: u,
-      options: n.getLoaderOptions(u, n.isBoth() && {
-        numCols: t.d_numItemsInViewport.cols
-      })
-    });
-  }), 128)) : D("", !0), I(t.$slots, "loadingicon", {}, function() {
-    return [q(l, c({
-      spin: "",
-      class: "p-virtualscroller-loading-icon"
-    }, t.ptm("loadingIcon")), null, 16)];
-  })], 16)) : D("", !0)], 16, $e));
-}
-be.render = Ye;
-var Xe = {
-  root: function(e) {
-    var i = e.instance, s = e.props, r = e.state;
-    return ["p-dropdown p-component p-inputwrapper", {
-      "p-disabled": s.disabled,
-      "p-invalid": s.invalid,
-      "p-variant-filled": s.variant ? s.variant === "filled" : i.$primevue.config.inputStyle === "filled",
-      "p-dropdown-clearable": s.showClear,
-      "p-focus": r.focused,
-      "p-inputwrapper-filled": i.hasSelectedOption,
-      "p-inputwrapper-focus": r.focused || r.overlayVisible,
-      "p-overlay-open": r.overlayVisible
-    }];
-  },
-  input: function(e) {
-    var i, s = e.instance, r = e.props;
-    return ["p-dropdown-label p-inputtext", {
-      "p-placeholder": !r.editable && s.label === r.placeholder,
-      "p-dropdown-label-empty": !r.editable && !s.$slots.value && (s.label === "p-emptylabel" || ((i = s.label) === null || i === void 0 ? void 0 : i.length) === 0)
-    }];
-  },
-  clearIcon: "p-dropdown-clear-icon",
-  trigger: "p-dropdown-trigger",
-  loadingicon: "p-dropdown-trigger-icon",
-  dropdownIcon: "p-dropdown-trigger-icon",
-  panel: function(e) {
-    e.props;
-    var i = e.instance;
-    return ["p-dropdown-panel p-component", {
-      "p-ripple-disabled": i.$primevue.config.ripple === !1
-    }];
-  },
-  header: "p-dropdown-header",
-  filterContainer: "p-dropdown-filter-container",
-  filterInput: function(e) {
-    var i = e.props, s = e.instance;
-    return ["p-dropdown-filter p-inputtext p-component", {
-      "p-variant-filled": i.variant ? i.variant === "filled" : s.$primevue.config.inputStyle === "filled"
-    }];
-  },
-  filterIcon: "p-dropdown-filter-icon",
-  wrapper: "p-dropdown-items-wrapper",
-  list: "p-dropdown-items",
-  itemGroup: "p-dropdown-item-group",
-  itemGroupLabel: "p-dropdown-item-group-label",
-  item: function(e) {
-    var i = e.instance, s = e.props, r = e.state, n = e.option, l = e.focusedOption;
-    return ["p-dropdown-item", {
-      "p-highlight": i.isSelected(n) && s.highlightOnSelect,
-      "p-focus": r.focusedOptionIndex === l,
-      "p-disabled": i.isOptionDisabled(n)
-    }];
-  },
-  itemLabel: "p-dropdown-item-label",
-  checkIcon: "p-dropdown-check-icon",
-  blankIcon: "p-dropdown-blank-icon",
-  emptyMessage: "p-dropdown-empty-message"
-}, Je = le.extend({
-  name: "dropdown",
-  classes: Xe
-}), Qe = {
-  name: "BaseDropdown",
-  extends: oe,
-  props: {
-    modelValue: null,
-    options: Array,
-    optionLabel: [String, Function],
-    optionValue: [String, Function],
-    optionDisabled: [String, Function],
-    optionGroupLabel: [String, Function],
-    optionGroupChildren: [String, Function],
-    scrollHeight: {
-      type: String,
-      default: "200px"
-    },
-    filter: Boolean,
-    filterPlaceholder: String,
-    filterLocale: String,
-    filterMatchMode: {
-      type: String,
-      default: "contains"
-    },
-    filterFields: {
-      type: Array,
-      default: null
-    },
-    editable: Boolean,
-    placeholder: {
-      type: String,
-      default: null
-    },
-    variant: {
-      type: String,
-      default: null
-    },
-    invalid: {
-      type: Boolean,
-      default: !1
-    },
-    disabled: {
-      type: Boolean,
-      default: !1
-    },
-    dataKey: null,
-    showClear: {
-      type: Boolean,
-      default: !1
-    },
-    inputId: {
-      type: String,
-      default: null
-    },
-    inputClass: {
-      type: [String, Object],
-      default: null
-    },
-    inputStyle: {
-      type: Object,
-      default: null
-    },
-    inputProps: {
-      type: null,
-      default: null
-    },
-    panelClass: {
-      type: [String, Object],
-      default: null
-    },
-    panelStyle: {
-      type: Object,
-      default: null
-    },
-    panelProps: {
-      type: null,
-      default: null
-    },
-    filterInputProps: {
-      type: null,
-      default: null
-    },
-    clearIconProps: {
-      type: null,
-      default: null
+    minY: {
+      type: Number,
+      default: 0
     },
     appendTo: {
       type: [String, Object],
       default: "body"
     },
-    loading: {
-      type: Boolean,
-      default: !1
-    },
-    clearIcon: {
+    closeIcon: {
       type: String,
       default: void 0
     },
-    dropdownIcon: {
+    maximizeIcon: {
       type: String,
       default: void 0
     },
-    filterIcon: {
+    minimizeIcon: {
       type: String,
       default: void 0
     },
-    loadingIcon: {
-      type: String,
-      default: void 0
-    },
-    resetFilterOnHide: {
-      type: Boolean,
-      default: !1
-    },
-    resetFilterOnClear: {
-      type: Boolean,
-      default: !1
-    },
-    virtualScrollerOptions: {
-      type: Object,
+    closeButtonProps: {
+      type: null,
       default: null
     },
-    autoOptionFocus: {
-      type: Boolean,
-      default: !1
-    },
-    autoFilterFocus: {
-      type: Boolean,
-      default: !1
-    },
-    selectOnFocus: {
-      type: Boolean,
-      default: !1
-    },
-    focusOnHover: {
-      type: Boolean,
-      default: !0
-    },
-    highlightOnSelect: {
-      type: Boolean,
-      default: !0
-    },
-    checkmark: {
-      type: Boolean,
-      default: !1
-    },
-    filterMessage: {
-      type: String,
-      default: null
-    },
-    selectionMessage: {
-      type: String,
-      default: null
-    },
-    emptySelectionMessage: {
-      type: String,
-      default: null
-    },
-    emptyFilterMessage: {
-      type: String,
-      default: null
-    },
-    emptyMessage: {
-      type: String,
-      default: null
-    },
-    tabindex: {
-      type: Number,
-      default: 0
-    },
-    ariaLabel: {
-      type: String,
-      default: null
-    },
-    ariaLabelledby: {
-      type: String,
-      default: null
-    }
+    _instance: null
   },
-  style: Je,
+  style: Fe,
   provide: function() {
     return {
       $parentInstance: this
     };
   }
-};
-function $(t) {
-  "@babel/helpers - typeof";
-  return $ = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
-    return typeof e;
-  } : function(e) {
-    return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-  }, $(t);
-}
-function _e(t) {
-  return nt(t) || it(t) || tt(t) || et();
-}
-function et() {
-  throw new TypeError(`Invalid attempt to spread non-iterable instance.
-In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
-}
-function tt(t, e) {
-  if (t) {
-    if (typeof t == "string") return se(t, e);
-    var i = Object.prototype.toString.call(t).slice(8, -1);
-    if (i === "Object" && t.constructor && (i = t.constructor.name), i === "Map" || i === "Set") return Array.from(t);
-    if (i === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(i)) return se(t, e);
-  }
-}
-function it(t) {
-  if (typeof Symbol < "u" && t[Symbol.iterator] != null || t["@@iterator"] != null) return Array.from(t);
-}
-function nt(t) {
-  if (Array.isArray(t)) return se(t);
-}
-function se(t, e) {
-  (e == null || e > t.length) && (e = t.length);
-  for (var i = 0, s = new Array(e); i < e; i++) s[i] = t[i];
-  return s;
-}
-function ce(t, e) {
-  var i = Object.keys(t);
-  if (Object.getOwnPropertySymbols) {
-    var s = Object.getOwnPropertySymbols(t);
-    e && (s = s.filter(function(r) {
-      return Object.getOwnPropertyDescriptor(t, r).enumerable;
-    })), i.push.apply(i, s);
-  }
-  return i;
-}
-function he(t) {
-  for (var e = 1; e < arguments.length; e++) {
-    var i = arguments[e] != null ? arguments[e] : {};
-    e % 2 ? ce(Object(i), !0).forEach(function(s) {
-      Oe(t, s, i[s]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(t, Object.getOwnPropertyDescriptors(i)) : ce(Object(i)).forEach(function(s) {
-      Object.defineProperty(t, s, Object.getOwnPropertyDescriptor(i, s));
-    });
-  }
-  return t;
-}
-function Oe(t, e, i) {
-  return e = st(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
-}
-function st(t) {
-  var e = rt(t, "string");
-  return $(e) == "symbol" ? e : String(e);
-}
-function rt(t, e) {
-  if ($(t) != "object" || !t) return t;
-  var i = t[Symbol.toPrimitive];
-  if (i !== void 0) {
-    var s = i.call(t, e);
-    if ($(s) != "object") return s;
-    throw new TypeError("@@toPrimitive must return a primitive value.");
-  }
-  return (e === "string" ? String : Number)(t);
-}
-var lt = {
-  name: "Dropdown",
-  extends: Qe,
+}, Pe = {
+  name: "Dialog",
+  extends: Oe,
   inheritAttrs: !1,
-  emits: ["update:modelValue", "change", "focus", "blur", "before-show", "before-hide", "show", "hide", "filter"],
-  outsideClickListener: null,
-  scrollHandler: null,
-  resizeListener: null,
-  labelClickListener: null,
-  overlay: null,
-  list: null,
-  virtualScroller: null,
-  searchTimeout: null,
-  searchValue: null,
-  isModelValueChanged: !1,
+  emits: ["update:visible", "show", "hide", "after-hide", "maximize", "unmaximize", "dragend"],
+  provide: function() {
+    var t = this;
+    return {
+      dialogRef: Q(function() {
+        return t._instance;
+      })
+    };
+  },
   data: function() {
     return {
       id: this.$attrs.id,
-      clicked: !1,
-      focused: !1,
-      focusedOptionIndex: -1,
-      filterValue: null,
-      overlayVisible: !1
+      containerVisible: this.visible,
+      maximized: !1,
+      focusableMax: null,
+      focusableClose: null,
+      target: null
     };
   },
   watch: {
-    "$attrs.id": function(e) {
-      this.id = e || ae();
-    },
-    modelValue: function() {
-      this.isModelValueChanged = !0;
-    },
-    options: function() {
-      this.autoUpdateModel();
+    "$attrs.id": function(t) {
+      this.id = t || P();
     }
   },
-  mounted: function() {
-    this.id = this.id || ae(), this.autoUpdateModel(), this.bindLabelClickListener();
-  },
+  documentKeydownListener: null,
+  container: null,
+  mask: null,
+  content: null,
+  headerContainer: null,
+  footerContainer: null,
+  maximizableButton: null,
+  closeButton: null,
+  styleElement: null,
+  dragging: null,
+  documentDragListener: null,
+  documentDragEndListener: null,
+  lastPageX: null,
+  lastPageY: null,
   updated: function() {
-    this.overlayVisible && this.isModelValueChanged && this.scrollInView(this.findSelectedOptionIndex()), this.isModelValueChanged = !1;
+    this.visible && (this.containerVisible = this.visible);
   },
   beforeUnmount: function() {
-    this.unbindOutsideClickListener(), this.unbindResizeListener(), this.unbindLabelClickListener(), this.scrollHandler && (this.scrollHandler.destroy(), this.scrollHandler = null), this.overlay && (ee.clear(this.overlay), this.overlay = null);
+    this.unbindDocumentState(), this.unbindGlobalListeners(), this.destroyStyle(), this.mask && this.autoZIndex && _.clear(this.mask), this.container = null, this.mask = null;
+  },
+  mounted: function() {
+    this.id = this.id || P(), this.breakpoints && this.createStyle();
   },
   methods: {
-    getOptionIndex: function(e, i) {
-      return this.virtualScrollerDisabled ? e : i && i(e).index;
+    close: function() {
+      this.$emit("update:visible", !1);
     },
-    getOptionLabel: function(e) {
-      return this.optionLabel ? V.resolveFieldData(e, this.optionLabel) : e;
+    onBeforeEnter: function(t) {
+      t.setAttribute(this.attributeSelector, "");
     },
-    getOptionValue: function(e) {
-      return this.optionValue ? V.resolveFieldData(e, this.optionValue) : e;
+    onEnter: function() {
+      this.$emit("show"), this.target = document.activeElement, this.enableDocumentSettings(), this.bindGlobalListeners(), this.autoZIndex && _.set("modal", this.mask, this.baseZIndex + this.$primevue.config.zIndex.modal);
     },
-    getOptionRenderKey: function(e, i) {
-      return (this.dataKey ? V.resolveFieldData(e, this.dataKey) : this.getOptionLabel(e)) + "_" + i;
+    onAfterEnter: function() {
+      this.focus();
     },
-    getPTItemOptions: function(e, i, s, r) {
-      return this.ptm(r, {
-        context: {
-          option: e,
-          index: s,
-          selected: this.isSelected(e),
-          focused: this.focusedOptionIndex === this.getOptionIndex(s, i),
-          disabled: this.isOptionDisabled(e)
+    onBeforeLeave: function() {
+      this.modal && !this.isUnstyled && l.addClass(this.mask, "p-component-overlay-leave");
+    },
+    onLeave: function() {
+      this.$emit("hide"), l.focus(this.target), this.target = null, this.focusableClose = null, this.focusableMax = null;
+    },
+    onAfterLeave: function() {
+      this.autoZIndex && _.clear(this.mask), this.containerVisible = !1, this.unbindDocumentState(), this.unbindGlobalListeners(), this.$emit("after-hide");
+    },
+    onMaskClick: function(t) {
+      this.dismissableMask && this.modal && this.mask === t.target && this.close();
+    },
+    focus: function() {
+      var t = function(r) {
+        return r && r.querySelector("[autofocus]");
+      }, n = this.$slots.footer && t(this.footerContainer);
+      n || (n = this.$slots.header && t(this.headerContainer), n || (n = this.$slots.default && t(this.content), n || (this.maximizable ? (this.focusableMax = !0, n = this.maximizableButton) : (this.focusableClose = !0, n = this.closeButton)))), n && l.focus(n, {
+        focusVisible: !0
+      });
+    },
+    maximize: function(t) {
+      this.maximized ? (this.maximized = !1, this.$emit("unmaximize", t)) : (this.maximized = !0, this.$emit("maximize", t)), this.modal || (this.maximized ? l.blockBodyScroll() : l.unblockBodyScroll());
+    },
+    enableDocumentSettings: function() {
+      (this.modal || !this.modal && this.blockScroll || this.maximizable && this.maximized) && l.blockBodyScroll();
+    },
+    unbindDocumentState: function() {
+      (this.modal || !this.modal && this.blockScroll || this.maximizable && this.maximized) && l.unblockBodyScroll();
+    },
+    onKeyDown: function(t) {
+      t.code === "Escape" && this.closeOnEscape && this.close();
+    },
+    bindDocumentKeyDownListener: function() {
+      this.documentKeydownListener || (this.documentKeydownListener = this.onKeyDown.bind(this), window.document.addEventListener("keydown", this.documentKeydownListener));
+    },
+    unbindDocumentKeyDownListener: function() {
+      this.documentKeydownListener && (window.document.removeEventListener("keydown", this.documentKeydownListener), this.documentKeydownListener = null);
+    },
+    containerRef: function(t) {
+      this.container = t;
+    },
+    maskRef: function(t) {
+      this.mask = t;
+    },
+    contentRef: function(t) {
+      this.content = t;
+    },
+    headerContainerRef: function(t) {
+      this.headerContainer = t;
+    },
+    footerContainerRef: function(t) {
+      this.footerContainer = t;
+    },
+    maximizableRef: function(t) {
+      this.maximizableButton = t;
+    },
+    closeButtonRef: function(t) {
+      this.closeButton = t;
+    },
+    createStyle: function() {
+      if (!this.styleElement && !this.isUnstyled) {
+        var t;
+        this.styleElement = document.createElement("style"), this.styleElement.type = "text/css", l.setAttribute(this.styleElement, "nonce", (t = this.$primevue) === null || t === void 0 || (t = t.config) === null || t === void 0 || (t = t.csp) === null || t === void 0 ? void 0 : t.nonce), document.head.appendChild(this.styleElement);
+        var n = "";
+        for (var o in this.breakpoints)
+          n += `
+                        @media screen and (max-width: `.concat(o, `) {
+                            .p-dialog[`).concat(this.attributeSelector, `] {
+                                width: `).concat(this.breakpoints[o], ` !important;
+                            }
+                        }
+                    `);
+        this.styleElement.innerHTML = n;
+      }
+    },
+    destroyStyle: function() {
+      this.styleElement && (document.head.removeChild(this.styleElement), this.styleElement = null);
+    },
+    initDrag: function(t) {
+      t.target.closest("div").getAttribute("data-pc-section") !== "icons" && this.draggable && (this.dragging = !0, this.lastPageX = t.pageX, this.lastPageY = t.pageY, this.container.style.margin = "0", document.body.setAttribute("data-p-unselectable-text", "true"), !this.isUnstyled && l.addClass(document.body, "p-unselectable-text"));
+    },
+    bindGlobalListeners: function() {
+      this.draggable && (this.bindDocumentDragListener(), this.bindDocumentDragEndListener()), this.closeOnEscape && this.closable && this.bindDocumentKeyDownListener();
+    },
+    unbindGlobalListeners: function() {
+      this.unbindDocumentDragListener(), this.unbindDocumentDragEndListener(), this.unbindDocumentKeyDownListener();
+    },
+    bindDocumentDragListener: function() {
+      var t = this;
+      this.documentDragListener = function(n) {
+        if (t.dragging) {
+          var o = l.getOuterWidth(t.container), r = l.getOuterHeight(t.container), i = n.pageX - t.lastPageX, d = n.pageY - t.lastPageY, c = t.container.getBoundingClientRect(), p = c.left + i, m = c.top + d, a = l.getViewport(), h = getComputedStyle(t.container), v = parseFloat(h.marginLeft), w = parseFloat(h.marginTop);
+          t.container.style.position = "fixed", t.keepInViewport ? (p >= t.minX && p + o < a.width && (t.lastPageX = n.pageX, t.container.style.left = p - v + "px"), m >= t.minY && m + r < a.height && (t.lastPageY = n.pageY, t.container.style.top = m - w + "px")) : (t.lastPageX = n.pageX, t.container.style.left = p - v + "px", t.lastPageY = n.pageY, t.container.style.top = m - w + "px");
         }
-      });
-    },
-    isOptionDisabled: function(e) {
-      return this.optionDisabled ? V.resolveFieldData(e, this.optionDisabled) : !1;
-    },
-    isOptionGroup: function(e) {
-      return this.optionGroupLabel && e.optionGroup && e.group;
-    },
-    getOptionGroupLabel: function(e) {
-      return V.resolveFieldData(e, this.optionGroupLabel);
-    },
-    getOptionGroupChildren: function(e) {
-      return V.resolveFieldData(e, this.optionGroupChildren);
-    },
-    getAriaPosInset: function(e) {
-      var i = this;
-      return (this.optionGroupLabel ? e - this.visibleOptions.slice(0, e).filter(function(s) {
-        return i.isOptionGroup(s);
-      }).length : e) + 1;
-    },
-    show: function(e) {
-      this.$emit("before-show"), this.overlayVisible = !0, this.focusedOptionIndex = this.focusedOptionIndex !== -1 ? this.focusedOptionIndex : this.autoOptionFocus ? this.findFirstFocusedOptionIndex() : this.editable ? -1 : this.findSelectedOptionIndex(), e && p.focus(this.$refs.focusInput);
-    },
-    hide: function(e) {
-      var i = this, s = function() {
-        i.$emit("before-hide"), i.overlayVisible = !1, i.clicked = !1, i.focusedOptionIndex = -1, i.searchValue = "", i.resetFilterOnHide && (i.filterValue = null), e && p.focus(i.$refs.focusInput);
-      };
-      setTimeout(function() {
-        s();
-      }, 0);
-    },
-    onFocus: function(e) {
-      this.disabled || (this.focused = !0, this.overlayVisible && (this.focusedOptionIndex = this.focusedOptionIndex !== -1 ? this.focusedOptionIndex : this.autoOptionFocus ? this.findFirstFocusedOptionIndex() : this.editable ? -1 : this.findSelectedOptionIndex(), this.scrollInView(this.focusedOptionIndex)), this.$emit("focus", e));
-    },
-    onBlur: function(e) {
-      this.focused = !1, this.focusedOptionIndex = -1, this.searchValue = "", this.$emit("blur", e);
-    },
-    onKeyDown: function(e) {
-      if (this.disabled || p.isAndroid()) {
-        e.preventDefault();
-        return;
-      }
-      var i = e.metaKey || e.ctrlKey;
-      switch (e.code) {
-        case "ArrowDown":
-          this.onArrowDownKey(e);
-          break;
-        case "ArrowUp":
-          this.onArrowUpKey(e, this.editable);
-          break;
-        case "ArrowLeft":
-        case "ArrowRight":
-          this.onArrowLeftKey(e, this.editable);
-          break;
-        case "Home":
-          this.onHomeKey(e, this.editable);
-          break;
-        case "End":
-          this.onEndKey(e, this.editable);
-          break;
-        case "PageDown":
-          this.onPageDownKey(e);
-          break;
-        case "PageUp":
-          this.onPageUpKey(e);
-          break;
-        case "Space":
-          this.onSpaceKey(e, this.editable);
-          break;
-        case "Enter":
-        case "NumpadEnter":
-          this.onEnterKey(e);
-          break;
-        case "Escape":
-          this.onEscapeKey(e);
-          break;
-        case "Tab":
-          this.onTabKey(e);
-          break;
-        case "Backspace":
-          this.onBackspaceKey(e, this.editable);
-          break;
-        case "ShiftLeft":
-        case "ShiftRight":
-          break;
-        default:
-          !i && V.isPrintableCharacter(e.key) && (!this.overlayVisible && this.show(), !this.editable && this.searchOptions(e, e.key));
-          break;
-      }
-      this.clicked = !1;
-    },
-    onEditableInput: function(e) {
-      var i = e.target.value;
-      this.searchValue = "";
-      var s = this.searchOptions(e, i);
-      !s && (this.focusedOptionIndex = -1), this.updateModel(e, i), !this.overlayVisible && V.isNotEmpty(i) && this.show();
-    },
-    onContainerClick: function(e) {
-      this.disabled || this.loading || e.target.tagName === "INPUT" || e.target.getAttribute("data-pc-section") === "clearicon" || e.target.closest('[data-pc-section="clearicon"]') || ((!this.overlay || !this.overlay.contains(e.target)) && (this.overlayVisible ? this.hide(!0) : this.show(!0)), this.clicked = !0);
-    },
-    onClearClick: function(e) {
-      this.updateModel(e, null), this.resetFilterOnClear && (this.filterValue = null);
-    },
-    onFirstHiddenFocus: function(e) {
-      var i = e.relatedTarget === this.$refs.focusInput ? p.getFirstFocusableElement(this.overlay, ':not([data-p-hidden-focusable="true"])') : this.$refs.focusInput;
-      p.focus(i);
-    },
-    onLastHiddenFocus: function(e) {
-      var i = e.relatedTarget === this.$refs.focusInput ? p.getLastFocusableElement(this.overlay, ':not([data-p-hidden-focusable="true"])') : this.$refs.focusInput;
-      p.focus(i);
-    },
-    onOptionSelect: function(e, i) {
-      var s = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : !0, r = this.getOptionValue(i);
-      this.updateModel(e, r), s && this.hide(!0);
-    },
-    onOptionMouseMove: function(e, i) {
-      this.focusOnHover && this.changeFocusedOptionIndex(e, i);
-    },
-    onFilterChange: function(e) {
-      var i = e.target.value;
-      this.filterValue = i, this.focusedOptionIndex = -1, this.$emit("filter", {
-        originalEvent: e,
-        value: i
-      }), !this.virtualScrollerDisabled && this.virtualScroller.scrollToIndex(0);
-    },
-    onFilterKeyDown: function(e) {
-      switch (e.code) {
-        case "ArrowDown":
-          this.onArrowDownKey(e);
-          break;
-        case "ArrowUp":
-          this.onArrowUpKey(e, !0);
-          break;
-        case "ArrowLeft":
-        case "ArrowRight":
-          this.onArrowLeftKey(e, !0);
-          break;
-        case "Home":
-          this.onHomeKey(e, !0);
-          break;
-        case "End":
-          this.onEndKey(e, !0);
-          break;
-        case "Enter":
-        case "NumpadEnter":
-          this.onEnterKey(e);
-          break;
-        case "Escape":
-          this.onEscapeKey(e);
-          break;
-        case "Tab":
-          this.onTabKey(e, !0);
-          break;
-      }
-    },
-    onFilterBlur: function() {
-      this.focusedOptionIndex = -1;
-    },
-    onFilterUpdated: function() {
-      this.overlayVisible && this.alignOverlay();
-    },
-    onOverlayClick: function(e) {
-      Ne.emit("overlay-click", {
-        originalEvent: e,
-        target: this.$el
-      });
-    },
-    onOverlayKeyDown: function(e) {
-      switch (e.code) {
-        case "Escape":
-          this.onEscapeKey(e);
-          break;
-      }
-    },
-    onArrowDownKey: function(e) {
-      if (!this.overlayVisible)
-        this.show(), this.editable && this.changeFocusedOptionIndex(e, this.findSelectedOptionIndex());
-      else {
-        var i = this.focusedOptionIndex !== -1 ? this.findNextOptionIndex(this.focusedOptionIndex) : this.clicked ? this.findFirstOptionIndex() : this.findFirstFocusedOptionIndex();
-        this.changeFocusedOptionIndex(e, i);
-      }
-      e.preventDefault();
-    },
-    onArrowUpKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      if (e.altKey && !i)
-        this.focusedOptionIndex !== -1 && this.onOptionSelect(e, this.visibleOptions[this.focusedOptionIndex]), this.overlayVisible && this.hide(), e.preventDefault();
-      else {
-        var s = this.focusedOptionIndex !== -1 ? this.findPrevOptionIndex(this.focusedOptionIndex) : this.clicked ? this.findLastOptionIndex() : this.findLastFocusedOptionIndex();
-        this.changeFocusedOptionIndex(e, s), !this.overlayVisible && this.show(), e.preventDefault();
-      }
-    },
-    onArrowLeftKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      i && (this.focusedOptionIndex = -1);
-    },
-    onHomeKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      if (i) {
-        var s = e.currentTarget;
-        e.shiftKey ? s.setSelectionRange(0, e.target.selectionStart) : (s.setSelectionRange(0, 0), this.focusedOptionIndex = -1);
-      } else
-        this.changeFocusedOptionIndex(e, this.findFirstOptionIndex()), !this.overlayVisible && this.show();
-      e.preventDefault();
-    },
-    onEndKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      if (i) {
-        var s = e.currentTarget;
-        if (e.shiftKey)
-          s.setSelectionRange(e.target.selectionStart, s.value.length);
-        else {
-          var r = s.value.length;
-          s.setSelectionRange(r, r), this.focusedOptionIndex = -1;
-        }
-      } else
-        this.changeFocusedOptionIndex(e, this.findLastOptionIndex()), !this.overlayVisible && this.show();
-      e.preventDefault();
-    },
-    onPageUpKey: function(e) {
-      this.scrollInView(0), e.preventDefault();
-    },
-    onPageDownKey: function(e) {
-      this.scrollInView(this.visibleOptions.length - 1), e.preventDefault();
-    },
-    onEnterKey: function(e) {
-      this.overlayVisible ? (this.focusedOptionIndex !== -1 && this.onOptionSelect(e, this.visibleOptions[this.focusedOptionIndex]), this.hide()) : (this.focusedOptionIndex = -1, this.onArrowDownKey(e)), e.preventDefault();
-    },
-    onSpaceKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      !i && this.onEnterKey(e);
-    },
-    onEscapeKey: function(e) {
-      this.overlayVisible && this.hide(!0), e.preventDefault(), e.stopPropagation();
-    },
-    onTabKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      i || (this.overlayVisible && this.hasFocusableElements() ? (p.focus(this.$refs.firstHiddenFocusableElementOnOverlay), e.preventDefault()) : (this.focusedOptionIndex !== -1 && this.onOptionSelect(e, this.visibleOptions[this.focusedOptionIndex]), this.overlayVisible && this.hide(this.filter)));
-    },
-    onBackspaceKey: function(e) {
-      var i = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
-      i && !this.overlayVisible && this.show();
-    },
-    onOverlayEnter: function(e) {
-      ee.set("overlay", e, this.$primevue.config.zIndex.overlay), p.addStyles(e, {
-        position: "absolute",
-        top: "0",
-        left: "0"
-      }), this.alignOverlay(), this.scrollInView(), this.autoFilterFocus && p.focus(this.$refs.filterInput);
-    },
-    onOverlayAfterEnter: function() {
-      this.bindOutsideClickListener(), this.bindScrollListener(), this.bindResizeListener(), this.$emit("show");
-    },
-    onOverlayLeave: function() {
-      this.unbindOutsideClickListener(), this.unbindScrollListener(), this.unbindResizeListener(), this.$emit("hide"), this.overlay = null;
-    },
-    onOverlayAfterLeave: function(e) {
-      ee.clear(e);
-    },
-    alignOverlay: function() {
-      this.appendTo === "self" ? p.relativePosition(this.overlay, this.$el) : (this.overlay.style.minWidth = p.getOuterWidth(this.$el) + "px", p.absolutePosition(this.overlay, this.$el));
-    },
-    bindOutsideClickListener: function() {
-      var e = this;
-      this.outsideClickListener || (this.outsideClickListener = function(i) {
-        e.overlayVisible && e.overlay && !e.$el.contains(i.target) && !e.overlay.contains(i.target) && e.hide();
-      }, document.addEventListener("click", this.outsideClickListener));
-    },
-    unbindOutsideClickListener: function() {
-      this.outsideClickListener && (document.removeEventListener("click", this.outsideClickListener), this.outsideClickListener = null);
-    },
-    bindScrollListener: function() {
-      var e = this;
-      this.scrollHandler || (this.scrollHandler = new Ce(this.$refs.container, function() {
-        e.overlayVisible && e.hide();
-      })), this.scrollHandler.bindScrollListener();
-    },
-    unbindScrollListener: function() {
-      this.scrollHandler && this.scrollHandler.unbindScrollListener();
-    },
-    bindResizeListener: function() {
-      var e = this;
-      this.resizeListener || (this.resizeListener = function() {
-        e.overlayVisible && !p.isTouchDevice() && e.hide();
-      }, window.addEventListener("resize", this.resizeListener));
-    },
-    unbindResizeListener: function() {
-      this.resizeListener && (window.removeEventListener("resize", this.resizeListener), this.resizeListener = null);
-    },
-    bindLabelClickListener: function() {
-      var e = this;
-      if (!this.editable && !this.labelClickListener) {
-        var i = document.querySelector('label[for="'.concat(this.inputId, '"]'));
-        i && p.isVisible(i) && (this.labelClickListener = function() {
-          p.focus(e.$refs.focusInput);
-        }, i.addEventListener("click", this.labelClickListener));
-      }
-    },
-    unbindLabelClickListener: function() {
-      if (this.labelClickListener) {
-        var e = document.querySelector('label[for="'.concat(this.inputId, '"]'));
-        e && p.isVisible(e) && e.removeEventListener("click", this.labelClickListener);
-      }
-    },
-    hasFocusableElements: function() {
-      return p.getFocusableElements(this.overlay, ':not([data-p-hidden-focusable="true"])').length > 0;
-    },
-    isOptionMatched: function(e) {
-      var i;
-      return this.isValidOption(e) && ((i = this.getOptionLabel(e)) === null || i === void 0 ? void 0 : i.toLocaleLowerCase(this.filterLocale).startsWith(this.searchValue.toLocaleLowerCase(this.filterLocale)));
-    },
-    isValidOption: function(e) {
-      return V.isNotEmpty(e) && !(this.isOptionDisabled(e) || this.isOptionGroup(e));
-    },
-    isValidSelectedOption: function(e) {
-      return this.isValidOption(e) && this.isSelected(e);
-    },
-    isSelected: function(e) {
-      return this.isValidOption(e) && V.equals(this.modelValue, this.getOptionValue(e), this.equalityKey);
-    },
-    findFirstOptionIndex: function() {
-      var e = this;
-      return this.visibleOptions.findIndex(function(i) {
-        return e.isValidOption(i);
-      });
-    },
-    findLastOptionIndex: function() {
-      var e = this;
-      return V.findLastIndex(this.visibleOptions, function(i) {
-        return e.isValidOption(i);
-      });
-    },
-    findNextOptionIndex: function(e) {
-      var i = this, s = e < this.visibleOptions.length - 1 ? this.visibleOptions.slice(e + 1).findIndex(function(r) {
-        return i.isValidOption(r);
-      }) : -1;
-      return s > -1 ? s + e + 1 : e;
-    },
-    findPrevOptionIndex: function(e) {
-      var i = this, s = e > 0 ? V.findLastIndex(this.visibleOptions.slice(0, e), function(r) {
-        return i.isValidOption(r);
-      }) : -1;
-      return s > -1 ? s : e;
-    },
-    findSelectedOptionIndex: function() {
-      var e = this;
-      return this.hasSelectedOption ? this.visibleOptions.findIndex(function(i) {
-        return e.isValidSelectedOption(i);
-      }) : -1;
-    },
-    findFirstFocusedOptionIndex: function() {
-      var e = this.findSelectedOptionIndex();
-      return e < 0 ? this.findFirstOptionIndex() : e;
-    },
-    findLastFocusedOptionIndex: function() {
-      var e = this.findSelectedOptionIndex();
-      return e < 0 ? this.findLastOptionIndex() : e;
-    },
-    searchOptions: function(e, i) {
-      var s = this;
-      this.searchValue = (this.searchValue || "") + i;
-      var r = -1, n = !1;
-      return V.isNotEmpty(this.searchValue) && (this.focusedOptionIndex !== -1 ? (r = this.visibleOptions.slice(this.focusedOptionIndex).findIndex(function(l) {
-        return s.isOptionMatched(l);
-      }), r = r === -1 ? this.visibleOptions.slice(0, this.focusedOptionIndex).findIndex(function(l) {
-        return s.isOptionMatched(l);
-      }) : r + this.focusedOptionIndex) : r = this.visibleOptions.findIndex(function(l) {
-        return s.isOptionMatched(l);
-      }), r !== -1 && (n = !0), r === -1 && this.focusedOptionIndex === -1 && (r = this.findFirstFocusedOptionIndex()), r !== -1 && this.changeFocusedOptionIndex(e, r)), this.searchTimeout && clearTimeout(this.searchTimeout), this.searchTimeout = setTimeout(function() {
-        s.searchValue = "", s.searchTimeout = null;
-      }, 500), n;
-    },
-    changeFocusedOptionIndex: function(e, i) {
-      this.focusedOptionIndex !== i && (this.focusedOptionIndex = i, this.scrollInView(), this.selectOnFocus && this.onOptionSelect(e, this.visibleOptions[i], !1));
-    },
-    scrollInView: function() {
-      var e = this, i = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : -1;
-      this.$nextTick(function() {
-        var s = i !== -1 ? "".concat(e.id, "_").concat(i) : e.focusedOptionId, r = p.findSingle(e.list, 'li[id="'.concat(s, '"]'));
-        r ? r.scrollIntoView && r.scrollIntoView({
-          block: "nearest"
-        }) : e.virtualScrollerDisabled || e.virtualScroller && e.virtualScroller.scrollToIndex(i !== -1 ? i : e.focusedOptionIndex);
-      });
-    },
-    autoUpdateModel: function() {
-      this.selectOnFocus && this.autoOptionFocus && !this.hasSelectedOption && (this.focusedOptionIndex = this.findFirstFocusedOptionIndex(), this.onOptionSelect(null, this.visibleOptions[this.focusedOptionIndex], !1));
-    },
-    updateModel: function(e, i) {
-      this.$emit("update:modelValue", i), this.$emit("change", {
-        originalEvent: e,
-        value: i
-      });
-    },
-    flatOptions: function(e) {
-      var i = this;
-      return (e || []).reduce(function(s, r, n) {
-        s.push({
-          optionGroup: r,
-          group: !0,
-          index: n
-        });
-        var l = i.getOptionGroupChildren(r);
-        return l && l.forEach(function(a) {
-          return s.push(a);
-        }), s;
-      }, []);
-    },
-    overlayRef: function(e) {
-      this.overlay = e;
-    },
-    listRef: function(e, i) {
-      this.list = e, i && i(e);
-    },
-    virtualScrollerRef: function(e) {
-      this.virtualScroller = e;
+      }, window.document.addEventListener("mousemove", this.documentDragListener);
+    },
+    unbindDocumentDragListener: function() {
+      this.documentDragListener && (window.document.removeEventListener("mousemove", this.documentDragListener), this.documentDragListener = null);
+    },
+    bindDocumentDragEndListener: function() {
+      var t = this;
+      this.documentDragEndListener = function(n) {
+        t.dragging && (t.dragging = !1, document.body.removeAttribute("data-p-unselectable-text"), !t.isUnstyled && l.removeClass(document.body, "p-unselectable-text"), t.$emit("dragend", n));
+      }, window.document.addEventListener("mouseup", this.documentDragEndListener);
+    },
+    unbindDocumentDragEndListener: function() {
+      this.documentDragEndListener && (window.document.removeEventListener("mouseup", this.documentDragEndListener), this.documentDragEndListener = null);
     }
   },
   computed: {
-    visibleOptions: function() {
-      var e = this, i = this.optionGroupLabel ? this.flatOptions(this.options) : this.options || [];
-      if (this.filterValue) {
-        var s = we.filter(i, this.searchFields, this.filterValue, this.filterMatchMode, this.filterLocale);
-        if (this.optionGroupLabel) {
-          var r = this.options || [], n = [];
-          return r.forEach(function(l) {
-            var a = e.getOptionGroupChildren(l), u = a.filter(function(d) {
-              return s.includes(d);
-            });
-            u.length > 0 && n.push(he(he({}, l), {}, Oe({}, typeof e.optionGroupChildren == "string" ? e.optionGroupChildren : "items", _e(u))));
-          }), this.flatOptions(n);
-        }
-        return s;
-      }
-      return i;
+    maximizeIconComponent: function() {
+      return this.maximized ? this.minimizeIcon ? "span" : "WindowMinimizeIcon" : this.maximizeIcon ? "span" : "WindowMaximizeIcon";
     },
-    hasSelectedOption: function() {
-      return V.isNotEmpty(this.modelValue);
+    ariaLabelledById: function() {
+      return this.header != null || this.$attrs["aria-labelledby"] !== null ? this.id + "_header" : null;
     },
-    label: function() {
-      var e = this.findSelectedOptionIndex();
-      return e !== -1 ? this.getOptionLabel(this.visibleOptions[e]) : this.placeholder || "p-emptylabel";
+    closeAriaLabel: function() {
+      return this.$primevue.config.locale.aria ? this.$primevue.config.locale.aria.close : void 0;
     },
-    editableInputValue: function() {
-      var e = this.findSelectedOptionIndex();
-      return e !== -1 ? this.getOptionLabel(this.visibleOptions[e]) : this.modelValue || "";
-    },
-    equalityKey: function() {
-      return this.optionValue ? null : this.dataKey;
-    },
-    searchFields: function() {
-      return this.filterFields || [this.optionLabel];
-    },
-    filterResultMessageText: function() {
-      return V.isNotEmpty(this.visibleOptions) ? this.filterMessageText.replaceAll("{0}", this.visibleOptions.length) : this.emptyFilterMessageText;
-    },
-    filterMessageText: function() {
-      return this.filterMessage || this.$primevue.config.locale.searchMessage || "";
-    },
-    emptyFilterMessageText: function() {
-      return this.emptyFilterMessage || this.$primevue.config.locale.emptySearchMessage || this.$primevue.config.locale.emptyFilterMessage || "";
-    },
-    emptyMessageText: function() {
-      return this.emptyMessage || this.$primevue.config.locale.emptyMessage || "";
-    },
-    selectionMessageText: function() {
-      return this.selectionMessage || this.$primevue.config.locale.selectionMessage || "";
-    },
-    emptySelectionMessageText: function() {
-      return this.emptySelectionMessage || this.$primevue.config.locale.emptySelectionMessage || "";
-    },
-    selectedMessageText: function() {
-      return this.hasSelectedOption ? this.selectionMessageText.replaceAll("{0}", "1") : this.emptySelectionMessageText;
-    },
-    listAriaLabel: function() {
-      return this.$primevue.config.locale.aria ? this.$primevue.config.locale.aria.listLabel : void 0;
-    },
-    focusedOptionId: function() {
-      return this.focusedOptionIndex !== -1 ? "".concat(this.id, "_").concat(this.focusedOptionIndex) : null;
-    },
-    ariaSetSize: function() {
-      var e = this;
-      return this.visibleOptions.filter(function(i) {
-        return !e.isOptionGroup(i);
-      }).length;
-    },
-    virtualScrollerDisabled: function() {
-      return !this.virtualScrollerOptions;
+    attributeSelector: function() {
+      return P();
     }
   },
   directives: {
-    ripple: Se
+    ripple: G,
+    focustrap: ge
   },
   components: {
-    VirtualScroller: be,
-    Portal: xe,
-    TimesIcon: Te,
-    ChevronDownIcon: ge,
-    SpinnerIcon: fe,
-    SearchIcon: ve,
-    CheckIcon: Pe,
-    BlankIcon: me
+    Portal: se,
+    WindowMinimizeIcon: re,
+    WindowMaximizeIcon: ie,
+    TimesIcon: W
   }
 };
-function Y(t) {
+function I(e) {
   "@babel/helpers - typeof";
-  return Y = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
-    return typeof e;
-  } : function(e) {
-    return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-  }, Y(t);
+  return I = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(t) {
+    return typeof t;
+  } : function(t) {
+    return t && typeof Symbol == "function" && t.constructor === Symbol && t !== Symbol.prototype ? "symbol" : typeof t;
+  }, I(e);
 }
-function pe(t, e) {
-  var i = Object.keys(t);
+function X(e, t) {
+  var n = Object.keys(e);
   if (Object.getOwnPropertySymbols) {
-    var s = Object.getOwnPropertySymbols(t);
-    e && (s = s.filter(function(r) {
-      return Object.getOwnPropertyDescriptor(t, r).enumerable;
-    })), i.push.apply(i, s);
+    var o = Object.getOwnPropertySymbols(e);
+    t && (o = o.filter(function(r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), n.push.apply(n, o);
   }
-  return i;
+  return n;
 }
-function x(t) {
-  for (var e = 1; e < arguments.length; e++) {
-    var i = arguments[e] != null ? arguments[e] : {};
-    e % 2 ? pe(Object(i), !0).forEach(function(s) {
-      ot(t, s, i[s]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(t, Object.getOwnPropertyDescriptors(i)) : pe(Object(i)).forEach(function(s) {
-      Object.defineProperty(t, s, Object.getOwnPropertyDescriptor(i, s));
+function z(e) {
+  for (var t = 1; t < arguments.length; t++) {
+    var n = arguments[t] != null ? arguments[t] : {};
+    t % 2 ? X(Object(n), !0).forEach(function(o) {
+      _e(e, o, n[o]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : X(Object(n)).forEach(function(o) {
+      Object.defineProperty(e, o, Object.getOwnPropertyDescriptor(n, o));
     });
   }
-  return t;
+  return e;
 }
-function ot(t, e, i) {
-  return e = at(e), e in t ? Object.defineProperty(t, e, { value: i, enumerable: !0, configurable: !0, writable: !0 }) : t[e] = i, t;
+function _e(e, t, n) {
+  return t = Me(t), t in e ? Object.defineProperty(e, t, { value: n, enumerable: !0, configurable: !0, writable: !0 }) : e[t] = n, e;
 }
-function at(t) {
-  var e = ut(t, "string");
-  return Y(e) == "symbol" ? e : String(e);
+function Me(e) {
+  var t = je(e, "string");
+  return I(t) == "symbol" ? t : String(t);
 }
-function ut(t, e) {
-  if (Y(t) != "object" || !t) return t;
-  var i = t[Symbol.toPrimitive];
-  if (i !== void 0) {
-    var s = i.call(t, e);
-    if (Y(s) != "object") return s;
+function je(e, t) {
+  if (I(e) != "object" || !e) return e;
+  var n = e[Symbol.toPrimitive];
+  if (n !== void 0) {
+    var o = n.call(e, t);
+    if (I(o) != "object") return o;
     throw new TypeError("@@toPrimitive must return a primitive value.");
   }
-  return (e === "string" ? String : Number)(t);
+  return (t === "string" ? String : Number)(e);
 }
-var dt = ["id"], ct = ["id", "value", "placeholder", "tabindex", "disabled", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-invalid"], ht = ["id", "tabindex", "aria-label", "aria-labelledby", "aria-expanded", "aria-controls", "aria-activedescendant", "aria-disabled"], pt = ["value", "placeholder", "aria-owns", "aria-activedescendant"], ft = ["id", "aria-label"], mt = ["id"], gt = ["id", "aria-label", "aria-selected", "aria-disabled", "aria-setsize", "aria-posinset", "onClick", "onMousemove", "data-p-highlight", "data-p-focused", "data-p-disabled"];
-function vt(t, e, i, s, r, n) {
-  var l = G("SpinnerIcon"), a = G("CheckIcon"), u = G("BlankIcon"), d = G("VirtualScroller"), o = G("Portal"), h = Le("ripple");
-  return f(), v("div", c({
-    ref: "container",
-    id: r.id,
-    class: t.cx("root"),
-    onClick: e[16] || (e[16] = function() {
-      return n.onContainerClick && n.onContainerClick.apply(n, arguments);
-    })
-  }, t.ptmi("root")), [t.editable ? (f(), v("input", c({
-    key: 0,
-    ref: "focusInput",
-    id: t.inputId,
-    type: "text",
-    class: [t.cx("input"), t.inputClass],
-    style: t.inputStyle,
-    value: n.editableInputValue,
-    placeholder: t.placeholder,
-    tabindex: t.disabled ? -1 : t.tabindex,
-    disabled: t.disabled,
-    autocomplete: "off",
-    role: "combobox",
-    "aria-label": t.ariaLabel,
-    "aria-labelledby": t.ariaLabelledby,
-    "aria-haspopup": "listbox",
-    "aria-expanded": r.overlayVisible,
-    "aria-controls": r.id + "_list",
-    "aria-activedescendant": r.focused ? n.focusedOptionId : void 0,
-    "aria-invalid": t.invalid || void 0,
-    onFocus: e[0] || (e[0] = function() {
-      return n.onFocus && n.onFocus.apply(n, arguments);
-    }),
-    onBlur: e[1] || (e[1] = function() {
-      return n.onBlur && n.onBlur.apply(n, arguments);
-    }),
-    onKeydown: e[2] || (e[2] = function() {
-      return n.onKeyDown && n.onKeyDown.apply(n, arguments);
-    }),
-    onInput: e[3] || (e[3] = function() {
-      return n.onEditableInput && n.onEditableInput.apply(n, arguments);
-    })
-  }, x(x({}, t.inputProps), t.ptm("input"))), null, 16, ct)) : (f(), v("span", c({
-    key: 1,
-    ref: "focusInput",
-    id: t.inputId,
-    class: [t.cx("input"), t.inputClass],
-    style: t.inputStyle,
-    tabindex: t.disabled ? -1 : t.tabindex,
-    role: "combobox",
-    "aria-label": t.ariaLabel || (n.label === "p-emptylabel" ? void 0 : n.label),
-    "aria-labelledby": t.ariaLabelledby,
-    "aria-haspopup": "listbox",
-    "aria-expanded": r.overlayVisible,
-    "aria-controls": r.id + "_list",
-    "aria-activedescendant": r.focused ? n.focusedOptionId : void 0,
-    "aria-disabled": t.disabled,
-    onFocus: e[4] || (e[4] = function() {
-      return n.onFocus && n.onFocus.apply(n, arguments);
-    }),
-    onBlur: e[5] || (e[5] = function() {
-      return n.onBlur && n.onBlur.apply(n, arguments);
-    }),
-    onKeydown: e[6] || (e[6] = function() {
-      return n.onKeyDown && n.onKeyDown.apply(n, arguments);
-    })
-  }, x(x({}, t.inputProps), t.ptm("input"))), [I(t.$slots, "value", {
-    value: t.modelValue,
-    placeholder: t.placeholder
-  }, function() {
-    return [te(M(n.label === "p-emptylabel" ? " " : n.label || "empty"), 1)];
-  })], 16, ht)), t.showClear && t.modelValue != null ? I(t.$slots, "clearicon", {
-    key: 2,
-    class: Q(t.cx("clearIcon")),
-    onClick: n.onClearClick,
-    clearCallback: n.onClearClick
-  }, function() {
-    return [(f(), j(ie(t.clearIcon ? "i" : "TimesIcon"), c({
-      ref: "clearIcon",
-      class: [t.cx("clearIcon"), t.clearIcon],
-      onClick: n.onClearClick
-    }, x(x({}, t.clearIconProps), t.ptm("clearIcon")), {
-      "data-pc-section": "clearicon"
-    }), null, 16, ["class", "onClick"]))];
-  }) : D("", !0), C("div", c({
-    class: t.cx("trigger")
-  }, t.ptm("trigger")), [t.loading ? I(t.$slots, "loadingicon", {
-    key: 0,
-    class: Q(t.cx("loadingIcon"))
-  }, function() {
-    return [t.loadingIcon ? (f(), v("span", c({
-      key: 0,
-      class: [t.cx("loadingIcon"), "pi-spin", t.loadingIcon],
-      "aria-hidden": "true"
-    }, t.ptm("loadingIcon")), null, 16)) : (f(), j(l, c({
-      key: 1,
-      class: t.cx("loadingIcon"),
-      spin: "",
-      "aria-hidden": "true"
-    }, t.ptm("loadingIcon")), null, 16, ["class"]))];
-  }) : I(t.$slots, "dropdownicon", {
-    key: 1,
-    class: Q(t.cx("dropdownIcon"))
-  }, function() {
-    return [(f(), j(ie(t.dropdownIcon ? "span" : "ChevronDownIcon"), c({
-      class: [t.cx("dropdownIcon"), t.dropdownIcon],
-      "aria-hidden": "true"
-    }, t.ptm("dropdownIcon")), null, 16, ["class"]))];
-  })], 16), q(o, {
-    appendTo: t.appendTo
+var Ve = ["aria-labelledby", "aria-modal"], He = ["id"], Te = ["autofocus", "tabindex"], Ae = ["autofocus", "aria-label"];
+function Ze(e, t, n, o, r, i) {
+  var d = ee("Portal"), c = j("ripple"), p = j("focustrap");
+  return s(), y(d, {
+    appendTo: e.appendTo
   }, {
-    default: _(function() {
-      return [q(ze, c({
-        name: "p-connected-overlay",
-        onEnter: n.onOverlayEnter,
-        onAfterEnter: n.onOverlayAfterEnter,
-        onLeave: n.onOverlayLeave,
-        onAfterLeave: n.onOverlayAfterLeave
-      }, t.ptm("transition")), {
-        default: _(function() {
-          return [r.overlayVisible ? (f(), v("div", c({
+    default: V(function() {
+      return [r.containerVisible ? (s(), f("div", u({
+        key: 0,
+        ref: i.maskRef,
+        class: e.cx("mask"),
+        style: e.sx("mask", !0, {
+          position: e.position,
+          modal: e.modal
+        }),
+        onClick: t[3] || (t[3] = function() {
+          return i.onMaskClick && i.onMaskClick.apply(i, arguments);
+        })
+      }, e.ptm("mask")), [E(te, u({
+        name: "p-dialog",
+        onBeforeEnter: i.onBeforeEnter,
+        onEnter: i.onEnter,
+        onAfterEnter: i.onAfterEnter,
+        onBeforeLeave: i.onBeforeLeave,
+        onLeave: i.onLeave,
+        onAfterLeave: i.onAfterLeave,
+        appear: ""
+      }, e.ptm("transition")), {
+        default: V(function() {
+          return [e.visible ? L((s(), f("div", u({
             key: 0,
-            ref: n.overlayRef,
-            class: [t.cx("panel"), t.panelClass],
-            style: t.panelStyle,
-            onClick: e[14] || (e[14] = function() {
-              return n.onOverlayClick && n.onOverlayClick.apply(n, arguments);
-            }),
-            onKeydown: e[15] || (e[15] = function() {
-              return n.onOverlayKeyDown && n.onOverlayKeyDown.apply(n, arguments);
-            })
-          }, x(x({}, t.panelProps), t.ptm("panel"))), [C("span", c({
-            ref: "firstHiddenFocusableElementOnOverlay",
-            role: "presentation",
-            "aria-hidden": "true",
-            class: "p-hidden-accessible p-hidden-focusable",
-            tabindex: 0,
-            onFocus: e[7] || (e[7] = function() {
-              return n.onFirstHiddenFocus && n.onFirstHiddenFocus.apply(n, arguments);
-            })
-          }, t.ptm("hiddenFirstFocusableEl"), {
-            "data-p-hidden-accessible": !0,
-            "data-p-hidden-focusable": !0
-          }), null, 16), I(t.$slots, "header", {
-            value: t.modelValue,
-            options: n.visibleOptions
-          }), t.filter ? (f(), v("div", c({
+            ref: i.containerRef,
+            class: e.cx("root"),
+            style: e.sx("root"),
+            role: "dialog",
+            "aria-labelledby": i.ariaLabelledById,
+            "aria-modal": e.modal
+          }, e.ptmi("root")), [e.$slots.container ? C(e.$slots, "container", {
             key: 0,
-            class: t.cx("header")
-          }, t.ptm("header")), [C("div", c({
-            class: t.cx("filterContainer")
-          }, t.ptm("filterContainer")), [C("input", c({
-            ref: "filterInput",
-            type: "text",
-            value: r.filterValue,
-            onVnodeMounted: e[8] || (e[8] = function() {
-              return n.onFilterUpdated && n.onFilterUpdated.apply(n, arguments);
-            }),
-            onVnodeUpdated: e[9] || (e[9] = function() {
-              return n.onFilterUpdated && n.onFilterUpdated.apply(n, arguments);
-            }),
-            class: t.cx("filterInput"),
-            placeholder: t.filterPlaceholder,
-            role: "searchbox",
-            autocomplete: "off",
-            "aria-owns": r.id + "_list",
-            "aria-activedescendant": n.focusedOptionId,
-            onKeydown: e[10] || (e[10] = function() {
-              return n.onFilterKeyDown && n.onFilterKeyDown.apply(n, arguments);
-            }),
-            onBlur: e[11] || (e[11] = function() {
-              return n.onFilterBlur && n.onFilterBlur.apply(n, arguments);
-            }),
-            onInput: e[12] || (e[12] = function() {
-              return n.onFilterChange && n.onFilterChange.apply(n, arguments);
-            })
-          }, x(x({}, t.filterInputProps), t.ptm("filterInput"))), null, 16, pt), I(t.$slots, "filtericon", {
-            class: Q(t.cx("filterIcon"))
-          }, function() {
-            return [(f(), j(ie(t.filterIcon ? "span" : "SearchIcon"), c({
-              class: [t.cx("filterIcon"), t.filterIcon]
-            }, t.ptm("filterIcon")), null, 16, ["class"]))];
-          })], 16), C("span", c({
-            role: "status",
-            "aria-live": "polite",
-            class: "p-hidden-accessible"
-          }, t.ptm("hiddenFilterResult"), {
-            "data-p-hidden-accessible": !0
-          }), M(n.filterResultMessageText), 17)], 16)) : D("", !0), C("div", c({
-            class: t.cx("wrapper"),
-            style: {
-              "max-height": n.virtualScrollerDisabled ? t.scrollHeight : ""
-            }
-          }, t.ptm("wrapper")), [q(d, c({
-            ref: n.virtualScrollerRef
-          }, t.virtualScrollerOptions, {
-            items: n.visibleOptions,
-            style: {
-              height: t.scrollHeight
+            onClose: i.close,
+            onMaximize: function(a) {
+              return i.maximize(a);
             },
-            tabindex: -1,
-            disabled: n.virtualScrollerDisabled,
-            pt: t.ptm("virtualScroller")
-          }), Ve({
-            content: _(function(g) {
-              var L = g.styleClass, S = g.contentRef, O = g.items, b = g.getItemOptions, F = g.contentStyle, z = g.itemSize;
-              return [C("ul", c({
-                ref: function(m) {
-                  return n.listRef(m, S);
-                },
-                id: r.id + "_list",
-                class: [t.cx("list"), L],
-                style: F,
-                role: "listbox",
-                "aria-label": n.listAriaLabel
-              }, t.ptm("list")), [(f(!0), v(N, null, ne(O, function(y, m) {
-                return f(), v(N, {
-                  key: n.getOptionRenderKey(y, n.getOptionIndex(m, b))
-                }, [n.isOptionGroup(y) ? (f(), v("li", c({
-                  key: 0,
-                  id: r.id + "_" + n.getOptionIndex(m, b),
-                  style: {
-                    height: z ? z + "px" : void 0
-                  },
-                  class: t.cx("itemGroup"),
-                  role: "option"
-                }, t.ptm("itemGroup")), [I(t.$slots, "optiongroup", {
-                  option: y.optionGroup,
-                  index: n.getOptionIndex(m, b)
-                }, function() {
-                  return [C("span", c({
-                    class: t.cx("itemGroupLabel")
-                  }, t.ptm("itemGroupLabel")), M(n.getOptionGroupLabel(y.optionGroup)), 17)];
-                })], 16, mt)) : Fe((f(), v("li", c({
-                  key: 1,
-                  id: r.id + "_" + n.getOptionIndex(m, b),
-                  class: t.cx("item", {
-                    option: y,
-                    focusedOption: n.getOptionIndex(m, b)
-                  }),
-                  style: {
-                    height: z ? z + "px" : void 0
-                  },
-                  role: "option",
-                  "aria-label": n.getOptionLabel(y),
-                  "aria-selected": n.isSelected(y),
-                  "aria-disabled": n.isOptionDisabled(y),
-                  "aria-setsize": n.ariaSetSize,
-                  "aria-posinset": n.getAriaPosInset(n.getOptionIndex(m, b)),
-                  onClick: function(k) {
-                    return n.onOptionSelect(k, y);
-                  },
-                  onMousemove: function(k) {
-                    return n.onOptionMouseMove(k, n.getOptionIndex(m, b));
-                  },
-                  "data-p-highlight": n.isSelected(y),
-                  "data-p-focused": r.focusedOptionIndex === n.getOptionIndex(m, b),
-                  "data-p-disabled": n.isOptionDisabled(y)
-                }, n.getPTItemOptions(y, b, m, "item")), [t.checkmark ? (f(), v(N, {
-                  key: 0
-                }, [n.isSelected(y) ? (f(), j(a, c({
-                  key: 0,
-                  class: t.cx("checkIcon")
-                }, t.ptm("checkIcon")), null, 16, ["class"])) : (f(), j(u, c({
-                  key: 1,
-                  class: t.cx("blankIcon")
-                }, t.ptm("blankIcon")), null, 16, ["class"]))], 64)) : D("", !0), I(t.$slots, "option", {
-                  option: y,
-                  index: n.getOptionIndex(m, b)
-                }, function() {
-                  return [C("span", c({
-                    class: t.cx("itemLabel")
-                  }, t.ptm("itemLabel")), M(n.getOptionLabel(y)), 17)];
-                })], 16, gt)), [[h]])], 64);
-              }), 128)), r.filterValue && (!O || O && O.length === 0) ? (f(), v("li", c({
-                key: 0,
-                class: t.cx("emptyMessage"),
-                role: "option"
-              }, t.ptm("emptyMessage"), {
-                "data-p-hidden-accessible": !0
-              }), [I(t.$slots, "emptyfilter", {}, function() {
-                return [te(M(n.emptyFilterMessageText), 1)];
-              })], 16)) : !t.options || t.options && t.options.length === 0 ? (f(), v("li", c({
-                key: 1,
-                class: t.cx("emptyMessage"),
-                role: "option"
-              }, t.ptm("emptyMessage"), {
-                "data-p-hidden-accessible": !0
-              }), [I(t.$slots, "empty", {}, function() {
-                return [te(M(n.emptyMessageText), 1)];
-              })], 16)) : D("", !0)], 16, ft)];
-            }),
-            _: 2
-          }, [t.$slots.loader ? {
-            name: "loader",
-            fn: _(function(g) {
-              var L = g.options;
-              return [I(t.$slots, "loader", {
-                options: L
-              })];
-            }),
-            key: "0"
-          } : void 0]), 1040, ["items", "style", "disabled", "pt"])], 16), I(t.$slots, "footer", {
-            value: t.modelValue,
-            options: n.visibleOptions
-          }), !t.options || t.options && t.options.length === 0 ? (f(), v("span", c({
-            key: 1,
-            role: "status",
-            "aria-live": "polite",
-            class: "p-hidden-accessible"
-          }, t.ptm("hiddenEmptyMessage"), {
-            "data-p-hidden-accessible": !0
-          }), M(n.emptyMessageText), 17)) : D("", !0), C("span", c({
-            role: "status",
-            "aria-live": "polite",
-            class: "p-hidden-accessible"
-          }, t.ptm("hiddenSelectedMessage"), {
-            "data-p-hidden-accessible": !0
-          }), M(n.selectedMessageText), 17), C("span", c({
-            ref: "lastHiddenFocusableElementOnOverlay",
-            role: "presentation",
-            "aria-hidden": "true",
-            class: "p-hidden-accessible p-hidden-focusable",
-            tabindex: 0,
-            onFocus: e[13] || (e[13] = function() {
-              return n.onLastHiddenFocus && n.onLastHiddenFocus.apply(n, arguments);
+            closeCallback: i.close,
+            maximizeCallback: function(a) {
+              return i.maximize(a);
+            }
+          }) : (s(), f(ne, {
+            key: 1
+          }, [e.showHeader ? (s(), f("div", u({
+            key: 0,
+            ref: i.headerContainerRef,
+            class: e.cx("header"),
+            onMousedown: t[2] || (t[2] = function() {
+              return i.initDrag && i.initDrag.apply(i, arguments);
             })
-          }, t.ptm("hiddenLastFocusableEl"), {
-            "data-p-hidden-accessible": !0,
-            "data-p-hidden-focusable": !0
-          }), null, 16)], 16)) : D("", !0)];
+          }, e.ptm("header")), [C(e.$slots, "header", {
+            class: M(e.cx("title"))
+          }, function() {
+            return [e.header ? (s(), f("span", u({
+              key: 0,
+              id: i.ariaLabelledById,
+              class: e.cx("title")
+            }, e.ptm("title")), k(e.header), 17, He)) : g("", !0)];
+          }), b("div", u({
+            class: e.cx("icons")
+          }, e.ptm("icons")), [e.maximizable ? L((s(), f("button", u({
+            key: 0,
+            ref: i.maximizableRef,
+            autofocus: r.focusableMax,
+            class: e.cx("maximizableButton"),
+            onClick: t[0] || (t[0] = function() {
+              return i.maximize && i.maximize.apply(i, arguments);
+            }),
+            type: "button",
+            tabindex: e.maximizable ? "0" : "-1"
+          }, e.ptm("maximizableButton"), {
+            "data-pc-group-section": "headericon"
+          }), [C(e.$slots, "maximizeicon", {
+            maximized: r.maximized,
+            class: M(e.cx("maximizableIcon"))
+          }, function() {
+            return [(s(), y(H(i.maximizeIconComponent), u({
+              class: [e.cx("maximizableIcon"), r.maximized ? e.minimizeIcon : e.maximizeIcon]
+            }, e.ptm("maximizableIcon")), null, 16, ["class"]))];
+          })], 16, Te)), [[c]]) : g("", !0), e.closable ? L((s(), f("button", u({
+            key: 1,
+            ref: i.closeButtonRef,
+            autofocus: r.focusableClose,
+            class: e.cx("closeButton"),
+            onClick: t[1] || (t[1] = function() {
+              return i.close && i.close.apply(i, arguments);
+            }),
+            "aria-label": i.closeAriaLabel,
+            type: "button"
+          }, z(z({}, e.closeButtonProps), e.ptm("closeButton")), {
+            "data-pc-group-section": "headericon"
+          }), [C(e.$slots, "closeicon", {
+            class: M(e.cx("closeButtonIcon"))
+          }, function() {
+            return [(s(), y(H(e.closeIcon ? "span" : "TimesIcon"), u({
+              class: [e.cx("closeButtonIcon"), e.closeIcon]
+            }, e.ptm("closeButtonIcon")), null, 16, ["class"]))];
+          })], 16, Ae)), [[c]]) : g("", !0)], 16)], 16)) : g("", !0), b("div", u({
+            ref: i.contentRef,
+            class: [e.cx("content"), e.contentClass],
+            style: e.contentStyle
+          }, z(z({}, e.contentProps), e.ptm("content"))), [C(e.$slots, "default")], 16), e.footer || e.$slots.footer ? (s(), f("div", u({
+            key: 1,
+            ref: i.footerContainerRef,
+            class: e.cx("footer")
+          }, e.ptm("footer")), [C(e.$slots, "footer", {}, function() {
+            return [ce(k(e.footer), 1)];
+          })], 16)) : g("", !0)], 64))], 16, Ve)), [[p, {
+            disabled: !e.modal
+          }]]) : g("", !0)];
         }),
         _: 3
-      }, 16, ["onEnter", "onAfterEnter", "onLeave", "onAfterLeave"])];
+      }, 16, ["onBeforeEnter", "onEnter", "onAfterEnter", "onBeforeLeave", "onLeave", "onAfterLeave"])], 16)) : g("", !0)];
     }),
     _: 3
-  }, 8, ["appendTo"])], 16, dt);
+  }, 8, ["appendTo"]);
 }
-lt.render = vt;
-var yt = {
-  root: function(e) {
-    var i = e.instance, s = e.props;
-    return ["p-inputtextarea p-inputtext p-component", {
-      "p-filled": i.filled,
-      "p-inputtextarea-resizable ": s.autoResize,
-      "p-invalid": s.invalid,
-      "p-variant-filled": s.variant ? s.variant === "filled" : i.$primevue.config.inputStyle === "filled"
-    }];
-  }
-}, bt = le.extend({
-  name: "textarea",
-  classes: yt
-}), Ot = {
-  name: "BaseTextarea",
-  extends: oe,
+Pe.render = Ze;
+var T = {
+  name: "CheckIcon",
+  extends: S
+}, Re = /* @__PURE__ */ b("path", {
+  d: "M4.86199 11.5948C4.78717 11.5923 4.71366 11.5745 4.64596 11.5426C4.57826 11.5107 4.51779 11.4652 4.46827 11.4091L0.753985 7.69483C0.683167 7.64891 0.623706 7.58751 0.580092 7.51525C0.536478 7.44299 0.509851 7.36177 0.502221 7.27771C0.49459 7.19366 0.506156 7.10897 0.536046 7.03004C0.565935 6.95111 0.613367 6.88 0.674759 6.82208C0.736151 6.76416 0.8099 6.72095 0.890436 6.69571C0.970973 6.67046 1.05619 6.66385 1.13966 6.67635C1.22313 6.68886 1.30266 6.72017 1.37226 6.76792C1.44186 6.81567 1.4997 6.8786 1.54141 6.95197L4.86199 10.2503L12.6397 2.49483C12.7444 2.42694 12.8689 2.39617 12.9932 2.40745C13.1174 2.41873 13.2343 2.47141 13.3251 2.55705C13.4159 2.64268 13.4753 2.75632 13.4938 2.87973C13.5123 3.00315 13.4888 3.1292 13.4271 3.23768L5.2557 11.4091C5.20618 11.4652 5.14571 11.5107 5.07801 11.5426C5.01031 11.5745 4.9368 11.5923 4.86199 11.5948Z",
+  fill: "currentColor"
+}, null, -1), Ke = [Re];
+function We(e, t, n, o, r, i) {
+  return s(), f("svg", u({
+    width: "14",
+    height: "14",
+    viewBox: "0 0 14 14",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, e.pti()), Ke, 16);
+}
+T.render = We;
+var A = {
+  name: "ExclamationTriangleIcon",
+  extends: S
+}, Ne = /* @__PURE__ */ b("path", {
+  d: "M13.4018 13.1893H0.598161C0.49329 13.189 0.390283 13.1615 0.299143 13.1097C0.208003 13.0578 0.131826 12.9832 0.0780112 12.8932C0.0268539 12.8015 0 12.6982 0 12.5931C0 12.4881 0.0268539 12.3848 0.0780112 12.293L6.47985 1.08982C6.53679 1.00399 6.61408 0.933574 6.70484 0.884867C6.7956 0.836159 6.897 0.810669 7 0.810669C7.103 0.810669 7.2044 0.836159 7.29516 0.884867C7.38592 0.933574 7.46321 1.00399 7.52015 1.08982L13.922 12.293C13.9731 12.3848 14 12.4881 14 12.5931C14 12.6982 13.9731 12.8015 13.922 12.8932C13.8682 12.9832 13.792 13.0578 13.7009 13.1097C13.6097 13.1615 13.5067 13.189 13.4018 13.1893ZM1.63046 11.989H12.3695L7 2.59425L1.63046 11.989Z",
+  fill: "currentColor"
+}, null, -1), Ue = /* @__PURE__ */ b("path", {
+  d: "M6.99996 8.78801C6.84143 8.78594 6.68997 8.72204 6.57787 8.60993C6.46576 8.49782 6.40186 8.34637 6.39979 8.18784V5.38703C6.39979 5.22786 6.46302 5.0752 6.57557 4.96265C6.68813 4.85009 6.84078 4.78686 6.99996 4.78686C7.15914 4.78686 7.31179 4.85009 7.42435 4.96265C7.5369 5.0752 7.60013 5.22786 7.60013 5.38703V8.18784C7.59806 8.34637 7.53416 8.49782 7.42205 8.60993C7.30995 8.72204 7.15849 8.78594 6.99996 8.78801Z",
+  fill: "currentColor"
+}, null, -1), Xe = /* @__PURE__ */ b("path", {
+  d: "M6.99996 11.1887C6.84143 11.1866 6.68997 11.1227 6.57787 11.0106C6.46576 10.8985 6.40186 10.7471 6.39979 10.5885V10.1884C6.39979 10.0292 6.46302 9.87658 6.57557 9.76403C6.68813 9.65147 6.84078 9.58824 6.99996 9.58824C7.15914 9.58824 7.31179 9.65147 7.42435 9.76403C7.5369 9.87658 7.60013 10.0292 7.60013 10.1884V10.5885C7.59806 10.7471 7.53416 10.8985 7.42205 11.0106C7.30995 11.1227 7.15849 11.1866 6.99996 11.1887Z",
+  fill: "currentColor"
+}, null, -1), Ye = [Ne, Ue, Xe];
+function qe(e, t, n, o, r, i) {
+  return s(), f("svg", u({
+    width: "14",
+    height: "14",
+    viewBox: "0 0 14 14",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, e.pti()), Ye, 16);
+}
+A.render = qe;
+var Z = {
+  name: "InfoCircleIcon",
+  extends: S
+}, Ge = /* @__PURE__ */ b("path", {
+  "fill-rule": "evenodd",
+  "clip-rule": "evenodd",
+  d: "M3.11101 12.8203C4.26215 13.5895 5.61553 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.61553 13.5895 4.26215 12.8203 3.11101C12.0511 1.95987 10.9579 1.06266 9.67879 0.532846C8.3997 0.00303296 6.99224 -0.13559 5.63437 0.134506C4.2765 0.404603 3.02922 1.07129 2.05026 2.05026C1.07129 3.02922 0.404603 4.2765 0.134506 5.63437C-0.13559 6.99224 0.00303296 8.3997 0.532846 9.67879C1.06266 10.9579 1.95987 12.0511 3.11101 12.8203ZM3.75918 2.14976C4.71846 1.50879 5.84628 1.16667 7 1.16667C8.5471 1.16667 10.0308 1.78125 11.1248 2.87521C12.2188 3.96918 12.8333 5.45291 12.8333 7C12.8333 8.15373 12.4912 9.28154 11.8502 10.2408C11.2093 11.2001 10.2982 11.9478 9.23232 12.3893C8.16642 12.8308 6.99353 12.9463 5.86198 12.7212C4.73042 12.4962 3.69102 11.9406 2.87521 11.1248C2.05941 10.309 1.50384 9.26958 1.27876 8.13803C1.05367 7.00647 1.16919 5.83358 1.61071 4.76768C2.05222 3.70178 2.79989 2.79074 3.75918 2.14976ZM7.00002 4.8611C6.84594 4.85908 6.69873 4.79698 6.58977 4.68801C6.48081 4.57905 6.4187 4.43185 6.41669 4.27776V3.88888C6.41669 3.73417 6.47815 3.58579 6.58754 3.4764C6.69694 3.367 6.84531 3.30554 7.00002 3.30554C7.15473 3.30554 7.3031 3.367 7.4125 3.4764C7.52189 3.58579 7.58335 3.73417 7.58335 3.88888V4.27776C7.58134 4.43185 7.51923 4.57905 7.41027 4.68801C7.30131 4.79698 7.1541 4.85908 7.00002 4.8611ZM7.00002 10.6945C6.84594 10.6925 6.69873 10.6304 6.58977 10.5214C6.48081 10.4124 6.4187 10.2652 6.41669 10.1111V6.22225C6.41669 6.06754 6.47815 5.91917 6.58754 5.80977C6.69694 5.70037 6.84531 5.63892 7.00002 5.63892C7.15473 5.63892 7.3031 5.70037 7.4125 5.80977C7.52189 5.91917 7.58335 6.06754 7.58335 6.22225V10.1111C7.58134 10.2652 7.51923 10.4124 7.41027 10.5214C7.30131 10.6304 7.1541 10.6925 7.00002 10.6945Z",
+  fill: "currentColor"
+}, null, -1), Je = [Ge];
+function Qe(e, t, n, o, r, i) {
+  return s(), f("svg", u({
+    width: "14",
+    height: "14",
+    viewBox: "0 0 14 14",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, e.pti()), Je, 16);
+}
+Z.render = Qe;
+var R = {
+  name: "TimesCircleIcon",
+  extends: S
+}, et = /* @__PURE__ */ b("path", {
+  "fill-rule": "evenodd",
+  "clip-rule": "evenodd",
+  d: "M7 14C5.61553 14 4.26215 13.5895 3.11101 12.8203C1.95987 12.0511 1.06266 10.9579 0.532846 9.67879C0.00303296 8.3997 -0.13559 6.99224 0.134506 5.63437C0.404603 4.2765 1.07129 3.02922 2.05026 2.05026C3.02922 1.07129 4.2765 0.404603 5.63437 0.134506C6.99224 -0.13559 8.3997 0.00303296 9.67879 0.532846C10.9579 1.06266 12.0511 1.95987 12.8203 3.11101C13.5895 4.26215 14 5.61553 14 7C14 8.85652 13.2625 10.637 11.9497 11.9497C10.637 13.2625 8.85652 14 7 14ZM7 1.16667C5.84628 1.16667 4.71846 1.50879 3.75918 2.14976C2.79989 2.79074 2.05222 3.70178 1.61071 4.76768C1.16919 5.83358 1.05367 7.00647 1.27876 8.13803C1.50384 9.26958 2.05941 10.309 2.87521 11.1248C3.69102 11.9406 4.73042 12.4962 5.86198 12.7212C6.99353 12.9463 8.16642 12.8308 9.23232 12.3893C10.2982 11.9478 11.2093 11.2001 11.8502 10.2408C12.4912 9.28154 12.8333 8.15373 12.8333 7C12.8333 5.45291 12.2188 3.96918 11.1248 2.87521C10.0308 1.78125 8.5471 1.16667 7 1.16667ZM4.66662 9.91668C4.58998 9.91704 4.51404 9.90209 4.44325 9.87271C4.37246 9.84333 4.30826 9.8001 4.2544 9.74557C4.14516 9.6362 4.0838 9.48793 4.0838 9.33335C4.0838 9.17876 4.14516 9.0305 4.2544 8.92113L6.17553 7L4.25443 5.07891C4.15139 4.96832 4.09529 4.82207 4.09796 4.67094C4.10063 4.51982 4.16185 4.37563 4.26872 4.26876C4.3756 4.16188 4.51979 4.10066 4.67091 4.09799C4.82204 4.09532 4.96829 4.15142 5.07887 4.25446L6.99997 6.17556L8.92106 4.25446C9.03164 4.15142 9.1779 4.09532 9.32903 4.09799C9.48015 4.10066 9.62434 4.16188 9.73121 4.26876C9.83809 4.37563 9.89931 4.51982 9.90198 4.67094C9.90464 4.82207 9.84855 4.96832 9.74551 5.07891L7.82441 7L9.74554 8.92113C9.85478 9.0305 9.91614 9.17876 9.91614 9.33335C9.91614 9.48793 9.85478 9.6362 9.74554 9.74557C9.69168 9.8001 9.62748 9.84333 9.55669 9.87271C9.4859 9.90209 9.40996 9.91704 9.33332 9.91668C9.25668 9.91704 9.18073 9.90209 9.10995 9.87271C9.03916 9.84333 8.97495 9.8001 8.9211 9.74557L6.99997 7.82444L5.07884 9.74557C5.02499 9.8001 4.96078 9.84333 4.88999 9.87271C4.81921 9.90209 4.74326 9.91704 4.66662 9.91668Z",
+  fill: "currentColor"
+}, null, -1), tt = [et];
+function nt(e, t, n, o, r, i) {
+  return s(), f("svg", u({
+    width: "14",
+    height: "14",
+    viewBox: "0 0 14 14",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, e.pti()), tt, 16);
+}
+R.render = nt;
+var ot = {
+  root: function(t) {
+    var n = t.props;
+    return "p-message p-component p-message-" + n.severity;
+  },
+  wrapper: "p-message-wrapper",
+  icon: "p-message-icon",
+  text: "p-message-text",
+  closeButton: "p-message-close p-link",
+  closeIcon: "p-message-close-icon"
+}, it = q.extend({
+  name: "message",
+  classes: ot
+}), rt = {
+  name: "BaseMessage",
+  extends: J,
   props: {
-    modelValue: null,
-    autoResize: Boolean,
-    invalid: {
-      type: Boolean,
-      default: !1
-    },
-    variant: {
+    severity: {
       type: String,
+      default: "info"
+    },
+    closable: {
+      type: Boolean,
+      default: !0
+    },
+    sticky: {
+      type: Boolean,
+      default: !0
+    },
+    life: {
+      type: Number,
+      default: 3e3
+    },
+    icon: {
+      type: String,
+      default: void 0
+    },
+    closeIcon: {
+      type: String,
+      default: void 0
+    },
+    closeButtonProps: {
+      type: null,
       default: null
     }
   },
-  style: bt,
+  style: it,
   provide: function() {
     return {
       $parentInstance: this
     };
   }
-}, It = {
-  name: "Textarea",
-  extends: Ot,
+}, st = {
+  name: "Message",
+  extends: rt,
   inheritAttrs: !1,
-  emits: ["update:modelValue"],
-  mounted: function() {
-    this.$el.offsetParent && this.autoResize && this.resize();
+  emits: ["close", "life-end"],
+  timeout: null,
+  data: function() {
+    return {
+      visible: !0
+    };
   },
-  updated: function() {
-    this.$el.offsetParent && this.autoResize && this.resize();
+  watch: {
+    sticky: function(t) {
+      t || this.closeAfterDelay();
+    }
+  },
+  mounted: function() {
+    this.sticky || this.closeAfterDelay();
   },
   methods: {
-    resize: function() {
-      this.$el.style.height = "auto", this.$el.style.height = this.$el.scrollHeight + "px", parseFloat(this.$el.style.height) >= parseFloat(this.$el.style.maxHeight) ? (this.$el.style.overflowY = "scroll", this.$el.style.height = this.$el.style.maxHeight) : this.$el.style.overflow = "hidden";
+    close: function(t) {
+      this.visible = !1, this.$emit("close", t);
     },
-    onInput: function(e) {
-      this.autoResize && this.resize(), this.$emit("update:modelValue", e.target.value);
+    closeAfterDelay: function() {
+      var t = this;
+      setTimeout(function() {
+        t.visible = !1, t.$emit("life-end");
+      }, this.life);
     }
   },
   computed: {
-    filled: function() {
-      return this.modelValue != null && this.modelValue.toString().length > 0;
-    },
-    ptmParams: function() {
+    iconComponent: function() {
       return {
-        context: {
-          disabled: this.$attrs.disabled || this.$attrs.disabled === ""
-        }
-      };
+        info: Z,
+        success: T,
+        warn: A,
+        error: R
+      }[this.severity];
+    },
+    closeAriaLabel: function() {
+      return this.$primevue.config.locale.aria ? this.$primevue.config.locale.aria.close : void 0;
+    }
+  },
+  directives: {
+    ripple: G
+  },
+  components: {
+    TimesIcon: W,
+    InfoCircleIcon: Z,
+    CheckIcon: T,
+    ExclamationTriangleIcon: A,
+    TimesCircleIcon: R
+  }
+};
+function x(e) {
+  "@babel/helpers - typeof";
+  return x = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(t) {
+    return typeof t;
+  } : function(t) {
+    return t && typeof Symbol == "function" && t.constructor === Symbol && t !== Symbol.prototype ? "symbol" : typeof t;
+  }, x(e);
+}
+function Y(e, t) {
+  var n = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    t && (o = o.filter(function(r) {
+      return Object.getOwnPropertyDescriptor(e, r).enumerable;
+    })), n.push.apply(n, o);
+  }
+  return n;
+}
+function $(e) {
+  for (var t = 1; t < arguments.length; t++) {
+    var n = arguments[t] != null ? arguments[t] : {};
+    t % 2 ? Y(Object(n), !0).forEach(function(o) {
+      at(e, o, n[o]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : Y(Object(n)).forEach(function(o) {
+      Object.defineProperty(e, o, Object.getOwnPropertyDescriptor(n, o));
+    });
+  }
+  return e;
+}
+function at(e, t, n) {
+  return t = lt(t), t in e ? Object.defineProperty(e, t, { value: n, enumerable: !0, configurable: !0, writable: !0 }) : e[t] = n, e;
+}
+function lt(e) {
+  var t = ut(e, "string");
+  return x(t) == "symbol" ? t : String(t);
+}
+function ut(e, t) {
+  if (x(e) != "object" || !e) return e;
+  var n = e[Symbol.toPrimitive];
+  if (n !== void 0) {
+    var o = n.call(e, t);
+    if (x(o) != "object") return o;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return (t === "string" ? String : Number)(e);
+}
+var ct = ["aria-label"];
+function dt(e, t, n, o, r, i) {
+  var d = ee("TimesIcon"), c = j("ripple");
+  return s(), y(te, u({
+    name: "p-message",
+    appear: ""
+  }, e.ptmi("transition")), {
+    default: V(function() {
+      return [L(b("div", u({
+        class: e.cx("root"),
+        role: "alert",
+        "aria-live": "assertive",
+        "aria-atomic": "true"
+      }, e.ptm("root")), [e.$slots.container ? C(e.$slots, "container", {
+        key: 0,
+        onClose: i.close,
+        closeCallback: i.close
+      }) : (s(), f("div", u({
+        key: 1,
+        class: e.cx("wrapper")
+      }, e.ptm("wrapper")), [C(e.$slots, "messageicon", {
+        class: "p-message-icon"
+      }, function() {
+        return [(s(), y(H(e.icon ? "span" : i.iconComponent), u({
+          class: [e.cx("icon"), e.icon]
+        }, e.ptm("icon")), null, 16, ["class"]))];
+      }), b("div", u({
+        class: ["p-message-text", e.cx("text")]
+      }, e.ptm("text")), [C(e.$slots, "default")], 16), e.closable ? L((s(), f("button", u({
+        key: 0,
+        class: e.cx("closeButton"),
+        "aria-label": i.closeAriaLabel,
+        type: "button",
+        onClick: t[0] || (t[0] = function(p) {
+          return i.close(p);
+        })
+      }, $($($({}, e.closeButtonProps), e.ptm("button")), e.ptm("closeButton"))), [C(e.$slots, "closeicon", {}, function() {
+        return [e.closeIcon ? (s(), f("i", u({
+          key: 0,
+          class: [e.cx("closeIcon"), e.closeIcon]
+        }, $($({}, e.ptm("buttonIcon")), e.ptm("closeIcon"))), null, 16)) : (s(), y(d, u({
+          key: 1,
+          class: [e.cx("closeIcon"), e.closeIcon]
+        }, $($({}, e.ptm("buttonIcon")), e.ptm("closeIcon"))), null, 16, ["class"]))];
+      })], 16, ct)), [[c]]) : g("", !0)], 16))], 16), [[de, r.visible]])];
+    }),
+    _: 3
+  }, 16);
+}
+st.render = dt;
+function Lt({ storageKey: e, defaultWidth: t, presets: n, fullVw: o = 94 }) {
+  function r() {
+    try {
+      const a = localStorage.getItem(e);
+      if (a === "full") return "full";
+      const h = parseFloat(a);
+      return Number.isFinite(h) ? h : t;
+    } catch {
+      return t;
     }
   }
-}, St = ["value", "aria-invalid"];
-function wt(t, e, i, s, r, n) {
-  return f(), v("textarea", c({
-    class: t.cx("root"),
-    value: t.modelValue,
-    "aria-invalid": t.invalid || void 0,
-    onInput: e[0] || (e[0] = function() {
-      return n.onInput && n.onInput.apply(n, arguments);
-    })
-  }, t.ptmi("root", n.ptmParams)), null, 16, St);
+  function i(a) {
+    try {
+      localStorage.setItem(e, String(a));
+    } catch {
+    }
+  }
+  function d(a) {
+    return a === "full" ? `${o}vw` : `min(94vw, ${a}px)`;
+  }
+  const c = oe(r()), p = Q(() => d(c.value));
+  function m(a) {
+    c.value = a, i(a);
+  }
+  return { cssWidth: p, setWidth: m, presets: n };
 }
-It.render = wt;
-const Ct = { class: "header-row" }, Lt = { class: "dialog-title" }, zt = { class: "status-el" }, Vt = {
+function Et({ storageKey: e, defaultSize: t = 13, min: n = 9, max: o = 22 }) {
+  function r() {
+    try {
+      const m = parseFloat(localStorage.getItem(e));
+      return Number.isFinite(m) ? m : t;
+    } catch {
+      return t;
+    }
+  }
+  function i(m) {
+    try {
+      localStorage.setItem(e, String(m));
+    } catch {
+    }
+  }
+  const d = oe(r());
+  fe(d, i);
+  function c() {
+    d.value = Math.max(n, d.value - 1);
+  }
+  function p() {
+    d.value = Math.min(o, d.value + 1);
+  }
+  return { fontSizePx: d, decrease: c, increase: p };
+}
+const ft = { class: "width-row" }, mt = {
+  __name: "PanelWidthButtons",
+  props: {
+    presets: { type: Array, required: !0 },
+    // px width buttons to show, in order
+    setWidth: { type: Function, required: !0 }
+    // (value: number | "full") => void
+  },
+  setup(e) {
+    return (t, n) => (s(), f("div", ft, [
+      (s(!0), f(ne, null, me(e.presets, (o) => (s(), y(B(F), {
+        key: o,
+        label: String(o),
+        text: "",
+        size: "small",
+        title: `Set editor width to ${o}px (capped to the window's width)`,
+        onClick: (r) => e.setWidth(o)
+      }, null, 8, ["label", "title", "onClick"]))), 128)),
+      E(B(F), {
+        label: "100%",
+        text: "",
+        size: "small",
+        title: "Use the full available window width",
+        onClick: n[0] || (n[0] = (o) => e.setWidth("full"))
+      })
+    ]));
+  }
+}, pt = /* @__PURE__ */ K(mt, [["__scopeId", "data-v-d114d08b"]]), ht = { class: "font-size-row" }, bt = {
+  __name: "FontSizeButtons",
+  props: {
+    decrease: { type: Function, required: !0 },
+    increase: { type: Function, required: !0 }
+  },
+  setup(e) {
+    return (t, n) => (s(), f("div", ht, [
+      E(B(F), {
+        label: "A−",
+        text: "",
+        size: "small",
+        title: "Decrease text size",
+        onClick: e.decrease
+      }, null, 8, ["onClick"]),
+      E(B(F), {
+        label: "A+",
+        text: "",
+        size: "small",
+        title: "Increase text size",
+        onClick: e.increase
+      }, null, 8, ["onClick"])
+    ]));
+  }
+}, Ct = /* @__PURE__ */ K(bt, [["__scopeId", "data-v-e71f4053"]]), vt = { class: "header-row" }, gt = { class: "dialog-title" }, yt = { class: "status-el" }, wt = {
   __name: "DialogHeader",
   props: {
     title: { type: String, required: !0 },
     status: { type: String, default: "" },
     widthPresets: { type: Array, required: !0 },
-    setWidth: { type: Function, required: !0 }
+    setWidth: { type: Function, required: !0 },
+    fontSizeDecrease: { type: Function, default: null },
+    fontSizeIncrease: { type: Function, default: null }
   },
-  setup(t) {
-    return (e, i) => (f(), v("div", Ct, [
-      C("div", Lt, M(t.title), 1),
-      C("div", zt, M(t.status), 1),
-      q(Me, {
-        presets: t.widthPresets,
-        "set-width": t.setWidth
+  setup(e) {
+    return (t, n) => (s(), f("div", vt, [
+      b("div", gt, k(e.title), 1),
+      b("div", yt, k(e.status), 1),
+      E(pt, {
+        presets: e.widthPresets,
+        "set-width": e.setWidth
       }, null, 8, ["presets", "set-width"]),
-      I(e.$slots, "after", {}, void 0, !0)
+      e.fontSizeDecrease && e.fontSizeIncrease ? (s(), y(Ct, {
+        key: 0,
+        decrease: e.fontSizeDecrease,
+        increase: e.fontSizeIncrease
+      }, null, 8, ["decrease", "increase"])) : g("", !0),
+      C(t.$slots, "after", {}, void 0, !0)
     ]));
   }
-}, Pt = /* @__PURE__ */ ke(Vt, [["__scopeId", "data-v-1444ac26"]]);
+}, Dt = /* @__PURE__ */ K(wt, [["__scopeId", "data-v-095e2d4d"]]);
 export {
-  Pt as D,
-  lt as a,
-  It as s
+  Dt as D,
+  Et as a,
+  Pe as b,
+  T as c,
+  W as d,
+  se as e,
+  st as s,
+  Lt as u
 };

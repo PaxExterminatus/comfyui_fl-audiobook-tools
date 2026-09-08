@@ -3,14 +3,19 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } 
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
+import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePanelWidth } from "../shared/panel_width.js";
+import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
+import InstructPickerDialog from "./InstructPickerDialog.vue";
+import SpeakerPickerDialog from "./SpeakerPickerDialog.vue";
+import { speakerAccent } from "../shared/speaker_accent.js";
 import { lineHash, makeLineFilename, hasExpectedFile, mostRecentAtPosition } from "../shared/line_hash.js";
 import {
     joinPath, stripSuffixAndExt, dirOf, markRoleStale,
@@ -30,22 +35,6 @@ const props = defineProps({
 const SAVE_DEBOUNCE_MS = 600;
 const POLL_MS = 3000;
 const EDIT_QUIET_MS = 1500;
-const DEFAULT_TEXT_FONT_SIZE = 11.5;
-const MIN_TEXT_FONT_SIZE = 9;
-const MAX_TEXT_FONT_SIZE = 22;
-const LS_FONT_KEY = "FL_CosyVoice3.LineEditor.textFontSizePx";
-
-function loadNum(key, fallback) {
-    try {
-        const v = parseFloat(localStorage.getItem(key));
-        return Number.isFinite(v) ? v : fallback;
-    } catch (e) {
-        return fallback;
-    }
-}
-function saveNum(key, value) {
-    try { localStorage.setItem(key, String(value)); } catch (e) { /* noop */ }
-}
 
 function parseLine(line) {
     const parts = line.split("|");
@@ -77,17 +66,6 @@ function serializeRows(rowsArr) {
         .join("\n");
 }
 
-// Stable, cheap hash -> hue, so each distinct speaker gets a consistent
-// accent color across the whole editor -- backs .line-rail's own
-// background, so kept translucent (a full-strength fill behind the line
-// number/drag-handle glyphs would fight their own text color at this
-// width, unlike the old 3px border this replaced).
-function speakerAccent(name) {
-    if (!name) return "rgba(255,255,255,0.1)";
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-    return `hsl(${hash % 360}, 55%, 55%, 0.3)`;
-}
 
 const confirm = useConfirm();
 function confirmAsync({ title = "Confirm", message = "", okText = "OK", cancelText = "Cancel" } = {}) {
@@ -112,6 +90,7 @@ const instructCategories = ref([]); // [{name, title, when, examples}, ...] from
 const roleEntries = ref([]);
 const rolesJsonPath = ref(null);
 const presets = ref([]);
+const speakerSampleDir = ref(""); // folder holding each preset's own .pt (and, hopefully, a same-named sample .mp3/.wav) -- see loadPresets
 const readyScripts = ref([]);
 const scriptList = ref([]);
 const status = ref("");
@@ -120,7 +99,10 @@ const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets 
     defaultWidth: 1600,
     presets: [1280, 1600],
 });
-const textFontSizePx = ref(loadNum(LS_FONT_KEY, DEFAULT_TEXT_FONT_SIZE));
+const { fontSizePx: textFontSizePx, decrease: decreaseTextFontSize, increase: increaseTextFontSize } = useFontSize({
+    storageKey: "FL_CosyVoice3.LineEditor.textFontSizePx",
+    defaultSize: 11.5,
+});
 const rawTimingLines = ref(null);
 const activeTimingIdx = ref(-1);
 const audioIsPlaying = ref(false);
@@ -210,24 +192,42 @@ function resolvedSpeakerForHash(code) {
     return (entry && entry.speaker) ? entry.speaker : (code || "");
 }
 
-// row.__key -> content hash (see src/shared/line_hash.js), recomputed
-// whenever any row's own fields OR the role catalog change (a role recast
-// resolves to a different value for every row using that role, without any
-// row's own fields changing). Compared against latestFileFor(index)'s own
-// hash, this Map IS the entire "is this line voiced for what it currently
-// says" check -- nothing is ever persisted.
+// row.__key -> content hash (see src/shared/line_hash.js). Compared
+// against latestFileFor(index)'s own hash, this Map IS the entire "is this
+// line voiced for what it currently says" check -- nothing is ever
+// persisted.
+//
+// Deliberately NOT a deep watch(rows) any more -- deep-watching the whole
+// array means typing a single character anywhere re-triggers the callback
+// for the WHOLE array, re-hashing (an async Web Crypto call) every OTHER
+// line in the script on every keystroke, not just the one being edited.
+// Kept updated by two explicit paths instead: updateRowHash for a single
+// row's own field edits (the common, per-keystroke case), and
+// recomputeAllHashes for the rarer cases where positions shift or a role's
+// resolved speaker changes for every row using it at once (called from
+// loadFromDisk, addLine/deleteRow/mergeRows/splitFocusedLine, and
+// onSpeakerFileRecast -- see each call site).
 const expectedHash = reactive(new Map());
-watch(
-    [rows, roleEntries],
-    async () => {
-        const nonMalformed = rows.value.filter((r) => !r.malformed);
-        const hashes = await Promise.all(
-            nonMalformed.map((r) => lineHash(resolvedSpeakerForHash(r.speaker), r.instruct, r.text)),
-        );
-        nonMalformed.forEach((r, i) => expectedHash.set(r.__key, hashes[i]));
-    },
-    { deep: true, immediate: true },
-);
+const rowHashDebounce = new Map(); // row.__key -> setTimeout id
+const ROW_HASH_DEBOUNCE_MS = 150;
+
+function updateRowHash(row) {
+    if (row.malformed) return;
+    clearTimeout(rowHashDebounce.get(row.__key));
+    rowHashDebounce.set(row.__key, setTimeout(async () => {
+        rowHashDebounce.delete(row.__key);
+        expectedHash.set(row.__key, await lineHash(resolvedSpeakerForHash(row.speaker), row.instruct, row.text));
+    }, ROW_HASH_DEBOUNCE_MS));
+}
+
+async function recomputeAllHashes() {
+    const nonMalformed = rows.value.filter((r) => !r.malformed);
+    const hashes = await Promise.all(
+        nonMalformed.map((r) => lineHash(resolvedSpeakerForHash(r.speaker), r.instruct, r.text)),
+    );
+    nonMalformed.forEach((r, i) => expectedHash.set(r.__key, hashes[i]));
+}
+watch(roleEntries, recomputeAllHashes);
 function rowHasAnyTake(index) {
     return latestFileFor(index) !== null;
 }
@@ -557,6 +557,11 @@ async function mergeRows(idxA, idxB) {
 
     first.text = `${first.text} ${second.text}`.trim();
     rows.value.splice(secondIdx, 1);
+    // Hash is content-only (speaker+instruct+text), not position -- merging
+    // only actually changes `first`'s own text, so that's the only hash
+    // that needs redoing (second's own entry is simply orphaned along with
+    // its row, and every OTHER row's content is untouched by this).
+    updateRowHash(first);
     scheduleSave();
 
     if (secondPos !== undefined) {
@@ -610,6 +615,9 @@ function deleteRow(index) {
     const pos = positionByIndex.value.get(index);
     const totalPositions = positionByIndex.value.size;
 
+    // No expectedHash update needed -- the hash is content-only
+    // (speaker+instruct+text), and deleting a row doesn't change any OTHER
+    // row's content, only positions (handled below via reorganizeLines).
     rows.value.splice(index, 1);
     scheduleSave();
 
@@ -633,9 +641,11 @@ async function confirmDeleteRow(index, previewText) {
 }
 
 function onSpeakerInput(row) {
+    updateRowHash(row);
     scheduleSave();
 }
 function onInstructInput(row) {
+    updateRowHash(row);
     scheduleSave();
 }
 
@@ -661,7 +671,10 @@ function applyInstructToSameRole(row) {
     if (!count) return;
     const code = row.speaker.trim();
     rows.value.forEach((r) => {
-        if (r !== row && !r.malformed && (r.speaker || "").trim() === code) r.instruct = row.instruct;
+        if (r !== row && !r.malformed && (r.speaker || "").trim() === code) {
+            r.instruct = row.instruct;
+            updateRowHash(r);
+        }
     });
     scheduleSave();
     setStatus(`Applied instruct to ${count} other "${code}" line(s) in this script`);
@@ -671,6 +684,7 @@ function applyInstructToSameRole(row) {
 // emits update:model-value, so a plain typed edit never reaches this.
 function onTextInput(row, el) {
     autoGrow(el);
+    updateRowHash(row);
     scheduleSave();
 }
 function onTextPaste(row, el, e) {
@@ -719,6 +733,41 @@ function instructNoteFor(row) {
     return category ? category.title : null;
 }
 
+// ── instruct picker dialog ──────────────────────────────────────────────
+// The dialog itself is stateless (see InstructPickerDialog.vue) -- this
+// editor tracks which row it's currently picking FOR, and what to do with
+// the result: stash whatever was there before into row.__prevInstruct (a
+// client-only field, never serialized -- see serializeRows, which only
+// ever reads speaker/instruct/text/raw) so the ↺ button can swap back to
+// it. Swapping rather than a destructive overwrite means a pick, or even a
+// manual edit followed by undo, never actually loses text -- it's always
+// one more click away in the other slot.
+const instructPickerVisible = ref(false);
+const instructPickerRow = ref(null);
+function openInstructPicker(row) {
+    instructPickerRow.value = row;
+    instructPickerVisible.value = true;
+}
+function onInstructPicked(example) {
+    const row = instructPickerRow.value;
+    if (!row) return;
+    row.__prevInstruct = row.instruct;
+    row.instruct = example;
+    onInstructInput(row);
+}
+function undoInstructTitle(row) {
+    return row.__prevInstruct !== undefined
+        ? `Restore previous instruct: "${row.__prevInstruct}"`
+        : "No previous instruct to restore";
+}
+function undoInstruct(row) {
+    if (row.__prevInstruct === undefined) return;
+    const current = row.instruct;
+    row.instruct = row.__prevInstruct;
+    row.__prevInstruct = current;
+    onInstructInput(row);
+}
+
 // Sub-label line for the speaker Dropdown's #option template (see
 // template below) -- same fields the old openRolePicker's PickPanel
 // showed underneath each role's code.
@@ -727,18 +776,38 @@ function roleOptionSubLabel(entry) {
 }
 
 // Reassigns a role's voice for the WHOLE project (see saveRolesJson) --
-// triggered by picking/typing a new value in the speaker-file Dropdown.
-// No-op if `row.speaker` isn't a known role code (the Dropdown is disabled
-// in that case, see the template).
+// triggered by free-typing into the speaker-file field, or picking one
+// from the dialog below (see openSpeakerPicker/onSpeakerPicked). No-op if
+// `row.speaker` isn't a known role code (the field is disabled in that
+// case, see the template).
 async function onSpeakerFileRecast(row, newPreset) {
     const entry = roleEntryFor(row);
     if (!entry) return;
     entry.speaker = newPreset;
+    // A mutation of an EXISTING roleEntries item, not a reassignment of
+    // roleEntries.value itself -- the watch(roleEntries, ...) below only
+    // fires on the latter, so this recast needs its own explicit recompute
+    // (every row using this role code resolves to a different speaker now).
+    recomputeAllHashes();
     const ok = await saveRolesJson();
     if (ok) {
         setStatus(`"${entry.code}" now uses "${newPreset}" for the whole play`);
         await notifyRoleSpeakerChanged(entry.code);
     }
+}
+
+// ── speaker picker dialog -- same "stateless dialog, this editor tracks
+// which row it's for" contract as InstructPickerDialog/openInstructPicker.
+const speakerPickerVisible = ref(false);
+const speakerPickerRow = ref(null);
+function openSpeakerPicker(row) {
+    speakerPickerRow.value = row;
+    speakerPickerVisible.value = true;
+}
+async function onSpeakerPicked(preset) {
+    const row = speakerPickerRow.value;
+    if (!row) return;
+    await onSpeakerFileRecast(row, preset);
 }
 
 function showRoleInfoPopover(anchorEl, code) {
@@ -838,6 +907,44 @@ async function revoiceRow(row, index) {
     } finally {
         pendingRevoiceRows.delete(row);
         flushSave();
+    }
+}
+
+// ── batch re-voice: every row the single 🔁 button already shows gold ───
+// No separate "marked" state to track -- "needs re-voicing" already has a
+// real, live answer per row (rowHasAnyTake && !rowIsFresh, the exact same
+// check the per-row button's own `stale` class uses), so this just re-runs
+// that same check across every row instead of asking the user to flag
+// anything by hand.
+function isRowStale(row, index) {
+    return !row.malformed && rowHasAnyTake(index) && !rowIsFresh(row, index);
+}
+const isRevoicingStale = ref(false);
+const staleRowCount = computed(() => rows.value.filter((r, i) => isRowStale(r, i)).length);
+const revoiceStaleTitle = computed(() => (
+    staleRowCount.value > 0
+        ? `Re-voice ${staleRowCount.value} line(s) whose text/speaker/instruct changed since they were last rendered (the gold 🔁 rows), one at a time`
+        : "No line in this script needs re-voicing right now"
+));
+async function revoiceStaleRows() {
+    if (isRevoicingStale.value) return;
+    // Snapshot the ROWS (not indices) up front -- re-voicing one line never
+    // adds/removes rows, only their positions could in principle shift
+    // (index is re-looked-up per iteration below), and re-scanning `rows`
+    // fresh on every iteration would let a row that JUST got fixed by an
+    // earlier pass in this same loop drop back out before its own turn.
+    const targets = rows.value.filter((r, i) => isRowStale(r, i));
+    if (!targets.length) return;
+    isRevoicingStale.value = true;
+    try {
+        for (const row of targets) {
+            const index = rows.value.indexOf(row);
+            if (index === -1) continue;
+            await revoiceRow(row, index);
+        }
+        setStatus(`Re-voiced ${targets.length} line(s)`);
+    } finally {
+        isRevoicingStale.value = false;
     }
 }
 
@@ -1089,6 +1196,10 @@ function splitFocusedLine() {
     row.text = before;
     const newRow = freshRow({ speaker: row.speaker, instruct: row.instruct, text: after, raw: "", malformed: false });
     rows.value.splice(index + 1, 0, newRow);
+    // Both halves' own text changed (the original row got truncated, the
+    // new one is the remainder) -- every other row's content is untouched.
+    updateRowHash(row);
+    updateRowHash(newRow);
     focusNewRow(newRow.__key);
     scheduleSave();
 
@@ -1105,6 +1216,9 @@ function addLine() {
     // row simply has no file yet.
     const newRow = freshRow({ speaker: "", instruct: "", text: "", raw: "", malformed: false });
     rows.value.push(newRow);
+    // Appended at the end -- no other row's position shifts, so only this
+    // one needs its own hash (see updateRowHash), not a full recompute.
+    updateRowHash(newRow);
     focusNewRow(newRow.__key);
     scheduleSave();
 }
@@ -1120,8 +1234,10 @@ async function loadPresets() {
         const resp = await fetch(PRESETS_API);
         const data = await resp.json();
         presets.value = data.presets || [];
+        speakerSampleDir.value = data.dir || "";
     } catch (e) {
         presets.value = [];
+        speakerSampleDir.value = "";
     }
 }
 
@@ -1180,6 +1296,7 @@ async function loadFromDisk({ isPoll = false } = {}) {
         if (data.content === lastSavedText) return;
         rows.value = parseScript(data.content);
         lastSavedText = data.content;
+        recomputeAllHashes();
         if (!isPoll) setStatus(`Loaded ${rows.value.length} line(s)`);
     } catch (e) {
         setStatus(`Read failed: ${e}`);
@@ -1220,14 +1337,11 @@ onBeforeUnmount(() => {
         class="line-editor-dialog"
     >
         <template #header>
-            <DialogHeader :title="filename" :status="status" :width-presets="widthPresets" :set-width="setPanelWidth">
-                <template #after>
-                    <div class="font-row">
-                        <Button label="A−" text size="small" title="Decrease line text font size" @click="textFontSizePx = Math.max(MIN_TEXT_FONT_SIZE, textFontSizePx - 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
-                        <Button label="A+" text size="small" title="Increase line text font size" @click="textFontSizePx = Math.min(MAX_TEXT_FONT_SIZE, textFontSizePx + 1); saveNum(LS_FONT_KEY, textFontSizePx)" />
-                    </div>
-                </template>
-            </DialogHeader>
+            <DialogHeader
+                :title="filename" :status="status"
+                :width-presets="widthPresets" :set-width="setPanelWidth"
+                :font-size-decrease="decreaseTextFontSize" :font-size-increase="increaseTextFontSize"
+            />
         </template>
 
         <StickyPanel class="line-editor-controls">
@@ -1284,6 +1398,13 @@ onBeforeUnmount(() => {
                 <Button label="´ Stress mark" text size="small" title="Insert a stress mark at the cursor: click into a line's text, place the cursor right after the vowel to stress (факел|ов), then click this" @mousedown.prevent="insertStressMark" />
                 <Button label="✂ Split line" text size="small" title="Split this line into two at the cursor: click into a line's text, place the cursor where it should split, then click this" @mousedown.prevent="splitFocusedLine" />
                 <Button label="+ Add line" text size="small" title="Add a new empty line at the end of the script" @click="addLine" />
+                <Button
+                    label="🔁 Re-voice pending"
+                    text size="small"
+                    :disabled="!revoiceApi || isCurrentlyReady || staleRowCount === 0 || isRevoicingStale"
+                    :title="revoiceStaleTitle"
+                    @click="revoiceStaleRows"
+                />
                 <div class="actions-divider" />
                 <Button label="◀ Prev" text size="small" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
                 <Button label="Next ▶" text size="small" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
@@ -1355,27 +1476,29 @@ onBeforeUnmount(() => {
 
                         <InputGroup class="instruct-group">
                             <InputGroupAddon><i class="pi pi-book" /></InputGroupAddon>
-                            <Dropdown
-                                :model-value="row.instruct"
-                                :options="instructCategories"
-                                option-group-label="title"
-                                option-group-children="examples"
-                                editable
-                                filter
+                            <Button
+                                icon="pi pi-undo"
+                                size="small"
+                                class="instruct-undo-btn"
+                                :disabled="row.__prevInstruct === undefined"
+                                :title="undoInstructTitle(row)"
+                                @click="undoInstruct(row)"
+                            />
+                            <InputText
+                                v-model="row.instruct"
                                 placeholder="Instruct"
-                                title="Instruct text"
-                                @update:model-value="row.instruct = $event; onInstructInput(row)"
-                            >
-                                <template #optiongroup="{ option: category }">
-                                    <div class="dropdown-optiongroup-label" :title="category.when">{{ category.title }}</div>
-                                </template>
-                                <template #option="{ option: example }">
-                                    <div class="dropdown-option-label">{{ example }}</div>
-                                </template>
-                            </Dropdown>
+                                title="Instruct text -- type freely, or pick from the phrase bank"
+                                @input="onInstructInput(row)"
+                            />
+                            <Button
+                                icon="pi pi-th-large"
+                                size="small"
+                                title="Pick an instruct phrase from the category bank"
+                                @click="openInstructPicker(row)"
+                            />
                             <Button
                                 icon="pi pi-users"
-                                text size="small"
+                                size="small"
                                 class="apply-instruct-btn"
                                 :disabled="sameRoleCount(row) === 0"
                                 :title="applyInstructTitle(row)"
@@ -1387,29 +1510,28 @@ onBeforeUnmount(() => {
                             <Button
                                 v-if="revoiceApi && !isCurrentlyReady"
                                 class="revoice-btn"
-                                text size="small"
+                                size="small"
                                 :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
                                 :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
                                 :disabled="pendingRevoiceRows.has(row)"
                                 :title="revoiceTitle(row, index)"
                                 @click="revoiceRow(row, index)"
                             />
-                            <Dropdown
+                            <InputText
                                 :model-value="roleEntryFor(row)?.speaker || ''"
-                                :options="presets"
-                                editable
-                                filter
                                 placeholder="(no speaker)"
-                                class="speaker-file-dropdown"
+                                class="speaker-file-input"
                                 :disabled="!roleEntryFor(row)"
                                 :title="speakerFileTitle(row)"
                                 @update:model-value="onSpeakerFileRecast(row, $event)"
-                            >
-                                <template #option="{ option }">
-                                    <div class="dropdown-option-label">{{ option }}</div>
-                                    <div class="dropdown-option-sublabel">{{ speakerUsageSubLabel(option) }}</div>
-                                </template>
-                            </Dropdown>
+                            />
+                            <Button
+                                icon="pi pi-microphone"
+                                size="small"
+                                :disabled="!roleEntryFor(row)"
+                                title="Pick a speaker from the preset gallery"
+                                @click="openSpeakerPicker(row)"
+                            />
                             <InputGroupAddon
                                 class="role-info-btn"
                                 @mouseenter="showRoleInfoPopover($event.target, row.speaker)"
@@ -1429,7 +1551,7 @@ onBeforeUnmount(() => {
                         :style="{ fontSize: `${textFontSizePx}px` }"
                         rows="1"
                         :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(textareaEls.get(row.__key))); }"
-                        @update:model-value="scheduleSave()"
+                        @update:model-value="updateRowHash(row); scheduleSave()"
                         @keydown.enter.prevent
                         @paste="onTextPaste(row, $event.target, $event)"
                     />
@@ -1440,6 +1562,20 @@ onBeforeUnmount(() => {
     </Dialog>
 
     <ConfirmDialog />
+
+    <InstructPickerDialog
+        v-model:visible="instructPickerVisible"
+        :categories="instructCategories"
+        @select="onInstructPicked"
+    />
+
+    <SpeakerPickerDialog
+        v-model:visible="speakerPickerVisible"
+        :presets="presets"
+        :sample-dir="speakerSampleDir"
+        :usage-for="speakerUsageSubLabel"
+        @select="onSpeakerPicked"
+    />
 
     <div v-if="roleInfoPopover.visible" class="role-info-popover" :style="{ left: `${roleInfoPopover.left}px`, top: `${roleInfoPopover.top}px` }">
         <div v-if="roleInfoFields.message">{{ roleInfoFields.message }}</div>

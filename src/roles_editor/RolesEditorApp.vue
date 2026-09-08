@@ -23,6 +23,7 @@ import Message from "primevue/message";
 import Dropdown from "primevue/dropdown";
 import Textarea from "primevue/textarea";
 import { usePanelWidth } from "../shared/panel_width.js";
+import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";
 import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API } from "../../web/fl_common.js";
 
@@ -45,6 +46,10 @@ const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets 
     storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
     defaultWidth: 1200,
     presets: [900, 1200],
+});
+const { fontSizePx: cardFontSizePx, decrease: decreaseCardFontSize, increase: increaseCardFontSize } = useFontSize({
+    storageKey: "FL_CosyVoice3.RolesEditor.fontSizePx",
+    defaultSize: 13,
 });
 
 let lastSavedText = null;
@@ -243,12 +248,16 @@ onBeforeUnmount(() => {
         class="roles-dialog"
     >
         <template #header>
-            <DialogHeader title="Roles" :status="status" :width-presets="widthPresets" :set-width="setPanelWidth" />
+            <DialogHeader
+                title="Roles" :status="status"
+                :width-presets="widthPresets" :set-width="setPanelWidth"
+                :font-size-decrease="decreaseCardFontSize" :font-size-increase="increaseCardFontSize"
+            />
         </template>
 
         <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>
 
-        <div class="roles-list">
+        <div class="roles-list" :style="{ fontSize: `${cardFontSizePx}px` }">
             <Card v-for="role in roles" :key="role.code" class="role-card">
                 <template #title>
                     <span class="role-code" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
@@ -274,6 +283,7 @@ onBeforeUnmount(() => {
                         rows="1"
                         placeholder="Description..."
                         class="role-description"
+                        :style="{ fontSize: `${cardFontSizePx}px` }"
                         @input="scheduleSave()"
                     />
                 </template>

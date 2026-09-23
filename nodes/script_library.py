@@ -81,7 +81,10 @@ except (ImportError, ValueError):
 
 
 def _looks_like_dialog_script(path: str) -> bool:
-    """Sniff a .txt file: does it look like a 'preset | instruct | text' script?"""
+    """Sniff a .txt file: does it look like a 'preset | instruct | text'
+    script? A line's optional 4th pause field counts too (see
+    split_script_line) -- a scene written with pauses throughout must not
+    stop looking like a script."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             lines = []
@@ -95,7 +98,7 @@ def _looks_like_dialog_script(path: str) -> bool:
         return False
     if not lines:
         return False
-    hits = sum(1 for l in lines if l.count("|") == 2)
+    hits = sum(1 for l in lines if l.count("|") in (2, 3))
     return hits >= max(1, len(lines) // 2)
 
 
@@ -181,14 +184,93 @@ def find_db_file(folder: str, filename: str, list_key: str) -> Tuple[Optional[st
     return None, 0, "", []
 
 
-def _parse_script_line(line: str) -> Optional[Tuple[str, str, str]]:
-    """'preset | instruct | text' -> (preset, instruct, text), or None if the
-    line doesn't have exactly two '|' separators (matches the Dialog node's
-    own parser -- see nodes/speaker_instruct2_dialog.py _parse_script)."""
-    parts = line.split("|")
-    if len(parts) != 3:
+MAX_LINE_PAUSE_S = 10.0
+DEFAULT_LINE_GAP_S = 0.3  # silence held after a line that doesn't name its own pause
+
+
+def effective_pauses(pauses: Optional[List[Optional[float]]], count: int) -> List[float]:
+    """
+    Resolves "silence to hold AFTER each of `count` lines" down to a
+    concrete number per position: whatever that position asked for, else
+    DEFAULT_LINE_GAP_S -- except after the LAST line, whose default is 0.
+    A trailing pause is a deliberate choice (a scene that should end on
+    held silence), never something the default adds behind the author's
+    back, so a script with no pause fields at all still stitches to
+    exactly the same audio it did before this field existed.
+
+    The result is what goes into the timing manifest and what
+    scripts_ready compares against it -- always the resolved numbers, so
+    the check can't be fooled by "0.3 written out explicitly" vs "0.3 by
+    default" being different spellings of the same track.
+    """
+    out = []
+    for pos in range(count):
+        raw = pauses[pos] if pauses is not None and pos < len(pauses) else None
+        if raw is None:
+            raw = DEFAULT_LINE_GAP_S if pos < count - 1 else 0.0
+        out.append(round(float(raw), 3))
+    return out
+
+
+def parse_pause_field(raw: str) -> Optional[float]:
+    """
+    The optional 4th field's value -> seconds of silence to hold after this
+    line, or None for "not specified, use the default" (see
+    effective_pauses). Accepts a comma decimal separator too (a Russian
+    keyboard types "1,2" far more naturally than "1.2", and this field is
+    written by hand/by an LLM straight into the script file). Anything
+    unparseable, negative, or past MAX_LINE_PAUSE_S is also None rather
+    than an error: a typo in one line's pause must not make the line itself
+    unrenderable -- it just falls back to the default gap, and the line
+    editor shows the raw text it couldn't read.
+    """
+    text = (raw or "").strip().replace(",", ".")
+    if not text:
         return None
-    return tuple(p.strip() for p in parts)  # type: ignore[return-value]
+    try:
+        value = float(text)
+    except ValueError:
+        return None
+    if value < 0 or value > MAX_LINE_PAUSE_S:
+        return None
+    return value
+
+
+def split_script_line(line: str) -> Optional[Tuple[str, str, str, Optional[float]]]:
+    """
+    'preset | instruct | text' or 'preset | instruct | text | pause' ->
+    (preset, instruct, text, pause_or_None). None if the line has neither 2
+    nor 3 '|' separators.
+
+    The 4th field is THIS addon's own: FL-CosyVoice3's Dialog node splits on
+    '|' and requires exactly 3 fields (see nodes/speaker_instruct2_dialog.py
+    _parse_script), so resolve_roles -- the one place a script's text leaves
+    this addon for the graph -- always drops it back down to 3 fields. It
+    also deliberately isn't part of a line's content hash: a pause is
+    silence the STITCH inserts, not something the TTS renders, so changing
+    one must never invalidate a line's existing take. What it does
+    invalidate is the final stitched track, which scripts_ready checks for
+    separately against the timing manifest's own recorded pauses.
+    """
+    parts = line.split("|")
+    if len(parts) == 3:
+        preset, instruct, text = (p.strip() for p in parts)
+        return preset, instruct, text, None
+    if len(parts) == 4:
+        preset, instruct, text, pause = (p.strip() for p in parts)
+        return preset, instruct, text, parse_pause_field(pause)
+    return None
+
+
+def _parse_script_line(line: str) -> Optional[Tuple[str, str, str]]:
+    """'preset | instruct | text[ | pause]' -> (preset, instruct, text) --
+    the speaker/instruct/text triple every hashing and role-resolution path
+    here works in, with any 4th pause field dropped (see split_script_line
+    for why a pause is not part of a line's identity)."""
+    parsed = split_script_line(line)
+    if parsed is None:
+        return None
+    return parsed[0], parsed[1], parsed[2]
 
 
 def role_map_from_entries(roles_list: List[dict]) -> Dict[str, str]:
@@ -217,18 +299,26 @@ def resolve_roles(script_content: str, role_map: Dict[str, str]) -> str:
     migration). Applied once, here, at Script Library's output -- so
     downstream nodes (FL CosyVoice3 Speaker Instruct2 Dialog included)
     always see real presets and never need to know role codes exist.
+
+    This is also where a line's optional 4th pause field is dropped: the
+    Dialog node's own parser requires exactly 3 fields, so a 4-field line
+    would reach it as malformed and be skipped entirely. Every line that
+    HAS a 4th field is therefore re-emitted as 3, whether or not its role
+    resolved to anything (which is why an empty role_map can't take the
+    early-return shortcut it used to).
     """
-    if not role_map:
-        return script_content
     out_lines = []
     for line in script_content.split("\n"):
-        parsed = _parse_script_line(line)
+        parsed = split_script_line(line)
         if parsed is None:
             out_lines.append(line)
             continue
-        preset, instruct, content = parsed
+        preset, instruct, content, pause = parsed
         resolved = role_map.get(preset, preset)
-        out_lines.append(f"{resolved} | {instruct} | {content}" if resolved != preset else line)
+        if resolved == preset and pause is None and line.count("|") == 2:
+            out_lines.append(line)  # nothing to change -- keep the author's own spacing
+        else:
+            out_lines.append(f"{resolved} | {instruct} | {content}")
     return "\n".join(out_lines)
 
 
@@ -299,11 +389,16 @@ def scripts_ready(act_folder: str, scripts: List[str], suffix: str) -> List[str]
     listen" nodes are meant to be stripped from this addon's own queued
     prompts -- see web/script_library.js's stripDownstreamAudioSavers) is
     never mistaken for the real thing, however plausible its name looks.
+
+    The manifest must also still agree with the script's own per-line
+    pauses -- see _manifest_matches_script_pauses for why that check lives
+    here and not in the per-line pending check.
     """
     candidates = scripts_with_audio(act_folder, scripts, suffix)
     return [
         f for f in candidates
         if os.path.isfile(_timing_manifest_path(act_folder, strip_suffix_and_ext(f, suffix)))
+        and _manifest_matches_script_pauses(act_folder, f, suffix)
     ]
 
 
@@ -514,11 +609,77 @@ def find_pending_revoice(root: str, suffix: str) -> List[dict]:
     return result
 
 
-DEFAULT_LINE_GAP_S = 0.3  # silence inserted between lines when stitching the final track
-
-
 def _timing_manifest_path(act_folder: str, base_name: str) -> str:
     return os.path.join(act_folder, "_audio", "timing", f"{base_name}.json")
+
+
+def script_line_pauses(act_folder: str, filename: str, suffix: str) -> List[Optional[float]]:
+    """
+    Each parseable line's own pause-after value read straight off disk, in
+    script order -- None where that line named no pause (see
+    split_script_line / parse_pause_field). Same position numbering
+    script_pending_lines and stitch_lines use: malformed lines are skipped
+    entirely and don't take a position.
+    """
+    path = os.path.join(act_folder, filename)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            raw_lines = [l for l in f.read().splitlines() if l.strip()]
+    except OSError:
+        return []
+    out = []
+    for line in raw_lines:
+        parsed = split_script_line(line)
+        if parsed is not None:
+            out.append(parsed[3])
+    return out
+
+
+def _manifest_matches_script_pauses(act_folder: str, filename: str, suffix: str) -> bool:
+    """
+    Is the final stitched track still built with the pauses the script
+    currently asks for? A pause isn't part of a line's content hash (it's
+    silence the stitch inserts, not audio the TTS renders -- see
+    split_script_line), so changing one leaves every per-line take valid
+    and would otherwise go completely undetected: the ✅ would stay on a
+    track that no longer matches the script. Comparing the manifest's own
+    recorded plan against the script's current one closes that, and keeps
+    "done" the same kind of plain disk fact it already is.
+
+    Line COUNT is part of the comparison, which also closes the older
+    version of the same hole: deleting a line from a done script left every
+    remaining take valid at its shifted position (reorganize_lines moves
+    the files), so nothing flagged the now-too-long final track either.
+
+    Manifests written before this field existed (no "pause_after" on any
+    line) are read as the fixed 0.3s-between-lines plan that stitch always
+    used back then -- so a script nobody has touched keeps its ✅ instead of
+    every already-done script un-readying itself on upgrade.
+    """
+    manifest_path = _timing_manifest_path(act_folder, strip_suffix_and_ext(filename, suffix))
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest_lines = json.load(f).get("lines") or []
+    except (OSError, ValueError):
+        return False
+    if not manifest_lines:
+        # A manifest with no per-line records at all -- there's nothing to
+        # compare against, so this stays "matching" rather than un-readying
+        # a script on a guess. stitch_lines never writes one (it raises on
+        # an empty script), so in practice this is only a hand-made stub.
+        return True
+
+    recorded = [
+        l.get("pause_after") if isinstance(l, dict) else None
+        for l in manifest_lines
+    ]
+    if all(p is None for p in recorded):
+        recorded = effective_pauses(None, len(manifest_lines))
+    else:
+        recorded = effective_pauses(recorded, len(manifest_lines))
+
+    current = script_line_pauses(act_folder, filename, suffix)
+    return recorded == effective_pauses(current, len(current))
 
 
 def stitch_lines(
@@ -526,7 +687,7 @@ def stitch_lines(
     base_name: str,
     line_hashes: List[str],
     line_texts: Optional[List[str]] = None,
-    pause_s: float = DEFAULT_LINE_GAP_S,
+    pauses: Optional[List[Optional[float]]] = None,
 ) -> dict:
     """
     Builds the final track by reading the EXACT file each position's
@@ -537,13 +698,20 @@ def stitch_lines(
     editor already has these -- see LineEditorApp.vue's toggleDone), so a
     missing file here is a real error (state genuinely doesn't match disk),
     not something to skip over or fall back to guessing about.
+
+    `pauses` is each position's own silence-after in seconds, None where
+    that line didn't name one (see effective_pauses for how the defaults
+    resolve, and split_script_line for the 4th script field they're read
+    from). The resolved plan is written into the timing manifest so
+    scripts_ready can tell later whether the pauses this track was built
+    with are still what the script asks for.
     """
     lines_dir = os.path.join(act_folder, "_audio", "lines", base_name)
     if not line_hashes:
         raise ValueError("No lines to stitch.")
 
+    pause_plan = effective_pauses(pauses, len(line_hashes))
     sample_rate = None
-    gap_samples = 0
     pieces = []
     timing_lines = []
     cursor_samples = 0
@@ -555,24 +723,28 @@ def stitch_lines(
         data, sr = sf.read(path, dtype="float32", always_2d=False)
         if sample_rate is None:
             sample_rate = sr
-            gap_samples = int(round(pause_s * sample_rate))
         elif sr != sample_rate:
             raise ValueError(f"Line at position {pos} has a different sample rate ({sr} vs {sample_rate}) -- can't merge safely.")
 
-        if pos > 0 and gap_samples > 0:
-            gap_shape = (gap_samples,) if data.ndim == 1 else (gap_samples,) + data.shape[1:]
-            pieces.append(np.zeros(gap_shape, dtype=data.dtype))
-            cursor_samples += gap_samples
-
         line_samples = data.shape[0]
+        # start/end bound the SPEECH only, never the silence after it --
+        # the line editor's playback highlight would otherwise sit on a
+        # line that already finished talking for the whole pause.
         timing_lines.append({
             "index": pos,
             "start": round(cursor_samples / sample_rate, 3),
             "end": round((cursor_samples + line_samples) / sample_rate, 3),
             "text": line_texts[pos] if line_texts and pos < len(line_texts) else "",
+            "pause_after": pause_plan[pos],
         })
         pieces.append(data)
         cursor_samples += line_samples
+
+        gap_samples = int(round(pause_plan[pos] * sample_rate))
+        if gap_samples > 0:
+            gap_shape = (gap_samples,) if data.ndim == 1 else (gap_samples,) + data.shape[1:]
+            pieces.append(np.zeros(gap_shape, dtype=data.dtype))
+            cursor_samples += gap_samples
 
     combined = np.concatenate(pieces, axis=0)
 
@@ -926,6 +1098,13 @@ if _HAS_SERVER:
         base_name = data.get("base_name", "").strip()
         line_texts = data.get("line_texts")
         line_hashes = data.get("line_hashes") or []
+        # Per-position silence-after, None/absent where that line names no
+        # pause of its own -- the line editor sends what its rows currently
+        # say rather than having this re-read the file, exactly as it
+        # already does for line_hashes/line_texts.
+        pauses = data.get("pauses")
+        if pauses is not None and not isinstance(pauses, list):
+            return web.json_response({"error": "pauses must be an array"})
 
         if not folder or not os.path.isdir(folder):
             return web.json_response({"error": f"not a folder: {folder}"})
@@ -935,7 +1114,7 @@ if _HAS_SERVER:
             return web.json_response({"error": "line_hashes must be a non-empty array of strings"})
 
         try:
-            result = stitch_lines(folder, base_name, line_hashes, line_texts=line_texts)
+            result = stitch_lines(folder, base_name, line_hashes, line_texts=line_texts, pauses=pauses)
         except (FileNotFoundError, ValueError) as e:
             return web.json_response({"error": str(e)})
         except OSError as e:
@@ -986,9 +1165,15 @@ if _HAS_SERVER:
             file_lines_changed = 0
             new_lines = []
             for line in file_lines:
-                parsed = _parse_script_line(line)
+                parsed = split_script_line(line)
                 if parsed and parsed[0] == old:
-                    new_lines.append(f"{new} | {parsed[1]} | {parsed[2]}")
+                    # Rebuilt through split_script_line, not the 3-field
+                    # parser: rewriting only the speaker must not silently
+                    # drop a line's own pause field along with it.
+                    rebuilt = f"{new} | {parsed[1]} | {parsed[2]}"
+                    if line.count("|") == 3:
+                        rebuilt += f" | {line.split('|')[3].strip()}"
+                    new_lines.append(rebuilt)
                     changed = True
                     file_lines_changed += 1
                 else:
@@ -1156,14 +1341,18 @@ class FL_CosyVoice3_ScriptLibrary:
             lines.append("Selected: (none -- script_file is empty, using script box content)")
 
         roles_path, roles_count, _, roles_list = find_db_file(root, "_roles.json", "roles")
+        role_map: Dict[str, str] = {}
         if roles_path:
             lines.append(f"Roles DB: {roles_path} ({roles_count} roles)")
             role_map = role_map_from_entries(roles_list)
             if role_map:
-                script_content = resolve_roles(script_content, role_map)
                 lines.append(f"Role resolution: {len(role_map)} role(s) resolved from _roles.json")
         else:
             lines.append("Roles DB: not found (_roles.json in project root)")
+        # Unconditional, even with no roles to resolve: this is also where a
+        # line's optional 4th pause field gets dropped, and Dialog's own
+        # parser would skip any 4-field line as malformed (see resolve_roles).
+        script_content = resolve_roles(script_content, role_map)
 
         message = "\n".join(lines)
         print(f"[FL CosyVoice3 ScriptLibrary]\n{message}")

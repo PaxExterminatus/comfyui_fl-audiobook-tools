@@ -2,7 +2,6 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
-import Dropdown from "primevue/dropdown";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import InputGroup from "primevue/inputgroup";
@@ -13,12 +12,18 @@ import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
-import InstructPickerDialog from "./InstructPickerDialog.vue";
+import InstructPickerDialog from "../shared/InstructPickerDialog.vue";
 import SpeakerPickerDialog from "./SpeakerPickerDialog.vue";
+import LineRowEditor from "../shared/LineRowEditor.vue";
 import { speakerAccent } from "../shared/speaker_accent.js";
+import { insertStressMark as sharedInsertStressMark } from "../shared/stress_mark.js";
+import { saveInstructPhrase } from "../shared/instruct_library.js";
+import { useRoleInfoPopover } from "../shared/role_info_popover.js";
+import RoleInfoPopover from "../shared/RoleInfoPopover.vue";
+import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
 import { lineHash, makeLineFilename, hasExpectedFile, mostRecentAtPosition } from "../shared/line_hash.js";
 import {
-    joinPath, stripSuffixAndExt, dirOf, markRoleStale,
+    joinPath, stripSuffixAndExt, dirOf, markRoleStale, parsePauseField, DEFAULT_LINE_GAP_S,
     SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
     BROWSE_API,
 } from "../../web/fl_common.js";
@@ -36,10 +41,21 @@ const SAVE_DEBOUNCE_MS = 600;
 const POLL_MS = 3000;
 const EDIT_QUIET_MS = 1500;
 
+// A 4th field is this addon's optional per-line pause (see
+// nodes/script_library.py's split_script_line). Kept as the author's own
+// RAW text, not a parsed number: an in-progress "1." or a typo'd "1,,2"
+// has to survive a keystroke and a save round-trip without being silently
+// rewritten under the cursor. It's parsed (parsePauseField) only where a
+// number is actually needed -- sending the stitch its plan.
 function parseLine(line) {
     const parts = line.split("|");
-    if (parts.length !== 3) return null;
-    return { speaker: parts[0].trim(), instruct: parts[1].trim(), text: parts[2].trim() };
+    if (parts.length !== 3 && parts.length !== 4) return null;
+    return {
+        speaker: parts[0].trim(),
+        instruct: parts[1].trim(),
+        text: parts[2].trim(),
+        pause: parts.length === 4 ? parts[3].trim() : "",
+    };
 }
 
 let nextRowKey = 1;
@@ -60,9 +76,17 @@ function parseScript(content) {
         });
 }
 
+// The 4th field is written only when the line actually asks for a pause --
+// a script with no pauses stays byte-identical to what it was before this
+// field existed, and "no pause named" never gets frozen into an explicit
+// number the author didn't choose.
 function serializeRows(rowsArr) {
     return rowsArr
-        .map((r) => (r.malformed ? r.raw : `${r.speaker} | ${r.instruct} | ${r.text}`))
+        .map((r) => {
+            if (r.malformed) return r.raw;
+            const base = `${r.speaker} | ${r.instruct} | ${r.text}`;
+            return r.pause ? `${base} | ${r.pause}` : base;
+        })
         .join("\n");
 }
 
@@ -87,8 +111,13 @@ const visible = ref(true);
 const filename = ref(props.filename);
 const rows = ref([]);
 const instructCategories = ref([]); // [{name, title, when, examples}, ...] from _instruct_categories.json
+const instructCategoriesPath = ref(null); // its resolved on-disk path -- null if none exists yet for this project
 const roleEntries = ref([]);
 const rolesJsonPath = ref(null);
+const { popover: roleInfoPopover, show: showRoleInfoPopover, hide: hideRoleInfoPopover, info: roleInfoFields } = useRoleInfoPopover(
+    roleEntries,
+    (entry) => Object.entries(entry).filter(([, v]) => v !== "" && v !== null && v !== undefined && v !== entry.__key),
+);
 const presets = ref([]);
 const speakerSampleDir = ref(""); // folder holding each preset's own .pt (and, hopefully, a same-named sample .mp3/.wav) -- see loadPresets
 const readyScripts = ref([]);
@@ -109,7 +138,6 @@ const audioIsPlaying = ref(false);
 const mode1PlayingIdx = ref(-1);
 const selectChecked = ref(props.checkedApi ? props.checkedApi.isChecked(props.filename) : false);
 const audioState = reactive({ checking: true, best: null, mtime: null, error: null });
-const roleInfoPopover = reactive({ visible: false, top: 0, left: 0, code: null });
 const justAddedKey = ref(null);
 
 const pendingRevoiceRows = reactive(new Set());
@@ -129,7 +157,7 @@ let mode1AudioEl = null;
 const audioElRef = ref(null); // mode 2's <audio> element
 const rowsContainerEl = ref(null);
 const rowEls = new Map(); // row.__key -> row root element (scroll/focus on add)
-const textareaEls = new Map(); // row.__key -> the .fl-textarea DOM node
+const { autoGrow, setTextareaRef, regrowAll } = useTextareaAutoGrow();
 
 const fullPath = computed(() => joinPath(props.folder, filename.value));
 const audioFolder = computed(() => joinPath(props.folder, "_audio"));
@@ -477,19 +505,6 @@ async function flushSave() {
     }
 }
 
-function autoGrow(el) {
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-}
-function setTextareaRef(key, el) {
-    if (!el) { textareaEls.delete(key); return; }
-    textareaEls.set(key, el.$el ?? el);
-}
-function applyTextFontSize() {
-    nextTick(() => textareaEls.forEach(autoGrow));
-}
-
 function setRowRef(key, el) {
     if (!el) { rowEls.delete(key); return; }
     rowEls.set(key, el);
@@ -556,6 +571,10 @@ async function mergeRows(idxA, idxB) {
     const totalPositions = positionByIndex.value.size;
 
     first.text = `${first.text} ${second.text}`.trim();
+    // A pause belongs AFTER its line, so the merged line inherits the
+    // SECOND half's pause -- the first half's own pause was silence in the
+    // middle of what is now one continuous line, and disappears with it.
+    first.pause = second.pause || "";
     rows.value.splice(secondIdx, 1);
     // Hash is content-only (speaker+instruct+text), not position -- merging
     // only actually changes `first`'s own text, so that's the only hash
@@ -644,9 +663,72 @@ function onSpeakerInput(row) {
     updateRowHash(row);
     scheduleSave();
 }
+// Grows _instruct_categories.json from actual typing -- every instruct a
+// row ends up with that isn't ALREADY somewhere in the bank gets appended
+// there under its own "custom" category (see instruct_library.js). Fires
+// from both a manual edit and onInstructPicked (the picker's own choice
+// is already in the bank almost always, so most calls here are a cheap
+// no-op via saveInstructPhrase's dedup check). Debounced per row, same
+// cadence as updateRowHash, so typing doesn't fire a write on every
+// keystroke.
+const instructLibrarySaveDebounce = new Map(); // row.__key -> setTimeout id
+function scheduleInstructLibrarySave(row) {
+    clearTimeout(instructLibrarySaveDebounce.get(row.__key));
+    instructLibrarySaveDebounce.set(row.__key, setTimeout(async () => {
+        instructLibrarySaveDebounce.delete(row.__key);
+        const updated = await saveInstructPhrase(FILE_API, instructCategoriesPath.value, row.instruct);
+        if (updated) instructCategories.value = updated;
+    }, SAVE_DEBOUNCE_MS));
+}
 function onInstructInput(row) {
     updateRowHash(row);
     scheduleSave();
+    scheduleInstructLibrarySave(row);
+}
+
+// ── per-line pause ──────────────────────────────────────────────────────
+// Deliberately does NOT touch the row's hash: a pause is silence the
+// stitch inserts between takes, not audio the TTS renders, so editing one
+// must leave every existing take valid (see nodes/script_library.py's
+// split_script_line). What it DOES invalidate is a final stitched track --
+// picked up on the next scan by comparing the timing manifest's recorded
+// plan against the script (_manifest_matches_script_pauses), which simply
+// un-marks the script as done so pressing ✅ Done re-stitches it.
+const lastRowIndex = computed(() => {
+    let last = -1;
+    rows.value.forEach((r, i) => { if (!r.malformed) last = i; });
+    return last;
+});
+
+// What this line's silence-after actually resolves to when the cell is
+// empty -- shown as the input's placeholder so the default is visible
+// rather than folklore. Mirrors effective_pauses: the last line holds
+// nothing unless it explicitly asks to.
+function pauseDefaultFor(index) {
+    return index === lastRowIndex.value ? 0 : DEFAULT_LINE_GAP_S;
+}
+
+// Something is typed that parsePauseField can't read. The line still
+// renders -- its pause just falls back to the default -- so this is a
+// warning, not the alarm a malformed line gets. Shown by swapping the
+// group's own stopwatch icon (our own <i>, so no fight with the theme
+// over an InputText's colour) plus PrimeVue's `p-invalid` on the field.
+function pauseUnreadable(row) {
+    return Boolean(row.pause) && parsePauseField(row.pause) === null;
+}
+
+function pauseTitle(row, index) {
+    const parsed = parsePauseField(row.pause);
+    if (row.pause && parsed === null) {
+        return `"${row.pause}" isn't a pause this can read -- expected seconds between 0 and 10 (e.g. 1.5). Falling back to ${pauseDefaultFor(index)}s.`;
+    }
+    if (parsed !== null) {
+        return parsed === 0
+            ? "No pause after this line -- the next one comes in on top of it (an interruption)"
+            : `Hold ${parsed}s of silence after this line`;
+    }
+    return `Pause after this line, in seconds. Empty = ${pauseDefaultFor(index)}s`
+        + (index === lastRowIndex.value ? " (nothing held after the last line)" : " (the default between lines)");
 }
 
 // How many OTHER rows in this same script share `row`'s current speaker --
@@ -679,28 +761,6 @@ function applyInstructToSameRole(row) {
     scheduleSave();
     setStatus(`Applied instruct to ${count} other "${code}" line(s) in this script`);
 }
-// Only still needed for the paste path below -- PrimeVue's own Textarea
-// (auto-resize) already resizes itself on every normal keystroke before it
-// emits update:model-value, so a plain typed edit never reaches this.
-function onTextInput(row, el) {
-    autoGrow(el);
-    updateRowHash(row);
-    scheduleSave();
-}
-function onTextPaste(row, el, e) {
-    // Writes el.value directly and skips PrimeVue's own onInput handler
-    // entirely (preventDefault stops the native paste from ever firing an
-    // `input` event) -- auto-resize's own resize() never runs for this
-    // change, so autoGrow(el) above is still required here specifically.
-    e.preventDefault();
-    const pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/[\r\n]+/g, " ");
-    const start = el.selectionStart, end = el.selectionEnd;
-    el.value = el.value.slice(0, start) + pasted + el.value.slice(end);
-    el.selectionStart = el.selectionEnd = start + pasted.length;
-    row.text = el.value;
-    onTextInput(row, el);
-}
-
 function roleEntryFor(row) {
     return roleEntries.value.find((e) => e.code === row.speaker);
 }
@@ -810,25 +870,6 @@ async function onSpeakerPicked(preset) {
     await onSpeakerFileRecast(row, preset);
 }
 
-function showRoleInfoPopover(anchorEl, code) {
-    const rect = anchorEl.getBoundingClientRect();
-    roleInfoPopover.left = Math.min(rect.left, window.innerWidth - 280);
-    roleInfoPopover.top = rect.bottom + 4;
-    roleInfoPopover.code = code;
-    roleInfoPopover.visible = true;
-}
-function hideRoleInfoPopover() {
-    roleInfoPopover.visible = false;
-}
-const roleInfoFields = computed(() => {
-    const code = roleInfoPopover.code;
-    if (!code) return { message: "No speaker set on this line yet" };
-    const entry = roleEntries.value.find((e) => e.code === code);
-    if (!entry) return { message: `"${code}" is not a role code in _roles.json -- used directly as a preset name` };
-    const fields = Object.entries(entry).filter(([, v]) => v !== "" && v !== null && v !== undefined && v !== entry.__key);
-    if (!fields.length) return { message: `"${code}" has no fields set in _roles.json` };
-    return { fields };
-});
 
 function revoiceTitle(row, index) {
     if (pendingRevoiceRows.has(row)) return "Re-voicing...";
@@ -1115,6 +1156,13 @@ async function toggleDone() {
                     // expected_path).
                     line_hashes: nonMalformed.map((r) => expectedHash.get(r.__key)),
                     line_texts: nonMalformed.map((r) => r.text),
+                    // Silence to hold after each line, null where the row
+                    // names none -- the stitch resolves those to its own
+                    // defaults and records the finished plan in the timing
+                    // manifest, which is what later tells a done script
+                    // its pauses have since been edited (see
+                    // _manifest_matches_script_pauses).
+                    pauses: nonMalformed.map((r) => parsePauseField(r.pause)),
                 }),
             });
             const stitchData = await stitchResp.json();
@@ -1159,19 +1207,8 @@ async function toggleDone() {
 }
 
 // ── actions row: stress mark / split / add line / prev/next ────────────
-// Uses mousedown+preventDefault (not click): a plain click on a <button>
-// steals focus from the textarea in Chromium before any click handler
-// runs, which would leave document.activeElement pointing at the button.
 function insertStressMark() {
-    const el = document.activeElement;
-    if (!el || (el.tagName !== "TEXTAREA" && el.tagName !== "INPUT")) {
-        setStatus("Click into a line's text first, place the cursor right after the vowel to stress");
-        return;
-    }
-    const pos = el.selectionStart;
-    el.value = el.value.slice(0, pos) + "́" + el.value.slice(pos);
-    el.selectionStart = el.selectionEnd = pos + 1;
-    el.dispatchEvent(new Event("input", { bubbles: true }));
+    sharedInsertStressMark(setStatus);
 }
 
 function splitFocusedLine() {
@@ -1194,7 +1231,10 @@ function splitFocusedLine() {
     const before = row.text.slice(0, pos).trimEnd();
     const after = row.text.slice(pos).trimStart();
     row.text = before;
-    const newRow = freshRow({ speaker: row.speaker, instruct: row.instruct, text: after, raw: "", malformed: false });
+    // The pause sat after the whole line, so it stays after its SECOND
+    // half -- the new row takes it, the first half goes back to default.
+    const newRow = freshRow({ speaker: row.speaker, instruct: row.instruct, text: after, pause: row.pause || "", raw: "", malformed: false });
+    row.pause = "";
     rows.value.splice(index + 1, 0, newRow);
     // Both halves' own text changed (the original row got truncated, the
     // new one is the remainder) -- every other row's content is untouched.
@@ -1214,7 +1254,7 @@ function splitFocusedLine() {
 function addLine() {
     // Appended past every existing position -- nothing to reorganize, this
     // row simply has no file yet.
-    const newRow = freshRow({ speaker: "", instruct: "", text: "", raw: "", malformed: false });
+    const newRow = freshRow({ speaker: "", instruct: "", text: "", pause: "", raw: "", malformed: false });
     rows.value.push(newRow);
     // Appended at the end -- no other row's position shifts, so only this
     // one needs its own hash (see updateRowHash), not a full recompute.
@@ -1247,12 +1287,14 @@ async function loadCatalog() {
         const resp = await fetch(url);
         const data = await resp.json();
         instructCategories.value = data.instruct_categories?.entries || [];
+        instructCategoriesPath.value = data.instruct_categories?.path || null;
         roleEntries.value = data.roles?.entries || [];
         rolesJsonPath.value = data.roles?.path || null;
         scriptList.value = Array.isArray(data.scripts) ? data.scripts : [];
         readyScripts.value = Array.isArray(data.ready_scripts) ? data.ready_scripts : [];
     } catch (e) {
         instructCategories.value = [];
+        instructCategoriesPath.value = null;
         roleEntries.value = [];
         rolesJsonPath.value = null;
         scriptList.value = [];
@@ -1304,7 +1346,7 @@ async function loadFromDisk({ isPoll = false } = {}) {
 }
 
 watch(lineTiming, () => nextTick(syncActiveLine));
-watch(textFontSizePx, applyTextFontSize);
+watch(textFontSizePx, regrowAll);
 
 onMounted(() => {
     loadCatalog();
@@ -1440,121 +1482,91 @@ onBeforeUnmount(() => {
                             class="fl-textarea malformed-textarea"
                             :style="{ fontSize: `${textFontSizePx}px` }"
                             rows="1"
-                            :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(textareaEls.get(row.__key))); }"
+                            :ref="(el) => setTextareaRef(row.__key, el)"
                             @update:model-value="scheduleSave()"
                             @keydown.enter.prevent
                         />
                     </template>
                     <template v-else>
-                    <div class="line-controls-row">
-                        <span
-                            class="play-btn"
-                            :class="{ 'is-playing': isRowPlaying(index), disabled: !canPlayRow(index, row) }"
-                            :title="canPlayRow(index, row) ? (isCurrentlyReady ? 'Jump to this line in the full render' : 'Play this line (and every voiced line after it)') : 'Not voiced yet -- nothing to play'"
-                            @click="onPlayClick(row, index)"
-                        >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
+                    <LineRowEditor
+                        :speaker="row.speaker"
+                        :role-entries="roleEntries"
+                        :role-option-sub-label="roleOptionSubLabel"
+                        :role-info-code="row.speaker"
+                        :instruct="row.instruct"
+                        :can-undo-instruct="row.__prevInstruct !== undefined"
+                        :undo-instruct-title="undoInstructTitle(row)"
+                        :can-apply-instruct="sameRoleCount(row) > 0"
+                        :apply-instruct-title="applyInstructTitle(row)"
+                        :instruct-note="instructNoteFor(row)"
+                        :text="row.text"
+                        :font-size-px="textFontSizePx"
+                        :textarea-ref="(el) => setTextareaRef(row.__key, el)"
+                        :on-auto-grow="autoGrow"
+                        @update:speaker="row.speaker = $event; onSpeakerInput(row)"
+                        @update:instruct="row.instruct = $event; onInstructInput(row)"
+                        @update:text="row.text = $event; updateRowHash(row); scheduleSave()"
+                        @open-instruct-picker="openInstructPicker(row)"
+                        @undo-instruct="undoInstruct(row)"
+                        @apply-instruct="applyInstructToSameRole(row)"
+                        @role-info-enter="showRoleInfoPopover"
+                        @role-info-leave="hideRoleInfoPopover"
+                    >
+                        <template #leading>
+                            <span
+                                class="play-btn"
+                                :class="{ 'is-playing': isRowPlaying(index), disabled: !canPlayRow(index, row) }"
+                                :title="canPlayRow(index, row) ? (isCurrentlyReady ? 'Jump to this line in the full render' : 'Play this line (and every voiced line after it)') : 'Not voiced yet -- nothing to play'"
+                                @click="onPlayClick(row, index)"
+                            >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
+                        </template>
+                        <template #trailing>
+                            <InputGroup class="speaker-file-group">
+                                <Button
+                                    v-if="revoiceApi && !isCurrentlyReady"
+                                    class="revoice-btn"
+                                    size="small"
+                                    :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
+                                    :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
+                                    :disabled="pendingRevoiceRows.has(row)"
+                                    :title="revoiceTitle(row, index)"
+                                    @click="revoiceRow(row, index)"
+                                />
+                                <InputText
+                                    :model-value="roleEntryFor(row)?.speaker || ''"
+                                    placeholder="(no speaker)"
+                                    class="speaker-file-input"
+                                    :disabled="!roleEntryFor(row)"
+                                    :title="speakerFileTitle(row)"
+                                    @update:model-value="onSpeakerFileRecast(row, $event)"
+                                />
+                                <Button
+                                    icon="pi pi-microphone"
+                                    size="small"
+                                    :disabled="!roleEntryFor(row)"
+                                    title="Pick a speaker from the preset gallery"
+                                    @click="openSpeakerPicker(row)"
+                                />
+                            </InputGroup>
 
-                        <InputGroup class="speaker-group">
-                            <InputGroupAddon><i class="pi pi-address-book" /></InputGroupAddon>
-                            <Dropdown
-                                :model-value="row.speaker"
-                                :options="roleEntries"
-                                option-label="code"
-                                option-value="code"
-                                editable
-                                filter
-                                placeholder="Speaker"
-                                title="Speaker (role code, or a literal preset/preset#tag)"
-                                @update:model-value="row.speaker = $event; onSpeakerInput(row)"
-                            >
-                                <template #option="{ option }">
-                                    <div class="dropdown-option-label">{{ option.code }}</div>
-                                    <div v-if="roleOptionSubLabel(option)" class="dropdown-option-sublabel">{{ roleOptionSubLabel(option) }}</div>
-                                </template>
-                            </Dropdown>
-                        </InputGroup>
+                            <InputGroup class="pause-group">
+                                <InputGroupAddon>
+                                    <i :class="pauseUnreadable(row) ? 'pi pi-exclamation-triangle pause-warn' : 'pi pi-stopwatch'" />
+                                </InputGroupAddon>
+                                <InputText
+                                    v-model="row.pause"
+                                    class="pause-input"
+                                    :class="{ 'p-invalid': pauseUnreadable(row) }"
+                                    :placeholder="String(pauseDefaultFor(index))"
+                                    :title="pauseTitle(row, index)"
+                                    @update:model-value="scheduleSave()"
+                                />
+                            </InputGroup>
 
-                        <InputGroup class="instruct-group">
-                            <InputGroupAddon><i class="pi pi-book" /></InputGroupAddon>
-                            <Button
-                                icon="pi pi-undo"
-                                size="small"
-                                class="instruct-undo-btn"
-                                :disabled="row.__prevInstruct === undefined"
-                                :title="undoInstructTitle(row)"
-                                @click="undoInstruct(row)"
-                            />
-                            <InputText
-                                v-model="row.instruct"
-                                placeholder="Instruct"
-                                title="Instruct text -- type freely, or pick from the phrase bank"
-                                @input="onInstructInput(row)"
-                            />
-                            <Button
-                                icon="pi pi-th-large"
-                                size="small"
-                                title="Pick an instruct phrase from the category bank"
-                                @click="openInstructPicker(row)"
-                            />
-                            <Button
-                                icon="pi pi-users"
-                                size="small"
-                                class="apply-instruct-btn"
-                                :disabled="sameRoleCount(row) === 0"
-                                :title="applyInstructTitle(row)"
-                                @click="applyInstructToSameRole(row)"
-                            />
-                        </InputGroup>
-
-                        <InputGroup class="speaker-file-group">
-                            <Button
-                                v-if="revoiceApi && !isCurrentlyReady"
-                                class="revoice-btn"
-                                size="small"
-                                :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
-                                :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
-                                :disabled="pendingRevoiceRows.has(row)"
-                                :title="revoiceTitle(row, index)"
-                                @click="revoiceRow(row, index)"
-                            />
-                            <InputText
-                                :model-value="roleEntryFor(row)?.speaker || ''"
-                                placeholder="(no speaker)"
-                                class="speaker-file-input"
-                                :disabled="!roleEntryFor(row)"
-                                :title="speakerFileTitle(row)"
-                                @update:model-value="onSpeakerFileRecast(row, $event)"
-                            />
-                            <Button
-                                icon="pi pi-microphone"
-                                size="small"
-                                :disabled="!roleEntryFor(row)"
-                                title="Pick a speaker from the preset gallery"
-                                @click="openSpeakerPicker(row)"
-                            />
-                            <InputGroupAddon
-                                class="role-info-btn"
-                                @mouseenter="showRoleInfoPopover($event.target, row.speaker)"
-                                @mouseleave="hideRoleInfoPopover"
-                            ><i class="pi pi-info-circle" /></InputGroupAddon>
-                        </InputGroup>
-
-                        <div class="spacer" />
-                        <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
-                    </div>
-                    <div v-if="instructNoteFor(row)" class="instruct-desc">↳ {{ instructNoteFor(row) }}</div>
-
-                    <Textarea
-                        v-model="row.text"
-                        auto-resize
-                        class="fl-textarea"
-                        :style="{ fontSize: `${textFontSizePx}px` }"
-                        rows="1"
-                        :ref="(el) => { setTextareaRef(row.__key, el); nextTick(() => autoGrow(textareaEls.get(row.__key))); }"
-                        @update:model-value="updateRowHash(row); scheduleSave()"
-                        @keydown.enter.prevent
-                        @paste="onTextPaste(row, $event.target, $event)"
-                    />
+                            <div class="spacer" />
+                            <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
+                        </template>
+                    </LineRowEditor>
                 </template>
                 </div>
             </div>
@@ -1577,13 +1589,10 @@ onBeforeUnmount(() => {
         @select="onSpeakerPicked"
     />
 
-    <div v-if="roleInfoPopover.visible" class="role-info-popover" :style="{ left: `${roleInfoPopover.left}px`, top: `${roleInfoPopover.top}px` }">
-        <div v-if="roleInfoFields.message">{{ roleInfoFields.message }}</div>
-        <div v-for="([k, v]) in roleInfoFields.fields" :key="k" class="role-info-row">
-            <span class="role-info-key">{{ k }}</span>
-            <span class="role-info-value">{{ v }}</span>
-        </div>
-    </div>
+    <RoleInfoPopover
+        :visible="roleInfoPopover.visible" :left="roleInfoPopover.left" :top="roleInfoPopover.top"
+        :message="roleInfoFields.message" :fields="roleInfoFields.fields"
+    />
 </template>
 
 

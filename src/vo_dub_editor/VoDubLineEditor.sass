@@ -1,0 +1,255 @@
+.vo-dub-editor-controls
+    display: flex
+    flex-direction: column
+
+.vo-dub-filters
+    @include button-row(8px)
+    width: 100%
+    align-items: center
+
+.vo-dub-search
+    flex: 1 1 240px
+    min-width: 0
+
+.vo-dub-status-filter
+    flex: 0 0 auto
+
+.actions-divider
+    width: 1px
+    align-self: stretch
+    background: $border-subtle
+    margin: 0 4px
+    flex: 0 0 auto
+
+// A separate row from .vo-dub-filters (same split as LineEditorApp.sass's
+// own audio-content-row/actions-row) -- cramming search+filter+refresh+
+// Stress mark+status+close into ONE row wraps unpredictably at typical
+// panel widths, leaving Stress mark stranded alone on its own line.
+.actions-row
+    @include button-row(6px)
+    align-items: center
+    padding: 2px 0
+
+.vo-dub-original-default-label
+    display: flex
+    align-items: center
+    gap: 6px
+    font-size: $font-sm
+    opacity: 0.85
+    cursor: pointer
+    user-select: none
+
+.vo-dub-editor-status
+    @extend %ellipsis
+    flex: 1 1 auto
+    opacity: 0.7
+    font-size: $font-sm
+
+.vo-dub-pager
+    display: flex
+    align-items: center
+    justify-content: center
+    gap: 8px
+    width: 100%
+    padding: 4px 0
+    border-top: 1px solid $border-subtle
+
+.vo-dub-pager-label
+    font-size: $font-sm
+    opacity: 0.75
+    font-variant-numeric: tabular-nums
+
+.vo-dub-rows
+    display: flex
+    flex-direction: column
+    gap: 10px
+    padding: 4px 2px 20px
+
+.vo-dub-row
+    display: flex
+    flex-direction: column
+    gap: 6px
+    padding: 10px 12px
+    border: 1px solid $border-subtle
+    border-radius: 8px
+    background: $bg-recessed
+    // Same convention as LineEditorApp.sass's own .row-playing -- lit up
+    // while "Play in order" (see playSequentialFrom) is on THIS row.
+    &.row-playing
+        background: rgba($color-accent, 0.1)
+
+.vo-dub-row-head
+    display: flex
+    align-items: baseline
+    gap: 10px
+
+.vo-dub-key
+    font-weight: 600
+    font-family: monospace
+    font-size: $font-sm
+
+.vo-dub-duration-ref
+    opacity: 0.6
+    font-size: $font-xs
+
+.vo-dub-render-btn
+    flex: 0 0 auto
+    &.stale
+        color: $color-warning
+
+.vo-dub-status-pill
+    font-size: $font-xs
+    padding: 1px 8px
+    border-radius: 100px
+    background: $overlay-soft
+
+.status-no_text
+    color: $color-warning
+.status-needs_translation
+    color: $color-active
+.status-not_started
+    opacity: 0.6
+.status-stale
+    color: $color-warning
+.status-done
+    color: $color-success
+.status-unsupported
+    opacity: 0.5
+    font-style: italic
+
+// The manual "Done" override -- same "success = ready" convention as the
+// status pill's own .status-done, but only lit up once actually ticked
+// (an untouched row's button stays neutral, not pre-colored).
+.vo-dub-done-btn
+    flex: 0 0 auto
+    margin-left: auto
+    opacity: 0.6
+.vo-dub-done-btn.active
+    color: $color-success
+    opacity: 1
+
+.vo-dub-players
+    display: flex
+    flex-direction: column
+    gap: 4px
+
+// Only the players ROW itself needs the 3-column split (EN | Play-both |
+// RU) -- the labels above it are now ONE left-aligned line (see the
+// template), not split to sit over each side separately (that split
+// layout was tried and explicitly rejected -- see the plan file's own
+// progress notes).
+.vo-dub-players-row
+    display: grid
+    grid-template-columns: 1fr auto 1fr
+    align-items: center
+    gap: 12px
+
+.vo-dub-players-labels
+    display: flex
+    align-items: center
+    gap: 6px
+    font-size: $font-xs
+    opacity: 0.7
+
+.vo-dub-player
+    display: flex
+    flex-direction: column
+    gap: 2px
+    min-width: 0
+
+// Render/Effect (+ its Save button when dirty) on their own row, left-
+// aligned -- both act on the FILE this row writes, distinct from "Play
+// both" above (which only ever plays what's already there).
+.vo-dub-players-footer
+    display: flex
+    flex-wrap: wrap
+    align-items: center
+    gap: 8px
+    padding-top: 2px
+
+.vo-dub-effect-select
+    flex: 0 0 auto
+    width: 200px
+
+.vo-dub-effect-save-btn
+    flex: 0 0 auto
+    color: $color-active
+
+// A plain PrimeVue Button, same as .vo-dub-render-btn -- only the
+// "currently playing" state gets its own color, same "active = currently
+// playing" convention as LineEditorApp.sass's own .play-btn. Centered in
+// the players ROW's own middle grid column, not the footer -- see the
+// template's own comment on why.
+.play-both-btn
+    justify-self: center
+.play-both-btn.playing
+    color: $color-active
+
+.vo-dub-no-take
+    opacity: 0.5
+    font-size: $font-sm
+    font-style: italic
+
+.vo-dub-duration-en-tag,
+.vo-dub-duration-tag,
+.vo-dub-duration-delta
+    font-size: $font-xs
+    padding: 1px 6px
+    border-radius: 100px
+    background: $overlay-soft
+
+// The "vs" connector between the two duration tags -- wrapped in its own
+// small pill too (not bare text floating between two chips), just muted
+// relative to them since it carries no data of its own.
+.vo-dub-duration-vs
+    font-size: $font-xs
+    padding: 1px 6px
+    border-radius: 100px
+    opacity: 0.55
+
+.badge-good
+    color: $color-success
+.badge-warn
+    color: $color-active
+.badge-bad
+    color: $color-warning
+
+.vo-dub-english
+    opacity: 0.65
+    font-size: $font-sm
+    font-style: italic
+
+.vo-dub-unsupported-note
+    font-size: $font-sm
+    opacity: 0.8
+    padding: 6px 8px
+    border-radius: 4px
+    background: $overlay-soft
+    border-left: 2px solid $color-warning
+
+.vo-dub-identifier
+    @extend %ellipsis
+    flex: 0 0 auto
+    max-width: 180px
+    font-size: $font-xs
+    font-family: monospace
+    opacity: 0.6
+
+.apply-role-btn
+    flex: 0 0 auto
+
+.vo-dub-use-original-label
+    display: flex
+    align-items: center
+    gap: 4px
+    flex: 0 0 auto
+    font-size: $font-xs
+    opacity: 0.75
+    cursor: pointer
+    user-select: none
+    white-space: nowrap
+
+.vo-dub-empty
+    opacity: 0.6
+    padding: 16px
+    text-align: center

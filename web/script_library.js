@@ -1,11 +1,14 @@
 import { app } from "../../scripts/app.js";
-import { api } from "../../scripts/api.js";
 import { hideWidget } from "./ui_kit.js";
 import { openLineEditor } from "./line_editor.js";
 import { openBrowseDialog } from "./browse_dialog.js";
 import { openRolesEditor } from "./roles_editor.js";
 import { mountScriptLibraryPanel } from "./script_library_panel.js";
 import { SCRIPT_LIBRARY_API } from "./fl_common.js";
+import {
+    findNodesByClass, findPromptEntry, stripDownstreamAudioSavers,
+    makeSubmitLock, submitAndTrackPromptId, pollPromptCompletion,
+} from "./fl_queue_orchestration.js";
 
 // FL CosyVoice3 Script Library: folder_path is a PROJECT ROOT. Shows every
 // "Act01"/"Act02"/... subfolder and its dialog scripts (every .txt file,
@@ -187,84 +190,12 @@ let pendingRevoiceTarget = null;
 // that wire exists in a given workflow.
 let pendingRevoiceContentHash = null;
 
-// Same subgraph-safe walk as buildFlNodeIndex, but collecting every
-// Post-Process node instead of indexing by id (a re-voice run has no
-// specific "this is the id we're looking for" -- every Post-Process node
-// found in the CURRENT prompt gets the override, matching "work within
-// the current flow" -- one Dialog/Post-Process pair per graph is the
-// assumption here, same as the checked-items loop assumes one driving
-// Script Library node).
+// buildPostProcessList/findPromptEntry/stripDownstreamAudioSavers moved to
+// fl_queue_orchestration.js (shared with vo_dub_library.js's own render
+// path -- none of the three cared about THIS addon's act/script model,
+// only about the current graph/prompt).
 function buildPostProcessList() {
-    const found = [];
-    const visit = (graph) => {
-        if (!graph) return;
-        const nodes = graph._nodes || graph.nodes || [];
-        for (const n of nodes) {
-            if (!n) continue;
-            if (n.comfyClass === POST_PROCESS_CLASS || n.type === POST_PROCESS_CLASS) found.push(n);
-            const inner = n.subgraph || n.graph || n._graph;
-            if (inner && inner !== graph) visit(inner);
-        }
-    };
-    visit(app.graph);
-    return found;
-}
-
-// Resolves a graph node to its entry in the SERIALIZED prompt. Same
-// composite-id hazard findFlNode handles: a node living inside a subgraph is
-// flattened into the prompt under an id like "5:12", so a plain
-// prompt[node.id] lookup silently misses it. That miss used to be quietly
-// destructive here rather than merely ineffective -- a re-voice whose
-// line_index_override never reached the Post-Process node makes
-// nodes/audio_post_process.py read the run as a FULL RENDER of one line,
-// which both writes it under position 0 instead of its real position AND
-// deletes every OTHER position's line file, i.e. the rest of the scene.
-function findPromptEntry(prompt, node, classType) {
-    const sId = String(node.id);
-    const direct = prompt[sId];
-    if (direct && direct.class_type === classType) return direct;
-    for (const key of Object.keys(prompt)) {
-        const entry = prompt[key];
-        if (!entry || entry.class_type !== classType) continue;
-        if (key.slice(key.lastIndexOf(":") + 1) === sId) return entry;
-    }
-    return null;
-}
-
-// Matches ComfyUI core's SaveAudio/SaveAudioMP3/SaveAudioOpus, VHS_SaveAudio,
-// and similar third-party audio-saver nodes by name, not by an exact class
-// list -- see stripDownstreamAudioSavers below.
-const AUDIO_SAVER_CLASS_RE = /saveaudio|audiosave/i;
-
-// A single-line re-voice only needs Post-Process's own per-line file write
-// (_audio\lines\<script>\<position>_<hash>.wav, via line_index_override) --
-// "✅ Done" (stitch_lines) owns producing the actual final scene file,
-// entirely server-side; Post-Process itself never stitches anything (see
-// nodes/audio_post_process.py's own docstring). If the user's graph still
-// has a Save Audio node wired downstream of Post-Process (e.g. for a quick
-// listen while working), queuing the WHOLE graph for just one line makes
-// that SAME Save Audio node fire too -- writing this one short line's audio
-// into _audio\ under the script's own filename_prefix, where the mini
-// player's "latest file wins" match (see nodes/script_library.py's
-// scripts_with_audio / web/line_editor.js's loadAudio) then mistakes it for
-// the actual full-scene take. Dropping any audio-saver node from THIS ONE
-// queued prompt (never from the graph itself) avoids that -- these are
-// always terminal/sink nodes (no outputs), so nothing else in the prompt
-// can be depending on one being present.
-// Returns the class_types actually removed -- stripping the node that
-// happened to be the branch's only execution root is exactly how a re-voice
-// silently renders nothing (see nodes/audio_post_process.py's OUTPUT_NODE),
-// so the caller logs this rather than letting it happen invisibly.
-function stripDownstreamAudioSavers(prompt) {
-    const stripped = [];
-    for (const key of Object.keys(prompt)) {
-        const entry = prompt[key];
-        if (entry && AUDIO_SAVER_CLASS_RE.test(entry.class_type || "")) {
-            stripped.push(entry.class_type);
-            delete prompt[key];
-        }
-    }
-    return stripped;
+    return findNodesByClass(POST_PROCESS_CLASS);
 }
 
 // Assigned inside the patch guard below (needs closure access to
@@ -478,76 +409,11 @@ if (!app._flScriptLibraryPatched) {
         }
     };
 
-    // Serializes the "stamp the override, call queuePrompt" critical
-    // section so two re-voice clicks fired close together can't stomp each
-    // other's flActiveItem/pendingRevoiceLineIndex values -- graphToPrompt
-    // reads them synchronously at the start of queuePrompt, so as long as
-    // submissions themselves don't overlap, each one's actual EXECUTION
-    // (which can take a while and does run one-at-a-time regardless, via
-    // ComfyUI's own queue) is free to be in flight concurrently with
-    // others. This only guards the brief submit window, not the render.
-    let revoiceSubmitChain = Promise.resolve();
-    function withRevoiceSubmitLock(fn) {
-        const run = revoiceSubmitChain.then(fn, fn);
-        revoiceSubmitChain = run.catch(() => {});
-        return run;
-    }
-
-    // Submits an already-built prompt and resolves with its prompt_id via
-    // the "execution_start" websocket event -- NOT via api.queuePrompt's
-    // own return value. This install has a long chain of OTHER extensions
-    // (rgthree, Pixaroma, inspire-pack, easy-use, DaSiWa) each wrapping
-    // api.queuePrompt, and confirmed live that {prompt_id} does not
-    // reliably survive that chain back to the original caller even though
-    // the server receives and queues the prompt correctly. The websocket
-    // event comes straight from the server, unaffected by any of those
-    // JS-level wrappers. Minor residual risk: if something ELSE is queued
-    // ahead of this one, the next execution_start could belong to that
-    // other job instead -- acceptable for "work within the current flow"
-    // (nothing else is expected to be queuing at the same time).
-    async function submitAndTrackPromptId(promptResult, { timeoutMs = 10 * 60 * 1000 } = {}) {
-        return new Promise((resolve, reject) => {
-            let settled = false;
-            const timer = setTimeout(() => {
-                if (settled) return;
-                settled = true;
-                api.removeEventListener("execution_start", onStart);
-                reject(new Error("Timed out waiting for the re-voice render to start"));
-            }, timeoutMs);
-            function onStart(event) {
-                if (settled) return;
-                settled = true;
-                clearTimeout(timer);
-                api.removeEventListener("execution_start", onStart);
-                resolve(event.detail?.prompt_id);
-            }
-            api.addEventListener("execution_start", onStart);
-            api.queuePrompt(0, promptResult).catch((err) => {
-                if (settled) return;
-                settled = true;
-                clearTimeout(timer);
-                api.removeEventListener("execution_start", onStart);
-                reject(err);
-            });
-        });
-    }
-
-    async function pollPromptCompletion(promptId, { intervalMs = 1000, timeoutMs = 10 * 60 * 1000 } = {}) {
-        const start = Date.now();
-        while (Date.now() - start < timeoutMs) {
-            const resp = await fetch(`/history/${promptId}`);
-            const data = await resp.json();
-            const entry = data[promptId];
-            if (entry) {
-                if (entry.status?.completed) return entry;
-                if (entry.status?.status_str === "error") {
-                    throw new Error("Re-voice render failed -- check the ComfyUI console for details");
-                }
-            }
-            await new Promise((r) => setTimeout(r, intervalMs));
-        }
-        throw new Error("Timed out waiting for the re-voice render to finish");
-    }
+    // withRevoiceSubmitLock/submitAndTrackPromptId/pollPromptCompletion
+    // moved to fl_queue_orchestration.js (shared with vo_dub_library.js's
+    // own render path) -- this addon's re-voice lock is its own instance,
+    // independent of any other caller's.
+    const withRevoiceSubmitLock = makeSubmitLock();
 
     // Runs `node`'s CURRENT graph exactly as a normal Run would (same
     // model) but with act/script_file FORCED to the script the line editor

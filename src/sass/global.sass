@@ -17,3 +17,48 @@
 
 .role-info-key
     opacity: 0.6
+
+// src/shared/LineRowEditor.vue's own markup -- rendered by THAT component
+// for both editors (LineEditorApp.vue and VoDubLineEditor.vue), never by
+// either caller's own template directly, so a scoped rule in either
+// caller's own .sass file would never reach it (scoped CSS attributes are
+// keyed to whichever component's template actually owns the element).
+.line-controls-row
+    display: flex
+    gap: 4px
+    align-items: center
+    flex-wrap: wrap
+
+.speaker-group
+    flex: 0 0 auto
+
+.fl-textarea
+    width: 100%
+    box-sizing: border-box
+    resize: none
+    overflow: hidden
+    border-radius: 4px
+    background: rgba(0, 0, 0, 0.2)
+    border: 1px solid $border-subtle
+    color: inherit
+    font-family: inherit
+    padding: 6px 8px
+
+.instruct-group
+    flex: 1 1 160px
+    min-width: 140px
+
+.apply-instruct-btn
+    flex: 0 0 auto
+
+.instruct-undo-btn
+    flex: 0 0 auto
+
+.role-info-btn
+    cursor: help
+    opacity: 0.7
+
+.instruct-desc
+    font-size: $font-sm
+    opacity: 0.7
+    padding-left: 22px

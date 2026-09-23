@@ -1,4 +1,4 @@
-import { y as a, z as r, b as s, i as p, C as u } from "./styles_link.js";
+import { y as a, b as r, i as s, D as p, G as u } from "./styles_link.js";
 var o = {
   root: function(t) {
     var i = t.instance, n = t.props;
@@ -15,7 +15,7 @@ var o = {
   classes: o
 }), m = {
   name: "BaseInputText",
-  extends: r,
+  extends: u,
   props: {
     modelValue: null,
     size: {
@@ -63,7 +63,7 @@ var o = {
   }
 }, v = ["value", "aria-invalid"];
 function c(e, t, i, n, g, l) {
-  return s(), p("input", u({
+  return r(), s("input", p({
     class: e.cx("root"),
     value: e.modelValue,
     "aria-invalid": e.invalid || void 0,

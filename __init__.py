@@ -19,17 +19,20 @@ sys.path.insert(0, os.path.dirname(__file__))
 from .nodes.script_library import FL_CosyVoice3_ScriptLibrary
 from .nodes.script_editor import FL_CosyVoice3_ScriptEditor
 from .nodes.audio_post_process import FL_CosyVoice3_AudioPostProcess
+from .nodes.vo_dub_library import FL_CosyVoice3_VODubLibrary
 
 NODE_CLASS_MAPPINGS = {
     "FL_CosyVoice3_ScriptLibrary": FL_CosyVoice3_ScriptLibrary,
     "FL_CosyVoice3_ScriptEditor": FL_CosyVoice3_ScriptEditor,
     "FL_CosyVoice3_AudioPostProcess": FL_CosyVoice3_AudioPostProcess,
+    "FL_CosyVoice3_VODubLibrary": FL_CosyVoice3_VODubLibrary,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "FL_CosyVoice3_ScriptLibrary": "FL CosyVoice3 Script Library",
     "FL_CosyVoice3_ScriptEditor": "FL CosyVoice3 Script Editor",
     "FL_CosyVoice3_AudioPostProcess": "FL CosyVoice3 Audio Post-Process",
+    "FL_CosyVoice3_VODubLibrary": "FL CosyVoice3 VO Dub Library",
 }
 
 WEB_DIRECTORY = "web"

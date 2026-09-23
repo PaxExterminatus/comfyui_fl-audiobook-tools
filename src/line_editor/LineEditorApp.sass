@@ -133,12 +133,6 @@
 .malformed-textarea
     border-color: rgba(224, 160, 48, 0.5)
 
-.line-controls-row
-    display: flex
-    gap: 4px
-    align-items: center
-    flex-wrap: wrap
-
 .drag-handle
     opacity: 0.6
 
@@ -162,51 +156,30 @@
     &.stale
         color: $color-warning
 
-.speaker-group
-    flex: 0 0 auto
-
-.instruct-group
-    flex: 1 1 160px
-    min-width: 140px
-
-.apply-instruct-btn
-    flex: 0 0 auto
-
-.instruct-undo-btn
-    flex: 0 0 auto
-
-.dropdown-option-label
-    @extend %catalog-option-label
-
-.dropdown-option-sublabel
-    @extend %catalog-option-sublabel
-
 .speaker-file-group
     flex: 0 0 auto
 
 .speaker-file-input
     max-width: 150px
 
-.role-info-btn
-    cursor: help
-    opacity: 0.7
+// Per-line pause, in seconds. Narrow on purpose: the values that belong
+// here are one or two characters ("0", "1.5"), and it sits in the same
+// controls row as the speaker and instruct fields, which need the space.
+.pause-group
+    flex: 0 0 auto
+
+.pause-input
+    width: 56px
+    text-align: center
+
+// Unreadable pause value (see pauseUnreadable). The warning rides on the
+// group's own icon rather than on the InputText's text colour: PrimeVue's
+// `.p-inputtext` colour wins here even from inside `@layer primevue` and
+// even against `.pause-input.p-invalid[data-v-…]` -- measured in the real
+// build, not assumed -- so anything that has to be VISIBLE belongs on an
+// element the theme has no colour rule for.
+.pause-warn
+    color: $color-warning
 
 .spacer
     flex: 1 1 auto
-
-.instruct-desc
-    font-size: $font-sm
-    opacity: 0.7
-    padding-left: 22px
-
-.fl-textarea
-    width: 100%
-    box-sizing: border-box
-    resize: none
-    overflow: hidden
-    border-radius: 4px
-    background: rgba(0, 0, 0, 0.2)
-    border: 1px solid $border-subtle
-    color: inherit
-    font-family: inherit
-    padding: 6px 8px

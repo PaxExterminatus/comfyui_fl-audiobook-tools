@@ -12,6 +12,7 @@ export const SCRIPT_EDITOR_API = "/fl_cosyvoice3/script_editor";
 export const SCRIPT_LIBRARY_API = "/fl_cosyvoice3/script_library";
 export const SPEAKER_PRESETS_API = "/fl_cosyvoice3/script_library/speaker_presets";
 export const BROWSE_API = "/fl_cosyvoice3/browse/list_dir";
+export const VO_DUB_API = "/fl_cosyvoice3/vo_dub";
 
 const SCAN_API = SCRIPT_LIBRARY_API;
 
@@ -41,6 +42,29 @@ export function stripSuffixAndExt(name, suffix) {
     }
     const dot = trimmed.lastIndexOf(".");
     return dot > 0 ? trimmed.slice(0, dot) : trimmed;
+}
+
+// A script line's optional 4th field: seconds of silence to hold AFTER
+// that line, or null for "not specified, let the stitch use its default"
+// (0.3s between lines, 0 after the last one). Mirrors
+// nodes/script_library.py's parse_pause_field exactly -- both sides must
+// agree on what a given cell means, since the editor sends the parsed
+// numbers to /stitch_lines while every other reader (the tree's ready
+// check, a plain re-scan) parses the same text off disk itself.
+//
+// A comma decimal separator is accepted ("1,2" is what a Russian keyboard
+// types), and anything unreadable, negative, or over the cap is null
+// rather than an error: a typo in one line's pause must never make that
+// line unrenderable, it just falls back to the default.
+export const MAX_LINE_PAUSE_S = 10;
+export const DEFAULT_LINE_GAP_S = 0.3;
+
+export function parsePauseField(raw) {
+    const text = String(raw ?? "").trim().replace(",", ".");
+    if (!text) return null;
+    const value = Number(text);
+    if (!Number.isFinite(value) || value < 0 || value > MAX_LINE_PAUSE_S) return null;
+    return value;
 }
 
 // Directory containing `path` -- e.g. recovering the project ROOT from a
@@ -81,5 +105,31 @@ export async function markRoleStale(root, roleCode, suffix) {
         return { changed, error: null, message };
     } catch (e) {
         return { changed: [], error: String(e), message: `"${roleCode}" recast, but couldn't check affected scripts: ${e.message || e}` };
+    }
+}
+
+// VO Dub's own equivalent of markRoleStale above -- same shape (raw
+// `changed` list + a ready-to-display `message`), but drops `hash`
+// entries in _dub_state.json (nodes/vo_dub_library.py's
+// mark_dub_role_stale) instead of un-readying script files, since a VO
+// dub project has no Act/script structure to scan.
+export async function markDubRoleStale(root, roleCode) {
+    try {
+        const resp = await fetch(`${VO_DUB_API}/mark_role_stale`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ root, role_code: roleCode }),
+        });
+        const data = await resp.json();
+        if (data.error) {
+            return { changed: [], error: data.error, message: `"${roleCode}" recast, but couldn't check affected rows: ${data.error}` };
+        }
+        const changed = data.changed || [];
+        const message = changed.length
+            ? `"${roleCode}" recast -- ${changed.length} row(s) need re-render`
+            : `"${roleCode}" recast -- no row uses this role`;
+        return { changed, error: null, message };
+    } catch (e) {
+        return { changed: [], error: String(e), message: `"${roleCode}" recast, but couldn't check affected rows: ${e.message || e}` };
     }
 }

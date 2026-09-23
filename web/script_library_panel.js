@@ -1,4 +1,4 @@
-import { _ as ne, r as E, o as ae, I as le, i as h, e as m, u as C, d as p, h as R, F as I, j as z, n as de, t as x, S as B, l as ue, M as D, b as v, s as w, k as A, H as j, m as pe, p as fe, q as he, P as ve } from "./styles_link.js";
+import { _ as ne, r as E, o as ae, H as le, i as h, e as m, u as C, d as p, h as R, F as I, j as z, n as de, t as x, S as B, l as ue, L as D, b as v, s as w, k as A, N as j, m as pe, p as fe, q as he, P as ve } from "./styles_link.js";
 const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = { class: "tools-row" }, be = {
   key: 0,
   class: "tree-empty"
@@ -14,7 +14,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
   key: 2,
   class: "row-icon row-icon-dim",
   title: "Rendered audio already exists for this script"
-}, Ie = { class: "status-line" }, M = "FL_CosyVoice3.ScriptLibrary.lastFolder", Ae = 90, je = 3e3, Pe = "::", qe = {
+}, Ie = { class: "status-line" }, H = "FL_CosyVoice3.ScriptLibrary.lastFolder", Ae = 90, je = 3e3, Pe = "::", qe = {
   __name: "ScriptLibraryPanel",
   props: {
     node: { type: Object, required: !0 },
@@ -47,13 +47,13 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     }
     function F(e) {
       try {
-        e && localStorage.setItem(M, e);
+        e && localStorage.setItem(H, e);
       } catch {
       }
     }
     function L() {
       try {
-        return localStorage.getItem(M) || "";
+        return localStorage.getItem(H) || "";
       } catch {
         return "";
       }
@@ -62,7 +62,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     function P() {
       i.filterWidget && (_.value = i.filterWidget.value ?? "");
     }
-    const H = ue(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
+    const M = ue(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
     function u(e) {
       k.value = e, i.node.setDirtyCanvas(!0, !0);
     }
@@ -288,7 +288,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       W && clearInterval(W);
     }), (e, s) => (v(), h("div", ge, [
       m(C(w), {
-        label: H.value,
+        label: M.value,
         title: n.value,
         text: "",
         class: "browse-button",

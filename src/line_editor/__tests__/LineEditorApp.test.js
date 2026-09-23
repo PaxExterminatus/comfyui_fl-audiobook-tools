@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
 import LineEditorApp from "../LineEditorApp.vue";
+import InstructPickerDialog from "../../shared/InstructPickerDialog.vue";
 import { lineHash } from "../../shared/line_hash.js";
 
 const SCRIPT_TEXT = "narrator | calm | First line.\nnarrator | calm | Second line.";
@@ -21,6 +22,7 @@ async function lineFileName(position, speaker, instruct, text) {
 function mockFetch(overrides = {}) {
     const files = new Map([
         ["Test_speakers.txt", SCRIPT_TEXT],
+        ["_instruct_categories.json", JSON.stringify({ categories: overrides.instructCategories || [] })],
     ]);
     Object.entries(overrides.extraFiles || {}).forEach(([name, content]) => files.set(name, content));
 
@@ -44,7 +46,11 @@ function mockFetch(overrides = {}) {
         if (u.startsWith("/fl_cosyvoice3/script_library/scan")) {
             return {
                 json: async () => ({
-                    instruct_categories: { entries: overrides.instructCategories || [] },
+                    instruct_categories: {
+                        entries: overrides.instructCategories || [],
+                        path: overrides.instructCategoriesPath !== undefined
+                            ? overrides.instructCategoriesPath : "C:\\project\\_instruct_categories.json",
+                    },
                     roles: { entries: overrides.roles || [], path: "C:\\project\\_roles.json" },
                     scripts: overrides.scriptList || ["Test_speakers.txt"],
                     ready_scripts: overrides.readyScripts || [],
@@ -127,6 +133,62 @@ describe("LineEditorApp", () => {
         await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
         const [, content] = onWrite.mock.calls.find(([key]) => key === "Test_speakers.txt");
         expect(content).toContain("First line, edited.");
+        wrapper.unmount();
+    });
+
+    // ── instruct library grows from actual typing (instruct_library.js) ──
+    it("typing a new instruct that isn't in the bank yet saves it into _instruct_categories.json's own 'custom' category", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({ onWrite, instructCategories: [{ name: "cold", examples: ["Speak coldly."] }] });
+
+        const instructInput = document.querySelectorAll("input[placeholder='Instruct']")[0];
+        instructInput.value = "Совершенно новая фраза.";
+        instructInput.dispatchEvent(new Event("input"));
+
+        vi.advanceTimersByTime(700);
+        await vi.waitFor(() => expect(onWrite.mock.calls.some(([key]) => key === "_instruct_categories.json")).toBe(true));
+        const [, content] = onWrite.mock.calls.find(([key]) => key === "_instruct_categories.json");
+        const categories = JSON.parse(content).categories;
+        expect(categories.find((c) => c.name === "cold")).toBeTruthy(); // untouched
+        expect(categories.find((c) => c.name === "custom").examples).toEqual(["Совершенно новая фраза."]);
+        wrapper.unmount();
+    });
+
+    it("does not write to the instruct library when the typed phrase is already in it, or when no bank exists for this project", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({ onWrite, instructCategories: [{ name: "cold", examples: ["Speak coldly."] }] });
+
+        const instructInput = document.querySelectorAll("input[placeholder='Instruct']")[0];
+        instructInput.value = "Speak coldly.";
+        instructInput.dispatchEvent(new Event("input"));
+
+        vi.advanceTimersByTime(700);
+        await vi.waitFor(() => expect(onWrite.mock.calls.some(([key]) => key === "Test_speakers.txt")).toBe(true)); // the script still saves
+        expect(onWrite.mock.calls.some(([key]) => key === "_instruct_categories.json")).toBe(false);
+        wrapper.unmount();
+    });
+
+    it("picking an already-known phrase from the library never writes to the library itself (only the script)", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({
+            onWrite,
+            instructCategories: [{ name: "cold", title: "Cold", when: "", examples: ["Speak warmly."] }],
+        });
+
+        const row = document.querySelectorAll(".fl-line-row")[0];
+        const pickerBtn = [...row.querySelectorAll("button")].find((b) => b.querySelector(".pi-th-large"));
+        pickerBtn.click();
+
+        const picker = wrapper.findComponent(InstructPickerDialog);
+        await vi.waitFor(() => expect(picker.props("visible")).toBe(true));
+        picker.vm.$emit("select", "Speak warmly.");
+
+        vi.advanceTimersByTime(700);
+        await vi.waitFor(() => expect(onWrite.mock.calls.some(([key]) => key === "Test_speakers.txt")).toBe(true));
+        expect(onWrite.mock.calls.some(([key]) => key === "_instruct_categories.json")).toBe(false);
         wrapper.unmount();
     });
 
@@ -291,6 +353,114 @@ describe("LineEditorApp", () => {
         await vi.waitFor(() => expect(onStitch).toHaveBeenCalledWith(expect.objectContaining({ base_name: "Test" })));
         await vi.waitFor(() => expect(doneBtn.textContent.trim()).toBe("Done ✓"));
         expect(checkedApi.setChecked).toHaveBeenCalledWith("Test_speakers.txt", false);
+        wrapper.unmount();
+    });
+
+    // ── per-line pause (the optional 4th field) ─────────────────────────
+    function pauseInputs() {
+        return [...document.querySelectorAll(".fl-line-row .pause-input")];
+    }
+
+    it("reads a line's pause out of its 4th field, and leaves it alone when the line's text is edited", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({
+            onWrite,
+            extraFiles: { "Test_speakers.txt": "narrator | calm | First line. | 1.5\nnarrator | calm | Second line." },
+        });
+
+        expect(pauseInputs().map((el) => el.value)).toEqual(["1.5", ""]);
+
+        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        textarea.value = "First line, edited.";
+        textarea.dispatchEvent(new Event("input"));
+        vi.advanceTimersByTime(700);
+
+        await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
+        const [, content] = onWrite.mock.calls.at(-1);
+        expect(content).toBe("narrator | calm | First line, edited. | 1.5\nnarrator | calm | Second line.");
+        wrapper.unmount();
+    });
+
+    it("typing a pause writes the 4th field without making the line's existing take stale", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({
+            onWrite,
+            lineFiles: [
+                await lineFileName(0, "narrator", "calm", "First line."),
+                await lineFileName(1, "narrator", "calm", "Second line."),
+            ],
+        });
+
+        const pauseEl = pauseInputs()[0];
+        pauseEl.value = "2";
+        pauseEl.dispatchEvent(new Event("input"));
+        vi.advanceTimersByTime(700);
+
+        await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
+        const [, content] = onWrite.mock.calls.at(-1);
+        expect(content).toBe("narrator | calm | First line. | 2\nnarrator | calm | Second line.");
+        // The take is silence-adjacent, not re-rendered: a pause isn't part
+        // of the line's content hash, so nothing here may go stale.
+        expect(document.querySelectorAll(".revoice-btn.stale").length).toBe(0);
+        wrapper.unmount();
+    });
+
+    it("a line with no pause stays a plain 3-field line", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({ onWrite });
+
+        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        textarea.value = "Edited.";
+        textarea.dispatchEvent(new Event("input"));
+        vi.advanceTimersByTime(700);
+
+        await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
+        const [, content] = onWrite.mock.calls.at(-1);
+        expect(content).toBe("narrator | calm | Edited.\nnarrator | calm | Second line.");
+        wrapper.unmount();
+    });
+
+    it("marking Done sends each line's own pause, null where the line names none", async () => {
+        const onStitch = vi.fn();
+        const { wrapper } = await mountEditor({
+            onStitch,
+            extraFiles: { "Test_speakers.txt": "narrator | calm | First line. | 1.5\nnarrator | calm | Second line." },
+            lineFiles: [
+                await lineFileName(0, "narrator", "calm", "First line."),
+                await lineFileName(1, "narrator", "calm", "Second line."),
+            ],
+        });
+
+        const doneBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim().startsWith("Done"));
+        await vi.waitFor(() => expect(doneBtn.disabled).toBe(false));
+        doneBtn.click();
+
+        await vi.waitFor(() => expect(onStitch).toHaveBeenCalled());
+        expect(onStitch).toHaveBeenCalledWith(expect.objectContaining({ pauses: [1.5, null] }));
+        wrapper.unmount();
+    });
+
+    it("splitting a line hands the pause to the second half -- it's silence AFTER the line", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const onWrite = vi.fn();
+        const { wrapper } = await mountEditor({
+            onWrite,
+            extraFiles: { "Test_speakers.txt": "narrator | calm | First line.\nnarrator | calm | One. Two. | 1.5" },
+        });
+
+        const textarea = [...document.querySelectorAll(".fl-textarea")][1];
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = "One.".length;
+        const splitBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Split line"));
+        splitBtn.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+        vi.advanceTimersByTime(700);
+
+        await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
+        const [, content] = onWrite.mock.calls.at(-1);
+        expect(content).toBe("narrator | calm | First line.\nnarrator | calm | One.\nnarrator | calm | Two. | 1.5");
         wrapper.unmount();
     });
 

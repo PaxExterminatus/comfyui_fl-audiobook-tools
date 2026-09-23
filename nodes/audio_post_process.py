@@ -47,6 +47,7 @@ try:
         trim_leading_silence,
         trim_trailing_silence,
     )
+    from ._audio_effects import apply_named_effect
     from . import _line_audio
 except (ImportError, ValueError):
     from _audio_utils import (
@@ -57,6 +58,7 @@ except (ImportError, ValueError):
         trim_leading_silence,
         trim_trailing_silence,
     )
+    from _audio_effects import apply_named_effect
     import _line_audio
 
 
@@ -179,6 +181,31 @@ class FL_CosyVoice3_AudioPostProcess:
                                "отдельного файла состояния. Не подключён -- используется хеш только "
                                "от текста (без голоса/instruct), это работает, но менее точно."
                 }),
+                "output_path_override": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": "Служебное поле для VO Dub Library: когда задан ПОЛНЫЙ путь к файлу, "
+                               "клип пишется РОВНО туда, минуя схему <позиция>_<хеш>.wav целиком -- "
+                               "нужно для дубляжа игр, где имя файла (audio_ru\\<audio_key>.wav) "
+                               "задано внешним контрактом (см. nodes/vo_dub_library.py), а не этим "
+                               "аддоном. Требует ровно ОДНОГО клипа на входе. Не подключён -- обычная "
+                               "схема _audio\\lines\\<script>\\<позиция>_<хеш>.wav, как всегда."
+                }),
+                "effect_override": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": "Служебное поле для VO Dub Library: применяет именованный эффект "
+                               "(см. nodes/_audio_effects.py, например \"radio\") к каждому клипу "
+                               "ПОСЛЕ обрезки/fade/нормализации, перед сохранением. Пустая строка "
+                               "или неизвестное имя = без эффекта."
+                }),
+                "dry_output_path_override": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": "Служебное поле для VO Dub Library: если задано, клип СРАЗУ ПОСЛЕ "
+                               "обрезки/fade/нормализации (но ДО effect_override) дополнительно "
+                               "сохраняется и сюда, ещё раз, без эффекта -- эта \"сухая\" копия "
+                               "позволяет /vo_dub/apply_effect потом сменить эффект в один клик, БЕЗ "
+                               "повторного прогона всего графа синтеза. Требует ровно ОДНОГО клипа "
+                               "на входе, как и output_path_override."
+                }),
             }
         }
 
@@ -208,6 +235,9 @@ class FL_CosyVoice3_AudioPostProcess:
         script_base_name: List[str] = [""],
         line_index_override: List[int] = [-1],
         line_hashes_json: List[str] = [""],
+        output_path_override: List[str] = [""],
+        effect_override: List[str] = [""],
+        dry_output_path_override: List[str] = [""],
     ):
         # INPUT_IS_LIST=True wraps EVERY input in a list, including plain
         # widget scalars -- those are single settings for this whole call,
@@ -223,6 +253,9 @@ class FL_CosyVoice3_AudioPostProcess:
         timing_folder = (script_folder[0] or "").strip()
         timing_base_name = (script_base_name[0] or "").strip()
         index_override = line_index_override[0] if line_index_override else -1
+        override_path = (output_path_override[0] or "").strip()
+        effect_name = (effect_override[0] or "").strip()
+        dry_override_path = (dry_output_path_override[0] or "").strip()
 
         # Unconditional per-run diagnostics. "The re-voice finished fine but
         # no file appeared" looks identical at the UI for at least four
@@ -239,9 +272,17 @@ class FL_CosyVoice3_AudioPostProcess:
         print(f"[FL CosyVoice3 AudioPostProcess]   line_index_override = {index_override!r}")
         print(f"[FL CosyVoice3 AudioPostProcess]   line_hashes_json    = {line_hashes_str[:200]!r}")
         print(f"[FL CosyVoice3 AudioPostProcess]   line_texts_json     = {line_texts_str[:120]!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   output_path_override = {override_path!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   effect_override     = {effect_name!r}")
+        print(f"[FL CosyVoice3 AudioPostProcess]   dry_output_path_override = {dry_override_path!r}")
 
         if not audio:
             raise ValueError("FL CosyVoice3 Audio Post-Process: no audio received.")
+        if override_path and len(audio) != 1:
+            raise ValueError(
+                f"FL CosyVoice3 Audio Post-Process: output_path_override is set but {len(audio)} "
+                f"clips arrived -- it only ever writes exactly one file, at exactly the path given."
+            )
 
         sample_rate = audio[0]["sample_rate"]
 
@@ -266,21 +307,28 @@ class FL_CosyVoice3_AudioPostProcess:
         # script, so it overrides which position gets written -- everything
         # else about single-item processing is unaffected.
         lines_dir = None
-        if timing_folder and timing_base_name:
+        if override_path:
+            # A fixed, externally-dictated filename (see the tooltip above)
+            # -- there's no <script>/<position> scheme to derive here, so
+            # none of the lines_dir/index_override machinery below applies.
+            print(f"[FL CosyVoice3 AudioPostProcess]   writing to output_path_override, "
+                  f"bypassing the _audio\\lines\\ scheme entirely")
+        elif timing_folder and timing_base_name:
             lines_dir = os.path.join(timing_folder, "_audio", "lines", timing_base_name)
             try:
                 os.makedirs(lines_dir, exist_ok=True)
             except OSError as e:
                 print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't create lines dir: {e}")
                 lines_dir = None
-        if lines_dir is None:
-            print("[FL CosyVoice3 AudioPostProcess]   lines_dir = <none> -- NO per-line file will be "
-                  "written this run. Wire Script Library's folder_path -> script_folder and "
-                  "filename -> script_base_name.")
-        else:
-            print(f"[FL CosyVoice3 AudioPostProcess]   lines_dir = {lines_dir}")
+        if not override_path:
+            if lines_dir is None:
+                print("[FL CosyVoice3 AudioPostProcess]   lines_dir = <none> -- NO per-line file will be "
+                      "written this run. Wire Script Library's folder_path -> script_folder and "
+                      "filename -> script_base_name.")
+            else:
+                print(f"[FL CosyVoice3 AudioPostProcess]   lines_dir = {lines_dir}")
 
-        if len(audio) == 1 and index_override < 0:
+        if not override_path and len(audio) == 1 and index_override < 0:
             # A per-line re-voice always stamps its real position (see
             # web/script_library.js's queueLineRevoice); a 1-item run
             # WITHOUT one is either a genuinely 1-line script or that stamp
@@ -348,9 +396,49 @@ class FL_CosyVoice3_AudioPostProcess:
                 gain_db = 20 * torch.log10((post_rms + 1e-9) / (pre_rms + 1e-9))
                 notes.append(f"loudness gain {gain_db:+.1f}dB")
 
+            if dry_override_path:
+                # The pre-effect reference copy -- written EVERY run this
+                # is wired, regardless of whether effect_override is set
+                # this particular time, so it always reflects the LATEST
+                # synthesized content. Lets a later Effect change reprocess
+                # THIS file (see nodes/vo_dub_library.py's own
+                # /vo_dub/apply_effect route) instead of re-running the
+                # whole TTS graph just to switch which effect is baked in.
+                try:
+                    dry_dir = os.path.dirname(dry_override_path)
+                    if dry_dir:
+                        os.makedirs(dry_dir, exist_ok=True)
+                    save_wav(wav, sample_rate, dry_override_path)
+                except OSError as e:
+                    print(f"[FL CosyVoice3 AudioPostProcess] WARNING: couldn't save dry take to "
+                          f"{dry_override_path}: {e}")
+
+            if effect_name:
+                # AFTER trim/fade/normalize, on the already-clean take -- an
+                # effect is a creative choice layered on top, not baked into
+                # what the TTS itself produced (see _audio_effects.py's own
+                # module docstring for why that order matters).
+                wav = apply_named_effect(wav, sample_rate, effect_name)
+                notes.append(f"effect: {effect_name}")
+
             line = f"Item {i + 1}/{len(audio)}: " + (", ".join(notes) if notes else "no changes")
             report_lines.append(line)
             print(f"[FL CosyVoice3 AudioPostProcess] {line}")
+
+            if override_path:
+                try:
+                    override_dir = os.path.dirname(override_path)
+                    if override_dir:
+                        os.makedirs(override_dir, exist_ok=True)
+                    save_wav(wav, sample_rate, override_path)
+                    print(f"[FL CosyVoice3 AudioPostProcess]   wrote {override_path} "
+                          f"(exists={os.path.isfile(override_path)})")
+                except OSError as e:
+                    print(f"[FL CosyVoice3 AudioPostProcess] ERROR: couldn't save to "
+                          f"{override_path}: {e}")
+                total_samples += wav.shape[-1]
+                result_audios.append(tensor_to_comfyui_audio(wav, sample_rate))
+                continue
 
             is_single_override = len(audio) == 1 and index_override >= 0
             position = index_override if is_single_override else i

@@ -1,6 +1,6 @@
-import { _ as q, m as K, w as G, o as H, I as Q, c as $, a as m, n as x, u as o, J as X, L as b, K as Y, r as h, b as v, g as Z, h as ee, d as C, i as te, F as se, j as ae, e as k, t as A, Q as oe, p as ne, q as re, P as ie } from "./styles_link.js";
+import { _ as q, m as K, w as H, o as G, H as Q, c as $, a as m, n as x, u as o, I as X, K as b, J as Y, r as h, b as v, g as Z, h as ee, d as C, i as te, F as se, j as ae, e as k, t as A, T as oe, p as ne, q as re, P as ie } from "./styles_link.js";
 import { u as le, a as ce, s as de, D as ue, b as pe } from "./DialogHeader.js";
-import { s as fe, b as me, a as he } from "./card.esm.js";
+import { a as fe, b as me, s as he } from "./dropdown.esm.js";
 const ve = {
   class: "role-code",
   title: "Role code (read-only here -- renaming would orphan script lines that already use it)"
@@ -16,11 +16,11 @@ const ve = {
       storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
       defaultWidth: 1200,
       presets: [900, 1200]
-    }), { fontSizePx: R, decrease: L, increase: j } = ce({
+    }), { fontSizePx: T, decrease: j, increase: L } = ce({
       storageKey: "FL_CosyVoice3.RolesEditor.fontSizePx",
       defaultSize: 13
     });
-    let d = null, T = 0, u = null, p = null;
+    let d = null, R = 0, u = null, p = null;
     const w = /* @__PURE__ */ new Map();
     function n(e) {
       P.value = e;
@@ -61,7 +61,7 @@ const ve = {
         }
     }
     function _() {
-      T = Date.now(), u && clearTimeout(u), u = setTimeout(z, Se);
+      R = Date.now(), u && clearTimeout(u), u = setTimeout(z, Se);
     }
     function E(e) {
       !e.code || w.get(e.code) === e.speaker || (w.set(e.code, e.speaker), oe(l.root, e.code, l.suffix).then((t) => n(t.message)));
@@ -88,7 +88,7 @@ const ve = {
           e || (r.value = [], d = "", n("_roles.json does not exist yet"));
           return;
         }
-        if (e && Date.now() - T < ge || t.content === d) return;
+        if (e && Date.now() - R < ge || t.content === d) return;
         let a;
         try {
           a = JSON.parse(t.content);
@@ -108,9 +108,9 @@ const ve = {
     function J() {
       u && (clearTimeout(u), z()), r.value.forEach((e) => E(e)), p && clearInterval(p), l.onClose();
     }
-    return G(i, (e) => {
+    return H(i, (e) => {
       e || J();
-    }), H(async () => {
+    }), G(async () => {
       W(), await I(), p = setInterval(() => I({ isPoll: !0 }), we);
     }), Q(() => {
       p && clearInterval(p);
@@ -130,8 +130,8 @@ const ve = {
           status: P.value,
           "width-presets": o(N),
           "set-width": o(F),
-          "font-size-decrease": o(L),
-          "font-size-increase": o(j)
+          "font-size-decrease": o(j),
+          "font-size-increase": o(L)
         }, null, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
       ]),
       default: m(() => [
@@ -147,7 +147,7 @@ const ve = {
         })),
         C("div", {
           class: "roles-list",
-          style: x({ fontSize: `${o(R)}px` })
+          style: x({ fontSize: `${o(T)}px` })
         }, [
           (v(!0), te(se, null, ae(r.value, (t) => (v(), $(o(fe), {
             key: t.code,
@@ -180,7 +180,7 @@ const ve = {
                 rows: "1",
                 placeholder: "Description...",
                 class: "role-description",
-                style: x({ fontSize: `${o(R)}px` }),
+                style: x({ fontSize: `${o(T)}px` }),
                 onInput: s[1] || (s[1] = (a) => _())
               }, null, 8, ["modelValue", "onUpdate:modelValue", "style"])
             ]),

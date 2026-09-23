@@ -1,0 +1,85 @@
+// A real _dub_roles.json entry carries a paragraph of description, a
+// paragraph of dub direction, a notes list, and stats -- a wrapping grid
+// of small cards (the audiobook Roles Editor's own shape, this file's
+// previous version) reads terribly at that density. One stacked column
+// of wider cards instead.
+.roles-list
+    max-height: 74vh
+    overflow-y: auto
+    display: flex
+    flex-direction: column
+    gap: 10px
+
+.role-card
+    padding: 10px 14px
+    border: 1px solid $border-subtle
+    border-radius: 8px
+    background: $bg-recessed
+    display: flex
+    flex-direction: column
+    gap: 6px
+
+.role-head
+    display: flex
+    align-items: baseline
+    gap: 10px
+    flex-wrap: wrap
+
+.role-name
+    font-weight: 600
+    font-size: 1.05em
+
+.role-code
+    font-family: monospace
+    font-size: $font-sm
+    opacity: 0.6
+
+.role-gender
+    font-size: $font-xs
+    opacity: 0.7
+    text-transform: capitalize
+    cursor: help
+
+.role-actor
+    font-size: $font-xs
+    opacity: 0.6
+    font-style: italic
+    margin-left: auto
+
+.role-description
+    margin: 0
+    opacity: 0.85
+
+// The single most actionable field for whoever's casting -- given its
+// own accent so it doesn't get lost next to the descriptive prose above it.
+.role-dub-direction
+    margin: 0
+    padding: 6px 10px
+    border-left: 2px solid $color-accent
+    background: $overlay-soft
+    border-radius: 0 4px 4px 0
+
+.role-notes
+    margin: 0
+    padding-left: 18px
+    font-size: $font-sm
+    opacity: 0.75
+
+.role-stats
+    display: flex
+    gap: 12px
+    font-size: $font-xs
+    opacity: 0.6
+    font-variant-numeric: tabular-nums
+
+.role-examples
+    font-size: $font-xs
+    opacity: 0.5
+    font-family: monospace
+
+.role-speaker-row
+    display: flex
+    gap: 6px
+
+.role-speaker
+    width: 260px

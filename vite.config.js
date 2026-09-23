@@ -27,6 +27,7 @@ export default defineConfig(({ command }) => {
                     browse_dialog: "src/browse_dialog/main.js",
                     script_library_panel: "src/script_library/main.js",
                     line_editor: "src/line_editor/main.js",
+                    vo_dub_editor: "src/vo_dub_editor/main.js",
                 },
                 formats: ["es"],
                 fileName: (_format, entryName) => `${entryName}.js`,

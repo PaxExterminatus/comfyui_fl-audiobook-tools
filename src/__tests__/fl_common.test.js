@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { joinPath, stripSuffixAndExt, dirOf, markRoleStale } from "../../web/fl_common.js";
+import { joinPath, stripSuffixAndExt, dirOf, markRoleStale, parsePauseField } from "../../web/fl_common.js";
 
 describe("joinPath", () => {
     it("joins with a backslash when base already uses one", () => {
@@ -34,6 +34,37 @@ describe("stripSuffixAndExt", () => {
 
     it("handles a name with no extension at all", () => {
         expect(stripSuffixAndExt("README", "_speakers.txt")).toBe("README");
+    });
+});
+
+// Must stay in lockstep with nodes/script_library.py's parse_pause_field:
+// the editor sends /stitch_lines the numbers IT parsed, while every other
+// reader (the tree's ready check, a plain re-scan) parses the same text off
+// disk on the Python side -- a disagreement would show up as a script that
+// un-readies itself the moment it's marked done.
+describe("parsePauseField", () => {
+    it("reads plain seconds", () => {
+        expect(parsePauseField("1.5")).toBe(1.5);
+    });
+
+    it("accepts a decimal comma", () => {
+        expect(parsePauseField("1,5")).toBe(1.5);
+    });
+
+    it("treats an explicit zero as a real value, not as unset", () => {
+        expect(parsePauseField("0")).toBe(0);
+    });
+
+    it("reads an empty/absent field as 'use the default'", () => {
+        expect(parsePauseField("")).toBeNull();
+        expect(parsePauseField("   ")).toBeNull();
+        expect(parsePauseField(undefined)).toBeNull();
+    });
+
+    it("falls back to the default rather than erroring on junk or out-of-range", () => {
+        expect(parsePauseField("soon")).toBeNull();
+        expect(parsePauseField("-1")).toBeNull();
+        expect(parsePauseField("99")).toBeNull();
     });
 });
 

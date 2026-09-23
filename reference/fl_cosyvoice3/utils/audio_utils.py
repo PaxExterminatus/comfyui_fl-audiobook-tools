@@ -380,12 +380,11 @@ def trim_leading_silence(
 
 def normalize_loudness_rms(
     wav: torch.Tensor,
-    target_rms_db: float = -20.0,
     peak_ceiling_db: float = -1.0,
 ) -> torch.Tensor:
     """
     Simple RMS-based loudness normalization: scales the whole clip so its
-    RMS level matches target_rms_db, then clamps the gain so the result
+    RMS level matches -20.0 dB, then clamps the gain so the result
     never exceeds peak_ceiling_db (no clipping). Evens out volume jumps
     between independently generated lines/speakers when applied per line,
     before concatenation. Pure torch, no external tool or extra dependency.
@@ -395,7 +394,7 @@ def normalize_loudness_rms(
     if rms < 1e-6:
         return wav  # near-silent clip (e.g. fully trimmed): nothing to normalize against
 
-    target_rms = 10 ** (target_rms_db / 20.0)
+    target_rms = 10 ** (-20.0 / 20.0)
     gain = target_rms / rms
 
     peak = flat.abs().max()
@@ -420,18 +419,16 @@ def trim_trailing_silence(wav: torch.Tensor, sample_rate: int, max_trim_ms: floa
     return trimmed_flipped.flip(-1), trimmed_ms
 
 
-def fade_edges(wav: torch.Tensor, sample_rate: int, fade_ms: float = 8.0) -> torch.Tensor:
+def fade_edges(wav: torch.Tensor, sample_rate: int) -> torch.Tensor:
     """
     Short linear fade-in and fade-out at the very start/end of a clip --
     smooths over the small click a hard cut can leave right after
     trim_leading_silence/trim_trailing_silence, or just softens a clip's
     natural edges before it gets concatenated next to another one.
-    No-op if fade_ms <= 0 or the clip is shorter than twice the fade length.
+    No-op if the clip is shorter than twice the fade length.
     """
-    if fade_ms <= 0:
-        return wav
     n = wav.shape[-1]
-    fade_samples = int(sample_rate * fade_ms / 1000)
+    fade_samples = int(sample_rate * 8.0 / 1000)
     if fade_samples <= 0 or n < fade_samples * 2:
         return wav
 

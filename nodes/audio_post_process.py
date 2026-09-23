@@ -2,9 +2,9 @@
 FL CosyVoice3 Audio Post-Process Node
 
 Post-synthesis cleanup: trims the onset click/silence CosyVoice's vocoder
-tends to leave at the start (and often the end) of a clip (see
-COSYVOICE_ONSET_CLICK.md), smooths the cut with a short fade, and
-normalizes loudness to a target RMS (with a peak safety ceiling).
+tends to leave at the START of a clip (see COSYVOICE_ONSET_CLICK.md),
+smooths the cut with a short fade, and normalizes loudness to a target
+RMS (with a peak safety ceiling).
 
 Works the same way whether `audio` is a single AUDIO from any synthesis
 node, or a LIST of AUDIO (e.g. FL CosyVoice3 Speaker Instruct2 Dialog's
@@ -40,32 +40,27 @@ from typing import Any, Dict, List
 
 try:
     from ._audio_utils import (
-        fade_edges,
-        normalize_loudness_rms,
         save_wav,
         tensor_to_comfyui_audio,
         trim_leading_silence,
-        trim_trailing_silence,
     )
     from ._audio_effects import apply_named_effect
     from . import _line_audio
 except (ImportError, ValueError):
     from _audio_utils import (
-        fade_edges,
-        normalize_loudness_rms,
         save_wav,
         tensor_to_comfyui_audio,
         trim_leading_silence,
-        trim_trailing_silence,
     )
     from _audio_effects import apply_named_effect
     import _line_audio
 
 
 class FL_CosyVoice3_AudioPostProcess:
-    """Trim onset click (start + end) + fade edges + normalize loudness for one
-    AUDIO, or a whole list of them, EACH INDEPENDENTLY -- never concatenated.
-    Also reports what it did per item via the `report` output."""
+    """Trim onset click (start only, see module docstring for why not the
+    end too) + fade edges + normalize loudness for one AUDIO, or a whole
+    list of them, EACH INDEPENDENTLY -- never concatenated. Also reports
+    what it did per item via the `report` output."""
 
     RETURN_TYPES = ("AUDIO", "STRING")
     RETURN_NAMES = ("audio", "report")
@@ -90,7 +85,7 @@ class FL_CosyVoice3_AudioPostProcess:
     OUTPUT_TOOLTIPS = (
         "The processed audio, one item per input item -- NOT concatenated (see the "
         "node's own docstring for why stitching moved to the \"✅ Done\" button).",
-        "Per-item report: how much was trimmed off each end, whether it was faded, "
+        "Per-item report: how much was trimmed off the start, whether it was faded, "
         "and the loudness gain applied. Also viewable full-screen via the node's own "
         "\"📄 Report\" button, no need to wire this up just to read it.",
     )
@@ -115,33 +110,10 @@ class FL_CosyVoice3_AudioPostProcess:
                                "границы внутренних чанков длинной строки -- за это по-прежнему "
                                "отвечает trim_line_onset самого Dialog."
                 }),
-                "trim_line_tail": ("BOOLEAN", {
-                    "default": True,
-                    "tooltip": "То же самое, но в КОНЦЕ каждого клипа -- CosyVoice иногда "
-                               "оставляет похожий артефакт/лишнюю тишину и на хвосте, не только в "
-                               "начале."
-                }),
                 "trim_max_ms": ("FLOAT", {
                     "default": 600.0, "min": 0.0, "max": 2000.0, "step": 10.0,
                     "tooltip": "Предохранитель: сколько максимум миллисекунд можно срезать с "
-                               "каждого края клипа, даже если чистое начало/конец не нашлись в "
-                               "этом бюджете. Общий для начала и конца."
-                }),
-                "fade_ms": ("FLOAT", {
-                    "default": 8.0, "min": 0.0, "max": 100.0, "step": 1.0,
-                    "tooltip": "Короткий линейный fade-in/fade-out на краях каждого клипа (после "
-                               "обрезки) -- сглаживает щелчок, который иногда остаётся от жёсткого "
-                               "среза. 0 = выключить."
-                }),
-                "normalize_loudness": ("BOOLEAN", {
-                    "default": True,
-                    "tooltip": "Выравнивает громкость каждого клипа к общему целевому RMS (с "
-                               "потолком по пикам, чтобы не клипповало)."
-                }),
-                "target_rms_db": ("FLOAT", {
-                    "default": -20.0, "min": -40.0, "max": -6.0, "step": 1.0,
-                    "tooltip": "Целевой уровень громкости (RMS, dBFS), к которому приводится "
-                               "каждый клип."
+                               "начала клипа, даже если чистое начало не нашлось в этом бюджете."
                 }),
             },
             "optional": {
@@ -225,11 +197,7 @@ class FL_CosyVoice3_AudioPostProcess:
         self,
         audio: List[Dict[str, Any]],
         trim_line_onset: List[bool],
-        trim_line_tail: List[bool],
         trim_max_ms: List[float],
-        fade_ms: List[float],
-        normalize_loudness: List[bool],
-        target_rms_db: List[float],
         line_texts_json: List[str] = [""],
         script_folder: List[str] = [""],
         script_base_name: List[str] = [""],
@@ -243,11 +211,7 @@ class FL_CosyVoice3_AudioPostProcess:
         # widget scalars -- those are single settings for this whole call,
         # not meant to vary per audio item, so just take index 0.
         do_trim_onset = trim_line_onset[0]
-        do_trim_tail = trim_line_tail[0]
         max_trim = trim_max_ms[0]
-        fade_len_ms = fade_ms[0]
-        do_normalize = normalize_loudness[0]
-        target_db = target_rms_db[0]
         line_texts_str = (line_texts_json[0] or "").strip()
         line_hashes_str = (line_hashes_json[0] or "").strip()
         timing_folder = (script_folder[0] or "").strip()
@@ -378,23 +342,6 @@ class FL_CosyVoice3_AudioPostProcess:
                 if trimmed_ms > 0:
                     cap_hit = trimmed_ms >= max_trim - 1.0
                     notes.append(f"trimmed {trimmed_ms:.0f}ms start" + (" [hit cap]" if cap_hit else ""))
-
-            if do_trim_tail:
-                wav, trimmed_ms = trim_trailing_silence(wav, sample_rate, max_trim_ms=max_trim)
-                if trimmed_ms > 0:
-                    cap_hit = trimmed_ms >= max_trim - 1.0
-                    notes.append(f"trimmed {trimmed_ms:.0f}ms end" + (" [hit cap]" if cap_hit else ""))
-
-            if fade_len_ms > 0:
-                wav = fade_edges(wav, sample_rate, fade_ms=fade_len_ms)
-                notes.append(f"faded {fade_len_ms:.0f}ms edges")
-
-            if do_normalize:
-                pre_rms = torch.sqrt(torch.mean(wav.float() ** 2) + 1e-12)
-                wav = normalize_loudness_rms(wav, target_rms_db=target_db)
-                post_rms = torch.sqrt(torch.mean(wav.float() ** 2) + 1e-12)
-                gain_db = 20 * torch.log10((post_rms + 1e-9) / (pre_rms + 1e-9))
-                notes.append(f"loudness gain {gain_db:+.1f}dB")
 
             if dry_override_path:
                 # The pre-effect reference copy -- written EVERY run this

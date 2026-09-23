@@ -1,6 +1,6 @@
 """
 Vendored subset of FL CosyVoice3's utils/audio_utils.py -- just the
-functions audio_post_process.py actually needs (onset/tail trim, fade,
+functions audio_post_process.py actually needs (onset trim, fade,
 loudness normalization, tensor<->ComfyUI-AUDIO conversion, exact-path wav
 write). Copied rather than imported across package boundaries: this addon
 lives in its own custom_nodes folder, separate from FL-CosyVoice3's, so a
@@ -127,57 +127,6 @@ def trim_leading_silence(
         return wav, 0.0
     trimmed_ms = cut_sample / sample_rate * 1000
     return wav[..., cut_sample:], trimmed_ms
-
-
-def trim_trailing_silence(wav: torch.Tensor, sample_rate: int, max_trim_ms: float = 600.0, **kwargs) -> Tuple[torch.Tensor, float]:
-    """Mirror of trim_leading_silence for the END of a clip: flip, reuse the
-    same leading-edge detection, flip back. Returns (trimmed_wav, trimmed_ms)."""
-    flipped = wav.flip(-1)
-    trimmed_flipped, trimmed_ms = trim_leading_silence(flipped, sample_rate, max_trim_ms=max_trim_ms, **kwargs)
-    return trimmed_flipped.flip(-1), trimmed_ms
-
-
-def normalize_loudness_rms(
-    wav: torch.Tensor,
-    target_rms_db: float = -20.0,
-    peak_ceiling_db: float = -1.0,
-) -> torch.Tensor:
-    """
-    Simple RMS-based loudness normalization: scales the whole clip so its
-    RMS level matches target_rms_db, then clamps the gain so the result
-    never exceeds peak_ceiling_db (no clipping).
-    """
-    flat = wav.reshape(-1).float()
-    rms = torch.sqrt(torch.mean(flat ** 2) + 1e-12)
-    if rms < 1e-6:
-        return wav
-
-    target_rms = 10 ** (target_rms_db / 20.0)
-    gain = target_rms / rms
-
-    peak = flat.abs().max()
-    peak_ceiling = 10 ** (peak_ceiling_db / 20.0)
-    if peak * gain > peak_ceiling:
-        gain = peak_ceiling / (peak + 1e-9)
-
-    return wav * gain
-
-
-def fade_edges(wav: torch.Tensor, sample_rate: int, fade_ms: float = 8.0) -> torch.Tensor:
-    """Short linear fade-in/fade-out at the very start/end of a clip.
-    No-op if fade_ms <= 0 or the clip is shorter than twice the fade length."""
-    if fade_ms <= 0:
-        return wav
-    n = wav.shape[-1]
-    fade_samples = int(sample_rate * fade_ms / 1000)
-    if fade_samples <= 0 or n < fade_samples * 2:
-        return wav
-
-    wav = wav.clone()
-    ramp = torch.linspace(0.0, 1.0, fade_samples, dtype=wav.dtype, device=wav.device)
-    wav[..., :fade_samples] *= ramp
-    wav[..., -fade_samples:] *= ramp.flip(0)
-    return wav
 
 
 def save_wav(waveform: torch.Tensor, sample_rate: int, path: str) -> None:

@@ -38,7 +38,9 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
 - **FL CosyVoice3 Script Editor** -- a simple in-graph text box live-linked
   to one file on disk (two-way: edits here save to the file, external
   edits get pulled back in).
-- **FL CosyVoice3 Audio Post-Process** -- onset-click/tail trim, fade, and
+- **FL CosyVoice3 Audio Post-Process** -- onset-click trim (start only --
+  a tail trim existed once, removed after it cut into real trailing speech,
+  see `nodes/_audio_utils.py`'s own module docstring), fade, and
   loudness normalization for any synthesis node's output, one item at a
   time (never concatenated); also the node that writes each line's
   per-line file. Building the final scene track is exclusively "✅ Done"'s

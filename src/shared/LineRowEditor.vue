@@ -1,25 +1,27 @@
 <script setup>
-// THE line-editing component -- extracted out of LineEditorApp.vue's own
-// per-row markup so both the audiobook Line Editor and VO Dub's Line
-// Editor mount the exact same component for a row's editable fields, not
-// two hand-drifted copies of the same layout (see RoleDropdown.vue/
-// InstructPickerDialog.vue/RoleInfoPopover.vue, already shared the same
-// way -- this is that same policy applied to the row ASSEMBLY itself, not
-// just its individual widgets).
-//
-// Deliberately prop/emit-driven, no `row` object dependency of its own --
-// each caller's own row shape (LineEditorApp's script-line rows,
-// VoDubLineEditor's csv rows) stays entirely on that caller's side; this
-// component only ever sees plain values. What it does NOT own: whatever
-// sits BEFORE this row's controls (a play button, an Identifier span --
-// see the `leading` slot) or AFTER them (a global speaker-preset
-// reassignment field, a pause field, a delete button -- see `trailing`),
-// since those differ per caller in ways that aren't just "the same widget,
-// different data" the way speaker/instruct/text are.
-//
-// A 3-root component (line-controls-row / instruct note / textarea) on
-// purpose -- these already need to stack as siblings inside the caller's
-// own `.line-body`-equivalent wrapper, not nest inside one extra div.
+/*
+ THE line-editing component -- extracted out of LineEditorApp.vue's own
+ per-row markup so both the audiobook Line Editor and VO Dub's Line
+ Editor mount the exact same component for a row's editable fields, not
+ two hand-drifted copies of the same layout (see RoleDropdown.vue/
+ InstructPickerDialog.vue/RoleInfoPopover.vue, already shared the same
+ way -- this is that same policy applied to the row ASSEMBLY itself, not
+ just its individual widgets).
+
+ Deliberately prop/emit-driven, no `row` object dependency of its own --
+ each caller's own row shape (LineEditorApp's script-line rows,
+ VoDubLineEditor's csv rows) stays entirely on that caller's side; this
+ component only ever sees plain values. What it does NOT own: whatever
+ sits BEFORE this row's controls (a play button, an Identifier span --
+ see the `leading` slot) or AFTER them (a global speaker-preset
+ reassignment field, a pause field, a delete button -- see `trailing`),
+ since those differ per caller in ways that aren't just "the same widget,
+ different data" the way speaker/instruct/text are.
+
+ A 3-root component (line-controls-row / instruct note / textarea) on
+ purpose -- these already need to stack as siblings inside the caller's
+ own `.line-body`-equivalent wrapper, not nest inside one extra div.
+*/
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import InputText from "primevue/inputtext";
@@ -34,9 +36,11 @@ const props = defineProps({
     roleOptionSubLabel: { type: Function, default: () => "" },
     speakerPlaceholder: { type: String, default: "Speaker" },
     speakerTitle: { type: String, default: "Speaker (role code, or a literal preset/preset#tag)" },
-    // What the info-hover looks up -- may differ from `speaker` itself
-    // (VO Dub's per-row override falls back to the row's raw csv tag when
-    // empty; the info popover should still resolve THAT identity).
+    /*
+     What the info-hover looks up -- may differ from `speaker` itself
+     (VO Dub's per-row override falls back to the row's raw csv tag when
+     empty; the info popover should still resolve THAT identity).
+    */
     roleInfoCode: { type: String, default: "" },
 
     // instruct
@@ -53,13 +57,17 @@ const props = defineProps({
     text: { type: String, default: "" },
     textPlaceholder: { type: String, default: "" },
     fontSizePx: { type: Number, default: 13 },
-    // Forwarded straight to the underlying Textarea's own `ref` -- the
-    // caller's own useTextareaAutoGrow() Map (see textarea_autogrow.js)
-    // needs the real node, this component has no tracking of its own.
+    /*
+     Forwarded straight to the underlying Textarea's own `ref` -- the
+     caller's own useTextareaAutoGrow() Map (see textarea_autogrow.js)
+     needs the real node, this component has no tracking of its own.
+    */
     textareaRef: { type: Function, default: null },
-    // Called after a paste (see onPaste) -- preventDefault there skips
-    // PrimeVue's own resize, so the caller's autoGrow needs an explicit
-    // nudge same as it does after loading fresh content.
+    /*
+     Called after a paste (see onPaste) -- preventDefault there skips
+     PrimeVue's own resize, so the caller's autoGrow needs an explicit
+     nudge same as it does after loading fresh content.
+    */
     onAutoGrow: { type: Function, default: null },
 });
 
@@ -69,10 +77,12 @@ const emit = defineEmits([
     "role-info-enter", "role-info-leave",
 ]);
 
-// Writes el.value directly and skips PrimeVue's own onInput handler
-// entirely (preventDefault stops the native paste from ever firing an
-// `input` event) -- pasted text never introduces a literal newline into
-// what's meant to stay one line of dialogue.
+/*
+ Writes el.value directly and skips PrimeVue's own onInput handler
+ entirely (preventDefault stops the native paste from ever firing an
+ `input` event) -- pasted text never introduces a literal newline into
+ what's meant to stay one line of dialogue.
+*/
 function onPaste(event) {
     event.preventDefault();
     const el = event.target;

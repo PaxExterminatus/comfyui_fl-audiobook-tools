@@ -14,6 +14,8 @@ import { ref, computed } from "vue";
    Editor/Roles Editor genuinely want to fill nearly the whole window; a simple file
    picker (Browse Dialog) doesn't need that much, so it passes a smaller value.
 */
+
+
 export function usePanelWidth({ storageKey, defaultWidth, presets, fullVw = 94 }) {
     function load() {
         try {

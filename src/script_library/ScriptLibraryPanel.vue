@@ -1,17 +1,19 @@
 <script setup>
-// Vue port of web/script_library.js's tree UI (everything from that file's
-// old nodeCreated EXCEPT the module-scope app.graphToPrompt/app.queuePrompt
-// patching, which stays put in web/script_library.js -- it's queue
-// orchestration, not UI, and far too delicate to risk touching in the same
-// change as a rendering rewrite). This component owns: the browse-for-
-// project button, the two tool rows, and the act/script checkbox tree.
-//
-// Bridges to plain ComfyUI widget objects (folderWidget/actWidget/
-// scriptFileWidget) by keeping its OWN reactive copies and writing back to
-// `.value` on every change -- Vue can't observe mutations to a plain
-// object's properties made from outside itself, and these widgets' values
-// must stay correct for ComfyUI's own workflow serialization regardless of
-// whether this panel is even mounted.
+/*
+ Vue port of web/script_library.js's tree UI (everything from that file's
+ old nodeCreated EXCEPT the module-scope app.graphToPrompt/app.queuePrompt
+ patching, which stays put in web/script_library.js -- it's queue
+ orchestration, not UI, and far too delicate to risk touching in the same
+ change as a rendering rewrite). This component owns: the browse-for-
+ project button, the two tool rows, and the act/script checkbox tree.
+
+ Bridges to plain ComfyUI widget objects (folderWidget/actWidget/
+ scriptFileWidget) by keeping its OWN reactive copies and writing back to
+ `.value` on every change -- Vue can't observe mutations to a plain
+ object's properties made from outside itself, and these widgets' values
+ must stay correct for ComfyUI's own workflow serialization regardless of
+ whether this panel is even mounted.
+*/
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
 import Button from "primevue/button";
 import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
@@ -22,18 +24,20 @@ const props = defineProps({
     actWidget: { type: Object, required: true },
     filterWidget: { type: Object, default: null },
     scriptFileWidget: { type: Object, required: true },
-    // Every cross-editor entry point is passed in rather than statically
-    // imported: openBrowseDialog/openRolesEditor ARE separate Vite lib
-    // entries (see vite.config.js), and importing an entry's main.js
-    // directly from a THIRD entry's source made Rollup hoist that shared
-    // code into its own chunk named after the shared module's basename --
-    // "main.js" for every one of these, since every entry's own source
-    // file is called that within its own folder, which collided across
-    // entries. Passing these as props keeps every entry's build output
-    // independent (aside from the intentionally-shared
-    // src/shared/styles_link.js). openLineEditor/queueLineRevoice aren't
-    // Vite entries at all (line_editor.js is still vanilla JS, and
-    // queueLineRevoice lives in web/script_library.js's own module scope).
+    /*
+     Every cross-editor entry point is passed in rather than statically
+     imported: openBrowseDialog/openRolesEditor ARE separate Vite lib
+     entries (see vite.config.js), and importing an entry's main.js
+     directly from a THIRD entry's source made Rollup hoist that shared
+     code into its own chunk named after the shared module's basename --
+     "main.js" for every one of these, since every entry's own source
+     file is called that within its own folder, which collided across
+     entries. Passing these as props keeps every entry's build output
+     independent (aside from the intentionally-shared
+     src/shared/styles_link.js). openLineEditor/queueLineRevoice aren't
+     Vite entries at all (line_editor.js is still vanilla JS, and
+     queueLineRevoice lives in web/script_library.js's own module scope).
+    */
     openBrowseDialog: { type: Function, required: true },
     openRolesEditor: { type: Function, required: true },
     openLineEditor: { type: Function, required: true },
@@ -72,29 +76,31 @@ const checked = reactive(new Set()); // keyOf(act, file) -- which scripts Run sh
 const expanded = reactive(new Set()); // act names
 const status = ref("");
 
-// A plain REF re-synced from the widget, never `computed(() =>
-// props.filterWidget?.value)`. props.filterWidget is a plain LiteGraph
-// widget object, not a reactive one -- Vue can't observe a mutation to its
-// `.value` made from outside (the same hazard this component already works
-// around for folder/act/scriptFile), so a computed over it evaluates ONCE
-// and then serves that first value for the rest of the session no matter
-// what the widget actually holds later. Meanwhile the BACKEND always
-// serializes the widget's real current value into every prompt. When those
-// two drift apart, this component and nodes/script_library.py derive
-// DIFFERENT base names from the same script (strip_suffix_and_ext with
-// "_speakers.txt" vs with ""), and the project silently splits into two
-// parallel _audio\lines\ trees: a full render writes its per-line files
-// under one name while the editor -- and every re-voice it queues -- looks
-// under the other. Observed live: lines\<script>\0000..0007 from the full
-// render, but the re-voiced line landing in lines\<script>_speakers\id5.wav,
-// with no error anywhere.
-//
-// The value itself is still used verbatim ("" included) -- NOT defaulted to
-// "_speakers.txt": an empty script_filter is a deliberate, documented choice
-// on the node ("leave empty to list every .txt file"), and the backend's own
-// strip_suffix_and_ext treats "" as "don't strip anything" too. Substituting
-// a default here would re-introduce the very same front/back mismatch from
-// the other direction.
+/*
+ A plain REF re-synced from the widget, never `computed(() =>
+ props.filterWidget?.value)`. props.filterWidget is a plain LiteGraph
+ widget object, not a reactive one -- Vue can't observe a mutation to its
+ `.value` made from outside (the same hazard this component already works
+ around for folder/act/scriptFile), so a computed over it evaluates ONCE
+ and then serves that first value for the rest of the session no matter
+ what the widget actually holds later. Meanwhile the BACKEND always
+ serializes the widget's real current value into every prompt. When those
+ two drift apart, this component and nodes/script_library.py derive
+ DIFFERENT base names from the same script (strip_suffix_and_ext with
+ "_speakers.txt" vs with ""), and the project silently splits into two
+ parallel _audio\lines\ trees: a full render writes its per-line files
+ under one name while the editor -- and every re-voice it queues -- looks
+ under the other. Observed live: lines\<script>\0000..0007 from the full
+ render, but the re-voiced line landing in lines\<script>_speakers\id5.wav,
+ with no error anywhere.
+
+ The value itself is still used verbatim ("" included) -- NOT defaulted to
+ "_speakers.txt": an empty script_filter is a deliberate, documented choice
+ on the node ("leave empty to list every .txt file"), and the backend's own
+ strip_suffix_and_ext treats "" as "don't strip anything" too. Substituting
+ a default here would re-introduce the very same front/back mismatch from
+ the other direction.
+*/
 const suffix = ref(props.filterWidget?.value ?? "");
 function syncSuffixFromWidget() {
     if (props.filterWidget) suffix.value = props.filterWidget.value ?? "";
@@ -136,9 +142,11 @@ function updateSelectionSummary() {
     setStatus(`${treeData.value.length} act(s), ${totalScripts} script(s)${filterNote} | ${checked.size} checked`);
 }
 
-// A script marked ready to release can never stay checked for queueing --
-// pruned whenever treeData refreshes (a role recast or the poll tick can
-// mark a script ready from outside any checkbox click).
+/*
+ A script marked ready to release can never stay checked for queueing --
+ pruned whenever treeData refreshes (a role recast or the poll tick can
+ mark a script ready from outside any checkbox click).
+*/
 function pruneReadyFromChecked() {
     let pruned = false;
     treeData.value.forEach(({ act, ready_scripts }) => {
@@ -153,9 +161,11 @@ function pruneReadyFromChecked() {
     return pruned;
 }
 
-// `readySet`'s scripts are excluded from "checkable" so the act checkbox's
-// tri-state doesn't get stuck on "some" forever just because a ready
-// script can never be checked.
+/*
+ `readySet`'s scripts are excluded from "checkable" so the act checkbox's
+ tri-state doesn't get stuck on "some" forever just because a ready
+ script can never be checked.
+*/
 function actCheckState(act, scripts, readySet) {
     const checkable = scripts.filter((f) => !readySet.has(f));
     if (!checkable.length) return "none";
@@ -249,10 +259,12 @@ function editScript(act, filename) {
         folder: joinPath(folderPath.value, act),
         filename,
         suffix: suffix.value,
-        // Lets the editor's own header checkbox reflect/toggle this
-        // script's checked-for-queueing state without closing the editor.
-        // Scoped to THIS act -- editor-side prev/next navigation never
-        // crosses into another act.
+        /*
+         Lets the editor's own header checkbox reflect/toggle this
+         script's checked-for-queueing state without closing the editor.
+         Scoped to THIS act -- editor-side prev/next navigation never
+         crosses into another act.
+        */
         checkedApi: {
             isChecked: (fname) => checked.has(keyOf(act, fname)),
             setChecked: (fname, val) => {
@@ -261,16 +273,18 @@ function editScript(act, filename) {
                 updateSelectionSummary();
             },
         },
-        // Backs the line editor's "Re-voice this line" button -- act is
-        // forced explicitly since the editor can be opened for any row, not
-        // just whichever one is "active" in the tree. `file: filename` is
-        // only a fallback for THIS script (spread after it, so it wins):
-        // Line Editor's own Prev/Next can switch this same editor instance
-        // to a different script post-open, and it always passes ITS
-        // current filename in `opts.file` -- this closure's `filename`
-        // param is fixed at the moment editScript() ran and never updates,
-        // so relying on it after Prev/Next would re-voice into the WRONG
-        // script's _audio\lines\ folder (see LineEditorApp.vue's revoiceRow).
+        /*
+         Backs the line editor's "Re-voice this line" button -- act is
+         forced explicitly since the editor can be opened for any row, not
+         just whichever one is "active" in the tree. `file: filename` is
+         only a fallback for THIS script (spread after it, so it wins):
+         Line Editor's own Prev/Next can switch this same editor instance
+         to a different script post-open, and it always passes ITS
+         current filename in `opts.file` -- this closure's `filename`
+         param is fixed at the moment editScript() ran and never updates,
+         so relying on it after Prev/Next would re-voice into the WRONG
+         script's _audio\lines\ folder (see LineEditorApp.vue's revoiceRow).
+        */
         revoiceApi: {
             revoiceLine: (opts) => props.queueLineRevoice(props.node, { act, file: filename, ...opts }),
         },
@@ -278,12 +292,14 @@ function editScript(act, filename) {
 }
 
 async function loadTree() {
-    // Re-read script_filter here rather than trusting a value cached at
-    // mount: this runs on mount, on every folder change, AND on the 3s poll
-    // tick, so however the widget's value changes (workflow configure(),
-    // a hidden-widget write, the user unhiding and editing it), this
-    // component converges on the backend's real value within one tick
-    // instead of silently disagreeing with it forever. See `suffix`.
+    /*
+     Re-read script_filter here rather than trusting a value cached at
+     mount: this runs on mount, on every folder change, AND on the 3s poll
+     tick, so however the widget's value changes (workflow configure(),
+     a hidden-widget write, the user unhiding and editing it), this
+     component converges on the backend's real value within one tick
+     instead of silently disagreeing with it forever. See `suffix`.
+    */
     syncSuffixFromWidget();
     if (!folderPath.value) {
         treeData.value = [];
@@ -319,11 +335,13 @@ async function loadTree() {
     }
 }
 
-// Project-wide "Re-voice pending" button: finds every line (any act, any
-// script) the line editor's per-line state marked stale/unvoiced -- e.g.
-// every line a role recast just invalidated -- and re-voices each one in
-// place. Sequential on purpose: queuing dozens of heavy TTS renders
-// concurrently would just flood ComfyUI's own queue for no benefit.
+/*
+ Project-wide "Re-voice pending" button: finds every line (any act, any
+ script) the line editor's per-line state marked stale/unvoiced -- e.g.
+ every line a role recast just invalidated -- and re-voices each one in
+ place. Sequential on purpose: queuing dozens of heavy TTS renders
+ concurrently would just flood ComfyUI's own queue for no benefit.
+*/
 async function revoiceAllPending() {
     if (!folderPath.value) {
         setStatus("Set a project folder first");
@@ -354,25 +372,29 @@ async function revoiceAllPending() {
     for (const script of scripts) {
         for (const line of script.pending) {
             try {
-                // No "mark voiced" follow-up needed any more -- there's
-                // nothing to flip. The next loadTree()/pending_revoice scan
-                // just re-hashes this position's now-fresh file and finds
-                // it matches, same as an open line editor would (see
-                // nodes/script_library.py's script_pending_lines).
+                /*
+                 No "mark voiced" follow-up needed any more -- there's
+                 nothing to flip. The next loadTree()/pending_revoice scan
+                 just re-hashes this position's now-fresh file and finds
+                 it matches, same as an open line editor would (see
+                 nodes/script_library.py's script_pending_lines).
+                */
                 await props.queueLineRevoice(props.node, {
                     act: script.act, file: script.file,
                     linePosition: line.position, speaker: line.speaker, instruct: line.instruct, text: line.text,
-                    // Same output-location pinning the line editor does (see
-                    // LineEditorApp's revoiceRow): folder/base_name here come
-                    // from the pending_revoice scan, which resolved them with
-                    // THIS panel's suffix -- so they're the same names the
-                    // scan itself checked against. contentHash likewise comes
-                    // straight from that same scan (nodes/script_library.py's
-                    // script_pending_lines already computed it from this
-                    // exact resolved speaker/instruct/text) instead of being
-                    // recomputed here -- stamped onto Post-Process's
-                    // line_hashes_json so the re-voice doesn't depend on the
-                    // graph having that output/input wired.
+                    /*
+                     Same output-location pinning the line editor does (see
+                     LineEditorApp's revoiceRow): folder/base_name here come
+                     from the pending_revoice scan, which resolved them with
+                     THIS panel's suffix -- so they're the same names the
+                     scan itself checked against. contentHash likewise comes
+                     straight from that same scan (nodes/script_library.py's
+                     script_pending_lines already computed it from this
+                     exact resolved speaker/instruct/text) instead of being
+                     recomputed here -- stamped onto Post-Process's
+                     line_hashes_json so the re-voice doesn't depend on the
+                     graph having that output/input wired.
+                    */
                     folder: script.folder, baseName: script.base_name, contentHash: line.hash,
                 });
             } catch (err) {
@@ -386,19 +408,23 @@ async function revoiceAllPending() {
     loadTree();
 }
 
-// Recall-from-localStorage + refresh + (re)load the tree. Runs both right
-// after mount AND after node.onConfigure (wired below) -- a fresh node
-// (dragged onto the canvas) only ever mounts fresh, but a node coming from
-// a saved/reloaded workflow mounts FIRST (folder_path still at its Python
-// default, usually empty) and THEN configure() restores the actual saved
-// folder_path. Running this only on mount meant an empty saved
-// folder_path never got the localStorage fallback applied after configure
-// overwrote it back to "", and even a real saved folder_path never
-// refreshed the tree that was drawn before configure ran.
+/*
+ Recall-from-localStorage + refresh + (re)load the tree. Runs both right
+ after mount AND after node.onConfigure (wired below) -- a fresh node
+ (dragged onto the canvas) only ever mounts fresh, but a node coming from
+ a saved/reloaded workflow mounts FIRST (folder_path still at its Python
+ default, usually empty) and THEN configure() restores the actual saved
+ folder_path. Running this only on mount meant an empty saved
+ folder_path never got the localStorage fallback applied after configure
+ overwrote it back to "", and even a real saved folder_path never
+ refreshed the tree that was drawn before configure ran.
+*/
 function syncFolderAndReload() {
     restoreCheckedFromProperties();
-    // Also covers the "no folder set" path below, which returns before
-    // loadTree() (and its own sync) ever runs.
+    /*
+     Also covers the "no folder set" path below, which returns before
+     loadTree() (and its own sync) ever runs.
+    */
     syncSuffixFromWidget();
     if (!folderPath.value) {
         const remembered = recallFolder();
@@ -431,9 +457,11 @@ onMounted(() => {
 
     syncFolderAndReload();
 
-    // Keep the "already rendered" icon current while this node sits on the
-    // canvas -- e.g. finishing a render for a checked script should light
-    // its icon up on its own, without the user re-browsing the folder.
+    /*
+     Keep the "already rendered" icon current while this node sits on the
+     canvas -- e.g. finishing a render for a checked script should light
+     its icon up on its own, without the user re-browsing the folder.
+    */
     pollTimer = setInterval(() => {
         if (folderPath.value) loadTree();
     }, TREE_POLL_MS);

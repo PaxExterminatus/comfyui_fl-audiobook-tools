@@ -1,12 +1,14 @@
 <script setup>
-// Inline node-panel for FL_CosyVoice3_VODubLibrary -- shows a VO dub
-// project's episode buckets with per-status counts (see
-// nodes/vo_dub_library.py's build_tree), same "one panel embedded in the
-// node's own body" shape as ScriptLibraryPanel.vue, but there is
-// deliberately no checkbox tree here: a VO dub project has no per-script
-// queue to build (see that node's own module docstring -- line_override
-// drives one row at a time, there's no "run everything checked").
-// Clicking a bucket opens VoDubLineEditor.vue for it.
+/*
+ Inline node-panel for FL_CosyVoice3_VODubLibrary -- shows a VO dub
+ project's episode buckets with per-status counts (see
+ nodes/vo_dub_library.py's build_tree), same "one panel embedded in the
+ node's own body" shape as ScriptLibraryPanel.vue, but there is
+ deliberately no checkbox tree here: a VO dub project has no per-script
+ queue to build (see that node's own module docstring -- line_override
+ drives one row at a time, there's no "run everything checked").
+ Clicking a bucket opens VoDubLineEditor.vue for it.
+*/
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
@@ -70,10 +72,12 @@ function openBucket(bucket) {
     props.openVoDubLineEditor({
         root: root.value,
         bucket: bucket.bucket,
-        // Only offered when this panel's node-wiring actually has a render
-        // mechanism (it always does in practice -- null only ever shows up
-        // in a test that doesn't pass one) -- see queueVoDubRender's own
-        // docstring in web/vo_dub_library.js for what it does.
+        /*
+         Only offered when this panel's node-wiring actually has a render
+         mechanism (it always does in practice -- null only ever shows up
+         in a test that doesn't pass one) -- see queueVoDubRender's own
+         docstring in web/vo_dub_library.js for what it does.
+        */
         renderApi: props.queueVoDubRender ? {
             renderRow: (opts) => props.queueVoDubRender(props.node, opts),
         } : null,

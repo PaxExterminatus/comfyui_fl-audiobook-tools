@@ -1,8 +1,10 @@
 <script setup>
-// Vue port of web/browse_dialog.js. Same imperative contract as before
-// (see main.js's openBrowseDialog) -- browsers never expose a dropped/
-// picked file's real OS path to page JS, so this lists directories/files
-// through our own backend (list_dir) instead of any browser file API.
+/*
+ Vue port of web/browse_dialog.js. Same imperative contract as before
+ (see main.js's openBrowseDialog) -- browsers never expose a dropped/
+ picked file's real OS path to page JS, so this lists directories/files
+ through our own backend (list_dir) instead of any browser file API.
+*/
 import { ref, computed, watch, onMounted } from "vue";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
@@ -33,8 +35,10 @@ const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets 
     storageKey: "FL_CosyVoice3.BrowseDialog.widthPx",
     defaultWidth: 560,
     presets: [420, 700],
-    // A file picker never needs to fill nearly the whole window the way
-    // Line/Roles Editor's "100%" does -- capped much narrower.
+    /*
+     A file picker never needs to fill nearly the whole window the way
+     Line/Roles Editor's "100%" does -- capped much narrower.
+    */
     fullVw: 70,
 });
 const { fontSizePx: listFontSizePx, decrease: decreaseListFontSize, increase: increaseListFontSize } = useFontSize({
@@ -48,9 +52,11 @@ const selectDisabled = computed(() =>
     props.mode === "folder" ? !currentPath.value : !selectedFilePath.value,
 );
 
-// Same three-branch order as the original: prefer a real parent, then an
-// explicit "" (one level above a drive root, i.e. back to the drive list),
-// then fall back to the drive list if there's no listing yet at all.
+/*
+ Same three-branch order as the original: prefer a real parent, then an
+ explicit "" (one level above a drive root, i.e. back to the drive list),
+ then fall back to the drive list if there's no listing yet at all.
+*/
 function goUp() {
     if (listing.value && listing.value.parent) {
         load(listing.value.parent);
@@ -121,11 +127,13 @@ function close() {
     props.onClose();
 }
 
-// Dialog owns ESC-to-close and its own header close button -- both just
-// flip v-model:visible to false, which lands here regardless of which one
-// triggered it. Non-modal and never dismissable-mask -- same behavior as
-// every dialog in this addon, so an accidental click past the panel's
-// edge can't silently lose an in-progress pick or close it unexpectedly.
+/*
+ Dialog owns ESC-to-close and its own header close button -- both just
+ flip v-model:visible to false, which lands here regardless of which one
+ triggered it. Non-modal and never dismissable-mask -- same behavior as
+ every dialog in this addon, so an accidental click past the panel's
+ edge can't silently lose an in-progress pick or close it unexpectedly.
+*/
 watch(visible, (v) => {
     if (!v) close();
 });

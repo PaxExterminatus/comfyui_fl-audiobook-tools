@@ -1,10 +1,12 @@
 <script setup>
-// Card-based picker for saved CosyVoice speaker presets -- same pattern as
-// InstructPickerDialog.vue (a Dialog full of Cards instead of a Dropdown),
-// just one card per preset instead of one per category. Stateless: doesn't
-// know which row it's assigning a speaker for, just emits the chosen
-// preset and lets the caller (LineEditorApp.vue) decide what to do with
-// it -- same contract as InstructPickerDialog's own `select` emit.
+/*
+ Card-based picker for saved CosyVoice speaker presets -- same pattern as
+ InstructPickerDialog.vue (a Dialog full of Cards instead of a Dropdown),
+ just one card per preset instead of one per category. Stateless: doesn't
+ know which row it's assigning a speaker for, just emits the chosen
+ preset and lets the caller (LineEditorApp.vue) decide what to do with
+ it -- same contract as InstructPickerDialog's own `select` emit.
+*/
 import { ref } from "vue";
 import Dialog from "primevue/dialog";
 import Card from "primevue/card";
@@ -19,15 +21,19 @@ import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js
 const props = defineProps({
     visible: { type: Boolean, required: true },
     presets: { type: Array, default: () => [] },
-    // Absolute folder holding each preset's OWN .pt file -- also where a
-    // same-named sample .mp3/.wav is expected to live (see the /audio
-    // route this samples from; "" means presets haven't loaded yet, no
-    // preview is offered until they have).
+    /*
+     Absolute folder holding each preset's OWN .pt file -- also where a
+     same-named sample .mp3/.wav is expected to live (see the /audio
+     route this samples from; "" means presets haven't loaded yet, no
+     preview is offered until they have).
+    */
     sampleDir: { type: String, default: "" },
-    // Optional (preset: string) => sublabel text, e.g. "used by: ..." --
-    // the caller already has this logic (see LineEditorApp.vue's
-    // speakerUsageSubLabel); kept out of this component so it stays a
-    // plain preset-picker with no opinion on who's "using" what.
+    /*
+     Optional (preset: string) => sublabel text, e.g. "used by: ..." --
+     the caller already has this logic (see LineEditorApp.vue's
+     speakerUsageSubLabel); kept out of this component so it stays a
+     plain preset-picker with no opinion on who's "using" what.
+    */
     usageFor: { type: Function, default: null },
 });
 const emit = defineEmits(["update:visible", "select"]);
@@ -47,11 +53,13 @@ function pick(preset) {
     emit("update:visible", false);
 }
 
-// ── sample preview: one <audio> shared across every card, mp3 first, wav
-// as a fallback (see nodes/script_library.py's speaker_presets route --
-// neither extension is confirmed to exist server-side, the element itself
-// just tries one then the other, same "let the browser tell us" approach
-// the rest of this addon already uses for "is there a take yet").
+/*
+ ── sample preview: one <audio> shared across every card, mp3 first, wav
+ as a fallback (see nodes/script_library.py's speaker_presets route --
+ neither extension is confirmed to exist server-side, the element itself
+ just tries one then the other, same "let the browser tell us" approach
+ the rest of this addon already uses for "is there a take yet").
+*/
 const playingPreset = ref(null);
 let sampleEl = null;
 

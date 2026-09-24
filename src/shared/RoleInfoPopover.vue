@@ -1,12 +1,14 @@
 <script setup>
-// Rendering half of useRoleInfoPopover (see role_info_popover.js) -- the
-// popover shell itself has no opinion on WHICH fields a role carries
-// (LineEditorApp.vue's _roles.json entries and VoDubLineEditor.vue's
-// _dub_roles.json entries don't share a shape), so it just renders
-// whatever [key, value] pairs the caller's own field-extractor produced.
-// `.role-info-popover`/`.role-info-row`/`.role-info-key`/`.role-info-value`
-// live in src/sass/global.sass (forwarded into every entry already), not
-// here -- this component has no scoped style of its own.
+/*
+ Rendering half of useRoleInfoPopover (see role_info_popover.js) -- the
+ popover shell itself has no opinion on WHICH fields a role carries
+ (LineEditorApp.vue's _roles.json entries and VoDubLineEditor.vue's
+ _dub_roles.json entries don't share a shape), so it just renders
+ whatever [key, value] pairs the caller's own field-extractor produced.
+ `.role-info-popover`/`.role-info-row`/`.role-info-key`/`.role-info-value`
+ live in src/sass/global.sass (forwarded into every entry already), not
+ here -- this component has no scoped style of its own.
+*/
 defineProps({
     visible: { type: Boolean, default: false },
     left: { type: Number, default: 0 },

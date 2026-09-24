@@ -1,14 +1,16 @@
 <script setup>
-// Card-based picker for _instruct_categories.json's phrase bank -- pulled
-// out of the instruct field's own Dropdown (see LineEditorApp.vue) into a
-// separate dialog so each category's "when to use this register" guidance
-// has real room to read as a subtitle, instead of a cramped tooltip on a
-// group header inside a small inline list.
-//
-// Stateless picker: doesn't know which row it's editing, doesn't touch
-// row.instruct itself -- it just emits the chosen phrase and lets the
-// caller (LineEditorApp.vue) decide what to do with it (stash the old
-// value, apply the new one).
+/*
+ Card-based picker for _instruct_categories.json's phrase bank -- pulled
+ out of the instruct field's own Dropdown (see LineEditorApp.vue) into a
+ separate dialog so each category's "when to use this register" guidance
+ has real room to read as a subtitle, instead of a cramped tooltip on a
+ group header inside a small inline list.
+
+ Stateless picker: doesn't know which row it's editing, doesn't touch
+ row.instruct itself -- it just emits the chosen phrase and lets the
+ caller (LineEditorApp.vue) decide what to do with it (stash the old
+ value, apply the new one).
+*/
 import Dialog from "primevue/dialog";
 import Card from "primevue/card";
 import Message from "primevue/message";

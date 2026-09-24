@@ -1,21 +1,23 @@
 <script setup>
-// Vue port of the old web/roles_editor.js: lists every role from the
-// project's _roles.json and lets you reassign its "speaker" (the real
-// CosyVoice preset that role code currently resolves to) -- code/name/
-// description are read-only display here, since renaming a role code
-// would silently orphan every script line that already references it.
-// Edits save straight back to _roles.json (debounced), the single source
-// of truth Script Library's "script" output resolves role codes against
-// (see nodes/script_library.py resolve_roles).
-//
-// Built from PrimeVue's own structural components (Dialog, Card, Message)
-// rather than hand-rolled overlay/panel/card markup -- Dialog alone
-// already handles the backdrop, ESC-to-close, and its own close button.
-// Cards flow left-to-right in a wrapping grid (see .roles-list) rather
-// than stacking in one long column, so a project with many roles reads
-// as a compact grid instead of a tall scrolling list -- every card stays
-// fully open (no collapse step) so editing a role is always a single
-// click, not click-to-expand-then-edit.
+/*
+ Vue port of the old web/roles_editor.js: lists every role from the
+ project's _roles.json and lets you reassign its "speaker" (the real
+ CosyVoice preset that role code currently resolves to) -- code/name/
+ description are read-only display here, since renaming a role code
+ would silently orphan every script line that already references it.
+ Edits save straight back to _roles.json (debounced), the single source
+ of truth Script Library's "script" output resolves role codes against
+ (see nodes/script_library.py resolve_roles).
+
+ Built from PrimeVue's own structural components (Dialog, Card, Message)
+ rather than hand-rolled overlay/panel/card markup -- Dialog alone
+ already handles the backdrop, ESC-to-close, and its own close button.
+ Cards flow left-to-right in a wrapping grid (see .roles-list) rather
+ than stacking in one long column, so a project with many roles reads
+ as a compact grid instead of a tall scrolling list -- every card stays
+ fully open (no collapse step) so editing a role is always a single
+ click, not click-to-expand-then-edit.
+*/
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import Dialog from "primevue/dialog";
 import Card from "primevue/card";
@@ -56,35 +58,41 @@ let lastSavedText = null;
 let lastLocalEditAt = 0;
 let saveTimer = null;
 let pollTimer = null;
-// Last speaker value we already ran a stale-scan for, per role code --
-// seeded from disk on every load so a genuine change (typed or picked) is
-// detected relative to what's ACTUALLY saved, not just "different from a
-// moment ago".
+/*
+ Last speaker value we already ran a stale-scan for, per role code --
+ seeded from disk on every load so a genuine change (typed or picked) is
+ detected relative to what's ACTUALLY saved, not just "different from a
+ moment ago".
+*/
 const lastNotifiedSpeaker = new Map();
 
 function setStatus(text) {
     status.value = text;
 }
 
-// PrimeVue's own `auto-resize` (see the Textarea) now handles growth on
-// every keystroke -- no more manual @input handler needed for that. Its
-// resize only runs on its OWN mounted/updated hooks though, each firing
-// exactly once per trigger; a role loaded right as this dialog is still
-// settling into its final size can still get measured mid-layout (an
-// inflated scrollHeight that never gets recalculated afterward, since
-// nothing else changes to fire `updated` again) -- kept a settling pass
-// after loadFromDisk populates `roles` for exactly that race, same fix
-// that already worked here before switching to auto-resize.
+/*
+ PrimeVue's own `auto-resize` (see the Textarea) now handles growth on
+ every keystroke -- no more manual @input handler needed for that. Its
+ resize only runs on its OWN mounted/updated hooks though, each firing
+ exactly once per trigger; a role loaded right as this dialog is still
+ settling into its final size can still get measured mid-layout (an
+ inflated scrollHeight that never gets recalculated afterward, since
+ nothing else changes to fire `updated` again) -- kept a settling pass
+ after loadFromDisk populates `roles` for exactly that race, same fix
+ that already worked here before switching to auto-resize.
+*/
 const textareaEls = new Map(); // role.code -> the underlying <textarea> DOM node
 function setTextareaRef(code, el) {
     if (!el) {
         textareaEls.delete(code);
         return;
     }
-    // PrimeVue's Textarea root IS the <textarea> itself, but a template/
-    // function ref on a component resolves to its instance proxy -- $el
-    // gets the real DOM node either way, and also handles the (unlikely
-    // here) plain-element case.
+    /*
+     PrimeVue's Textarea root IS the <textarea> itself, but a template/
+     function ref on a component resolves to its instance proxy -- $el
+     gets the real DOM node either way, and also handles the (unlikely
+     here) plain-element case.
+    */
     textareaEls.set(code, el.$el ?? el);
 }
 function autoGrow(el) {
@@ -127,13 +135,15 @@ function scheduleSave() {
     saveTimer = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
 }
 
-// Recasting a role changes what EVERY line using that role code resolves
-// to, project-wide -- but a script line's own row never changes, so
-// nothing about the per-line state model would otherwise notice. See
-// fl_common.js's markRoleStale for what actually gets marked/un-readied
-// server-side. Only called on a discrete "this value is now committed"
-// moment (an option picked, or the field loses focus after free typing) --
-// never on every keystroke, which would spam the project-wide scan.
+/*
+ Recasting a role changes what EVERY line using that role code resolves
+ to, project-wide -- but a script line's own row never changes, so
+ nothing about the per-line state model would otherwise notice. See
+ fl_common.js's markRoleStale for what actually gets marked/un-readied
+ server-side. Only called on a discrete "this value is now committed"
+ moment (an option picked, or the field loses focus after free typing) --
+ never on every keystroke, which would spam the project-wide scan.
+*/
 function notifyIfSpeakerChanged(role) {
     if (!role.code) return;
     const prev = lastNotifiedSpeaker.get(role.code);
@@ -183,18 +193,22 @@ async function loadFromDisk({ isPoll = false } = {}) {
             return;
         }
         roles.value = Array.isArray(parsed.roles) ? parsed.roles : [];
-        // Baseline for notifyIfSpeakerChanged -- whatever's on disk right
-        // now isn't a pending change to scan for.
+        /*
+         Baseline for notifyIfSpeakerChanged -- whatever's on disk right
+         now isn't a pending change to scan for.
+        */
         roles.value.forEach((role) => {
             if (role.code) lastNotifiedSpeaker.set(role.code, role.speaker);
         });
         lastSavedText = data.content;
         if (!isPoll) setStatus(`Loaded ${roles.value.length} role(s)`);
-        // The nextTick call alone can catch the textareas mid-layout (e.g.
-        // right as this dialog is still settling into its final size) and
-        // measure an inflated scrollHeight that never gets recalculated
-        // afterward -- one more pass on the next animation frame
-        // re-measures once layout has actually settled.
+        /*
+         The nextTick call alone can catch the textareas mid-layout (e.g.
+         right as this dialog is still settling into its final size) and
+         measure an inflated scrollHeight that never gets recalculated
+         afterward -- one more pass on the next animation frame
+         re-measures once layout has actually settled.
+        */
         nextTick(() => {
             autoGrowAll();
             requestAnimationFrame(autoGrowAll);
@@ -209,19 +223,23 @@ function close() {
         clearTimeout(saveTimer);
         flushSave();
     }
-    // Catches a speaker change whose commit event never fired (e.g.
-    // closing while still focused in a freshly-typed field).
+    /*
+     Catches a speaker change whose commit event never fired (e.g.
+     closing while still focused in a freshly-typed field).
+    */
     roles.value.forEach((role) => notifyIfSpeakerChanged(role));
     if (pollTimer) clearInterval(pollTimer);
     props.onClose();
 }
 
-// Dialog owns ESC-to-close and its own header close button -- both just
-// flip v-model:visible to false, which lands here regardless of which one
-// triggered it. Non-modal (no backdrop, click-through to the canvas) and
-// never dismissable-mask -- same behavior as every dialog in this addon,
-// so an accidental click past the panel's edge can't lose in-progress
-// edits or close the editor unexpectedly.
+/*
+ Dialog owns ESC-to-close and its own header close button -- both just
+ flip v-model:visible to false, which lands here regardless of which one
+ triggered it. Non-modal (no backdrop, click-through to the canvas) and
+ never dismissable-mask -- same behavior as every dialog in this addon,
+ so an accidental click past the panel's edge can't lose in-progress
+ edits or close the editor unexpectedly.
+*/
 watch(visible, (v) => {
     if (!v) close();
 });

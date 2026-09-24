@@ -1,8 +1,10 @@
 <script setup>
-// Pairs with panel_width.js's usePanelWidth() -- the width-preset button
-// row itself was duplicated verbatim (same markup, same props, only the
-// preset numbers differed) between Roles Editor and Line Editor before
-// this existed.
+/*
+ Pairs with panel_width.js's usePanelWidth() -- the width-preset button
+ row itself was duplicated verbatim (same markup, same props, only the
+ preset numbers differed) between Roles Editor and Line Editor before
+ this existed.
+*/
 import Button from "primevue/button";
 
 defineProps({

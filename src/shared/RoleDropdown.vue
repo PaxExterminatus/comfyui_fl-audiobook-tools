@@ -1,13 +1,15 @@
 <script setup>
-// Shared "speaker/role" Dropdown -- extracted from LineEditorApp.vue's own
-// speaker field so the audiobook's Line Editor and VO Dub's Line Editor
-// use the EXACT same component/behavior instead of two hand-drifted
-// copies. Looks up a role CODE against whichever role catalog the caller
-// is using (_roles.json for an audiobook, _dub_roles.json for a VO dub
-// project) -- editable, so typing a value that ISN'T a known code just
-// passes it straight through as a literal preset name (both backends'
-// own role resolution already does the same: `role_map.get(value,
-// value)`, never an error for an unrecognized value).
+/*
+ Shared "speaker/role" Dropdown -- extracted from LineEditorApp.vue's own
+ speaker field so the audiobook's Line Editor and VO Dub's Line Editor
+ use the EXACT same component/behavior instead of two hand-drifted
+ copies. Looks up a role CODE against whichever role catalog the caller
+ is using (_roles.json for an audiobook, _dub_roles.json for a VO dub
+ project) -- editable, so typing a value that ISN'T a known code just
+ passes it straight through as a literal preset name (both backends'
+ own role resolution already does the same: `role_map.get(value,
+ value)`, never an error for an unrecognized value).
+*/
 import Dropdown from "primevue/dropdown";
 
 const props = defineProps({

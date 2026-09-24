@@ -1,23 +1,25 @@
 <script setup>
-// Full-screen-ish editor for one episode bucket of a VO dub project (see
-// nodes/vo_dub_library.py's module docstring). Deliberately NOT
-// LineEditorApp.vue with a few fields swapped: there's no position/hash
-// filename scheme here (see that module's docstring), no merge/split/
-// pause (rows never restructure), and no "stitch into one track" step --
-// a row's own rendered take already IS the deliverable. What DOES carry
-// over: the debounced-save-to-one-JSON-file pattern (closer to
-// RolesEditorApp.vue's own _roles.json save loop than to LineEditorApp's
-// per-script save), and lineHash() for the same content-fingerprint
-// scheme (see src/shared/line_hash.js).
-//
-// The 🔁 render button queues the SAME graph a normal Run would (see
-// web/vo_dub_library.js's queueVoDubRender, a close mirror of
-// web/script_library.js's own per-line queueLineRevoice), with the VO Dub
-// Library node's line_override forced to this row's resolved
-// "speaker | instruct | text", Audio Post-Process's output_path_override
-// forced to audio_ru\<audio_key>.wav, and its effect_override forced to
-// this row's chosen Effect (e.g. "radio") -- see
-// nodes/audio_post_process.py's own tooltips for both inputs.
+/*
+ Full-screen-ish editor for one episode bucket of a VO dub project (see
+ nodes/vo_dub_library.py's module docstring). Deliberately NOT
+ LineEditorApp.vue with a few fields swapped: there's no position/hash
+ filename scheme here (see that module's docstring), no merge/split/
+ pause (rows never restructure), and no "stitch into one track" step --
+ a row's own rendered take already IS the deliverable. What DOES carry
+ over: the debounced-save-to-one-JSON-file pattern (closer to
+ RolesEditorApp.vue's own _roles.json save loop than to LineEditorApp's
+ per-script save), and lineHash() for the same content-fingerprint
+ scheme (see src/shared/line_hash.js).
+
+ The 🔁 render button queues the SAME graph a normal Run would (see
+ web/vo_dub_library.js's queueVoDubRender, a close mirror of
+ web/script_library.js's own per-line queueLineRevoice), with the VO Dub
+ Library node's line_override forced to this row's resolved
+ "speaker | instruct | text", Audio Post-Process's output_path_override
+ forced to audio_ru\<audio_key>.wav, and its effect_override forced to
+ this row's chosen Effect (e.g. "radio") -- see
+ nodes/audio_post_process.py's own tooltips for both inputs.
+*/
 import { ref, reactive, computed, watch, onMounted } from "vue";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
@@ -62,9 +64,11 @@ const { fontSizePx, decrease: decreaseFontSize, increase: increaseFontSize } = u
     defaultSize: 13,
 });
 const { autoGrow, setTextareaRef, regrowAll } = useTextareaAutoGrow();
-// A font-size change resizes the TEXT but not a textarea's own height (set
-// via inline style, not CSS) -- same reasoning as LineEditorApp.vue's own
-// regrowAll watch.
+/*
+ A font-size change resizes the TEXT but not a textarea's own height (set
+ via inline style, not CSS) -- same reasoning as LineEditorApp.vue's own
+ regrowAll watch.
+*/
 watch(fontSizePx, regrowAll);
 
 const visible = ref(true);
@@ -95,10 +99,12 @@ const STATUS_LABELS = {
 };
 const STATUS_FILTER_OPTIONS = Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }));
 
-// Mirrors nodes/_audio_effects.py's EFFECTS registry. A row's chosen
-// effect is applied AFTER trim/fade/normalize, right before save (see
-// audio_post_process.py's effect_override input), never baked into the
-// TTS generation itself.
+/*
+ Mirrors nodes/_audio_effects.py's EFFECTS registry. A row's chosen
+ effect is applied AFTER trim/fade/normalize, right before save (see
+ audio_post_process.py's effect_override input), never baked into the
+ TTS generation itself.
+*/
 const EFFECT_OPTIONS = [
     { value: "", label: "No effect" },
     { value: "radio", label: "📻 Radio" },
@@ -109,12 +115,14 @@ const EFFECT_OPTIONS = [
     { value: "suit", label: "🧑‍🚀 Suit" },
 ];
 
-// Picking an effect previews it INSTANTLY on the RU take (see
-// effectPreviews below) without touching _dub_state.json at all -- it's
-// only a pending, client-side choice until the user explicitly commits it
-// (the Save button next to the dropdown, or Render/Re-render, which both
-// call commitEffect). Keyed separately from stateRows on purpose: the
-// saved entry must stay untouched by just trying an effect out.
+/*
+ Picking an effect previews it INSTANTLY on the RU take (see
+ effectPreviews below) without touching _dub_state.json at all -- it's
+ only a pending, client-side choice until the user explicitly commits it
+ (the Save button next to the dropdown, or Render/Re-render, which both
+ call commitEffect). Keyed separately from stateRows on purpose: the
+ saved entry must stay untouched by just trying an effect out.
+*/
 const previewEffect = reactive({}); // audio_key -> pending effect value, or undefined if untouched this session
 function effectValue(row) {
     const pending = previewEffect[row.audio_key];
@@ -128,37 +136,43 @@ function onEffectPicked(row, value) {
     previewEffect[row.audio_key] = value;
     effectPreviews.get(row.audio_key)?.setEffect(value);
 }
-// Folds the pending choice into the SAVED entry -- called by both the
-// explicit Save button and renderRow() (a render necessarily commits
-// whatever's currently selected, since the file it writes will reflect
-// exactly that).
+/*
+ Folds the pending choice into the SAVED entry -- called by both the
+ explicit Save button and renderRow() (a render necessarily commits
+ whatever's currently selected, since the file it writes will reflect
+ exactly that).
+*/
 function commitEffect(row) {
     if (previewEffect[row.audio_key] !== undefined) {
         entryFor(row).effect = previewEffect[row.audio_key];
         delete previewEffect[row.audio_key];
     }
 }
-// Saving persists the choice to _dub_state.json either way -- but if a
-// take already exists, it ALSO reprocesses the file immediately (see
-// applyEffectToFile), no TTS re-synthesis required, so the saved choice
-// is actually reflected on disk right away instead of only taking effect
-// on the row's next full Render.
+/*
+ Saving persists the choice to _dub_state.json either way -- but if a
+ take already exists, it ALSO reprocesses the file immediately (see
+ applyEffectToFile), no TTS re-synthesis required, so the saved choice
+ is actually reflected on disk right away instead of only taking effect
+ on the row's next full Render.
+*/
 function saveEffect(row) {
     commitEffect(row);
     onTextEdit(row);
     if (hasRuTake(row)) applyEffectToFile(row);
 }
 
-// Whether THIS row's render should use the game's own EN reference take
-// as the TTS voice-cloning sample instead of a preset/role voice -- an
-// explicit per-row choice (entry.use_original_sample) wins once the row's
-// own checkbox has ever been touched; otherwise it follows the
-// project-wide default checkbox (useOriginalDefault). Deliberately never
-// backfilled to a concrete value on load (unlike effect/instruct/
-// speaker_override) -- an ABSENT key is what "still inheriting the
-// project default" actually means; backfilling it would freeze every row
-// at whatever the default happened to be the moment it was first opened.
-// Mirrors nodes/vo_dub_library.py's own uses_original_as_sample() exactly.
+/*
+ Whether THIS row's render should use the game's own EN reference take
+ as the TTS voice-cloning sample instead of a preset/role voice -- an
+ explicit per-row choice (entry.use_original_sample) wins once the row's
+ own checkbox has ever been touched; otherwise it follows the
+ project-wide default checkbox (useOriginalDefault). Deliberately never
+ backfilled to a concrete value on load (unlike effect/instruct/
+ speaker_override) -- an ABSENT key is what "still inheriting the
+ project default" actually means; backfilling it would freeze every row
+ at whatever the default happened to be the moment it was first opened.
+ Mirrors nodes/vo_dub_library.py's own uses_original_as_sample() exactly.
+*/
 function resolvedUseOriginal(row) {
     const override = entryFor(row).use_original_sample;
     return override === undefined ? useOriginalDefault.value : Boolean(override);
@@ -175,9 +189,11 @@ function statePath() {
     return joinPath(props.root, "_dub_state.json");
 }
 
-// _dub_state.json's own top-level "use original EN take as the TTS voice
-// sample" default -- a project-wide checkbox, separate from any single
-// row's own choice (see resolvedUseOriginal/onToggleRowUseOriginal below).
+/*
+ _dub_state.json's own top-level "use original EN take as the TTS voice
+ sample" default -- a project-wide checkbox, separate from any single
+ row's own choice (see resolvedUseOriginal/onToggleRowUseOriginal below).
+*/
 const useOriginalDefault = ref(false);
 
 async function loadState() {
@@ -208,10 +224,12 @@ async function loadRows() {
             return;
         }
         rows.value = data.rows || [];
-        // Backfill every row's own editable entry so the textarea/inputs
-        // below always bind to something real from the first render --
-        // never to `undefined`, and never overwriting an edit that's
-        // already there (see entryFor).
+        /*
+         Backfill every row's own editable entry so the textarea/inputs
+         below always bind to something real from the first render --
+         never to `undefined`, and never overwriting an edit that's
+         already there (see entryFor).
+        */
         for (const row of rows.value) {
             const entry = stateRows[row.audio_key] || (stateRows[row.audio_key] = {});
             if (!entry.russian_text) entry.russian_text = row.russian || "";
@@ -247,11 +265,13 @@ async function flushSave() {
             }),
         });
         status.value = "Saved";
-        // Re-fetch so status pills (not_started/stale/done) catch up with
-        // whatever's actually on disk now -- an edit here doesn't
-        // re-render anything, so a row that just became "stale" (its
-        // recorded hash no longer matches its new text) only shows that
-        // once this refresh runs.
+        /*
+         Re-fetch so status pills (not_started/stale/done) catch up with
+         whatever's actually on disk now -- an edit here doesn't
+         re-render anything, so a row that just became "stale" (its
+         recorded hash no longer matches its new text) only shows that
+         once this refresh runs.
+        */
         loadRows();
     } catch (e) {
         status.value = `Save failed: ${e}`;
@@ -278,12 +298,14 @@ const visibleRows = computed(() => {
     });
 });
 
-// A bucket can be up to ~617 rows (the real project's biggest episode) --
-// rendering all of them (each with two <audio> elements) at once is what
-// made this editor slow to open. Paginating keeps the DOM small
-// regardless of bucket size; the audio elements themselves are lazy too
-// (see `preload="none"` below), so a page of 50 costs nothing over the
-// network until something is actually played.
+/*
+ A bucket can be up to ~617 rows (the real project's biggest episode) --
+ rendering all of them (each with two <audio> elements) at once is what
+ made this editor slow to open. Paginating keeps the DOM small
+ regardless of bucket size; the audio elements themselves are lazy too
+ (see `preload="none"` below), so a page of 50 costs nothing over the
+ network until something is actually played.
+*/
 const PAGE_SIZE = 50;
 const currentPage = ref(0);
 const pageCount = computed(() => Math.max(1, Math.ceil(visibleRows.value.length / PAGE_SIZE)));
@@ -292,27 +314,33 @@ const pagedRows = computed(() => {
     return visibleRows.value.slice(start, start + PAGE_SIZE);
 });
 
-// A new search/status filter starts back at page 1 -- staying on, say,
-// page 4 of a filter that now has only 1 page left reads as "my search
-// broke", not "the list changed".
+/*
+ A new search/status filter starts back at page 1 -- staying on, say,
+ page 4 of a filter that now has only 1 page left reads as "my search
+ broke", not "the list changed".
+*/
 watch([statusFilter, searchText], () => { currentPage.value = 0; });
 
-// Clamps back into range whenever the FILTERED count shrinks -- including
-// right after rendering a row flips it out of the current status filter
-// and loadRows() refreshes (see renderRow): without this, the page could
-// point past the end of what's actually left to show.
+/*
+ Clamps back into range whenever the FILTERED count shrinks -- including
+ right after rendering a row flips it out of the current status filter
+ and loadRows() refreshes (see renderRow): without this, the page could
+ point past the end of what's actually left to show.
+*/
 watch(visibleRows, () => {
     if (currentPage.value > pageCount.value - 1) currentPage.value = Math.max(0, pageCount.value - 1);
 });
 
-// ── role catalog (_dub_roles.json) ───────────────────────────────────────
-// Same system as the audiobook Line Editor's own speaker field (see
-// LineEditorApp.vue's roleEntries/roleOptionSubLabel, and
-// src/shared/RoleDropdown.vue, the component both now share): a row's
-// "speaker" is either a known role CODE (resolved through this catalog's
-// own assigned voice, set in DubRolesEditorApp.vue) or a literal preset
-// typed directly -- an unrecognized value just passes through unchanged,
-// same as nodes/vo_dub_library.py's resolved_speaker.
+/*
+ ── role catalog (_dub_roles.json) ───────────────────────────────────────
+ Same system as the audiobook Line Editor's own speaker field (see
+ LineEditorApp.vue's roleEntries/roleOptionSubLabel, and
+ src/shared/RoleDropdown.vue, the component both now share): a row's
+ "speaker" is either a known role CODE (resolved through this catalog's
+ own assigned voice, set in DubRolesEditorApp.vue) or a literal preset
+ typed directly -- an unrecognized value just passes through unchanged,
+ same as nodes/vo_dub_library.py's resolved_speaker.
+*/
 const roleEntries = ref([]); // [{code, character, speaker, description, dub_direction, ...}]
 async function loadRoleEntries() {
     try {
@@ -326,26 +354,32 @@ async function loadRoleEntries() {
         roleEntries.value = [];
     }
 }
-// Shown under each option's code in the dropdown -- character name + the
-// voice actually assigned, so picking a role means something without
-// having to open the Roles editor first.
+/*
+ Shown under each option's code in the dropdown -- character name + the
+ voice actually assigned, so picking a role means something without
+ having to open the Roles editor first.
+*/
 function roleOptionSubLabel(entry) {
     return [entry.character, entry.speaker].filter(Boolean).join(" -- ");
 }
 
-// The value a row's Role field currently holds -- override if set, else
-// the raw csv tag shown in the Identifier field -- same "manual value, or
-// fall back to the tag" logic as nodes/vo_dub_library.py's
-// resolved_speaker (minus the role_map lookup, which only matters for
-// what VOICE it resolves to, not for identifying which rows share it).
+/*
+ The value a row's Role field currently holds -- override if set, else
+ the raw csv tag shown in the Identifier field -- same "manual value, or
+ fall back to the tag" logic as nodes/vo_dub_library.py's
+ resolved_speaker (minus the role_map lookup, which only matters for
+ what VOICE it resolves to, not for identifying which rows share it).
+*/
 function roleCodeFor(row) {
     return (entryFor(row).speaker_override || row.speaker_tag || "").trim();
 }
 
-// Hovering a row's Role field/Identifier shows this role's catalog entry
-// -- same mechanism as LineEditorApp.vue's own role-info-btn (see
-// src/shared/role_info_popover.js), just reading _dub_roles.json's richer
-// casting-document fields instead of _roles.json's flat ones.
+/*
+ Hovering a row's Role field/Identifier shows this role's catalog entry
+ -- same mechanism as LineEditorApp.vue's own role-info-btn (see
+ src/shared/role_info_popover.js), just reading _dub_roles.json's richer
+ casting-document fields instead of _roles.json's flat ones.
+*/
 const { popover: roleInfoPopover, show: showRoleInfoPopover, hide: hideRoleInfoPopover, info: roleInfoFields } = useRoleInfoPopover(
     roleEntries,
     (entry) => [
@@ -359,8 +393,10 @@ const { popover: roleInfoPopover, show: showRoleInfoPopover, hide: hideRoleInfoP
     ].filter(([, v]) => v !== undefined && v !== null && v !== ""),
 );
 
-// ── instruct phrase bank (_instruct_categories.json) -- same file/shape
-// and picker dialog as the audiobook Line Editor's own instruct field. ──
+/*
+ ── instruct phrase bank (_instruct_categories.json) -- same file/shape
+ and picker dialog as the audiobook Line Editor's own instruct field. ──
+*/
 const instructCategories = ref([]); // [{name, title, when, examples}, ...]
 function instructCategoriesPath() {
     return joinPath(props.root, "_instruct_categories.json");
@@ -377,12 +413,14 @@ async function loadInstructCategories() {
     }
 }
 
-// Grows the bank from actual typing -- every instruct a row ends up with
-// that isn't ALREADY somewhere in _instruct_categories.json gets appended
-// there under its own "custom" category (see instruct_library.js).
-// Debounced per row, same cadence as the row's own save-to-state debounce
-// -- typing itself shouldn't fire a network round-trip on every
-// keystroke, only once it settles.
+/*
+ Grows the bank from actual typing -- every instruct a row ends up with
+ that isn't ALREADY somewhere in _instruct_categories.json gets appended
+ there under its own "custom" category (see instruct_library.js).
+ Debounced per row, same cadence as the row's own save-to-state debounce
+ -- typing itself shouldn't fire a network round-trip on every
+ keystroke, only once it settles.
+*/
 const instructLibrarySaveTimers = new Map(); // audio_key -> setTimeout handle
 function scheduleInstructLibrarySave(row) {
     clearTimeout(instructLibrarySaveTimers.get(row.audio_key));
@@ -399,9 +437,11 @@ function openInstructPicker(row) {
     instructPickerRow.value = row;
     instructPickerVisible.value = true;
 }
-// The previous instruct is kept OUTSIDE stateRows (which serializes as-is
-// into _dub_state.json, see flushSave) -- a pure UI undo buffer has no
-// business landing in the saved sidecar.
+/*
+ The previous instruct is kept OUTSIDE stateRows (which serializes as-is
+ into _dub_state.json, see flushSave) -- a pure UI undo buffer has no
+ business landing in the saved sidecar.
+*/
 const prevInstruct = reactive({});
 function onInstructPicked(example) {
     const row = instructPickerRow.value;
@@ -409,14 +449,18 @@ function onInstructPicked(example) {
     prevInstruct[row.audio_key] = entryFor(row).instruct;
     entryFor(row).instruct = example;
     onTextEdit(row);
-    // Already came FROM the bank -- saveInstructPhrase's own dedup check
-    // makes this a no-op almost always, harmless to call anyway for the
-    // rare case a category was edited by hand since this picker loaded.
+    /*
+     Already came FROM the bank -- saveInstructPhrase's own dedup check
+     makes this a no-op almost always, harmless to call anyway for the
+     rare case a category was edited by hand since this picker loaded.
+    */
     scheduleInstructLibrarySave(row);
 }
-// Shows which register a row's CURRENT instruct belongs to, if it happens
-// to match one of _instruct_categories.json's example phrases exactly --
-// purely informational, same as LineEditorApp.vue's own instructNoteFor.
+/*
+ Shows which register a row's CURRENT instruct belongs to, if it happens
+ to match one of _instruct_categories.json's example phrases exactly --
+ purely informational, same as LineEditorApp.vue's own instructNoteFor.
+*/
 function instructNoteFor(row) {
     const text = (entryFor(row).instruct || "").trim();
     const category = instructCategories.value.find((c) => (c.examples || []).some((ex) => ex.trim() === text));
@@ -435,10 +479,12 @@ function undoInstruct(row) {
     onTextEdit(row);
 }
 
-// "Apply this instruct to every other row using the same role" -- grouped
-// by roleCodeFor across the WHOLE bucket (rows.value), not just the
-// current page, same as LineEditorApp.vue's sameRoleCount/
-// applyInstructToSameRole over a whole script.
+/*
+ "Apply this instruct to every other row using the same role" -- grouped
+ by roleCodeFor across the WHOLE bucket (rows.value), not just the
+ current page, same as LineEditorApp.vue's sameRoleCount/
+ applyInstructToSameRole over a whole script.
+*/
 function sameRoleCount(row) {
     const code = roleCodeFor(row);
     if (!code) return 0;
@@ -464,15 +510,17 @@ function applyInstructToSameRole(row) {
     status.value = `Applied instruct to ${count} other "${code}" row(s) in this bucket`;
 }
 
-// "Apply this Role to every other row sharing the same Identifier" -- the
-// game's own csv `speaker` tag (e.g. "Ellie") and a project's curated role
-// codes (e.g. "emma") are deliberately NOT auto-matched (see
-// nodes/vo_dub_library.py's module docstring -- a raw tag isn't reliably
-// the same character everywhere), so assigning a role to ONE row would
-// otherwise do nothing for the hundreds of other rows sharing its exact
-// same Identifier. This is still a manual, one-click-per-tag action, not
-// automated matching -- it just makes the manual work scale per TAG
-// instead of per ROW.
+/*
+ "Apply this Role to every other row sharing the same Identifier" -- the
+ game's own csv `speaker` tag (e.g. "Ellie") and a project's curated role
+ codes (e.g. "emma") are deliberately NOT auto-matched (see
+ nodes/vo_dub_library.py's module docstring -- a raw tag isn't reliably
+ the same character everywhere), so assigning a role to ONE row would
+ otherwise do nothing for the hundreds of other rows sharing its exact
+ same Identifier. This is still a manual, one-click-per-tag action, not
+ automated matching -- it just makes the manual work scale per TAG
+ instead of per ROW.
+*/
 function sameIdentifierCount(row) {
     const tag = (row.speaker_tag || "").trim();
     if (!tag) return 0;
@@ -503,31 +551,37 @@ function rawAudioPath(dir, audioKey) {
 }
 function audioUrl(dir, audioKey, cacheBust) {
     const url = `${SCAN_API}/audio?path=${encodeURIComponent(rawAudioPath(dir, audioKey))}`;
-    // A just-rendered take overwrites the SAME filename a moment-old
-    // browser cache entry (or a prior "file not found") might already
-    // hold for -- the render is a `?v=` cache-buster, not the browser's
-    // normal reload, so this only changes right after this row's own
-    // render completes.
+    /*
+     A just-rendered take overwrites the SAME filename a moment-old
+     browser cache entry (or a prior "file not found") might already
+     hold for -- the render is a `?v=` cache-buster, not the browser's
+     normal reload, so this only changes right after this row's own
+     render completes.
+    */
     return cacheBust ? `${url}&v=${cacheBust}` : url;
 }
 function ruFilePath(row) {
     return rawAudioPath("audio_ru", row.audio_key);
 }
-// The pre-effect reference copy audio_post_process.py's own
-// dry_output_path_override writes on every render -- lets applyEffectToFile
-// reprocess THIS file instead of re-running the whole TTS graph just to
-// change which Effect is baked in. See nodes/vo_dub_library.py's own
-// AUDIO_DRY_DIRNAME comment for why it lives outside audio_ru/ itself.
+/*
+ The pre-effect reference copy audio_post_process.py's own
+ dry_output_path_override writes on every render -- lets applyEffectToFile
+ reprocess THIS file instead of re-running the whole TTS graph just to
+ change which Effect is baked in. See nodes/vo_dub_library.py's own
+ AUDIO_DRY_DIRNAME comment for why it lives outside audio_ru/ itself.
+*/
 function dryFilePath(row) {
     return rawAudioPath("_dub_dry", row.audio_key);
 }
 
-// A one-off, single-file measurement (used only right after THIS row's
-// own render) -- distinct from the list's players, which stay
-// preload="none" so nothing is fetched in bulk just because a row is on
-// screen. Resolves null rather than rejecting on any failure (a slow/
-// stalled load, a decode error): a missing duration just means the badge
-// doesn't show yet, never something worth failing the whole render over.
+/*
+ A one-off, single-file measurement (used only right after THIS row's
+ own render) -- distinct from the list's players, which stay
+ preload="none" so nothing is fetched in bulk just because a row is on
+ screen. Resolves null rather than rejecting on any failure (a slow/
+ stalled load, a decode error): a missing duration just means the badge
+ doesn't show yet, never something worth failing the whole render over.
+*/
 function measureDuration(url, timeoutMs = 8000) {
     return new Promise((resolve) => {
         const el = new Audio();
@@ -553,13 +607,15 @@ function hasRuTake(row) {
     return row.status === "done" || row.status === "stale" || renderedOnce.has(row.audio_key);
 }
 
-// A manual "this take is good enough" override -- reads DONE even if the
-// row's own content hash has since drifted (e.g. a trivial text tweak the
-// user doesn't care to re-render for), mirroring
-// nodes/vo_dub_library.py's compute_row_status(manually_marked_done=...)
-// exactly. Sticky until unchecked -- editing the row further does NOT
-// clear it on its own; that's a deliberate choice by whoever ticked it,
-// same as a real checkbox.
+/*
+ A manual "this take is good enough" override -- reads DONE even if the
+ row's own content hash has since drifted (e.g. a trivial text tweak the
+ user doesn't care to re-render for), mirroring
+ nodes/vo_dub_library.py's compute_row_status(manually_marked_done=...)
+ exactly. Sticky until unchecked -- editing the row further does NOT
+ clear it on its own; that's a deliberate choice by whoever ticked it,
+ same as a real checkbox.
+*/
 function manuallyDone(row) {
     return Boolean(entryFor(row).manually_done);
 }
@@ -568,25 +624,29 @@ function toggleManuallyDone(row) {
     onTextEdit(row);
 }
 
-// Measured live from the RU <audio> element once its metadata loads --
-// deliberately NOT trusted from _dub_state.json's own rendered_duration_s
-// alone, since a file could be dropped into audio_ru/ by hand (or by a
-// render) without that field ever being stamped.
+/*
+ Measured live from the RU <audio> element once its metadata loads --
+ deliberately NOT trusted from _dub_state.json's own rendered_duration_s
+ alone, since a file could be dropped into audio_ru/ by hand (or by a
+ render) without that field ever being stamped.
+*/
 const measuredDuration = reactive({});
 function onRuMetadata(row, event) {
     measuredDuration[row.audio_key] = event.target.duration;
 }
 
-// ── native <audio controls> per track (EN + RU) ──────────────────────────
-// Reverted back to the SAME native player every other editor in this
-// addon uses (LineEditorApp.vue's own rows included) -- a previous round
-// replaced this with a bespoke waveform-driven player (custom progress
-// bar, custom play/pause, click-to-seek) and re-invented several bugs the
-// native element never had (a play/pause icon that flickered during
-// buffering, a track that didn't restart from 0 after ending, a progress
-// bar that could desync). guardAgainstUnbufferedPlay/effect preview/
-// Play-both/duration measurement/sequential playback all still act on
-// these same real elements -- only the bespoke transport chrome is gone.
+/*
+ ── native <audio controls> per track (EN + RU) ──────────────────────────
+ Reverted back to the SAME native player every other editor in this
+ addon uses (LineEditorApp.vue's own rows included) -- a previous round
+ replaced this with a bespoke waveform-driven player (custom progress
+ bar, custom play/pause, click-to-seek) and re-invented several bugs the
+ native element never had (a play/pause icon that flickered during
+ buffering, a track that didn't restart from 0 after ending, a progress
+ bar that could desync). guardAgainstUnbufferedPlay/effect preview/
+ Play-both/duration measurement/sequential playback all still act on
+ these same real elements -- only the bespoke transport chrome is gone.
+*/
 const enAudioEls = new Map(); // audio_key -> the EN <audio> DOM node
 const ruAudioEls = new Map(); // audio_key -> the RU <audio> DOM node
 function setEnAudioRef(key, el) {
@@ -594,11 +654,13 @@ function setEnAudioRef(key, el) {
     enAudioEls.set(key, el);
     guardAgainstUnbufferedPlay(el);
 }
-// audio_key -> {setEffect(name)} -- one per RU element, created once on
-// mount (createEffectPreview wraps createMediaElementSource, which can
-// only ever be called once per element) and torn down when the element
-// unmounts (pagination, a filter change) so a later remount gets a fresh
-// one for the new element instance.
+/*
+ audio_key -> {setEffect(name)} -- one per RU element, created once on
+ mount (createEffectPreview wraps createMediaElementSource, which can
+ only ever be called once per element) and torn down when the element
+ unmounts (pagination, a filter change) so a later remount gets a fresh
+ one for the new element instance.
+*/
 const effectPreviews = new Map();
 function setRuAudioRef(row, el) {
     const key = row.audio_key;
@@ -612,14 +674,16 @@ function setRuAudioRef(row, el) {
 
 const dualPlayingRows = reactive(new Set());
 const dualLoadingRows = reactive(new Set());
-// Clears the "both playing" indicator on EITHER track pausing/ending, for
-// ANY reason -- the native controls, the other track finishing first, or
-// Play-both itself -- so it never reads "still playing" once one side
-// has actually stopped. Also the one place a RU track's own native pause
-// interrupts an active sequential-playback run (see below) -- pausing
-// mid-row via its own native controls, for any reason OTHER than
-// reaching the end naturally, stops the whole run rather than fighting
-// the action the user just took.
+/*
+ Clears the "both playing" indicator on EITHER track pausing/ending, for
+ ANY reason -- the native controls, the other track finishing first, or
+ Play-both itself -- so it never reads "still playing" once one side
+ has actually stopped. Also the one place a RU track's own native pause
+ interrupts an active sequential-playback run (see below) -- pausing
+ mid-row via its own native controls, for any reason OTHER than
+ reaching the end naturally, stops the whole run rather than fighting
+ the action the user just took.
+*/
 function onTrackPaused(row, side) {
     dualPlayingRows.delete(row.audio_key);
     if (side === "ru" && sequentialPlayingKey.value === row.audio_key) {
@@ -649,11 +713,13 @@ async function playBoth(row) {
     await Promise.all([waitUntilBuffered(en), waitUntilBuffered(ru)]);
     dualLoadingRows.delete(row.audio_key);
     if (!enAudioEls.has(row.audio_key)) return; // row unmounted (paged away) while buffering
-    // Re-assert the start position AFTER buffering, not just before: a
-    // track whose src just changed (e.g. right after Save/apply_effect
-    // bumps its cache-buster) can silently drop a currentTime reset
-    // requested while it still had no metadata at all -- setting it again
-    // now, once genuinely ready, is what actually sticks.
+    /*
+     Re-assert the start position AFTER buffering, not just before: a
+     track whose src just changed (e.g. right after Save/apply_effect
+     bumps its cache-buster) can silently drop a currentTime reset
+     requested while it still had no metadata at all -- setting it again
+     now, once genuinely ready, is what actually sticks.
+    */
     en.currentTime = 0;
     ru.currentTime = 0;
     dualPlayingRows.add(row.audio_key);
@@ -661,16 +727,18 @@ async function playBoth(row) {
     ru.play().catch(() => {});
 }
 
-// ── sequential playback through this page's RU takes ("Play in order") ──
-// Mirrors LineEditorApp.vue's own "mode 1" sequential playback
-// (playRowSequential/mode1PlayingIdx) exactly in spirit -- play one row's
-// take, and when it ends, auto-advance to the next row that has one,
-// skipping any that don't. The one deliberate difference: that mode plays
-// a throwaway `new Audio()` per row (its rows have no native element at
-// all before "Done"); VO Dub's rows already have real <audio> elements
-// (needed for the buffering guard/effect preview/Play-both/duration
-// measurement anyway), so this reuses THOSE via ruAudioEls instead of
-// creating parallel ones.
+/*
+ ── sequential playback through this page's RU takes ("Play in order") ──
+ Mirrors LineEditorApp.vue's own "mode 1" sequential playback
+ (playRowSequential/mode1PlayingIdx) exactly in spirit -- play one row's
+ take, and when it ends, auto-advance to the next row that has one,
+ skipping any that don't. The one deliberate difference: that mode plays
+ a throwaway `new Audio()` per row (its rows have no native element at
+ all before "Done"); VO Dub's rows already have real <audio> elements
+ (needed for the buffering guard/effect preview/Play-both/duration
+ measurement anyway), so this reuses THOSE via ruAudioEls instead of
+ creating parallel ones.
+*/
 const sequentialPlayingKey = ref(null); // audio_key currently playing in the run, or null
 let sequentialEndedListener = null; // {el, fn} of the currently-armed listener, so stopping can detach it cleanly
 
@@ -679,20 +747,24 @@ function stopSequentialPlayback() {
         sequentialEndedListener.el.removeEventListener("ended", sequentialEndedListener.fn);
         sequentialEndedListener = null;
     }
-    // Clear the flag BEFORE calling .pause() below, not after: pause()
-    // synchronously fires this same element's own `pause` event, whose
-    // template handler (onTrackPaused) checks this SAME flag to decide
-    // whether a manual pause should stop the run -- if it's still set
-    // when that fires, onTrackPaused calls stopSequentialPlayback() again
-    // from inside this very call, which called .pause() again, forever.
+    /*
+     Clear the flag BEFORE calling .pause() below, not after: pause()
+     synchronously fires this same element's own `pause` event, whose
+     template handler (onTrackPaused) checks this SAME flag to decide
+     whether a manual pause should stop the run -- if it's still set
+     when that fires, onTrackPaused calls stopSequentialPlayback() again
+     from inside this very call, which called .pause() again, forever.
+    */
     const key = sequentialPlayingKey.value;
     sequentialPlayingKey.value = null;
     if (key) ruAudioEls.get(key)?.pause();
 }
 
-// Scoped to the CURRENT PAGE, not the whole (possibly 617-row) bucket --
-// rows outside it aren't even mounted, so there's nothing to scroll to or
-// play. `startIndex` indexes into `pagedRows.value`.
+/*
+ Scoped to the CURRENT PAGE, not the whole (possibly 617-row) bucket --
+ rows outside it aren't even mounted, so there's nothing to scroll to or
+ play. `startIndex` indexes into `pagedRows.value`.
+*/
 async function playSequentialFrom(startIndex) {
     stopSequentialPlayback();
     const list = pagedRows.value;
@@ -722,35 +794,43 @@ function toggleSequentialPlayback() {
     else playSequentialFrom(0);
 }
 
-// audio_key -> this row's own root DOM element -- only needed for the
-// sequential run's own scrollIntoView (see above), same purpose
-// LineEditorApp.vue's own rowEls Map serves for mode 1's scroll-to.
+/*
+ audio_key -> this row's own root DOM element -- only needed for the
+ sequential run's own scrollIntoView (see above), same purpose
+ LineEditorApp.vue's own rowEls Map serves for mode 1's scroll-to.
+*/
 const rowEls = new Map();
 function setRowRef(key, el) {
     if (!el) { rowEls.delete(key); return; }
     rowEls.set(key, el);
 }
 
-// A row this editor itself has successfully rendered SINCE loading,
-// ahead of the next loadRows() refresh actually confirming it server-side
-// -- without this, hasRuTake(row) still reads the STALE "not_started"
-// status for the few seconds between the render finishing and that
-// refresh landing, so the player/badge wouldn't show up at all despite
-// the file already sitting on disk.
+/*
+ A row this editor itself has successfully rendered SINCE loading,
+ ahead of the next loadRows() refresh actually confirming it server-side
+ -- without this, hasRuTake(row) still reads the STALE "not_started"
+ status for the few seconds between the render finishing and that
+ refresh landing, so the player/badge wouldn't show up at all despite
+ the file already sitting on disk.
+*/
 const renderedOnce = reactive(new Set());
-// Per-row cache-bust token so the RU <audio> element's `src` actually
-// changes after a re-render of the SAME filename -- without this the
-// browser can keep serving whatever it cached for that exact URL
-// (including a cached 404 for a row that had no take before).
+/*
+ Per-row cache-bust token so the RU <audio> element's `src` actually
+ changes after a re-render of the SAME filename -- without this the
+ browser can keep serving whatever it cached for that exact URL
+ (including a cached 404 for a row that had no take before).
+*/
 const cacheBust = reactive({});
 const renderingKeys = reactive(new Set());
 
-// Shared tail of "this row's RU file just changed on disk" -- called by
-// BOTH a full render and the fast effect-only reprocess below. Measures
-// the file THIS action just wrote (not the list-wide preloading the
-// "none" players stay clear of), stamps the matching hash into
-// _dub_state.json, and refreshes the cache-buster so the RU <audio>
-// element's `src` actually re-fetches the new bytes at the same filename.
+/*
+ Shared tail of "this row's RU file just changed on disk" -- called by
+ BOTH a full render and the fast effect-only reprocess below. Measures
+ the file THIS action just wrote (not the list-wide preloading the
+ "none" players stay clear of), stamps the matching hash into
+ _dub_state.json, and refreshes the cache-buster so the RU <audio>
+ element's `src` actually re-fetches the new bytes at the same filename.
+*/
 async function finalizeRuTake(row, hash) {
     const freshCacheBust = Date.now();
     const renderedDuration = await measureDuration(audioUrl("audio_ru", row.audio_key, freshCacheBust));
@@ -767,21 +847,25 @@ async function finalizeRuTake(row, hash) {
     cacheBust[row.audio_key] = freshCacheBust;
 }
 
-// Folds a row's speaker/instruct/text/effect/use-original-as-sample into
-// the SAME hash formula nodes/vo_dub_library.py's row_hash() uses --
-// shared by renderRow and applyEffectToFile so both stamp an IDENTICAL
-// hash for identical content, regardless of which path actually produced
-// the file.
+/*
+ Folds a row's speaker/instruct/text/effect/use-original-as-sample into
+ the SAME hash formula nodes/vo_dub_library.py's row_hash() uses --
+ shared by renderRow and applyEffectToFile so both stamp an IDENTICAL
+ hash for identical content, regardless of which path actually produced
+ the file.
+*/
 async function currentContentHash(row) {
     const entry = entryFor(row);
     const speaker = row.speaker; // already resolved server-side (override or raw csv tag)
     const instruct = entry.instruct || "";
     const russianText = entry.russian_text || "";
     const effect = entry.effect || "";
-    // Folded into the SAME instruct field the hash already covers,
-    // exactly mirroring nodes/vo_dub_library.py's row_hash() -- lineHash()
-    // itself stays untouched (a strict 3-arg contract with the
-    // audiobook's own filename scheme, see src/shared/line_hash.js).
+    /*
+     Folded into the SAME instruct field the hash already covers,
+     exactly mirroring nodes/vo_dub_library.py's row_hash() -- lineHash()
+     itself stays untouched (a strict 3-arg contract with the
+     audiobook's own filename scheme, see src/shared/line_hash.js).
+    */
     let instructForHash = instruct;
     if (effect) instructForHash += `\x00effect=${effect}`;
     if (resolvedUseOriginal(row)) instructForHash += "\x00sample=original";
@@ -793,17 +877,21 @@ async function renderRow(row) {
     renderingKeys.add(row.audio_key);
     status.value = `Rendering ${row.audio_key}...`;
     try {
-        // A pending (previewed-but-not-yet-saved) effect becomes official
-        // NOW -- the file this is about to write will reflect exactly
-        // whatever's currently selected, so it can't stay "just a preview"
-        // past this point.
+        /*
+         A pending (previewed-but-not-yet-saved) effect becomes official
+         NOW -- the file this is about to write will reflect exactly
+         whatever's currently selected, so it can't stay "just a preview"
+         past this point.
+        */
         commitEffect(row);
-        // Whatever's still sitting in the save debounce must land on disk
-        // BEFORE rendering: mark_rendered stamps the hash of these LIVE
-        // fields, but the next loadRows() recomputes ITS comparison hash
-        // from whatever _dub_state.json actually holds -- if that's still
-        // the pre-edit text, the row reads "stale" the instant it finishes
-        // rendering the CURRENT text.
+        /*
+         Whatever's still sitting in the save debounce must land on disk
+         BEFORE rendering: mark_rendered stamps the hash of these LIVE
+         fields, but the next loadRows() recomputes ITS comparison hash
+         from whatever _dub_state.json actually holds -- if that's still
+         the pre-edit text, the row reads "stale" the instant it finishes
+         rendering the CURRENT text.
+        */
         clearTimeout(saveTimer);
         await flushSave();
 
@@ -832,16 +920,18 @@ async function renderRow(row) {
     }
 }
 
-// Mirrors ScriptLibraryPanel.vue's own "🔁 Re-voice pending" button
-// (revoiceAllPending) almost exactly: every row in THIS bucket (the whole
-// bucket, not just the current page or the active search/status filter --
-// same project-wide scope that button has, just bounded to one bucket
-// instead of one project) that needs_started/is stale gets rendered, one
-// at a time, awaited in sequence -- deliberately not concurrent, for the
-// same reason that button's own comment gives: flooding ComfyUI's queue
-// with dozens of heavy TTS renders at once helps nobody. renderRow()
-// itself never throws (it catches its own errors into `status`), so the
-// try/catch here is only a defensive backstop, not the normal path.
+/*
+ Mirrors ScriptLibraryPanel.vue's own "🔁 Re-voice pending" button
+ (revoiceAllPending) almost exactly: every row in THIS bucket (the whole
+ bucket, not just the current page or the active search/status filter --
+ same project-wide scope that button has, just bounded to one bucket
+ instead of one project) that needs_started/is stale gets rendered, one
+ at a time, awaited in sequence -- deliberately not concurrent, for the
+ same reason that button's own comment gives: flooding ComfyUI's queue
+ with dozens of heavy TTS renders at once helps nobody. renderRow()
+ itself never throws (it catches its own errors into `status`), so the
+ try/catch here is only a defensive backstop, not the normal path.
+*/
 const isRenderingAllPending = ref(false);
 async function renderAllPending() {
     if (!props.renderApi || isRenderingAllPending.value) return;
@@ -868,12 +958,14 @@ async function renderAllPending() {
     }
 }
 
-// The fast path: reprocesses the row's own DRY (pre-effect) reference
-// copy with whatever Effect is now saved -- no TTS re-synthesis, no full
-// graph run, just a lightweight backend call (see
-// nodes/vo_dub_library.py's /vo_dub/apply_effect). Only reachable once a
-// dry take actually exists (a real render has happened at least once
-// since this addon started writing them) -- see saveEffect's own guard.
+/*
+ The fast path: reprocesses the row's own DRY (pre-effect) reference
+ copy with whatever Effect is now saved -- no TTS re-synthesis, no full
+ graph run, just a lightweight backend call (see
+ nodes/vo_dub_library.py's /vo_dub/apply_effect). Only reachable once a
+ dry take actually exists (a real render has happened at least once
+ since this addon started writing them) -- see saveEffect's own guard.
+*/
 async function applyEffectToFile(row) {
     status.value = `Applying effect to ${row.audio_key}...`;
     try {
@@ -897,11 +989,13 @@ async function applyEffectToFile(row) {
     }
 }
 
-// Built as one JS string, not "EN<template v-if=...> {{ ... }}s</template>"
-// -- that relied on a raw whitespace character inside inline template
-// markup, which the compiler's whitespace handling silently swallowed
-// ("EN3.3s", no space). A plain template-literal string has no such
-// pitfall.
+/*
+ Built as one JS string, not "EN<template v-if=...> {{ ... }}s</template>"
+ -- that relied on a raw whitespace character inside inline template
+ markup, which the compiler's whitespace handling silently swallowed
+ ("EN3.3s", no space). A plain template-literal string has no such
+ pitfall.
+*/
 function enDurationText(row) {
     return row.duration_s ? `EN ${row.duration_s.toFixed(1)}s` : "EN";
 }
@@ -909,12 +1003,14 @@ function enDurationText(row) {
 const DURATION_GREEN = 0.15;
 const DURATION_AMBER = 0.40;
 function durationBadge(row) {
-    // With preload="none", measuredDuration is only ever populated once
-    // the user has actually pressed play on this row's RU take -- before
-    // that, fall back to whatever _dub_state.json recorded the last time
-    // this addon itself rendered the row (mark_rendered's own
-    // duration_s), so the badge doesn't disappear entirely just because
-    // audio isn't preloaded any more.
+    /*
+     With preload="none", measuredDuration is only ever populated once
+     the user has actually pressed play on this row's RU take -- before
+     that, fall back to whatever _dub_state.json recorded the last time
+     this addon itself rendered the row (mark_rendered's own
+     duration_s), so the badge doesn't disappear entirely just because
+     audio isn't preloaded any more.
+    */
     const measured = measuredDuration[row.audio_key] ?? row.rendered_duration_s;
     const original = row.duration_s;
     if (!hasRuTake(row) || measured === undefined || measured === null || !original) return null;
@@ -922,10 +1018,12 @@ function durationBadge(row) {
     const pct = Math.round(delta * 100);
     const abs = Math.abs(delta);
     const level = abs <= DURATION_GREEN ? "good" : abs <= DURATION_AMBER ? "warn" : "bad";
-    // Split into separate fields, not one run-on "4.4s vs 3.4s (+29%)"
-    // string -- EN's own duration is shown directly in the labels row
-    // (row.duration_s), so this only needs to carry RU's own measured
-    // length and how far it drifted.
+    /*
+     Split into separate fields, not one run-on "4.4s vs 3.4s (+29%)"
+     string -- EN's own duration is shown directly in the labels row
+     (row.duration_s), so this only needs to carry RU's own measured
+     length and how far it drifted.
+    */
     return {
         level,
         ruSeconds: `${measured.toFixed(1)}s`,

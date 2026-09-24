@@ -6,7 +6,7 @@
  quietly drift apart.
 */
 export function speakerAccent(name) {
-    if (!name) return "rgba(255,255,255,0.1)";
+    if (!name) return "#353535";
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
     return `hsl(${hash % 360}, 55%, 55%, 0.3)`;

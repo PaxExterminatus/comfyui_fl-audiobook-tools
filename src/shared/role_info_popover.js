@@ -1,11 +1,13 @@
 import { reactive, computed } from "vue";
 
-// Shared "hover a role code, see its catalog entry" behavior -- extracted
-// from LineEditorApp.vue's own role-info-btn so both editors' role
-// catalogs (_roles.json's flat entries, _dub_roles.json's richer casting
-// documents) show through the SAME popover mechanism, each with its own
-// `fieldsFor(entry) => [[key, value], ...]` extractor for what's worth
-// surfacing on hover.
+/*
+ Shared "hover a role code, see its catalog entry" behavior -- extracted
+ from LineEditorApp.vue's own role-info-btn so both editors' role
+ catalogs (_roles.json's flat entries, _dub_roles.json's richer casting
+ documents) show through the SAME popover mechanism, each with its own
+ `fieldsFor(entry) => [[key, value], ...]` extractor for what's worth
+ surfacing on hover.
+*/
 export function useRoleInfoPopover(roleEntries, fieldsFor) {
     const popover = reactive({ visible: false, left: 0, top: 0, code: "" });
 

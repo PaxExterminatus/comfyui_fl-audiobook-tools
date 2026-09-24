@@ -3,14 +3,16 @@ import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
 import SpeakerPickerDialog from "../SpeakerPickerDialog.vue";
 
-// This suite exists for one specific failure mode. PrimeVue's Button and
-// Card both declare `inheritAttrs: false`, so an @click / @click.stop
-// written directly on <Button> is never attached to the native <button>
-// underneath -- the click just keeps bubbling to the card row's own
-// handler, and previewing a voice silently SELECTS it instead. The
-// component defends against that with a plain <span> wrapper that owns the
-// .stop; the comment explaining why kept getting removed along with the
-// wrapper, so the guard is a test now instead of a comment.
+/*
+ This suite exists for one specific failure mode. PrimeVue's Button and
+ Card both declare `inheritAttrs: false`, so an @click / @click.stop
+ written directly on <Button> is never attached to the native <button>
+ underneath -- the click just keeps bubbling to the card row's own
+ handler, and previewing a voice silently SELECTS it instead. The
+ component defends against that with a plain <span> wrapper that owns the
+ .stop; the comment explaining why kept getting removed along with the
+ wrapper, so the guard is a test now instead of a comment.
+*/
 describe("SpeakerPickerDialog", () => {
     let originalAudio;
     let plays;
@@ -44,9 +46,11 @@ describe("SpeakerPickerDialog", () => {
         });
     }
 
-    // Dialog Teleports its content to document.body on the next tick, so
-    // nothing is queryable until it lands (see the frontend skill's testing
-    // notes) -- every case here waits for the cards first.
+    /*
+     Dialog Teleports its content to document.body on the next tick, so
+     nothing is queryable until it lands (see the frontend skill's testing
+     notes) -- every case here waits for the cards first.
+    */
     async function cards() {
         await vi.waitFor(() => expect(document.querySelectorAll(".speaker-card-row").length).toBe(2));
     }

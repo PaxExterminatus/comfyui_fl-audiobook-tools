@@ -51,10 +51,12 @@ describe("RolesEditorApp", () => {
             global: { plugins: [PrimeVue] },
             attachTo: document.body,
         });
-        // Dialog teleports its content to document.body, and onMounted's
-        // loadFromDisk() is async -- wait for the real DOM to reflect it
-        // rather than asserting against `wrapper` (which only sees what
-        // stayed in the component's own tree pre-teleport).
+        /*
+         Dialog teleports its content to document.body, and onMounted's
+         loadFromDisk() is async -- wait for the real DOM to reflect it
+         rather than asserting against `wrapper` (which only sees what
+         stayed in the component's own tree pre-teleport).
+        */
         await vi.waitFor(() => expect(document.body.textContent).toContain("narrator"));
         return { wrapper, onClose };
     }
@@ -66,13 +68,15 @@ describe("RolesEditorApp", () => {
     });
 
     it("resizes via the width preset buttons and persists the choice, same system as the Line Editor", async () => {
-        // PrimeVue's Dialog merges its own internal positioning style with
-        // the `:style` prop we pass in a way happy-dom doesn't reproduce
-        // (confirmed working live in a real browser -- width visibly
-        // changes and the merged inline style shows the new value) --
-        // asserting against localStorage instead verifies the actual logic
-        // this component owns (usePanelWidth's setWidth), rather than
-        // PrimeVue's own internal DOM merging.
+        /*
+         PrimeVue's Dialog merges its own internal positioning style with
+         the `:style` prop we pass in a way happy-dom doesn't reproduce
+         (confirmed working live in a real browser -- width visibly
+         changes and the merged inline style shows the new value) --
+         asserting against localStorage instead verifies the actual logic
+         this component owns (usePanelWidth's setWidth), rather than
+         PrimeVue's own internal DOM merging.
+        */
         const { wrapper } = await mountApp();
 
         const btn900 = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "900");

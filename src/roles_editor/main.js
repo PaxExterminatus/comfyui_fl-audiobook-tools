@@ -1,10 +1,12 @@
-// Vue/PrimeVue entry point for the Roles Editor -- pilot for migrating
-// this addon's editors off hand-written vanilla-JS DOM manipulation.
-// Exports the EXACT SAME `openRolesEditor({root, suffix})` signature the
-// old web/roles_editor.js did, so web/script_library.js's
-// `import { openRolesEditor } from "./roles_editor.js"` needs zero
-// changes -- this built file replaces that one directly (see
-// vite.config.js: outDir is "web", fileName is "roles_editor.js").
+/*
+ Vue/PrimeVue entry point for the Roles Editor -- pilot for migrating
+ this addon's editors off hand-written vanilla-JS DOM manipulation.
+ Exports the EXACT SAME `openRolesEditor({root, suffix})` signature the
+ old web/roles_editor.js did, so web/script_library.js's
+ `import { openRolesEditor } from "./roles_editor.js"` needs zero
+ changes -- this built file replaces that one directly (see
+ vite.config.js: outDir is "web", fileName is "roles_editor.js").
+*/
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import RolesEditorApp from "./RolesEditorApp.vue";

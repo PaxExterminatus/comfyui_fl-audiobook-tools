@@ -5,11 +5,13 @@ import DubRolesEditorApp from "../DubRolesEditorApp.vue";
 
 const ROOT = "C:\\vo\\Observation";
 
-// Shaped like the REAL _dub_roles.json (see nodes/vo_dub_library.py's
-// read_dub_roles_document): "roles" is a dict keyed by role code, each a
-// casting document this addon never generated -- project-level fields
-// (project/generated_by/totals/unmatched_keys) exist alongside "roles"
-// and must round-trip through a save untouched.
+/*
+ Shaped like the REAL _dub_roles.json (see nodes/vo_dub_library.py's
+ read_dub_roles_document): "roles" is a dict keyed by role code, each a
+ casting document this addon never generated -- project-level fields
+ (project/generated_by/totals/unmatched_keys) exist alongside "roles"
+ and must round-trip through a save untouched.
+*/
 function realDoc(overrides = {}) {
     return {
         project: "Observation - Russian AI dub",

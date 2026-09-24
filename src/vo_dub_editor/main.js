@@ -1,10 +1,12 @@
-// Vue/PrimeVue entry point for the VO Dub Library node's UI -- two mount
-// functions, mirroring the two existing shapes this addon already has:
-// `mountVoDubBrowserPanel` (inline node widget, like
-// script_library_panel.js's mountScriptLibraryPanel) and
-// `openVoDubLineEditor` (floating, non-modal dialog, like line_editor.js's
-// openLineEditor). See nodes/vo_dub_library.py's module docstring for why
-// this is a separate node/UI rather than a mode flag on Script Library.
+/*
+ Vue/PrimeVue entry point for the VO Dub Library node's UI -- two mount
+ functions, mirroring the two existing shapes this addon already has:
+ `mountVoDubBrowserPanel` (inline node widget, like
+ script_library_panel.js's mountScriptLibraryPanel) and
+ `openVoDubLineEditor` (floating, non-modal dialog, like line_editor.js's
+ openLineEditor). See nodes/vo_dub_library.py's module docstring for why
+ this is a separate node/UI rather than a mode flag on Script Library.
+*/
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import VoDubBrowserPanel from "./VoDubBrowserPanel.vue";

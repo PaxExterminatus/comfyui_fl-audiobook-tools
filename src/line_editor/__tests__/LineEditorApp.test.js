@@ -8,12 +8,14 @@ import { lineHash } from "../../shared/line_hash.js";
 
 const SCRIPT_TEXT = "narrator | calm | First line.\nnarrator | calm | Second line.";
 
-// No _state.json any more -- a line's voiced/fresh state is purely "does
-// _audio\lines\<script>\ have a <position>_<hash>.wav whose hash matches
-// this row's CURRENT (role-resolved) content" (see src/shared/line_hash.js).
-// Builds a real filename the same way the app itself will compute the
-// EXPECTED one, so these tests exercise the actual hashing path instead of
-// a stand-in.
+/*
+ No _state.json any more -- a line's voiced/fresh state is purely "does
+ _audio\lines\<script>\ have a <position>_<hash>.wav whose hash matches
+ this row's CURRENT (role-resolved) content" (see src/shared/line_hash.js).
+ Builds a real filename the same way the app itself will compute the
+ EXPECTED one, so these tests exercise the actual hashing path instead of
+ a stand-in.
+*/
 async function lineFileName(position, speaker, instruct, text) {
     const hash = await lineHash(speaker, instruct, text);
     return `${String(position).padStart(4, "0")}_${hash}.wav`;
@@ -212,8 +214,10 @@ describe("LineEditorApp", () => {
 
         await vi.waitFor(() => expect(document.querySelectorAll(".fl-line-row").length).toBe(1));
         expect(lineTexts()).toEqual(["Second line."]);
-        // Position 0 (the deleted row) is gone; position 1 (Second line.,
-        // now the only row) shifts down to 0 -- see reorganizeLines.
+        /*
+         Position 0 (the deleted row) is gone; position 1 (Second line.,
+         now the only row) shifts down to 0 -- see reorganizeLines.
+        */
         await vi.waitFor(() => expect(onReorganize).toHaveBeenCalledWith(
             expect.objectContaining({ deletes: [0], moves: [[1, 0]] }),
         ));
@@ -246,14 +250,16 @@ describe("LineEditorApp", () => {
     });
 
     it("re-voicing a line after Prev/Next passes the CURRENTLY open filename, not the one the editor first opened for", async () => {
-        // Regression test: ScriptLibraryPanel's editScript() builds
-        // revoiceApi.revoiceLine with a `file` closed over whatever script
-        // was passed to openLineEditor -- that closure never updates when
-        // this same editor instance switches to a different script via
-        // Prev/Next (switchToFile only touches this component's own
-        // filename ref). Re-voicing a line after navigating used to re-voice
-        // into the ORIGINAL script's _audio\lines\ folder while the line
-        // being edited (in the NEW script) kept showing its old audio.
+        /*
+         Regression test: ScriptLibraryPanel's editScript() builds
+         revoiceApi.revoiceLine with a `file` closed over whatever script
+         was passed to openLineEditor -- that closure never updates when
+         this same editor instance switches to a different script via
+         Prev/Next (switchToFile only touches this component's own
+         filename ref). Re-voicing a line after navigating used to re-voice
+         into the ORIGINAL script's _audio\lines\ folder while the line
+         being edited (in the NEW script) kept showing its old audio.
+        */
         const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
         const { wrapper } = await mountEditor({
             revoiceApi,
@@ -280,36 +286,42 @@ describe("LineEditorApp", () => {
     });
 
     it("re-voicing pins the output location to the folder this editor actually reads lines from", async () => {
-        // The re-voiced file must land in the SAME _audio\lines\<base>\ this
-        // editor lists (linesDirPath). Letting the backend re-derive that from
-        // its own script_filter widget is a second, independent derivation of
-        // the same name -- when the two drifted, the audio was written to
-        // lines\<script>_speakers\ while the editor kept reading lines\<script>\,
-        // so the edited line played its old take and the render looked like a
-        // no-op despite completing without errors.
+        /*
+         The re-voiced file must land in the SAME _audio\lines\<base>\ this
+         editor lists (linesDirPath). Letting the backend re-derive that from
+         its own script_filter widget is a second, independent derivation of
+         the same name -- when the two drifted, the audio was written to
+         lines\<script>_speakers\ while the editor kept reading lines\<script>\,
+         so the edited line played its old take and the render looked like a
+         no-op despite completing without errors.
+        */
         const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
         const { wrapper } = await mountEditor({ revoiceApi });
 
         document.querySelector(".revoice-btn").click();
 
         await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
-            // "Test_speakers.txt" minus the "_speakers.txt" suffix -- the same
-            // base name audioBaseName/linesDirPath resolve to.
+            /*
+             "Test_speakers.txt" minus the "_speakers.txt" suffix -- the same
+             base name audioBaseName/linesDirPath resolve to.
+            */
             expect.objectContaining({ folder: "C:\\project\\Act01", baseName: "Test" }),
         ));
         wrapper.unmount();
     });
 
     it("re-voicing stamps the CURRENT content's own hash, not relying on a graph wire", async () => {
-        // Regression test: contentHash used to not exist at all -- Post-
-        // Process fell back to hashing just the text whenever the new
-        // Script Library -> Post-Process line_hashes_json wire wasn't
-        // present in the user's own graph (a one-time setup step, easy to
-        // not have done yet). That fallback hash could never match this
-        // editor's own expected hash (voice+instruct+text), so a re-voice
-        // completed successfully server-side but the row looked exactly
-        // as "not voiced" as before -- indistinguishable from re-voicing
-        // silently doing nothing. See LineEditorApp.vue's revoiceRow.
+        /*
+         Regression test: contentHash used to not exist at all -- Post-
+         Process fell back to hashing just the text whenever the new
+         Script Library -> Post-Process line_hashes_json wire wasn't
+         present in the user's own graph (a one-time setup step, easy to
+         not have done yet). That fallback hash could never match this
+         editor's own expected hash (voice+instruct+text), so a re-voice
+         completed successfully server-side but the row looked exactly
+         as "not voiced" as before -- indistinguishable from re-voicing
+         silently doing nothing. See LineEditorApp.vue's revoiceRow.
+        */
         const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
         const { wrapper } = await mountEditor({ revoiceApi });
 
@@ -401,8 +413,10 @@ describe("LineEditorApp", () => {
         await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
         const [, content] = onWrite.mock.calls.at(-1);
         expect(content).toBe("narrator | calm | First line. | 2\nnarrator | calm | Second line.");
-        // The take is silence-adjacent, not re-rendered: a pause isn't part
-        // of the line's content hash, so nothing here may go stale.
+        /*
+         The take is silence-adjacent, not re-rendered: a pause isn't part
+         of the line's content hash, so nothing here may go stale.
+        */
         expect(document.querySelectorAll(".revoice-btn.stale").length).toBe(0);
         wrapper.unmount();
     });
@@ -496,11 +510,13 @@ describe("LineEditorApp", () => {
     });
 
     it("play button still plays an old take even when its hash no longer matches the current text (stale, not absent)", async () => {
-        // A latest-version file that doesn't match current content isn't
-        // "nothing to play" -- rowHasAnyTake (position has SOME file) gates
-        // playability, rowIsFresh (Done, "stale" styling) is a separate,
-        // stricter check. Built from completely different text so its hash
-        // can't coincidentally match "First line.".
+        /*
+         A latest-version file that doesn't match current content isn't
+         "nothing to play" -- rowHasAnyTake (position has SOME file) gates
+         playability, rowIsFresh (Done, "stale" styling) is a separate,
+         stricter check. Built from completely different text so its hash
+         can't coincidentally match "First line.".
+        */
         const { wrapper } = await mountEditor({
             lineFiles: [await lineFileName(0, "narrator", "calm", "Some older take entirely.")],
         });

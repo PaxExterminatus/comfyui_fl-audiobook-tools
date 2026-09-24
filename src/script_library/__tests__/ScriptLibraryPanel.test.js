@@ -121,8 +121,10 @@ describe("ScriptLibraryPanel", () => {
         const audioRow = [...document.body.querySelectorAll(".script-row")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
         expect(audioRow.textContent).toContain("🔊");
 
-        // Act02 isn't expanded (Act01 is the auto-active/expanded one) --
-        // expand it to see Scene3's pending warning icon.
+        /*
+         Act02 isn't expanded (Act01 is the auto-active/expanded one) --
+         expand it to see Scene3's pending warning icon.
+        */
         const act02Row = [...document.body.querySelectorAll(".act-row")].find((r) => r.textContent.includes("Act02"));
         act02Row.click();
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene3_speakers.txt"));
@@ -143,9 +145,11 @@ describe("ScriptLibraryPanel", () => {
     });
 
     it("'Re-voice pending' runs queueLineRevoice for each pending line", async () => {
-        // No follow-up "mark voiced" call any more -- there's nothing to
-        // flip (see nodes/script_library.py's script_pending_lines): the
-        // next tree refresh just re-hashes and finds a match.
+        /*
+         No follow-up "mark voiced" call any more -- there's nothing to
+         flip (see nodes/script_library.py's script_pending_lines): the
+         next tree refresh just re-hashes and finds a match.
+        */
         const queueLineRevoice = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = mountPanel({
             queueLineRevoice,
@@ -167,12 +171,14 @@ describe("ScriptLibraryPanel", () => {
     });
 
     it("revoiceApi.revoiceLine forwards the CALLER's file, not the script it was opened for (Prev/Next in Line Editor)", async () => {
-        // editScript()'s revoiceApi.revoiceLine closes over `filename` as a
-        // fallback for scripts that never provide their own `file` -- but
-        // Line Editor's Prev/Next can switch the SAME open editor to a
-        // different script, and always passes its own current filename in
-        // opts.file. That must win over this closure's (now-stale) value --
-        // see LineEditorApp.vue's revoiceRow.
+        /*
+         editScript()'s revoiceApi.revoiceLine closes over `filename` as a
+         fallback for scripts that never provide their own `file` -- but
+         Line Editor's Prev/Next can switch the SAME open editor to a
+         different script, and always passes its own current filename in
+         opts.file. That must win over this closure's (now-stale) value --
+         see LineEditorApp.vue's revoiceRow.
+        */
         const queueLineRevoice = vi.fn().mockResolvedValue(undefined);
         const { wrapper, openLineEditor } = mountPanel({ queueLineRevoice });
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
@@ -191,23 +197,27 @@ describe("ScriptLibraryPanel", () => {
     });
 
     it("picks up a script_filter value set AFTER mount (the widget is a plain object Vue can't observe)", async () => {
-        // Root cause of a silent audio-loss bug: `suffix` used to be
-        // computed(() => props.filterWidget?.value) -- but filterWidget is a
-        // plain LiteGraph widget object, so Vue never sees a mutation to its
-        // .value and the computed served its FIRST reading for the whole
-        // session. The backend meanwhile serializes the widget's real current
-        // value into every prompt. Once the two drifted, this panel and
-        // nodes/script_library.py derived different base names for the same
-        // script, and a re-voice wrote its audio into a parallel
-        // _audio\lines\<script>_speakers\ tree that the editor never reads
-        // from -- the line kept playing its old take, with no error anywhere.
+        /*
+         Root cause of a silent audio-loss bug: `suffix` used to be
+         computed(() => props.filterWidget?.value) -- but filterWidget is a
+         plain LiteGraph widget object, so Vue never sees a mutation to its
+         .value and the computed served its FIRST reading for the whole
+         session. The backend meanwhile serializes the widget's real current
+         value into every prompt. Once the two drifted, this panel and
+         nodes/script_library.py derived different base names for the same
+         script, and a re-voice wrote its audio into a parallel
+         _audio\lines\<script>_speakers\ tree that the editor never reads
+         from -- the line kept playing its old take, with no error anywhere.
+        */
         const filterWidget = makeWidget("");
         const { wrapper, node, openLineEditor } = mountPanel({ filterWidget });
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        // ComfyUI applies a saved workflow's widget values after the node
-        // (and this panel) already exists -- exactly the mutation Vue can't
-        // observe on its own.
+        /*
+         ComfyUI applies a saved workflow's widget values after the node
+         (and this panel) already exists -- exactly the mutation Vue can't
+         observe on its own.
+        */
         filterWidget.value = "_speakers.txt";
         node.onConfigure({});
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
@@ -220,8 +230,10 @@ describe("ScriptLibraryPanel", () => {
     });
 
     it("'Re-voice pending' pins each line's output folder to the scan's own folder/base_name", async () => {
-        // The backend must not re-derive where to write from its own
-        // script_filter widget -- see LineEditorApp's revoiceRow.
+        /*
+         The backend must not re-derive where to write from its own
+         script_filter widget -- see LineEditorApp's revoiceRow.
+        */
         const queueLineRevoice = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = mountPanel({
             queueLineRevoice,
@@ -244,15 +256,17 @@ describe("ScriptLibraryPanel", () => {
     });
 
     it("passes an empty script_filter through as-is to the Line Editor, not a hardcoded default", async () => {
-        // A blank script_filter is a deliberate, documented choice on the
-        // node (list every .txt file) -- and the backend's own
-        // strip_suffix_and_ext treats "" as "don't strip anything" when
-        // naming a script's audio/timing files on disk. Silently
-        // substituting "_speakers.txt" here made this component guess a
-        // DIFFERENT base name than the backend actually used, so the Line
-        // Editor could never find that script's audio/timing files (every
-        // per-line play button showing disabled) whenever a project left
-        // script_filter blank.
+        /*
+         A blank script_filter is a deliberate, documented choice on the
+         node (list every .txt file) -- and the backend's own
+         strip_suffix_and_ext treats "" as "don't strip anything" when
+         naming a script's audio/timing files on disk. Silently
+         substituting "_speakers.txt" here made this component guess a
+         DIFFERENT base name than the backend actually used, so the Line
+         Editor could never find that script's audio/timing files (every
+         per-line play button showing disabled) whenever a project left
+         script_filter blank.
+        */
         const { wrapper, openLineEditor } = mountPanel({ filterWidget: makeWidget("") });
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 

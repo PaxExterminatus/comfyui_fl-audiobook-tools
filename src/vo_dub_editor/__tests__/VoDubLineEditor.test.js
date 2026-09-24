@@ -51,12 +51,14 @@ function mockFetch(overrides = {}) {
             return { json: async () => ({ mtime: 2 }) };
         }
         if (u.startsWith("/fl_cosyvoice3/vo_dub/rows")) {
-            // A real fetch always JSON-round-trips -- returning the SAME
-            // array/object references on every call (instead of a fresh
-            // deserialization) would let a raw in-place mutation of the
-            // test's own `rows` (bypassing Vue's reactivity proxy entirely)
-            // masquerade as a real backend update, hiding bugs a real
-            // fetch could never hide.
+            /*
+             A real fetch always JSON-round-trips -- returning the SAME
+             array/object references on every call (instead of a fresh
+             deserialization) would let a raw in-place mutation of the
+             test's own `rows` (bypassing Vue's reactivity proxy entirely)
+             masquerade as a real backend update, hiding bugs a real
+             fetch could never hide.
+            */
             return { json: async () => ({ root: ROOT, bucket: "E1", rows: JSON.parse(JSON.stringify(overrides.rows || ROWS_E1)) }) };
         }
         if (u.startsWith("/fl_cosyvoice3/vo_dub/mark_rendered")) {
@@ -79,12 +81,14 @@ describe("VoDubLineEditor", () => {
     beforeEach(() => {
         originalFetch = global.fetch;
         originalAudio = global.Audio;
-        // renderRow's measureDuration() does a one-off `new Audio()` probe
-        // of the file it just rendered (see that function's own comment --
-        // distinct from the list's own preload="none" players, which never
-        // construct one). happy-dom's real HTMLAudioElement never fires
-        // loadedmetadata/error on its own, so without this every render
-        // test would hang on measureDuration's 8s fallback timeout.
+        /*
+         renderRow's measureDuration() does a one-off `new Audio()` probe
+         of the file it just rendered (see that function's own comment --
+         distinct from the list's own preload="none" players, which never
+         construct one). happy-dom's real HTMLAudioElement never fires
+         loadedmetadata/error on its own, so without this every render
+         test would hang on measureDuration's 8s fallback timeout.
+        */
         global.Audio = class {
             constructor() { this.duration = 4.2; }
             addEventListener(event, cb) {
@@ -274,9 +278,11 @@ describe("VoDubLineEditor", () => {
         wrapper.unmount();
     });
 
-    // ── native <audio controls> again, plus the waveform as a passive
-    // overview above it (a previous round replaced native controls with a
-    // bespoke player; reverted -- see WaveformCanvas.vue's own comment) ──
+    /*
+     ── native <audio controls> again, plus the waveform as a passive
+     overview above it (a previous round replaced native controls with a
+     bespoke player; reverted -- see WaveformCanvas.vue's own comment) ──
+    */
     it("shows real native audio controls on both players, with the waveform purely as a visual overview above them", async () => {
         const { wrapper } = await mountEditor();
         const rowB = document.querySelectorAll(".vo-dub-row")[1];
@@ -480,8 +486,10 @@ describe("VoDubLineEditor", () => {
         const renderRow = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = await mountEditor({ onWrite, onMarkRendered, renderApi: { renderRow } });
 
-        // Edit row A's text right before rendering -- this must reach
-        // _dub_state.json BEFORE the render call, not just eventually.
+        /*
+         Edit row A's text right before rendering -- this must reach
+         _dub_state.json BEFORE the render call, not just eventually.
+        */
         const textarea = document.querySelectorAll(".fl-textarea")[0];
         textarea.value = "Свежий перевод.";
         textarea.dispatchEvent(new Event("input"));
@@ -544,9 +552,11 @@ describe("VoDubLineEditor", () => {
             "radio",
             "phone",
             "muffled",
-            // Dubbing a game that layers its own channel noise needs radio's
-            // band WITHOUT static, or the two stack; intercom and suit cover
-            // the station-speaker and inside-a-helmet cases next to it.
+            /*
+             Dubbing a game that layers its own channel noise needs radio's
+             band WITHOUT static, or the two stack; intercom and suit cover
+             the station-speaker and inside-a-helmet cases next to it.
+            */
             "radio_dry",
             "intercom",
             "suit",
@@ -560,9 +570,11 @@ describe("VoDubLineEditor", () => {
         const rowA = document.querySelectorAll(".vo-dub-row")[0];
 
         const checkboxes = () => wrapper.findAllComponents({ name: "Checkbox" });
-        // .element.closest() walks the REAL DOM regardless of PrimeVue
-        // Dialog's own Teleport (same reason every other test here queries
-        // rows via document.querySelectorAll instead of wrapper.find).
+        /*
+         .element.closest() walks the REAL DOM regardless of PrimeVue
+         Dialog's own Teleport (same reason every other test here queries
+         rows via document.querySelectorAll instead of wrapper.find).
+        */
         const projectCheckbox = () => checkboxes().find((c) => c.element.closest(".vo-dub-original-default-label"));
         const rowACheckbox = () => checkboxes().find((c) => c.element.closest(".vo-dub-row") === rowA);
 
@@ -719,8 +731,10 @@ describe("VoDubLineEditor", () => {
         await vi.waitFor(() => expect(onWrite).toHaveBeenCalled());
         const content = JSON.parse(onWrite.mock.calls.at(-1)[0].content);
         expect(content.rows["Loc_E1_S1_A"].effect).toBe("radio");
-        // Committed -- the Save button (had it not just rendered) would no
-        // longer have anything pending to offer.
+        /*
+         Committed -- the Save button (had it not just rendered) would no
+         longer have anything pending to offer.
+        */
         wrapper.unmount();
     });
 
@@ -821,16 +835,20 @@ describe("VoDubLineEditor", () => {
         document.querySelectorAll(".vo-dub-pager button")[1].click(); // Next -> page 2 (the last 46 "not_started" rows)
         await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label").textContent).toContain("Page 2 / 2"));
 
-        // Re-render every "not_started" row this filter still has as "done"
-        // -- once none are left, the filtered list (and page count) must
-        // shrink back to page 1 on its own, not point past the end.
+        /*
+         Re-render every "not_started" row this filter still has as "done"
+         -- once none are left, the filtered list (and page count) must
+         shrink back to page 1 on its own, not point past the end.
+        */
         rows.forEach((r) => { r.status = "done"; });
         const renderBtn = document.querySelectorAll(".vo-dub-row")[0].querySelector(".vo-dub-render-btn");
         renderBtn.click();
 
-        // The filter now matches nothing at all -- must land back on a
-        // valid page (1 of 1), not stay stuck on the "page 2" that no
-        // longer exists.
+        /*
+         The filter now matches nothing at all -- must land back on a
+         valid page (1 of 1), not stay stuck on the "page 2" that no
+         longer exists.
+        */
         await vi.waitFor(() => expect(document.querySelector(".vo-dub-empty")).toBeTruthy());
         expect(document.querySelector(".vo-dub-pager-label").textContent).toBe("Page 1 / 1 (0 row(s))");
         wrapper.unmount();
@@ -875,9 +893,11 @@ describe("VoDubLineEditor", () => {
         { audio_key: "Loc_E1_Sam_01", episode: "1", speaker: "Sam", speaker_tag: "Sam", english: "Go.", russian: "Иди.", instruct: "", duration_s: 1.0, channels: 1, status: "not_started", rendered_duration_s: null },
     ];
 
-    // Same 3 rows, but each already has a take -- for exercising sequential
-    // playback's own auto-advance across MULTIPLE rows (PROMPT_ROWS itself
-    // has none, so hasRuTake(row) is false for all three there).
+    /*
+     Same 3 rows, but each already has a take -- for exercising sequential
+     playback's own auto-advance across MULTIPLE rows (PROMPT_ROWS itself
+     has none, so hasRuTake(row) is false for all three there).
+    */
     const PROMPT_ROWS_WITH_TAKES = PROMPT_ROWS.map((r) => ({ ...r, status: "done", rendered_duration_s: r.duration_s }));
 
     const ROLE_ENTRIES = {
@@ -1000,11 +1020,13 @@ describe("VoDubLineEditor", () => {
         await vi.waitFor(() => expect(instructInput.value).toBe(""));
 
         vi.advanceTimersByTime(700);
-        // Picking a phrase ALSO schedules an instruct-library save (see
-        // scheduleInstructLibrarySave) on the SAME debounce as the state
-        // save -- both timers fire from this one advance, in no
-        // guaranteed order, so find the state write by its own path
-        // rather than assuming it's whichever call happened last.
+        /*
+         Picking a phrase ALSO schedules an instruct-library save (see
+         scheduleInstructLibrarySave) on the SAME debounce as the state
+         save -- both timers fire from this one advance, in no
+         guaranteed order, so find the state write by its own path
+         rather than assuming it's whichever call happened last.
+        */
         await vi.waitFor(() => expect(onWrite.mock.calls.some((c) => c[0].path === STATE_PATH)).toBe(true));
         const stateWrite = onWrite.mock.calls.find((c) => c[0].path === STATE_PATH);
         const content = JSON.parse(stateWrite[0].content);

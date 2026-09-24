@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// happy-dom has no Web Audio API at all, so this hand-rolls just enough of
-// a fake AudioContext for decodeWaveformPeaks' own call surface
-// (decodeAudioData -> an object with getChannelData) -- not a general
-// Web Audio emulator, see effect_preview.test.js for the same approach.
+/*
+ happy-dom has no Web Audio API at all, so this hand-rolls just enough of
+ a fake AudioContext for decodeWaveformPeaks' own call surface
+ (decodeAudioData -> an object with getChannelData) -- not a general
+ Web Audio emulator, see effect_preview.test.js for the same approach.
+*/
 class FakeAudioContext {
     async decodeAudioData(arrayBuffer) {
         const length = arrayBuffer.byteLength;

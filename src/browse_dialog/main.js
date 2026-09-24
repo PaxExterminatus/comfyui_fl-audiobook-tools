@@ -1,9 +1,11 @@
-// Vue/PrimeVue entry point for the shared Browse Dialog. Exports the EXACT
-// SAME `openBrowseDialog({mode, startPath, ext, onSelect})` signature the
-// old web/browse_dialog.js did, so script_editor.js/script_library.js/
-// line_editor.js's `import { openBrowseDialog } from "./browse_dialog.js"`
-// need zero changes -- this built file replaces that one directly (see
-// vite.config.js: outDir is "web", fileName is "browse_dialog.js").
+/*
+ Vue/PrimeVue entry point for the shared Browse Dialog. Exports the EXACT
+ SAME `openBrowseDialog({mode, startPath, ext, onSelect})` signature the
+ old web/browse_dialog.js did, so script_editor.js/script_library.js/
+ line_editor.js's `import { openBrowseDialog } from "./browse_dialog.js"`
+ need zero changes -- this built file replaces that one directly (see
+ vite.config.js: outDir is "web", fileName is "browse_dialog.js").
+*/
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import BrowseDialogApp from "./BrowseDialogApp.vue";

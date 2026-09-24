@@ -37,11 +37,13 @@ describe("stripSuffixAndExt", () => {
     });
 });
 
-// Must stay in lockstep with nodes/script_library.py's parse_pause_field:
-// the editor sends /stitch_lines the numbers IT parsed, while every other
-// reader (the tree's ready check, a plain re-scan) parses the same text off
-// disk on the Python side -- a disagreement would show up as a script that
-// un-readies itself the moment it's marked done.
+/*
+ Must stay in lockstep with nodes/script_library.py's parse_pause_field:
+ the editor sends /stitch_lines the numbers IT parsed, while every other
+ reader (the tree's ready check, a plain re-scan) parses the same text off
+ disk on the Python side -- a disagreement would show up as a script that
+ un-readies itself the moment it's marked done.
+*/
 describe("parsePauseField", () => {
     it("reads plain seconds", () => {
         expect(parsePauseField("1.5")).toBe(1.5);

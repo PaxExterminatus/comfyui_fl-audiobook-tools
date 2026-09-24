@@ -1,8 +1,10 @@
-// Decodes an audio file into a small array of peak magnitudes (0..1), one
-// per "bucket" -- a static overview waveform to LOOK at (see
-// WaveformCanvas.vue), not anything to do with playback. Uses
-// decodeAudioData purely as a decoder; nothing here ever gets connected to
-// a destination or played.
+/*
+ Decodes an audio file into a small array of peak magnitudes (0..1), one
+ per "bucket" -- a static overview waveform to LOOK at (see
+ WaveformCanvas.vue), not anything to do with playback. Uses
+ decodeAudioData purely as a decoder; nothing here ever gets connected to
+ a destination or played.
+*/
 let sharedDecodeCtx = null;
 function getDecodeContext() {
     const Ctor = typeof window !== "undefined" && (window.AudioContext || window.webkitAudioContext);
@@ -11,9 +13,11 @@ function getDecodeContext() {
     return sharedDecodeCtx;
 }
 
-// Rejects (never silently returns a flat/empty array) on any failure --
-// WaveformCanvas.vue is the one place that decides what "couldn't load a
-// waveform" should look like, this function just does the decode.
+/*
+ Rejects (never silently returns a flat/empty array) on any failure --
+ WaveformCanvas.vue is the one place that decides what "couldn't load a
+ waveform" should look like, this function just does the decode.
+*/
 export async function decodeWaveformPeaks(url, bucketCount = 100) {
     const ctx = getDecodeContext();
     if (!ctx) throw new Error("Web Audio not supported -- can't decode a waveform");

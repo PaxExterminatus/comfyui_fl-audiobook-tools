@@ -1,8 +1,10 @@
-// Stable, cheap hash -> hue, so each distinct speaker gets a consistent
-// accent color everywhere it's shown -- Line Editor's .line-rail
-// background and the speaker picker dialog's avatars both need the EXACT
-// same mapping, so this lives here once instead of two copies that could
-// quietly drift apart.
+/*
+ Stable, cheap hash -> hue, so each distinct speaker gets a consistent
+ accent color everywhere it's shown -- Line Editor's .line-rail
+ background and the speaker picker dialog's avatars both need the EXACT
+ same mapping, so this lives here once instead of two copies that could
+ quietly drift apart.
+*/
 export function speakerAccent(name) {
     if (!name) return "rgba(255,255,255,0.1)";
     let hash = 0;
@@ -10,9 +12,11 @@ export function speakerAccent(name) {
     return `hsl(${hash % 360}, 55%, 55%, 0.3)`;
 }
 
-// Two-letter avatar monogram: the first character, then the next DISTINCT
-// character after it (skipping any repeats of the first) -- "AA" reads as
-// a mistake at a glance, "AR"/"ZH" reads as a real abbreviation.
+/*
+ Two-letter avatar monogram: the first character, then the next DISTINCT
+ character after it (skipping any repeats of the first) -- "AA" reads as
+ a mistake at a glance, "AR"/"ZH" reads as a real abbreviation.
+*/
 export function speakerInitials(name) {
     const letters = (name || "").toUpperCase().replace(/[^A-ZА-Я0-9]/g, "");
     if (!letters) return "?";

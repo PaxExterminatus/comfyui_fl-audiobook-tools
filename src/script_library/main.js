@@ -1,8 +1,10 @@
-// Vue/PrimeVue entry point for the Script Library node's tree panel.
-// Unlike Roles Editor/Browse Dialog this isn't a floating overlay -- it
-// mounts directly into a container that web/script_library.js hands to
-// ComfyUI's node.addDOMWidget, so it renders inline as part of the node's
-// own body on the canvas.
+/*
+ Vue/PrimeVue entry point for the Script Library node's tree panel.
+ Unlike Roles Editor/Browse Dialog this isn't a floating overlay -- it
+ mounts directly into a container that web/script_library.js hands to
+ ComfyUI's node.addDOMWidget, so it renders inline as part of the node's
+ own body on the canvas.
+*/
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import ScriptLibraryPanel from "./ScriptLibraryPanel.vue";

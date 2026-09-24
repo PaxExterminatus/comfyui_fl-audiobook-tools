@@ -1,9 +1,11 @@
-// Vue/PrimeVue entry point for the Line Editor. Exports the EXACT SAME
-// `openLineEditor({folder, filename, suffix, checkedApi, revoiceApi})`
-// signature the old web/line_editor.js did, so web/script_library.js's
-// `import { openLineEditor } from "./line_editor.js"` needs zero changes
-// -- this built file replaces that one directly (see vite.config.js:
-// outDir is "web", fileName is "line_editor.js").
+/*
+ Vue/PrimeVue entry point for the Line Editor. Exports the EXACT SAME
+ `openLineEditor({folder, filename, suffix, checkedApi, revoiceApi})`
+ signature the old web/line_editor.js did, so web/script_library.js's
+ `import { openLineEditor } from "./line_editor.js"` needs zero changes
+ -- this built file replaces that one directly (see vite.config.js:
+ outDir is "web", fileName is "line_editor.js").
+*/
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";

@@ -1,9 +1,11 @@
-// Shared by both editors' "´ Stress mark" button (see LineEditorApp.vue and
-// vo_dub_editor/VoDubLineEditor.vue). Uses mousedown+preventDefault on the
-// caller's <Button> (not click): a plain click on a <button> steals focus
-// from the textarea in Chromium before any click handler runs, which would
-// leave document.activeElement pointing at the button, not the field the
-// user was just typing into.
+/*
+ Shared by both editors' "´ Stress mark" button (see LineEditorApp.vue and
+ vo_dub_editor/VoDubLineEditor.vue). Uses mousedown+preventDefault on the
+ caller's <Button> (not click): a plain click on a <button> steals focus
+ from the textarea in Chromium before any click handler runs, which would
+ leave document.activeElement pointing at the button, not the field the
+ user was just typing into.
+*/
 export function insertStressMark(setStatus) {
     const el = document.activeElement;
     if (!el || (el.tagName !== "TEXTAREA" && el.tagName !== "INPUT")) {

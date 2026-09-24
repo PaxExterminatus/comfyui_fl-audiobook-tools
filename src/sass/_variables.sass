@@ -1,37 +1,16 @@
-// Shared design tokens for every editor's scoped Sass. Auto-@import'd
-// into every .sass file Vite compiles (see vite.config.js's
-// css.preprocessorOptions.sass.additionalData) -- no component file
-// needs to @import this by hand.
-//
-// Named by ROLE, not by the number that happened to get typed at the
-// time -- an audit of the 5 editors' <style> blocks (before this file
-// existed) found the "same" selection-highlight blue written as both
-// rgb(90,140,255) and rgb(90,150,255) in different files, and half a
-// dozen near-identical rgba(255,255,255, 0.08–0.16) values used for
-// borders/hovers/backgrounds with no real distinction between them.
-// Pulling these into one place is what actually prevents that drift,
-// not just moving CSS text around.
 
-// Semantic colors
-$color-accent: rgb(90, 140, 255) // selection / active row / focus highlight
-$color-warning: #e0a030 // stale / needs re-voice / malformed line
-$color-active: #e0b030 // currently playing
-$color-success: #4caf50 // voiced / available to play
+$color-accent: rgb(90, 140, 255)
+$color-warning: #e0a030
+$color-active: #e0b030
+$color-success: #4caf50
 
-// Subtle white overlays layered over the dark theme -- named by ROLE
-// (border vs a soft fill), not "hover", since $overlay-soft covers both a
-// hover background AND a plain static divider that happen to use the
-// same alpha; a hover-specific name would be misleading at the divider
-// call sites.
 $border-subtle: rgba(255, 255, 255, 0.12)
 $border-subtle-strong: rgba(255, 255, 255, 0.15)
 $overlay-soft: rgba(255, 255, 255, 0.08)
-$bg-recessed: rgba(0, 0, 0, 0.15) // sunken panel background (tree, textarea)
-$dialog-surface: #1f2937 // matches PrimeVue theme's .p-dialog-content background -- for a sticky bar that needs to fully occlude content scrolling underneath it, not a translucent overlay
+$bg-recessed: rgba(0, 0, 0, 0.15)
+$dialog-surface: #1f2937
 
-// Type scale -- only sizes actually reused 2+ times across editors; a
-// one-off size stays a literal in its own component's Sass.
-$font-xs: 10px // chevrons, counts, small icons
-$font-sm: 11px // status lines, muted notes, secondary rows
-$font-md: 12px // section labels, act/script names
-$font-lg: 14px // dialog/panel titles
+$font-xs: 10px
+$font-sm: 11px
+$font-md: 12px
+$font-lg: 14px

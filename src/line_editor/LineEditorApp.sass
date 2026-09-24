@@ -12,11 +12,6 @@
     flex: 0 0 auto
     cursor: pointer
 
-// The audio mini-player and the line-tools/nav row used to be two
-// separate sticky blocks -- merged into one (see src/shared/
-// StickyPanel.vue for why sticky belongs on a wrapper like this at all)
-// so there's a single continuous panel, not two independently-pinned
-// strips stacked on top of each other.
 .line-editor-controls
     display: flex
     flex-direction: column
@@ -67,9 +62,7 @@
 
 .fl-line-row
     display: flex
-    // Clips .line-rail's own background to this row's rounded corners --
-    // without this it'd poke out square at the top/bottom-left the moment
-    // it's a real fill instead of the old 3px border.
+
     overflow: hidden
     border-radius: 6px
     background: rgba(255, 255, 255, 0.02)
@@ -82,10 +75,6 @@
     &.row-enter
         animation: fl-row-enter 0.35s ease
 
-// The whole rail is the drag handle now (see attachDragHandlers), not just
-// the ⠿ glyph inside it -- widened from the old 3px accent border so the
-// line number has somewhere to live, and grabbing it is a bigger, easier
-// target than that glyph alone ever was.
 .line-rail
     display: flex
     flex-direction: column
@@ -162,9 +151,6 @@
 .speaker-file-input
     max-width: 150px
 
-// Per-line pause, in seconds. Narrow on purpose: the values that belong
-// here are one or two characters ("0", "1.5"), and it sits in the same
-// controls row as the speaker and instruct fields, which need the space.
 .pause-group
     flex: 0 0 auto
 
@@ -172,12 +158,6 @@
     width: 56px
     text-align: center
 
-// Unreadable pause value (see pauseUnreadable). The warning rides on the
-// group's own icon rather than on the InputText's text colour: PrimeVue's
-// `.p-inputtext` colour wins here even from inside `@layer primevue` and
-// even against `.pause-input.p-invalid[data-v-…]` -- measured in the real
-// build, not assumed -- so anything that has to be VISIBLE belongs on an
-// element the theme has no colour rule for.
 .pause-warn
     color: $color-warning
 

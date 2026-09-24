@@ -18,11 +18,6 @@
 .role-info-key
     opacity: 0.6
 
-// src/shared/LineRowEditor.vue's own markup -- rendered by THAT component
-// for both editors (LineEditorApp.vue and VoDubLineEditor.vue), never by
-// either caller's own template directly, so a scoped rule in either
-// caller's own .sass file would never reach it (scoped CSS attributes are
-// keyed to whichever component's template actually owns the element).
 .line-controls-row
     display: flex
     gap: 4px

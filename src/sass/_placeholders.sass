@@ -1,23 +1,11 @@
-// Extend-only patterns repeated verbatim across 2+ editors' scoped
-// styles -- @extend these instead of retyping the same declarations.
-// (Sass placeholders never appear in compiled CSS on their own, only
-// wherever something @extends them -- unlike a real class, there's no
-// runtime cost to declaring one that only one file ends up using.)
+
 @use "variables" as *
 
-// Truncate to one line with an ellipsis -- found identically (same 3
-// declarations, same order) in at least 8 places across the 5 editors
-// before this existed: button/status labels, tree row names, dialog
-// titles, audio filenames.
 %ellipsis
     overflow: hidden
     text-overflow: ellipsis
     white-space: nowrap
 
-// A dialog header's transient status text ("Loaded 3 role(s)", "Saved
-// 14:32:07", an error) -- sits between the title and the width-preset
-// buttons in every editor's header row. Muted and capped so a long
-// message can't push the width buttons out of the dialog.
 %header-status
     @extend %ellipsis
     flex: 0 0 auto
@@ -25,40 +13,23 @@
     opacity: 0.75
     max-width: 260px
 
-// The header row itself -- title, status, width buttons laid out in a
-// single flex line. Found identical (down to the gap) in both Roles
-// Editor and Line Editor's custom #header slot once the status text
-// moved into the header in both -- no reason for those two numbers to
-// ever drift apart again.
 %dialog-header-row
     display: flex
     align-items: center
     gap: 6px
     width: 100%
 
-// The header's own title text (as opposed to %header-status, the
-// transient message next to it). Same weight/size/truncation in both
-// editors that define a custom header.
 %dialog-title
     @extend %ellipsis
     font-weight: 600
     font-size: $font-lg
     flex: 1
 
-// A flex row of small action buttons that shouldn't grow/shrink in
-// whatever flex column it sits in (width presets, bulk-select actions,
-// per-line tools). Only the properties EVERY call site already agreed
-// on -- gap varies (3px here, 5-6px there), and about half already add
-// their own align-items/padding on top of this, so those stay explicit
-// per component rather than guessed at here.
 @mixin button-row($gap: 4px)
     display: flex
     gap: $gap
     flex: 0 0 auto
 
-// A picked-from-a-catalog row's own label + secondary detail line -- every
-// Dropdown's custom #option template in LineEditorApp (role/instruct/
-// speaker-file) renders this exact same two-line shape.
 %catalog-option-label
     @extend %ellipsis
     font-size: $font-md

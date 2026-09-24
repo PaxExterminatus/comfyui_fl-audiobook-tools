@@ -5,16 +5,15 @@ import { ref, computed } from "vue";
  (WIDTH_PRESETS buttons + 100% + localStorage persistence) and Roles
  Editor didn't; factored out here so both (and any future editor) share
  one implementation instead of copy-pasting it.
-
- @param {Object} opts
- @param {string} opts.storageKey - localStorage key this editor's width choice persists under.
- @param {number} opts.defaultWidth - px width used the first time (nothing saved yet).
- @param {number[]} opts.presets - px width buttons to offer, in the order shown.
- @param {number} [opts.fullVw=94] - viewport-width % the "100%" button maps to. Line
-   Editor/Roles Editor genuinely want to fill nearly the whole window; a simple file
-   picker (Browse Dialog) doesn't need that much, so it passes a smaller value.
 */
 
+/**
+ * @param {Object} opts
+ * @param {string} opts.storageKey - localStorage key this editor's width choice persists under.
+ * @param {number} opts.defaultWidth - px width used the first time (nothing saved yet).
+ * @param {number[]} opts.presets - px width buttons to offer, in the order shown.
+ * @param {number} [opts.fullVw=94] - viewport-width % the "100%" button maps to. Line Editor/Roles Editor genuinely want to fill nearly the whole window; a simple file picker (Browse Dialog) doesn't need that much, so it passes a smaller value.
+ */
 
 export function usePanelWidth({ storageKey, defaultWidth, presets, fullVw = 94 }) {
     function load() {

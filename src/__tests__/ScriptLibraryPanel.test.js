@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import ScriptLibraryPanel from "../ScriptLibraryPanel.vue";
+import ScriptLibraryPanel from "../script_library/ScriptLibraryPanel.vue";
 
 function makeWidget(initial = "") {
     return { value: initial, callback: null };

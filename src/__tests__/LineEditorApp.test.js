@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
-import LineEditorApp from "../LineEditorApp.vue";
-import InstructPickerDialog from "../../shared/InstructPickerDialog.vue";
-import { lineHash } from "../../shared/line_hash.js";
+import LineEditorApp from "../line_editor/LineEditorApp.vue";
+import InstructPickerDialog from "../line_editor/../shared/InstructPickerDialog.vue";
+import { lineHash } from "../line_editor/../shared/line_hash.js";
 
 const SCRIPT_TEXT = "narrator | calm | First line.\nnarrator | calm | Second line.";
 

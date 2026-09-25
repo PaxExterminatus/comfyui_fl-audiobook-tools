@@ -29,7 +29,7 @@ describe("decodeWaveformPeaks", () => {
 
     async function freshModule() {
         vi.resetModules(); // effect_preview.js's sibling caches its context at module scope; waveform.js does the same
-        return import("../waveform.js");
+        return import("../vo_dub_editor/waveform.js");
     }
 
     it("returns one peak value per bucket, each within [0, 1]", async () => {

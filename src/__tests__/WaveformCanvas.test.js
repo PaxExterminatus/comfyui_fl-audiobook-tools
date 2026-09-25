@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
-import WaveformCanvas from "../WaveformCanvas.vue";
+import WaveformCanvas from "../vo_dub_editor/WaveformCanvas.vue";
 
 class FakeAudioContext {
     async decodeAudioData() {

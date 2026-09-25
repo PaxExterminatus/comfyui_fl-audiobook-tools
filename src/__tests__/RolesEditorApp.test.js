@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import RolesEditorApp from "../RolesEditorApp.vue";
+import RolesEditorApp from "../roles_editor/RolesEditorApp.vue";
 
 function mockFetchResponses(overrides = {}) {
     const rolesContent =

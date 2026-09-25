@@ -64,7 +64,7 @@ describe("createEffectPreview", () => {
 
     async function freshModule() {
         vi.resetModules(); // effect_preview.js caches its AudioContext at module scope
-        return import("../effect_preview.js");
+        return import("../vo_dub_editor/effect_preview.js");
     }
 
     /*

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import VoDubBrowserPanel from "../VoDubBrowserPanel.vue";
+import VoDubBrowserPanel from "../vo_dub_editor/VoDubBrowserPanel.vue";
 
 const ROOT = "C:\\vo\\Observation";
 const TREE = {

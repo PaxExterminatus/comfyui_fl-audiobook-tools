@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import DubRolesEditorApp from "../DubRolesEditorApp.vue";
+import DubRolesEditorApp from "../vo_dub_editor/DubRolesEditorApp.vue";
 
 const ROOT = "C:\\vo\\Observation";
 

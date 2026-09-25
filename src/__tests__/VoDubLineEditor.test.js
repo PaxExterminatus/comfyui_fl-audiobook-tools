@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import VoDubLineEditor from "../VoDubLineEditor.vue";
-import RoleDropdown from "../../shared/RoleDropdown.vue";
-import InstructPickerDialog from "../../shared/InstructPickerDialog.vue";
-import { lineHash } from "../../shared/line_hash.js";
+import VoDubLineEditor from "../vo_dub_editor/VoDubLineEditor.vue";
+import RoleDropdown from "../vo_dub_editor/../shared/RoleDropdown.vue";
+import InstructPickerDialog from "../vo_dub_editor/../shared/InstructPickerDialog.vue";
+import { lineHash } from "../vo_dub_editor/../shared/line_hash.js";
 
 const ROOT = "C:\\vo\\Observation";
 const STATE_PATH = "C:\\vo\\Observation\\_dub_state.json";

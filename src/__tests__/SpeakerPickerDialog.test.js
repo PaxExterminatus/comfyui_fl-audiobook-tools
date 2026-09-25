@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import SpeakerPickerDialog from "../SpeakerPickerDialog.vue";
+import SpeakerPickerDialog from "../line_editor/SpeakerPickerDialog.vue";
 
 /*
  This suite exists for one specific failure mode. PrimeVue's Button and

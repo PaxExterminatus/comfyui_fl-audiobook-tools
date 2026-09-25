@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import BrowseDialogApp from "../BrowseDialogApp.vue";
+import BrowseDialogApp from "../browse_dialog/BrowseDialogApp.vue";
 
 function mockListDir(byPath) {
     return vi.fn(async (url) => {

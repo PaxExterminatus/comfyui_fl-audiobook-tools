@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { containsPhrase, addPhraseToCategories, saveInstructPhrase } from "../instruct_library.js";
+import { containsPhrase, addPhraseToCategories, saveInstructPhrase } from "../shared/instruct_library.js";
 
 describe("containsPhrase", () => {
     it("matches an existing example exactly, ignoring surrounding whitespace", () => {

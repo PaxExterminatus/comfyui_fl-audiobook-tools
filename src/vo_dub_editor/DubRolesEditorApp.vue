@@ -383,4 +383,4 @@ onBeforeUnmount(() => {
     />
 </template>
 
-<style scoped lang="sass" src="./DubRolesEditorApp.sass"></style>
+<style scoped src="./DubRolesEditorApp.css"></style>

@@ -14,7 +14,7 @@
   color: #ddd;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: var(--font-sm);
   height: auto;
   transition: background 0.1s ease;
 }
@@ -79,7 +79,7 @@
 
 .fl-panel-header {
   padding: 12px 16px;
-  border-bottom: 1px solid #1e1e1e;
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -95,7 +95,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: 11px;
+  font-size: var(--font-sm);
   color: var(--descrip-text, #ccc);
   border: 1px dashed var(--border-color, #666);
   border-radius: 6px;
@@ -115,7 +115,7 @@
 
 .fl-text-viewer-title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--font-lg);
   flex: 1;
 }
 

@@ -21,4 +21,4 @@ defineProps({
     </div>
 </template>
 
-<style scoped lang="sass" src="./FontSizeButtons.sass"></style>
+<style scoped src="./FontSizeButtons.css"></style>

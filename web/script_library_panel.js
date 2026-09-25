@@ -22,18 +22,20 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     actWidget: { type: Object, required: !0 },
     filterWidget: { type: Object, default: null },
     scriptFileWidget: { type: Object, required: !0 },
-    // Every cross-editor entry point is passed in rather than statically
-    // imported: openBrowseDialog/openRolesEditor ARE separate Vite lib
-    // entries (see vite.config.js), and importing an entry's main.js
-    // directly from a THIRD entry's source made Rollup hoist that shared
-    // code into its own chunk named after the shared module's basename --
-    // "main.js" for every one of these, since every entry's own source
-    // file is called that within its own folder, which collided across
-    // entries. Passing these as props keeps every entry's build output
-    // independent (aside from the intentionally-shared
-    // src/shared/styles_link.js). openLineEditor/queueLineRevoice aren't
-    // Vite entries at all (line_editor.js is still vanilla JS, and
-    // queueLineRevoice lives in web/script_library.js's own module scope).
+    /*
+     Every cross-editor entry point is passed in rather than statically
+     imported: openBrowseDialog/openRolesEditor ARE separate Vite lib
+     entries (see vite.config.js), and importing an entry's main.js
+     directly from a THIRD entry's source made Rollup hoist that shared
+     code into its own chunk named after the shared module's basename --
+     "main.js" for every one of these, since every entry's own source
+     file is called that within its own folder, which collided across
+     entries. Passing these as props keeps every entry's build output
+     independent (aside from the intentionally-shared
+     src/shared/styles_link.js). openLineEditor/queueLineRevoice aren't
+     Vite entries at all (line_editor.js is still vanilla JS, and
+     queueLineRevoice lives in web/script_library.js's own module scope).
+    */
     openBrowseDialog: { type: Function, required: !0 },
     openRolesEditor: { type: Function, required: !0 },
     openLineEditor: { type: Function, required: !0 },
@@ -161,26 +163,30 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
         folder: pe(n.value, e),
         filename: s,
         suffix: _.value,
-        // Lets the editor's own header checkbox reflect/toggle this
-        // script's checked-for-queueing state without closing the editor.
-        // Scoped to THIS act -- editor-side prev/next navigation never
-        // crosses into another act.
+        /*
+         Lets the editor's own header checkbox reflect/toggle this
+         script's checked-for-queueing state without closing the editor.
+         Scoped to THIS act -- editor-side prev/next navigation never
+         crosses into another act.
+        */
         checkedApi: {
           isChecked: (t) => r.has(l(e, t)),
           setChecked: (t, o) => {
             o ? r.add(l(e, t)) : r.delete(l(e, t)), g();
           }
         },
-        // Backs the line editor's "Re-voice this line" button -- act is
-        // forced explicitly since the editor can be opened for any row, not
-        // just whichever one is "active" in the tree. `file: filename` is
-        // only a fallback for THIS script (spread after it, so it wins):
-        // Line Editor's own Prev/Next can switch this same editor instance
-        // to a different script post-open, and it always passes ITS
-        // current filename in `opts.file` -- this closure's `filename`
-        // param is fixed at the moment editScript() ran and never updates,
-        // so relying on it after Prev/Next would re-voice into the WRONG
-        // script's _audio\lines\ folder (see LineEditorApp.vue's revoiceRow).
+        /*
+         Backs the line editor's "Re-voice this line" button -- act is
+         forced explicitly since the editor can be opened for any row, not
+         just whichever one is "active" in the tree. `file: filename` is
+         only a fallback for THIS script (spread after it, so it wins):
+         Line Editor's own Prev/Next can switch this same editor instance
+         to a different script post-open, and it always passes ITS
+         current filename in `opts.file` -- this closure's `filename`
+         param is fixed at the moment editScript() ran and never updates,
+         so relying on it after Prev/Next would re-voice into the WRONG
+         script's _audio\lines\ folder (see LineEditorApp.vue's revoiceRow).
+        */
         revoiceApi: {
           revoiceLine: (t) => i.queueLineRevoice(i.node, { act: e, file: s, ...t })
         }
@@ -241,17 +247,19 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
               speaker: c.speaker,
               instruct: c.instruct,
               text: c.text,
-              // Same output-location pinning the line editor does (see
-              // LineEditorApp's revoiceRow): folder/base_name here come
-              // from the pending_revoice scan, which resolved them with
-              // THIS panel's suffix -- so they're the same names the
-              // scan itself checked against. contentHash likewise comes
-              // straight from that same scan (nodes/script_library.py's
-              // script_pending_lines already computed it from this
-              // exact resolved speaker/instruct/text) instead of being
-              // recomputed here -- stamped onto Post-Process's
-              // line_hashes_json so the re-voice doesn't depend on the
-              // graph having that output/input wired.
+              /*
+               Same output-location pinning the line editor does (see
+               LineEditorApp's revoiceRow): folder/base_name here come
+               from the pending_revoice scan, which resolved them with
+               THIS panel's suffix -- so they're the same names the
+               scan itself checked against. contentHash likewise comes
+               straight from that same scan (nodes/script_library.py's
+               script_pending_lines already computed it from this
+               exact resolved speaker/instruct/text) instead of being
+               recomputed here -- stamped onto Post-Process's
+               line_hashes_json so the re-voice doesn't depend on the
+               graph having that output/input wired.
+              */
               folder: o.folder,
               baseName: o.base_name,
               contentHash: c.hash
@@ -397,7 +405,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       p("div", Ie, x(k.value), 1)
     ]));
   }
-}, Oe = /* @__PURE__ */ ne(qe, [["__scopeId", "data-v-06adc896"]]);
+}, Oe = /* @__PURE__ */ ne(qe, [["__scopeId", "data-v-0df5dc4d"]]);
 function Te({ node: y, folderWidget: i, actWidget: l, filterWidget: F, scriptFileWidget: L, openBrowseDialog: n, openRolesEditor: d, openLineEditor: a, queueLineRevoice: r }) {
   fe(import.meta.url);
   const f = document.createElement("div");

@@ -1,0 +1,25 @@
+/* Converted from DialogHeader.sass */
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.dialog-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: var(--font-lg);
+  flex: 1;
+}
+.status-el {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  font-size: var(--font-sm);
+  opacity: 0.75;
+  max-width: 260px;
+}

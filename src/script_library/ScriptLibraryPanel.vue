@@ -563,4 +563,4 @@ onBeforeUnmount(() => {
     </div>
 </template>
 
-<style scoped lang="sass" src="./ScriptLibraryPanel.sass"></style>
+<style scoped src="./ScriptLibraryPanel.css"></style>

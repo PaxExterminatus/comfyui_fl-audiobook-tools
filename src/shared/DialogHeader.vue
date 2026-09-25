@@ -32,4 +32,4 @@ defineProps({
     </div>
 </template>
 
-<style scoped lang="sass" src="./DialogHeader.sass"></style>
+<style scoped src="./DialogHeader.css"></style>

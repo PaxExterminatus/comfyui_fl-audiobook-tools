@@ -75,4 +75,4 @@ function pick(example) {
     </Dialog>
 </template>
 
-<style scoped lang="sass" src="./InstructPickerDialog.sass"></style>
+<style scoped src="./InstructPickerDialog.css"></style>

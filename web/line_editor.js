@@ -811,18 +811,22 @@ const Ea = { class: "audio-content-row" }, Da = ["title"], Fa = ["src"], Oa = {
             body: JSON.stringify({
               folder: l.folder,
               base_name: U.value,
-              // Each position's own current hash -- lets stitch_lines
-              // read the EXACT file that content hashes to, no
-              // directory-scan guessing (see nodes/_line_audio.py's
-              // expected_path).
+              /*
+               Each position's own current hash -- lets stitch_lines
+               read the EXACT file that content hashes to, no
+               directory-scan guessing (see nodes/_line_audio.py's
+               expected_path).
+              */
               line_hashes: a.map((r) => $e.get(r.__key)),
               line_texts: a.map((r) => r.text),
-              // Silence to hold after each line, null where the row
-              // names none -- the stitch resolves those to its own
-              // defaults and records the finished plan in the timing
-              // manifest, which is what later tells a done script
-              // its pauses have since been edited (see
-              // _manifest_matches_script_pauses).
+              /*
+               Silence to hold after each line, null where the row
+               names none -- the stitch resolves those to its own
+               defaults and records the finished plan in the timing
+               manifest, which is what later tells a done script
+               its pauses have since been edited (see
+               _manifest_matches_script_pauses).
+              */
               pauses: a.map((r) => vt(r.pause))
             })
           })).json();
@@ -1253,7 +1257,7 @@ const Ea = { class: "audio-content-row" }, Da = ["title"], Fa = ["src"], Oa = {
       }, null, 8, ["visible", "left", "top", "message", "fields"])
     ], 64));
   }
-}, Ka = /* @__PURE__ */ Yn(Wa, [["__scopeId", "data-v-be311997"]]);
+}, Ka = /* @__PURE__ */ Yn(Wa, [["__scopeId", "data-v-d82236ac"]]);
 function es({ folder: i, filename: l, suffix: S = "", checkedApi: Z, revoiceApi: b }) {
   oa(import.meta.url);
   const v = document.createElement("div");

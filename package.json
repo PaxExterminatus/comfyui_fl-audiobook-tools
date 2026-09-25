@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "clean:chunks": "node scripts/clean-chunks.mjs",
-    "compile:vanilla-sass": "node scripts/compile-vanilla-sass.mjs",
-    "dev": "npm run clean:chunks && npm run compile:vanilla-sass && vite build --watch --mode development",
+    "dev": "npm run clean:chunks && vite build --watch --mode development",
     "dev:ui": "vite",
-    "build": "npm run clean:chunks && npm run compile:vanilla-sass && vite build",
+    "build": "npm run clean:chunks && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "nvm list": "nvm list",

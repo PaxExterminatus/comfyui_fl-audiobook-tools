@@ -59,7 +59,7 @@ const me = { class: "sticky-panel" }, ye = {
       z(t.$slots, "default", {}, void 0, !0)
     ]));
   }
-}, He = /* @__PURE__ */ L(ye, [["__scopeId", "data-v-2941a6c7"]]), ve = { class: "instruct-example-list" }, he = ["onClick"], ge = {
+}, He = /* @__PURE__ */ L(ye, [["__scopeId", "data-v-2365d115"]]), ve = { class: "instruct-example-list" }, he = ["onClick"], ge = {
   __name: "InstructPickerDialog",
   props: {
     visible: { type: Boolean, required: !0 },
@@ -137,9 +137,9 @@ const me = { class: "sticky-panel" }, ye = {
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, Je = /* @__PURE__ */ L(ge, [["__scopeId", "data-v-6c49f239"]]);
+}, Je = /* @__PURE__ */ L(ge, [["__scopeId", "data-v-2559d844"]]);
 function be(e) {
-  if (!e) return "rgba(255,255,255,0.1)";
+  if (!e) return "#353535";
   let t = 0;
   for (let n = 0; n < e.length; n++) t = t * 31 + e.charCodeAt(n) >>> 0;
   return `hsl(${t % 360}, 55%, 55%, 0.3)`;
@@ -158,15 +158,19 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
   props: {
     visible: { type: Boolean, required: !0 },
     presets: { type: Array, default: () => [] },
-    // Absolute folder holding each preset's OWN .pt file -- also where a
-    // same-named sample .mp3/.wav is expected to live (see the /audio
-    // route this samples from; "" means presets haven't loaded yet, no
-    // preview is offered until they have).
+    /*
+     Absolute folder holding each preset's OWN .pt file -- also where a
+     same-named sample .mp3/.wav is expected to live (see the /audio
+     route this samples from; "" means presets haven't loaded yet, no
+     preview is offered until they have).
+    */
     sampleDir: { type: String, default: "" },
-    // Optional (preset: string) => sublabel text, e.g. "used by: ..." --
-    // the caller already has this logic (see LineEditorApp.vue's
-    // speakerUsageSubLabel); kept out of this component so it stays a
-    // plain preset-picker with no opinion on who's "using" what.
+    /*
+     Optional (preset: string) => sublabel text, e.g. "used by: ..." --
+     the caller already has this logic (see LineEditorApp.vue's
+     speakerUsageSubLabel); kept out of this component so it stays a
+     plain preset-picker with no opinion on who's "using" what.
+    */
     usageFor: { type: Function, default: null }
   },
   emits: ["update:visible", "select"],
@@ -278,7 +282,7 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, Ye = /* @__PURE__ */ L(Ie, [["__scopeId", "data-v-210e5f8b"]]), Ce = { class: "dropdown-option-label" }, ze = {
+}, Ye = /* @__PURE__ */ L(Ie, [["__scopeId", "data-v-330706a0"]]), Ce = { class: "dropdown-option-label" }, ze = {
   key: 0,
   class: "dropdown-option-sublabel"
 }, Ae = {
@@ -314,7 +318,7 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
       _: 1
     }, 8, ["model-value", "options", "placeholder", "title"]));
   }
-}, Te = /* @__PURE__ */ L(Ae, [["__scopeId", "data-v-d512d6a7"]]), Ee = { class: "line-controls-row" }, Fe = {
+}, Te = /* @__PURE__ */ L(Ae, [["__scopeId", "data-v-b4f6eb71"]]), Ee = { class: "line-controls-row" }, Fe = {
   key: 0,
   class: "instruct-desc"
 }, qe = {
@@ -326,9 +330,11 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
     roleOptionSubLabel: { type: Function, default: () => "" },
     speakerPlaceholder: { type: String, default: "Speaker" },
     speakerTitle: { type: String, default: "Speaker (role code, or a literal preset/preset#tag)" },
-    // What the info-hover looks up -- may differ from `speaker` itself
-    // (VO Dub's per-row override falls back to the row's raw csv tag when
-    // empty; the info popover should still resolve THAT identity).
+    /*
+     What the info-hover looks up -- may differ from `speaker` itself
+     (VO Dub's per-row override falls back to the row's raw csv tag when
+     empty; the info popover should still resolve THAT identity).
+    */
     roleInfoCode: { type: String, default: "" },
     // instruct
     instruct: { type: String, default: "" },
@@ -343,13 +349,17 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
     text: { type: String, default: "" },
     textPlaceholder: { type: String, default: "" },
     fontSizePx: { type: Number, default: 13 },
-    // Forwarded straight to the underlying Textarea's own `ref` -- the
-    // caller's own useTextareaAutoGrow() Map (see textarea_autogrow.js)
-    // needs the real node, this component has no tracking of its own.
+    /*
+     Forwarded straight to the underlying Textarea's own `ref` -- the
+     caller's own useTextareaAutoGrow() Map (see textarea_autogrow.js)
+     needs the real node, this component has no tracking of its own.
+    */
     textareaRef: { type: Function, default: null },
-    // Called after a paste (see onPaste) -- preventDefault there skips
-    // PrimeVue's own resize, so the caller's autoGrow needs an explicit
-    // nudge same as it does after loading fresh content.
+    /*
+     Called after a paste (see onPaste) -- preventDefault there skips
+     PrimeVue's own resize, so the caller's autoGrow needs an explicit
+     nudge same as it does after loading fresh content.
+    */
     onAutoGrow: { type: Function, default: null }
   },
   emits: [

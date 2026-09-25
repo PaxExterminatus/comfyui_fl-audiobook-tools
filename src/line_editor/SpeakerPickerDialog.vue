@@ -154,4 +154,4 @@ function playSample(preset) {
     </Dialog>
 </template>
 
-<style scoped lang="sass" src="./SpeakerPickerDialog.sass"></style>
+<style scoped src="./SpeakerPickerDialog.css"></style>

@@ -85,9 +85,9 @@ watch(() => props.src, load);
     </div>
 </template>
 
-<style scoped lang="sass">
+<style scoped>
 /*
- These rules must live HERE, not in a caller's own scoped .sass file --
+ These rules must live HERE, not in a caller's own scoped CSS file --
  Vue's scoped-CSS attribute is only stamped onto THIS component's own
  root node when rendered from a parent, never onto elements nested
  inside its own template (the <canvas>, the status <span>s). A parent
@@ -96,22 +96,25 @@ watch(() => props.src, load);
  pixels) with no clipping on the wrap -- exactly what overlapped every
  row below it before this was caught.
 */
-.waveform-wrap
-    position: relative
-    width: 100%
-    height: 28px
-    overflow: hidden
+.waveform-wrap {
+    position: relative;
+    width: 100%;
+    height: 28px;
+    overflow: hidden;
+}
 
-.waveform-canvas
-    display: block
-    width: 100%
-    height: 100%
-    color: $color-success
+.waveform-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: var(--color-success);
+}
 
-.waveform-status
-    position: absolute
-    top: 0
-    right: 4px
-    font-size: $font-xs
-    opacity: 0.6
+.waveform-status {
+    position: absolute;
+    top: 0;
+    right: 4px;
+    font-size: var(--font-xs);
+    opacity: 0.6;
+}
 </style>

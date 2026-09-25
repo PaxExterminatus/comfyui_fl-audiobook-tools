@@ -1,0 +1,81 @@
+/* Converted from DubRolesEditorApp.sass */
+
+.roles-list {
+  max-height: 74vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.role-card {
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-recessed);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.role-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.role-name {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+.role-code {
+  font-family: monospace;
+  font-size: var(--font-sm);
+  opacity: 0.6;
+}
+.role-gender {
+  font-size: var(--font-xs);
+  opacity: 0.7;
+  text-transform: capitalize;
+  cursor: help;
+}
+.role-actor {
+  font-size: var(--font-xs);
+  opacity: 0.6;
+  font-style: italic;
+  margin-left: auto;
+}
+.role-description {
+  margin: 0;
+  opacity: 0.85;
+}
+.role-dub-direction {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 2px solid var(--color-accent);
+  background: var(--overlay-soft);
+  border-radius: 0 4px 4px 0;
+}
+.role-notes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--font-sm);
+  opacity: 0.75;
+}
+.role-stats {
+  display: flex;
+  gap: 12px;
+  font-size: var(--font-xs);
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+.role-examples {
+  font-size: var(--font-xs);
+  opacity: 0.5;
+  font-family: monospace;
+}
+.role-speaker-row {
+  display: flex;
+  gap: 6px;
+}
+.role-speaker {
+  width: 260px;
+}

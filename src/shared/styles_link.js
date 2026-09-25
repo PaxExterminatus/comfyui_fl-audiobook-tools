@@ -20,7 +20,7 @@ import "primeicons/primeicons.css";
  own -- see that file's own comment for why it lives here instead of
  inside the one editor that currently uses it.
 */
-import "../sass/global.sass";
+import "../sass/app.css";
 
 /*
  Bump any time the built CSS could have changed -- without a version on

@@ -1,4 +1,4 @@
-import { _ as T, w as H, o as M, c as P, a as w, n as k, u as l, B as O, r as i, b as u, d as z, e as h, s as S, f as G, g as J, t as _, h as F, i as m, F as V, j as Q, k as X, l as y, m as B, p as Y, q as Z, P as ee } from "./styles_link.js";
+import { _ as T, w as H, o as M, c as P, a as w, n as k, u as l, B as O, r as i, b as u, d as z, e as h, s as S, f as G, g as J, t as _, h as F, i as m, F as V, j as Q, k as X, l as b, m as B, p as Y, q as Z, P as ee } from "./styles_link.js";
 import { u as te, a as se, s as ae, D as oe, b as le } from "./DialogHeader.js";
 import { s as ne } from "./inputtext.esm.js";
 const re = { class: "browse-toolbar" }, ie = {
@@ -17,24 +17,26 @@ const re = { class: "browse-toolbar" }, ie = {
     onSelect: { type: Function, required: !0 },
     onClose: { type: Function, required: !0 }
   },
-  setup(b) {
-    const o = b, f = i(!0), n = i(""), r = i(""), s = i(null), v = i(null), g = i(!1), c = i(null), { cssWidth: $, setWidth: D, presets: E } = te({
+  setup(y) {
+    const o = y, f = i(!0), n = i(""), r = i(""), s = i(null), v = i(null), g = i(!1), c = i(null), { cssWidth: $, setWidth: D, presets: E } = te({
       storageKey: "FL_CosyVoice3.BrowseDialog.widthPx",
       defaultWidth: 560,
       presets: [420, 700],
-      // A file picker never needs to fill nearly the whole window the way
-      // Line/Roles Editor's "100%" does -- capped much narrower.
+      /*
+       A file picker never needs to fill nearly the whole window the way
+       Line/Roles Editor's "100%" does -- capped much narrower.
+      */
       fullVw: 70
     }), { fontSizePx: L, decrease: W, increase: U } = se({
       storageKey: "FL_CosyVoice3.BrowseDialog.fontSizePx",
       defaultSize: 13
-    }), I = y(() => o.mode === "folder" ? "Choose a folder" : "Choose a file"), j = y(() => o.mode === "folder" ? "Select This Folder" : "Select File"), A = y(
+    }), I = b(() => o.mode === "folder" ? "Choose a folder" : "Choose a file"), j = b(() => o.mode === "folder" ? "Select This Folder" : "Select File"), A = b(
       () => o.mode === "folder" ? !n.value : !v.value
     );
     function K() {
       s.value && s.value.parent ? d(s.value.parent) : (s.value && s.value.parent === "" || n.value) && d("");
     }
-    const x = y(() => {
+    const x = b(() => {
       const t = s.value;
       if (!t) return [];
       const a = [];
@@ -145,13 +147,13 @@ const re = { class: "browse-toolbar" }, ie = {
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, pe = /* @__PURE__ */ T(de, [["__scopeId", "data-v-e4cd65a4"]]);
-function me({ mode: b = "folder", startPath: o = "", ext: f = "", onSelect: n }) {
+}, pe = /* @__PURE__ */ T(de, [["__scopeId", "data-v-7091ab45"]]);
+function me({ mode: y = "folder", startPath: o = "", ext: f = "", onSelect: n }) {
   Y(import.meta.url);
   const r = document.createElement("div");
   document.body.appendChild(r);
   const s = Z(pe, {
-    mode: b,
+    mode: y,
     startPath: o,
     ext: f,
     onSelect: n,

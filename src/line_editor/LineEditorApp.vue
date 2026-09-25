@@ -1696,4 +1696,4 @@ onBeforeUnmount(() => {
 </template>
 
 
-<style scoped lang="sass" src="./LineEditorApp.sass"></style>
+<style scoped src="./LineEditorApp.css"></style>

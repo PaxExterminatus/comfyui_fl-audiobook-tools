@@ -1,0 +1,7 @@
+/* Converted from PanelWidthButtons.sass */
+
+.width-row {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}

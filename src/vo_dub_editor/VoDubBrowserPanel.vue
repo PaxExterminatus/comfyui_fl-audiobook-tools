@@ -132,4 +132,4 @@ onBeforeUnmount(() => clearInterval(pollTimer));
     </div>
 </template>
 
-<style scoped lang="sass" src="./VoDubBrowserPanel.sass"></style>
+<style scoped src="./VoDubBrowserPanel.css"></style>

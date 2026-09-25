@@ -17,4 +17,4 @@
     <div class="sticky-panel"><slot /></div>
 </template>
 
-<style scoped lang="sass" src="./StickyPanel.sass"></style>
+<style scoped src="./StickyPanel.css"></style>

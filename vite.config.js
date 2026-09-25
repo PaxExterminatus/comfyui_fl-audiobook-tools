@@ -9,11 +9,8 @@ export default defineConfig(({ command }) => {
         root: isServe ? "dev-ui" : undefined,
         plugins: [vue(), ...(isServe ? [mockComfyApiPlugin()] : [])],
         css: {
-            preprocessorOptions: {
-                sass: {
-                    additionalData: `@use "../sass/app" as *\n`,
-                },
-            },
+            css: {
+            }
         },
         define: {
             "process.env.NODE_ENV": JSON.stringify("production"),

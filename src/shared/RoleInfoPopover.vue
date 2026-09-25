@@ -6,7 +6,7 @@
  _dub_roles.json entries don't share a shape), so it just renders
  whatever [key, value] pairs the caller's own field-extractor produced.
  `.role-info-popover`/`.role-info-row`/`.role-info-key`/`.role-info-value`
- live in src/sass/global.sass (forwarded into every entry already), not
+ live in src/sass/app.css (forwarded into every entry already), not
  here -- this component has no scoped style of its own.
 */
 defineProps({

@@ -1323,4 +1323,4 @@ onMounted(async () => {
     />
 </template>
 
-<style scoped src="./VoDubLineEditor.css"></style>
+<style scoped src="../style/VoDubLineEditor.css"></style>

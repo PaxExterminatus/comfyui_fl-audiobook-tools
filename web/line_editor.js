@@ -1257,7 +1257,7 @@ const Ea = { class: "audio-content-row" }, Da = ["title"], Fa = ["src"], Oa = {
       }, null, 8, ["visible", "left", "top", "message", "fields"])
     ], 64));
   }
-}, Ka = /* @__PURE__ */ Yn(Wa, [["__scopeId", "data-v-d82236ac"]]);
+}, Ka = /* @__PURE__ */ Yn(Wa, [["__scopeId", "data-v-426fb3c8"]]);
 function es({ folder: i, filename: l, suffix: S = "", checkedApi: Z, revoiceApi: b }) {
   oa(import.meta.url);
   const v = document.createElement("div");

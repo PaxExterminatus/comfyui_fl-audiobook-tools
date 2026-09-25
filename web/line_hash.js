@@ -59,7 +59,7 @@ const me = { class: "sticky-panel" }, ye = {
       z(t.$slots, "default", {}, void 0, !0)
     ]));
   }
-}, He = /* @__PURE__ */ L(ye, [["__scopeId", "data-v-2365d115"]]), ve = { class: "instruct-example-list" }, he = ["onClick"], ge = {
+}, He = /* @__PURE__ */ L(ye, [["__scopeId", "data-v-3edd6ab3"]]), ve = { class: "instruct-example-list" }, he = ["onClick"], ge = {
   __name: "InstructPickerDialog",
   props: {
     visible: { type: Boolean, required: !0 },
@@ -137,7 +137,7 @@ const me = { class: "sticky-panel" }, ye = {
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, Je = /* @__PURE__ */ L(ge, [["__scopeId", "data-v-2559d844"]]);
+}, Je = /* @__PURE__ */ L(ge, [["__scopeId", "data-v-0d135846"]]);
 function be(e) {
   if (!e) return "#353535";
   let t = 0;
@@ -282,7 +282,7 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, Ye = /* @__PURE__ */ L(Ie, [["__scopeId", "data-v-330706a0"]]), Ce = { class: "dropdown-option-label" }, ze = {
+}, Ye = /* @__PURE__ */ L(Ie, [["__scopeId", "data-v-f6109d98"]]), Ce = { class: "dropdown-option-label" }, ze = {
   key: 0,
   class: "dropdown-option-sublabel"
 }, Ae = {
@@ -318,7 +318,7 @@ const $e = ["onClick"], Se = { class: "speaker-card-text" }, we = { class: "spea
       _: 1
     }, 8, ["model-value", "options", "placeholder", "title"]));
   }
-}, Te = /* @__PURE__ */ L(Ae, [["__scopeId", "data-v-b4f6eb71"]]), Ee = { class: "line-controls-row" }, Fe = {
+}, Te = /* @__PURE__ */ L(Ae, [["__scopeId", "data-v-4b129755"]]), Ee = { class: "line-controls-row" }, Fe = {
   key: 0,
   class: "instruct-desc"
 }, qe = {

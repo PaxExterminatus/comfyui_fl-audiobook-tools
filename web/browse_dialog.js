@@ -147,7 +147,7 @@ const re = { class: "browse-toolbar" }, ie = {
       _: 1
     }, 8, ["visible", "style"]));
   }
-}, pe = /* @__PURE__ */ T(de, [["__scopeId", "data-v-7091ab45"]]);
+}, pe = /* @__PURE__ */ T(de, [["__scopeId", "data-v-af3cbce2"]]);
 function me({ mode: y = "folder", startPath: o = "", ext: f = "", onSelect: n }) {
   Y(import.meta.url);
   const r = document.createElement("div");

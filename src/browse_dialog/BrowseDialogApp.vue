@@ -194,4 +194,4 @@ onMounted(() => load(props.startPath || ""));
     </Dialog>
 </template>
 
-<style scoped src="./BrowseDialogApp.css"></style>
+<style scoped src="../style/BrowseDialogApp.css"></style>

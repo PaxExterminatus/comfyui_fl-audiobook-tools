@@ -27,4 +27,4 @@ defineProps({
     </div>
 </template>
 
-<style scoped src="./PanelWidthButtons.css"></style>
+<style scoped src="../style/PanelWidthButtons.css"></style>

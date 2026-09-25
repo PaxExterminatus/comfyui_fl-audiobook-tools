@@ -42,4 +42,4 @@ const emit = defineEmits(["update:modelValue"]);
     </Dropdown>
 </template>
 
-<style scoped src="./RoleDropdown.css"></style>
+<style scoped src="../style/RoleDropdown.css"></style>

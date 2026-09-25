@@ -15,8 +15,8 @@ export default defineConfig({
                 // `as *` re-exposes app.sass's @forward-ed variables/
                 // placeholders without an "app." namespace prefix, the
                 // closest match to the old @import-based "just works"
-                // ergonomics (see src/sass/app.sass's own comment).
-                additionalData: `@use "../sass/app" as *\n`,
+                // ergonomics (see src/style/app.sass's own comment).
+                additionalData: `@use "../style/app" as *\n`,
             },
         },
     },

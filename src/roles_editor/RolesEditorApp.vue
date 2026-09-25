@@ -310,4 +310,4 @@ onBeforeUnmount(() => {
     </Dialog>
 </template>
 
-<style scoped src="./RolesEditorApp.css"></style>
+<style scoped src="../style/RolesEditorApp.css"></style>

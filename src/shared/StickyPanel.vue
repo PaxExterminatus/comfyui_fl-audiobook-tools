@@ -17,4 +17,4 @@
     <div class="sticky-panel"><slot /></div>
 </template>
 
-<style scoped src="./StickyPanel.css"></style>
+<style scoped src="../style/StickyPanel.css"></style>

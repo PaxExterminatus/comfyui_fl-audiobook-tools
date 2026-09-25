@@ -1107,7 +1107,7 @@ const ft = { class: "width-row" }, mt = {
       })
     ]));
   }
-}, pt = /* @__PURE__ */ K(mt, [["__scopeId", "data-v-4d0e0dfa"]]), ht = { class: "font-size-row" }, bt = {
+}, pt = /* @__PURE__ */ K(mt, [["__scopeId", "data-v-65803abe"]]), ht = { class: "font-size-row" }, bt = {
   __name: "FontSizeButtons",
   props: {
     decrease: { type: Function, required: !0 },
@@ -1131,7 +1131,7 @@ const ft = { class: "width-row" }, mt = {
       }, null, 8, ["onClick"])
     ]));
   }
-}, Ct = /* @__PURE__ */ K(bt, [["__scopeId", "data-v-e6814203"]]), vt = { class: "header-row" }, gt = { class: "dialog-title" }, yt = { class: "status-el" }, wt = {
+}, Ct = /* @__PURE__ */ K(bt, [["__scopeId", "data-v-ce3b8142"]]), vt = { class: "header-row" }, gt = { class: "dialog-title" }, yt = { class: "status-el" }, wt = {
   __name: "DialogHeader",
   props: {
     title: { type: String, required: !0 },
@@ -1157,7 +1157,7 @@ const ft = { class: "width-row" }, mt = {
       C(t.$slots, "after", {}, void 0, !0)
     ]));
   }
-}, Dt = /* @__PURE__ */ K(wt, [["__scopeId", "data-v-584df2ac"]]);
+}, Dt = /* @__PURE__ */ K(wt, [["__scopeId", "data-v-db174e7d"]]);
 export {
   Dt as D,
   Et as a,

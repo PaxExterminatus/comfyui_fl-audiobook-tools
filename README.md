@@ -425,6 +425,11 @@ mount their component with a mocked `fetch` and drive it through the DOM
 (the Line Editor's suite also exercises its `ConfirmDialog` flow --
 delete-with-confirm -- via `primevue/confirmationservice`).
 
+## Test layout
+
+All test files now live in `src/__tests__/`, a single flat folder.
+Previously they were scattered in per-component `__tests__` subfolders.
+
 ## License
 
 MIT.

@@ -184,6 +184,15 @@ export function mockComfyApiPlugin() {
                     });
                 }
 
+                if (url.pathname === "/fl_cosyvoice3/vo_dub/tree" && req.method === "GET") {
+                    return sendJson(res, 200, {
+                        buckets: [
+                            { bucket: "E1", count: 3 },
+                            { bucket: "Other", count: 1 },
+                        ],
+                    });
+                }
+
                 if (url.pathname === "/fl_cosyvoice3/script_library/pending_revoice" && req.method === "GET") {
                     return sendJson(res, 200, {
                         scripts: [{

@@ -7,57 +7,123 @@
             /* Rough stand-in for the dark canvas the real editors float
                over inside ComfyUI, so a Dialog's own backdrop/contrast
                looks roughly like it will in-app. */
-            body {
+            html, body {
                 margin: 0;
-                min-height: 100vh;
+                height: 100%;
                 background: #18181b;
                 font-family: -apple-system, "Inter var", sans-serif;
+                color: #eee;
             }
-            #dev-toolbar {
-                position: fixed;
-                top: 12px;
-                left: 12px;
-                z-index: 20000;
+            #app-shell {
                 display: flex;
-                gap: 8px;
+                flex-direction: column;
+                height: 100vh;
             }
-            #dev-toolbar button {
+            #app-header {
+                flex: none;
+                padding: 10px 16px;
+                background: #202024;
+                border-bottom: 1px solid #333;
+                font-size: 14px;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+            }
+            #app-body {
+                flex: 1;
+                display: flex;
+                min-height: 0;
+            }
+            #sidebar {
+                flex: none;
+                width: 220px;
+                background: #202024;
+                border-right: 1px solid #333;
+                padding: 8px;
+                box-sizing: border-box;
+                overflow-y: auto;
+            }
+            #sidebar button {
+                display: block;
+                width: 100%;
+                text-align: left;
+                background: transparent;
+                color: #ccc;
+                border: none;
+                border-radius: 6px;
+                padding: 9px 10px;
+                margin-bottom: 2px;
+                font-size: 13px;
+                cursor: pointer;
+            }
+            #sidebar button:hover {
+                background: #2a2a2e;
+                color: #fff;
+            }
+            #sidebar button.active {
+                background: #34343a;
+                color: #fff;
+                font-weight: 600;
+            }
+            #main-content {
+                flex: 1;
+                min-width: 0;
+                position: relative;
+                overflow: auto;
+                padding: 16px;
+                box-sizing: border-box;
+            }
+            /* Where panel-style components (Script Library, VO Dub browser
+               panel) mount -- these size themselves to fill this box, the
+               same way they fill a ComfyUI node body via addDOMWidget. */
+            #panel-host {
+                width: 100%;
+                height: 100%;
+            }
+            /* Shown for dialog-style tools (Roles Editor, Browse Dialog,
+               Line Editor) -- they have no persistent embedded view, just
+               a launcher button, since the real component is always a
+               floating overlay regardless of where it's triggered from. */
+            .dialog-launcher {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .dialog-launcher p {
+                color: #999;
+                font-size: 13px;
+                max-width: 480px;
+            }
+            .dialog-launcher button {
                 background: #2a2a2e;
                 color: #eee;
                 border: 1px solid #444;
                 border-radius: 6px;
-                padding: 6px 12px;
-                font-size: 12px;
+                padding: 8px 14px;
+                font-size: 13px;
                 cursor: pointer;
             }
-            #dev-toolbar button:hover {
+            .dialog-launcher button:hover {
                 background: #3a3a3e;
-            }
-            /* Rough stand-in for a ComfyUI node's own body -- the real
-               panel mounts into a fixed-size box like this one via
-               node.addDOMWidget, not a floating overlay. */
-            #script-library-host {
-                position: fixed;
-                top: 60px;
-                left: 12px;
-                width: 340px;
-                height: 420px;
-                background: #2a2a2e;
-                border: 1px solid #444;
-                border-radius: 8px;
-                padding: 8px;
-                box-sizing: border-box;
             }
         </style>
     </head>
     <body>
-        <div id="dev-toolbar">
-            <button id="open-roles">Open Roles Editor</button>
-            <button id="open-browse-folder">Open Browse Dialog (folder)</button>
-            <button id="open-browse-file">Open Browse Dialog (file)</button>
-            <button id="open-line-editor">Open Line Editor</button>
+        <div id="app-shell">
+            <div id="app-header">FL Audiobook Tools -- standalone UI dev</div>
+            <div id="app-body">
+                <div id="sidebar">
+                    <button data-tool="script_library">Script Library</button>
+                    <button data-tool="roles_editor">Roles Editor</button>
+                    <button data-tool="browse_dialog">Browse Dialog (demo)</button>
+                    <button data-tool="line_editor">Line Editor</button>
+                    <button data-tool="vo_dub_editor">VO Dub Editor</button>
+                </div>
+                <div id="main-content">
+                    <div id="panel-host"></div>
+                </div>
+            </div>
         </div>
-        <div id="script-library-host"></div>
         <script type="module" src="./main.js"></script>
     </body>
 </html>

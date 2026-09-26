@@ -9,7 +9,7 @@
                looks roughly like it will in-app. */
             html, body {
                 margin: 0;
-                height: 100%;
+                min-height: 100%;
                 background: #18181b;
                 font-family: -apple-system, "Inter var", sans-serif;
                 color: #eee;
@@ -17,7 +17,7 @@
             #app-shell {
                 display: flex;
                 flex-direction: column;
-                height: 100vh;
+                min-height: 100vh;
             }
             #app-header {
                 flex: none;
@@ -124,6 +124,7 @@
                     <div id="panel-host"></div>
                 </div>
             </div>
+
         </div>
         <script type="module" src="./main.js"></script>
     </body>

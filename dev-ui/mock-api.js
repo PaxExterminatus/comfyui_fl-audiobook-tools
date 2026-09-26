@@ -54,9 +54,13 @@ function readFixtureText(filename, fallback) {
 function makeFileStore() {
     const roles = readFixtureJson("_roles.json", { roles: [] });
     const instructCategories = readFixtureJson("_instruct_categories.json", { categories: [] });
+    const dubRoles = readFixtureJson("_dub_roles.json", { roles: {} });
+    const dubState = readFixtureJson("_dub_state.json", { rows: {}, use_original_default: false });
     return new Map([
         ["_roles.json", JSON.stringify(roles, null, 2)],
         ["_instruct_categories.json", JSON.stringify(instructCategories, null, 2)],
+        ["_dub_roles.json", JSON.stringify(dubRoles, null, 2)],
+        ["_dub_state.json", JSON.stringify(dubState, null, 2)],
         ["Test_speakers.txt", readFixtureText("Test_speakers.txt", "")],
     ]);
 }
@@ -247,6 +251,65 @@ export function mockComfyApiPlugin() {
                     });
                 }
 
+                if (url.pathname === "/fl_cosyvoice3/vo_dub/rows" && req.method === "GET") {
+                    const root = url.searchParams.get("root") || "";
+                    const bucket = url.searchParams.get("bucket") || "";
+                    let rows = [];
+                    if (bucket === "E1") {
+                        rows = [
+                            { audio_key: "E1_001", episode: "Ep1", english: "Hello world.", duration_s: 4.2, channels: 2, status: "done", speaker: "Narrator", speaker_tag: "Narrator", russian: "Привет мир.", instruct: "calm" },
+                            { audio_key: "E1_002", episode: "Ep1", english: "How are you?", duration_s: 3.8, channels: 2, status: "not_started", speaker: "Hero", speaker_tag: "Hero", russian: "", instruct: "neutral" },
+                            { audio_key: "E1_003", episode: "Ep1", english: "Goodbye!", duration_s: 2.5, channels: 2, status: "stale", speaker: "Villain", speaker_tag: "Villain", russian: "Пока!", instruct: "angry" }
+                        ];
+                    } else if (bucket === "Other") {
+                        rows = [
+                            { audio_key: "Other_001", episode: "Ep2", english: "Extra line.", duration_s: 5.0, channels: 2, status: "no_text", speaker: "Narrator", speaker_tag: "Narrator", russian: "", instruct: "calm" }
+                        ];
+                    }
+                    return sendJson(res, 200, { rows });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/vo_dub/mark_rendered" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    console.log(`[mock-comfy-api] mark_rendered for ${body.audio_key}`);
+                    return sendJson(res, 200, { success: true });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/vo_dub/apply_effect" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    console.log(`[mock-comfy-api] apply_effect for ${body.audio_key} effect ${body.effect}`);
+                    return sendJson(res, 200, { success: true });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/vo_dub/seed_roles" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    const root = body.root || "";
+                    const dubRolesKey = [...files.keys()].find((k) => k.endsWith("_dub_roles.json"));
+                    const added = [];
+                    if (dubRolesKey) {
+                        const current = files.get(dubRolesKey);
+                        let dubRoles = { roles: {} };
+                        try { dubRoles = JSON.parse(current); } catch (_) {}
+                        const toAdd = ["hero", "villain"];
+                        for (const code of toAdd) {
+                            if (!dubRoles.roles[code]) {
+                                dubRoles.roles[code] = { character: code, speaker: "Narrator", gender: "", actor: "", description: "", dub_direction: "", notes: [], longest_files: [], lines: 0, audio_minutes: 0, lines_needing_translation: 0, lines_without_any_text: 0 };
+                                added.push(code);
+                            }
+                        }
+                        if (added.length > 0) {
+                            files.set(dubRolesKey, JSON.stringify(dubRoles, null, 2));
+                            console.log(`[mock-comfy-api] seed_roles added ${added.join(", ")}`);
+                        }
+                    }
+                    return sendJson(res, 200, { added: added });
+                }
+
+                if (url.pathname === "/fl_cosyvoice3/vo_dub/mark_role_stale" && req.method === "POST") {
+                    const body = JSON.parse((await readBody(req)) || "{}");
+                    console.log(`[mock-comfy-api] mark_role_stale for role ${body.role_code}`);
+                    return sendJson(res, 200, { changed: [] });
+                }
                 next();
             });
         },

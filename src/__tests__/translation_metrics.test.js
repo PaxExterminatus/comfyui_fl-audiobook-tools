@@ -10,22 +10,25 @@ function byKey(scores, key) {
 }
 
 describe("computeTranslationScores", () => {
-    it("returns 5 metrics with exact keys/labels, each a 0-100 number", () => {
-        const scores = computeTranslationScores("The old man read his book.", "Старый мужчина читал книгу.");
+    it("returns exactly 5 metrics with the new keys/labels, each a 0-100 number", () => {
+        const scores = computeTranslationScores(
+            "The old man read his book in the garden.",
+            "Старый мужчина читал свою книгу в саду."
+        );
 
         expect(scores).toHaveLength(5);
         expect(scores).toEqual([
-            expect.objectContaining({ key: "charLength" }),
-            expect.objectContaining({ key: "wordCount" }),
-            expect.objectContaining({ key: "tone" }),
-            expect.objectContaining({ key: "entities" }),
-            expect.objectContaining({ key: "speechDuration" }),
+            expect.objectContaining({ key: "syllableRatio" }),
+            expect.objectContaining({ key: "acousticTexture" }),
+            expect.objectContaining({ key: "edgeParity" }),
+            expect.objectContaining({ key: "lexicalDiversity" }),
+            expect.objectContaining({ key: "pauseDensity" }),
         ]);
-        expect(byKey(scores, "charLength").label).toBe("Длина (символы)");
-        expect(byKey(scores, "wordCount").label).toBe("Кол-во слов");
-        expect(byKey(scores, "tone").label).toBe("Тон/пунктуация");
-        expect(byKey(scores, "entities").label).toBe("Числа/даты");
-        expect(byKey(scores, "speechDuration").label).toBe("Темп речи");
+        expect(byKey(scores, "syllableRatio").label).toBe("Слоговая ёмкость строки");
+        expect(byKey(scores, "acousticTexture").label).toBe("Звуковая/фонетическая согласованность");
+        expect(byKey(scores, "edgeParity").label).toBe("Интонационно-краевые маркеры");
+        expect(byKey(scores, "lexicalDiversity").label).toBe("Лексическое разнообразие (TTR)");
+        expect(byKey(scores, "pauseDensity").label).toBe("Плотность микропауз");
 
         for (const score of scores) {
             expect(typeof score.score).toBe("number");
@@ -34,82 +37,70 @@ describe("computeTranslationScores", () => {
         }
     });
 
-    it("identical short text scores 100 on the word/tone/number metrics where applicable", () => {
-        const scores = computeTranslationScores("The cat sat on the mat", "The cat sat on the mat");
+    it("identical EN/EN text: edges, TTR and pauses are 100; syllables/sounds reflect EN-only vowels", () => {
+        // "The quick brown fox" has 5 EN syllable groups vs 0 RU vowel letters
+        // -> delta 1 -> 100 * exp(-2) -> 13.5
+        // sound-class: EN vowel prop 5/16 vs RU 0/16, EN sib x 1/16 -> soundScore 81.25, interj 100 -> 90.6
+        const scores = computeTranslationScores("The quick brown fox", "The quick brown fox");
 
-        // word count, tone and number tokens all match exactly -> 100
-        expect(byKey(scores, "wordCount").score).toBe(100);
-        expect(byKey(scores, "tone").score).toBe(100);
-        expect(byKey(scores, "entities").score).toBe(100);
-
-        // length/syllable formulas penalise equal-length EN vs EN (and 0 RU vowels),
-        // so we only bound-check those instead of demanding 100.
-        expect(byKey(scores, "charLength").score).toBeGreaterThanOrEqual(0);
-        expect(byKey(scores, "charLength").score).toBeLessThanOrEqual(100);
-        expect(byKey(scores, "speechDuration").score).toBeGreaterThanOrEqual(0);
-        expect(byKey(scores, "speechDuration").score).toBeLessThanOrEqual(100);
+        expect(byKey(scores, "acousticTexture").score).toBe(90.6);
+        expect(byKey(scores, "edgeParity").score).toBe(100);
+        expect(byKey(scores, "lexicalDiversity").score).toBe(100); // <7 words -> TTR gate
+        expect(byKey(scores, "pauseDensity").score).toBe(100);
+        expect(byKey(scores, "syllableRatio").score).toBe(13.5);
     });
 
-    it("a dropped question mark lowers the tone score", () => {
-        // en flags: [T, F, F]; ru "Ты идёшь" has no punctuation: [F, F, F] -> 2 of 3 match
-        const scores = computeTranslationScores("Are you coming?", "Ты идёшь");
-        expect(byKey(scores, "tone").score).toBe(66.7);
-
-        // keeping the question mark restores full tone match
-        const scores2 = computeTranslationScores("Are you coming?", "Ты идёшь?");
-        expect(byKey(scores2, "tone").score).toBe(100);
+    it("a short original (<7 words) gates lexical diversity to 100", () => {
+        const scores = computeTranslationScores("Hi there", "Привет, как дела?");
+        expect(byKey(scores, "lexicalDiversity").score).toBe(100);
     });
 
-    it("a dropped number lowers entities; kept or absent numbers score 100", () => {
-        // "3" and "5" both present in the Russian -> 100
-        expect(
-            byKey(computeTranslationScores("Chapter 3 has 5 pages.", "Глава 3 имеет 5 страниц."), "entities").score
-        ).toBe(100);
-
-        // "5" dropped -> 1 of 2 number tokens retained -> 50
-        const dropped = computeTranslationScores("Chapter 3 has 5 pages.", "Глава 3 имеет страниц.");
-        expect(byKey(dropped, "entities").score).toBe(50);
-
-        // no number tokens in the original -> 100 by definition
-        const noNum = computeTranslationScores("The rain falls softly", "Дождь падает мягко");
-        expect(byKey(noNum, "entities").score).toBe(100);
-    });
-
-    it("a much longer translation drops length and word-count to the 0 floor", () => {
+    it("7+ words with genuinely different lexical diversity scales the TTR ratio", () => {
+        // EN content tokens: cat, sat, mat, today -> TTR 1
+        // RU content tokens: кот, сидел, коврике, кот, снова, сидел -> TTR 4/6
+        // ratio -> 66.7
         const scores = computeTranslationScores(
-            "Hi, John.",
-            "Здравствуйте, Джон! Очень рад вас видеть, надеюсь, у вас все хорошо и погода сегодня хорошая."
+            "The cat sat on the mat today",
+            "Кот сидел на коврике, кот снова сидел"
         );
-
-        expect(byKey(scores, "charLength").score).toBe(0);
-        expect(byKey(scores, "wordCount").score).toBe(0);
-        // penalty is clamped, never negative
-        expect(byKey(scores, "speechDuration").score).toBeGreaterThanOrEqual(0);
+        expect(byKey(scores, "lexicalDiversity").score).toBe(66.7);
     });
 
-    it("a realistic EN/RU pair lands in the healthy range with full tone/number match", () => {
+    it("a dropped question mark lowers edgeParity; keeping it restores 100", () => {
+        // EN flags: [T,F,F,F,F]; RU "Ты идёшь": [F,F,F,F,F] -> 4 of 5 match -> 80
+        const scores = computeTranslationScores("Are you coming?", "Ты идёшь");
+        expect(byKey(scores, "edgeParity").score).toBe(80);
+
+        // keeping the question mark -> 5 of 5 match -> 100
+        const scores2 = computeTranslationScores("Are you coming?", "Ты идёшь?");
+        expect(byKey(scores2, "edgeParity").score).toBe(100);
+    });
+
+    it("mismatched interjection density drags acousticTexture down", () => {
+        // EN: "oh"/"wow" density 50 per 100 words vs RU 0 -> interjScore ~0.02;
+        // sound-class balance ~88.64 -> total ~44.3
+        const scores = computeTranslationScores("Oh, wow, the sky!", "Небо!");
+        expect(byKey(scores, "acousticTexture").score).toBe(44.3);
+    });
+
+    it("a realistic EN/RU pair scores high on edges/diversity/pauses, mid on syllables", () => {
         const scores = computeTranslationScores(
             "The old man read his book in the garden.",
-            "Старый мужчина читал свою книгу в саду.",
+            "Старый мужчина читал свою книгу в саду."
         );
 
-        expect(byKey(scores, "tone").score).toBe(100);
-        expect(byKey(scores, "entities").score).toBe(100);
-        const len = byKey(scores, "charLength").score;
-        const words = byKey(scores, "wordCount").score;
-        const speech = byKey(scores, "speechDuration").score;
-        expect(len).toBeGreaterThanOrEqual(0);
-        expect(len).toBeLessThanOrEqual(100);
-        expect(words).toBeGreaterThanOrEqual(0);
-        expect(words).toBeLessThanOrEqual(100);
-        expect(speech).toBeGreaterThanOrEqual(0);
-        expect(speech).toBeLessThanOrEqual(100);
+        expect(byKey(scores, "edgeParity").score).toBe(100);
+        expect(byKey(scores, "lexicalDiversity").score).toBe(100);
+        expect(byKey(scores, "pauseDensity").score).toBe(100);
+        // 10 EN syllable groups vs 13 RU vowels -> delta 0.3 -> 100 * exp(-0.6) -> 54.9
+        expect(byKey(scores, "syllableRatio").score).toBe(54.9);
+        expect(byKey(scores, "acousticTexture").score).toBe(95.6);
     });
 
     it("rounds every score to 1 decimal place", () => {
         const scores = computeTranslationScores(
             "The quick brown fox jumped over 2 lazy dogs at 5 o'clock.",
-            "Быстрый коричневый лиса прыгнул через 2 ленивых собак в 5 часов.",
+            "Быстрый лиса прыгнул через 2 ленивых собак в 5 часов."
         );
 
         for (const score of scores) {

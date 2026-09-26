@@ -14,12 +14,8 @@ function splitWords(text) {
     return String(text).split(/\s+/).filter(Boolean);
 }
 
-function toneFlags(text) {
-    return [
-        text.includes("?"),
-        text.includes("!"),
-        text.includes("...") || text.includes("…"),
-    ];
+function countPauses(text, conjRegex) {
+    return (text.match(/[,;]/g) || []).length + (text.match(conjRegex) || []).length;
 }
 
 function countEnglishSyllables(text) {
@@ -34,54 +30,99 @@ export function computeTranslationScores(original, translation) {
     const en = String(original);
     const ru = String(translation);
 
-    // 1. charLength — Длина (символы)
-    const ratio1 = ru.length / (en.length * 1.25);
-    const score1 = Math.max(0, 100 - Math.abs(ratio1 - 1) * 200);
+    // 1. syllableRatio — Слогая ёмкость строки
+    const enSyll = countEnglishSyllables(en);
+    const ruSyll = countRussianSyllables(ru);
+    let score1;
+    if (enSyll === 0) {
+        score1 = 100;
+    } else {
+        const ratio1 = ruSyll / enSyll;
+        const delta1 = Math.abs(ratio1 - 1);
+        score1 = 100 * Math.exp(-2 * delta1);
+    }
 
-    // 2. wordCount — Кол-во слов
-    const enWords = splitWords(en);
-    const ruWords = splitWords(ru);
-    const ratio2 = ruWords.length / enWords.length;
-    const score2 =
-        enWords.length === 0
-            ? 100
-            : Math.max(0, 100 - Math.abs(ratio2 - 1) * 150);
+    // 2. acousticTexture — Звуковая/фонетическая согласованность
+    // Part A: interjection density parity (per 100 words)
+    const EN_INTERJECTIONS = /\b(oh|ah|hm|ha|hey|ugh|wow|oops|tsk)\b/gi;
+    const RU_INTERJECTIONS = /\b(ох|ах|хм|ха|эй|уф|ого|ой|упс|мда)\b/gi;
+    const fEn = (en.match(EN_INTERJECTIONS) || []).length / Math.max(1, splitWords(en).length) * 100;
+    const fRu = (ru.match(RU_INTERJECTIONS) || []).length / Math.max(1, splitWords(ru).length) * 100;
+    const interjRatio = (Math.min(fEn, fRu) + 0.01) / (Math.max(fEn, fRu) + 0.01);
+    const interjScore = 100 * interjRatio;
 
-    // 3. tone — Тон/пунктуация
-    const enFlags = toneFlags(en);
-    const ruFlags = toneFlags(ru);
+    // Part B: sound-class (vowel / sibilant) balance
+    const EN_VOWELS = /[aeiouyAEIOUY]/g;
+    const EN_SIBILANTS = /[sxzSXZ]/g;
+    const RU_VOWELS = /[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g;
+    const RU_SIBILANTS = /[шжщчсзШЖЩЧСЗ]/g;
+    const totalLettersEn = (en.match(/[a-zA-Z]/g) || []).length || 1;
+    const totalLettersRu = (ru.match(/[а-яёА-ЯЁ]/g) || []).length || 1;
+    const vowelPropEn = (en.match(EN_VOWELS) || []).length / totalLettersEn;
+    const vowelPropRu = (ru.match(RU_VOWELS) || []).length / totalLettersRu;
+    const sibPropEn = (en.match(EN_SIBILANTS) || []).length / totalLettersEn;
+    const sibPropRu = (ru.match(RU_SIBILANTS) || []).length / totalLettersRu;
+    const vowelDiff = Math.abs(vowelPropEn - vowelPropRu);
+    const sibDiff = Math.abs(sibPropEn - sibPropRu);
+    const soundScore = 100 * (1 - Math.min(1, (vowelDiff + sibDiff) / 2));
+    const score2 = (interjScore + soundScore) / 2;
+
+    // 3. edgeParity — Интонационно-краевые маркеры
+    const edgeFlags = (text) => [
+        text.includes("?"),
+        text.includes("!"),
+        text.includes("...") || text.includes("…"),
+        /["«»]/.test(text),
+        /^\s*[—-]/.test(text),
+    ];
+    const enFlags = edgeFlags(en);
+    const ruFlags = edgeFlags(ru);
     let matchCount = 0;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
         if (enFlags[i] === ruFlags[i]) {
             matchCount += 1;
         }
     }
-    const score3 = (matchCount / 3) * 100;
+    const score3 = (matchCount / 5) * 100;
 
-    // 4. entities — Числа/даты
-    const numberTokens = en.match(/\d+/g) || [];
-    let score4;
-    if (numberTokens.length === 0) {
-        score4 = 100;
-    } else {
-        const found = numberTokens.filter((token) => ru.includes(token));
-        score4 = (found.length / numberTokens.length) * 100;
+    // 4. lexicalDiversity — Лексическое разнообразие (TTR)
+    const enWords = splitWords(en);
+    let score4 = 100;
+    if (enWords.length >= 7) {
+        const EN_STOP = new Set([
+            "the", "a", "an", "is", "are", "was", "were", "and", "or", "but", "of", "to", "in", "on", "at", "it",
+        ]);
+        const RU_STOP = new Set([
+            "и", "а", "но", "в", "на", "с", "к", "о", "у", "что", "это", "я", "ты", "он", "она",
+        ]);
+        const normalize = (text) =>
+            String(text)
+                .toLowerCase()
+                .replace(/[^a-zа-яё\s]/gi, "")
+                .split(/\s+/)
+                .filter(Boolean);
+        const enTokens = normalize(en).filter((w) => !EN_STOP.has(w));
+        const ruTokens = normalize(ru).filter((w) => !RU_STOP.has(w));
+        const ttrEn = new Set(enTokens).size / Math.max(1, enTokens.length);
+        const ttrRu = new Set(ruTokens).size / Math.max(1, ruTokens.length);
+        const ratio3 = Math.min(ttrEn, ttrRu) / Math.max(ttrEn, ttrRu, 0.0001);
+        score4 = ratio3 * 100;
     }
 
-    // 5. speechDuration — Темп речи
-    const enSyllables = countEnglishSyllables(en);
-    const ruSyllables = countRussianSyllables(ru);
-    const ratio5 = ruSyllables / (enSyllables * 1.15);
-    const score5 =
-        enSyllables === 0
-            ? 100
-            : Math.max(0, 100 - Math.abs(ratio5 - 1) * 200);
+    // 5. pauseDensity — Плотность микропауз
+    const EN_CONJ = /\b(and|but|or|so|because|although)\b/gi;
+    const RU_CONJ = /\b(и|а|но|или|потому|хотя)\b/gi;
+    const ruWords = splitWords(ru);
+    const pEn = countPauses(en, EN_CONJ) / (enWords.length || 1) * 10;
+    const pRu = countPauses(ru, RU_CONJ) / (ruWords.length || 1) * 10;
+    const ratio4 = (Math.min(pEn, pRu) + 0.01) / (Math.max(pEn, pRu) + 0.01);
+    const score5 = 100 * ratio4;
 
     return [
-        { key: "charLength", label: "Длина (символы)", score: round1(score1) },
-        { key: "wordCount", label: "Кол-во слов", score: round1(score2) },
-        { key: "tone", label: "Тон/пунктуация", score: round1(score3) },
-        { key: "entities", label: "Числа/даты", score: round1(score4) },
-        { key: "speechDuration", label: "Темп речи", score: round1(score5) },
+        { key: "syllableRatio", label: "Слоговая ёмкость строки", score: round1(score1) },
+        { key: "acousticTexture", label: "Звуковая/фонетическая согласованность", score: round1(score2) },
+        { key: "edgeParity", label: "Интонационно-краевые маркеры", score: round1(score3) },
+        { key: "lexicalDiversity", label: "Лексическое разнообразие (TTR)", score: round1(score4) },
+        { key: "pauseDensity", label: "Плотность микропауз", score: round1(score5) },
     ];
 }

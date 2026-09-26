@@ -19,6 +19,9 @@ import {
     openVoDubLineEditor,
     openDubRolesEditor,
 } from "../src/vo_dub_editor/main.js";
+import TranslationSimilarityRadar from "../src/shared/TranslationSimilarityRadar.vue";
+import { createApp } from "vue";
+import { ensureStylesLinked } from "../src/shared/styles_link.js";
 
 // Any string works -- the mock backend matches requests by filename
 // suffix (_roles.json, _instruct_categories.json, ...), not the literal path.
@@ -173,12 +176,72 @@ function renderVoDubEditor() {
     panelHost.appendChild(activePanel.element);
 }
 
+// A small palette of test cases spanning the score range -- lets you see at
+// a glance how the radar reacts to a solid translation vs. specific kinds
+// of drift (dropped punctuation/number, length blowup), not just one example.
+const TRANSLATION_RADAR_SAMPLES = [
+    {
+        title: "Хороший перевод",
+        original: "The quick brown fox jumps over the lazy dog. Voice synthesis requires accurate timing and expressive delivery.",
+        translation: "Быстрая бурая лиса прыгает через ленивую собаку. Синтез речи требует точного тайминга и выразительной подачи.",
+    },
+    {
+        title: "Короткая фраза (чувствительна к коэффициенту длины)",
+        original: "Chapter 5: The beginning.",
+        translation: "Глава 5: Начало.",
+    },
+    {
+        title: "Пропали вопрос, восклицание и число",
+        original: "Is it midnight already? We have 12 hours left!",
+        translation: "Уже за полночь.",
+    },
+    {
+        title: "Перевод сильно длиннее оригинала",
+        original: "Yes.",
+        translation: "Да, конечно, именно так, как я и думал с самого начала этой истории.",
+    },
+];
+
+function renderTranslationRadar() {
+    ensureStylesLinked(import.meta.url);
+    clearPanelHost();
+
+    const grid = document.createElement("div");
+    grid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; width: 100%; height: 100%; box-sizing: border-box; padding: 20px; overflow: auto; align-content: start;";
+
+    const apps = [];
+    for (const sample of TRANSLATION_RADAR_SAMPLES) {
+        const card = document.createElement("div");
+        card.style.cssText = "display: flex; flex-direction: column; align-items: center; background: #1e1e22; border: 1px solid #333; border-radius: 8px; padding: 12px;";
+
+        const title = document.createElement("div");
+        title.textContent = sample.title;
+        title.style.cssText = "color: #ccc; font-size: 13px; font-weight: 600; margin-bottom: 8px;";
+        card.appendChild(title);
+
+        const chartHost = document.createElement("div");
+        card.appendChild(chartHost);
+        grid.appendChild(card);
+
+        const app = createApp(TranslationSimilarityRadar, {
+            original: sample.original,
+            translation: sample.translation,
+        });
+        app.mount(chartHost);
+        apps.push(app);
+    }
+
+    activePanel = { unmount: () => apps.forEach((app) => app.unmount()) };
+    panelHost.appendChild(grid);
+}
+
 const TOOLS = {
     script_library: renderScriptLibrary,
     roles_editor: renderRolesEditor,
     browse_dialog: renderBrowseDialog,
     line_editor: renderLineEditor,
     vo_dub_editor: renderVoDubEditor,
+    translation_radar: renderTranslationRadar,
 };
 
 function selectTool(name) {

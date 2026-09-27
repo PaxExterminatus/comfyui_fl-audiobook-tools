@@ -60,6 +60,7 @@ import re
 import json
 import soundfile as sf
 import numpy as np
+from datetime import datetime, timezone
 from typing import Tuple, List, Optional, Dict
 
 try:
@@ -78,6 +79,11 @@ try:
     from . import _line_audio
 except (ImportError, ValueError):
     import _line_audio
+
+try:
+    from . import _line_history
+except (ImportError, ValueError):
+    import _line_history
 
 
 def _looks_like_dialog_script(path: str) -> bool:
@@ -1081,6 +1087,125 @@ if _HAS_SERVER:
         lines_dir = os.path.join(folder, "_audio", "lines", base_name)
         result = _line_audio.reorganize_lines(lines_dir, deletes, moves)
         return web.json_response(result)
+
+    @routes.get("/fl_cosyvoice3/script_library/line_history")
+    async def fl_cosyvoice3_script_library_line_history(request):
+        """Line History dialog's read side -- ported 1:1 from
+        electron-server/server.py's own copy. Keyed by position (see
+        _line_history.py's docstring for why not a stable id)."""
+        folder = request.query.get("folder", "").strip()
+        base_name = request.query.get("base_name", "").strip()
+        try:
+            position = int(request.query.get("position", ""))
+        except (TypeError, ValueError):
+            return web.json_response({"error": "position must be an integer"})
+        if not folder or not os.path.isdir(folder):
+            return web.json_response({"error": f"not a folder: {folder}"})
+        if not base_name:
+            return web.json_response({"error": "base_name is required"})
+
+        lines_dir = os.path.join(folder, "_audio", "lines", base_name)
+        entry = _line_history.get_entry(lines_dir, position) or {"chosen_version": None, "versions": []}
+        return web.json_response(entry)
+
+    @routes.get("/fl_cosyvoice3/script_library/line_history/counts")
+    async def fl_cosyvoice3_script_library_line_history_counts(request):
+        """One-shot version-count map for EVERY line in a script (see
+        _line_history.py's version_counts) -- backs the Line Editor's
+        per-row "History (N)" button without a per-row fetch."""
+        folder = request.query.get("folder", "").strip()
+        base_name = request.query.get("base_name", "").strip()
+        if not folder or not os.path.isdir(folder):
+            return web.json_response({"error": f"not a folder: {folder}"})
+        if not base_name:
+            return web.json_response({"error": "base_name is required"})
+        lines_dir = os.path.join(folder, "_audio", "lines", base_name)
+        return web.json_response(_line_history.version_counts(lines_dir))
+
+    @routes.post("/fl_cosyvoice3/script_library/line_history/choose")
+    async def fl_cosyvoice3_script_library_line_history_choose(request):
+        """Promotes an already-rendered version onto the canonical path
+        (_line_audio.promote_version) -- ported 1:1 from electron-server's
+        copy. The ONLY thing "pick the best take" does; every other
+        version file stays on disk untouched."""
+        try:
+            data = await request.json()
+        except Exception as e:
+            return web.json_response({"error": f"invalid request body: {e}"})
+        folder = (data.get("folder") or "").strip()
+        base_name = (data.get("base_name") or "").strip()
+        try:
+            position = int(data.get("position"))
+            version = int(data.get("version"))
+        except (TypeError, ValueError):
+            return web.json_response({"error": "position and version must be integers"})
+        if not folder or not os.path.isdir(folder):
+            return web.json_response({"error": f"not a folder: {folder}"})
+        if not base_name:
+            return web.json_response({"error": "base_name is required"})
+
+        lines_dir = os.path.join(folder, "_audio", "lines", base_name)
+        key = f"{position:04d}"
+        match = next((v for v in _line_audio.list_version_files(lines_dir, key) if v[0] == version), None)
+        if match is None:
+            return web.json_response({"error": f"no version {version} at position {position}"})
+        _, content_hash, _, _ = match
+        try:
+            out_path = _line_audio.promote_version(
+                lines_dir, key, version, _line_audio.expected_path(lines_dir, position, content_hash)
+            )
+        except FileNotFoundError as e:
+            return web.json_response({"error": str(e)})
+        _line_history.set_chosen_version(lines_dir, position, version)
+        return web.json_response({"ok": True, "path": out_path, "chosen_version": version})
+
+    @routes.post("/fl_cosyvoice3/script_library/line_history/capture_take")
+    async def fl_cosyvoice3_script_library_line_history_capture_take(request):
+        """ComfyUI-mode-only counterpart to electron-server's in-process
+        takes loop: since re-voicing here goes through ComfyUI's OWN queue
+        (one full graph submit+poll per take -- see web/script_library.js's
+        queueLineRevoice), each take arrives at the CANONICAL path first
+        (Audio Post-Process wrote it there, same as any single re-voice).
+        This snapshots that just-written canonical file into its own
+        version file (_line_audio.make_version_filename) + records it in
+        _history.json, so by the time all N takes have looped through, the
+        history is identical in shape to what electron-server's
+        /render/line produces in one call -- just assembled one take at a
+        time instead of in one Python loop."""
+        try:
+            data = await request.json()
+        except Exception as e:
+            return web.json_response({"error": f"invalid request body: {e}"})
+        folder = (data.get("folder") or "").strip()
+        base_name = (data.get("base_name") or "").strip()
+        speaker = (data.get("speaker") or "").strip()
+        instruct = data.get("instruct") or ""
+        text = (data.get("text") or "").strip()
+        try:
+            position = int(data.get("position"))
+            seed = int(data.get("seed"))
+        except (TypeError, ValueError):
+            return web.json_response({"error": "position and seed must be integers"})
+        if not folder or not os.path.isdir(folder):
+            return web.json_response({"error": f"not a folder: {folder}"})
+        if not base_name:
+            return web.json_response({"error": "base_name is required"})
+
+        content_hash = _line_audio.line_hash(speaker, instruct, text)
+        lines_dir = os.path.join(folder, "_audio", "lines", base_name)
+        canonical_path = _line_audio.expected_path(lines_dir, position, content_hash)
+        if not os.path.isfile(canonical_path):
+            return web.json_response({"error": f"no freshly-rendered file at {canonical_path} to capture"})
+
+        import shutil
+
+        key = f"{position:04d}"
+        version = _line_audio.next_version_number(lines_dir, key)
+        version_path = os.path.join(lines_dir, _line_audio.make_version_filename(key, version, content_hash, seed))
+        shutil.copyfile(canonical_path, version_path)
+        created_at = datetime.now(timezone.utc).isoformat()
+        _line_history.append_version(lines_dir, position, version, content_hash, seed, speaker, instruct, text, created_at)
+        return web.json_response({"ok": True, "version": version, "path": version_path})
 
     @routes.post("/fl_cosyvoice3/script_library/stitch_lines")
     async def fl_cosyvoice3_script_library_stitch_lines(request):

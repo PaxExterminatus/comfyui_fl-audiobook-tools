@@ -13,6 +13,7 @@ import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
 import InstructPickerDialog from "../shared/InstructPickerDialog.vue";
 import SpeakerPickerDialog from "./SpeakerPickerDialog.vue";
+import LineHistoryDialog from "../shared/LineHistoryDialog.vue";
 import LineRowEditor from "../shared/LineRowEditor.vue";
 import { speakerAccent } from "../shared/speaker_accent.js";
 import { insertStressMark as sharedInsertStressMark } from "../shared/stress_mark.js";
@@ -789,11 +790,28 @@ function pauseTitle(row, index) {
  role recast in Roles Editor): a role code can resolve to a different
  real speaker in another script's own context, so "same role" only means
  something within one script's own lines.
+
+ Memoized as a computed Map keyed by speaker code -- the template calls
+ this on EVERY row on EVERY render (see the v-for below), and the naive
+ per-row rows.value.filter(...) made that O(N^2) in the script's line
+ count. A computed only re-walks rows.value when some row's .speaker
+ actually changes, not on every keystroke in an unrelated row's .text.
 */
+const roleCountByCode = computed(() => {
+    const counts = new Map();
+    for (const r of rows.value) {
+        if (r.malformed) continue;
+        const code = (r.speaker || "").trim();
+        if (!code) continue;
+        counts.set(code, (counts.get(code) || 0) + 1);
+    }
+    return counts;
+});
 function sameRoleCount(row) {
     const code = (row.speaker || "").trim();
     if (!code) return 0;
-    return rows.value.filter((r) => r !== row && !r.malformed && (r.speaker || "").trim() === code).length;
+    const total = roleCountByCode.value.get(code) || 0;
+    return total > 0 ? total - 1 : 0;
 }
 function applyInstructTitle(row) {
     const count = sameRoleCount(row);
@@ -814,8 +832,22 @@ function applyInstructToSameRole(row) {
     scheduleSave();
     setStatus(`Applied instruct to ${count} other "${code}" line(s) in this script`);
 }
+/*
+ Memoized as a computed Map keyed by role code -- same reasoning as
+ roleCountByCode above: called per-row per-render in the template, and
+ roleEntries.value.find(...) per call was an unnecessary O(N) scan
+ (roleEntries only changes when roles are edited, never on a text
+ keystroke).
+*/
+const roleEntryByCode = computed(() => {
+    const map = new Map();
+    for (const e of roleEntries.value) {
+        map.set(e.code, e);
+    }
+    return map;
+});
 function roleEntryFor(row) {
-    return roleEntries.value.find((e) => e.code === row.speaker);
+    return roleEntryByCode.value.get(row.speaker);
 }
 
 function speakerFileTitle(row) {
@@ -844,10 +876,24 @@ function speakerUsageSubLabel(preset) {
  non-matching value (hand-typed, or a phrase from the retired
  _instructions.json catalog) is left alone and this just returns null.
 */
+/*
+ Memoized as a computed Map from example phrase -> category title --
+ same reasoning as the two Maps above: called per-row per-render, and
+ the nested .find/.some scan over instructCategories per call was
+ unnecessary work on every keystroke (instructCategories is static
+ per-session, loaded once from _instruct_categories.json).
+*/
+const instructCategoryByPhrase = computed(() => {
+    const map = new Map();
+    for (const c of instructCategories.value) {
+        for (const ex of c.examples || []) {
+            map.set(ex.trim(), c.title);
+        }
+    }
+    return map;
+});
 function instructNoteFor(row) {
-    const text = row.instruct.trim();
-    const category = instructCategories.value.find((c) => (c.examples || []).some((ex) => ex.trim() === text));
-    return category ? category.title : null;
+    return instructCategoryByPhrase.value.get(row.instruct.trim()) || null;
 }
 
 /*
@@ -937,6 +983,68 @@ async function onSpeakerPicked(preset) {
     await onSpeakerFileRecast(row, preset);
 }
 
+/*
+ ── line history dialog -- same "stateless dialog, this editor tracks
+ which row it's for" contract as SpeakerPickerDialog/InstructPickerDialog
+ above. historyCounts backs each row's "History (N)" button with ONE
+ fetch for the whole script (see nodes/script_library.py's line_history/
+ counts route) instead of one fetch per row -- the same O(N) cost this
+ session's earlier LineEditorContent.vue perf fix removed elsewhere must
+ not come back here.
+*/
+const historyVisible = ref(false);
+const historyRow = ref(null);
+const historyVersions = ref([]);
+const historyChosenVersion = ref(null);
+const historyCounts = reactive(new Map());
+
+async function refreshHistoryCounts() {
+    try {
+        const resp = await fetch(`${SCAN_API}/line_history/counts?folder=${encodeURIComponent(props.folder)}&base_name=${encodeURIComponent(audioBaseName.value)}`);
+        const data = await resp.json();
+        if (data && !data.error) {
+            historyCounts.clear();
+            for (const [pos, count] of Object.entries(data)) historyCounts.set(Number(pos), count);
+        }
+    } catch (e) {
+        console.error("[FL history] couldn't load version counts", e);
+    }
+}
+
+async function openLineHistory(row, index) {
+    historyRow.value = row;
+    const position = positionByIndex.value.get(index);
+    try {
+        const resp = await fetch(`${SCAN_API}/line_history?folder=${encodeURIComponent(props.folder)}&base_name=${encodeURIComponent(audioBaseName.value)}&position=${position}`);
+        const data = await resp.json();
+        historyVersions.value = data.versions || [];
+        historyChosenVersion.value = data.chosen_version ?? null;
+    } catch (e) {
+        console.error("[FL history] couldn't load line history", e);
+        historyVersions.value = [];
+        historyChosenVersion.value = null;
+    }
+    historyVisible.value = true;
+}
+
+async function onHistoryVersionChosen(version) {
+    const row = historyRow.value;
+    if (!row) return;
+    const index = rows.value.indexOf(row);
+    const position = positionByIndex.value.get(index);
+    try {
+        await fetch(`${SCAN_API}/line_history/choose`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folder: props.folder, base_name: audioBaseName.value, position, version }),
+        });
+        setStatus(`Line switched to version ${version}`);
+        await loadLineFiles();
+    } catch (e) {
+        setStatus(`Couldn't switch version: ${e.message || e}`);
+    }
+}
+
 
 function revoiceTitle(row, index) {
     if (pendingRevoiceRows.has(row)) return "Re-voicing...";
@@ -997,6 +1105,7 @@ async function revoiceRow(row, index) {
             baseName: audioBaseName.value,
         });
         await loadLineFiles();
+        await refreshHistoryCounts();
         /*
          Closes the loop the two other logs open (web/script_library.js's
          "[FL revoice]" and audio_post_process.py's per-run block): those
@@ -1452,6 +1561,7 @@ onMounted(() => {
     loadPresets();
     loadAudio();
     loadLineFiles();
+    refreshHistoryCounts();
     audioPollTimer = setInterval(() => { loadAudio({ silent: true }); loadLineFiles(); }, POLL_MS);
     loadFromDisk().then(() => {
         pollTimer = setInterval(() => loadFromDisk({ isPoll: true }), POLL_MS);
@@ -1550,6 +1660,16 @@ onBeforeUnmount(() => {
                 :class="{ 'row-enter': justAddedKey === row.__key, 'row-playing': (isCurrentlyReady ? currentRowToTimingIdx.get(index) === activeTimingIdx : mode1PlayingIdx === index) }"
                 :data-row-index="index"
                 :ref="(el) => setRowRef(row.__key, el)"
+                v-memo="[
+                    index, row.__key, row.text, row.speaker, row.instruct, row.pause, row.malformed, row.raw,
+                    roleCountByCode.get((row.speaker || '').trim()), roleEntryByCode.get(row.speaker),
+                    instructCategoryByPhrase.get(row.instruct.trim()),
+                    justAddedKey === row.__key, pendingRevoiceRows.has(row),
+                    rowHasAnyTake(index), rowIsFresh(row, index),
+                    isCurrentlyReady ? currentRowToTimingIdx.get(index) === activeTimingIdx : mode1PlayingIdx === index,
+                    isCurrentlyReady ? currentRowToTimingIdx.get(index) !== undefined : rowHasAnyTake(index),
+                    index === lastRowIndex,
+                ]"
             >
                 <div class="line-rail"
                     :style="row.malformed ? {} : { backgroundColor: speakerAccent(row.speaker) }"
@@ -1653,6 +1773,14 @@ onBeforeUnmount(() => {
                             </InputGroup>
 
                             <div class="spacer" />
+                            <Button
+                                icon="pi pi-history"
+                                size="small"
+                                text
+                                :label="historyCounts.get(positionByIndex.get(index)) ? String(historyCounts.get(positionByIndex.get(index))) : ''"
+                                title="Line history (previous takes/versions)"
+                                @click="openLineHistory(row, index)"
+                            />
                             <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
                         </template>
                     </LineRowEditor>
@@ -1676,6 +1804,14 @@ onBeforeUnmount(() => {
         :sample-dir="speakerSampleDir"
         :usage-for="speakerUsageSubLabel"
         @select="onSpeakerPicked"
+    />
+
+    <LineHistoryDialog
+        v-model:visible="historyVisible"
+        :versions="historyVersions"
+        :chosen-version="historyChosenVersion"
+        original=""
+        @select="onHistoryVersionChosen"
     />
 
     <RoleInfoPopover

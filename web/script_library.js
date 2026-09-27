@@ -113,6 +113,12 @@ app.registerExtension({
 // per checked script.
 const FL_CLASS = "FL_CosyVoice3_ScriptLibrary";
 const POST_PROCESS_CLASS = "FL_CosyVoice3_AudioPostProcess";
+// Third-party node (comfyui_fl-cosyvoice3, not this addon) -- stamped the
+// same literal-override way as Post-Process's inputs below, so a takes
+// loop can force a fresh seed per iteration without ever touching the
+// node's own `seed` widget (same "never mutate widget.value" reason the
+// module comment up top gives for act/file/line_override).
+const DIALOG_CLASS = "FL_CosyVoice3_SpeakerInstruct2Dialog";
 
 function isFlNodeActive(node) {
     // mode 2 = muted (LiteGraph), mode 4 = bypass (ComfyUI). Anything else counts as active.
@@ -190,12 +196,22 @@ let pendingRevoiceTarget = null;
 // that wire exists in a given workflow.
 let pendingRevoiceContentHash = null;
 
+// Set alongside the above, one iteration of queueLineRevoice's takes loop
+// at a time -- the seed THIS specific queued prompt's Dialog node(s)
+// should render with. null outside of a re-voice request (the Dialog
+// node's own widget value wins, unmodified, same as before this existed).
+let pendingRevoiceSeed = null;
+
 // buildPostProcessList/findPromptEntry/stripDownstreamAudioSavers moved to
 // fl_queue_orchestration.js (shared with vo_dub_library.js's own render
 // path -- none of the three cared about THIS addon's act/script model,
 // only about the current graph/prompt).
 function buildPostProcessList() {
     return findNodesByClass(POST_PROCESS_CLASS);
+}
+
+function buildDialogNodeList() {
+    return findNodesByClass(DIALOG_CLASS);
 }
 
 // Assigned inside the patch guard below (needs closure access to
@@ -327,10 +343,30 @@ if (!app._flScriptLibraryPatched) {
                         if (pendingRevoiceContentHash) ppEntry.inputs.line_hashes_json = JSON.stringify([pendingRevoiceContentHash]);
                         stamped.push(ppEntry.inputs);
                     }
+
+                    let seedStampedCount = 0;
+                    if (pendingRevoiceSeed !== null) {
+                        const dialogNodes = buildDialogNodeList();
+                        for (const dialogNode of dialogNodes) {
+                            const dialogEntry = findPromptEntry(prompt, dialogNode, DIALOG_CLASS);
+                            if (!dialogEntry) continue;
+                            dialogEntry.inputs = dialogEntry.inputs || {};
+                            dialogEntry.inputs.seed = pendingRevoiceSeed;
+                            seedStampedCount++;
+                        }
+                        if (dialogNodes.length === 0) {
+                            console.warn("[FL revoice] no FL CosyVoice3 Speaker Instruct2 Dialog node in this graph -- takes will all render with whatever seed the node's own widget already holds, not the requested per-take seed.");
+                        } else if (seedStampedCount === 0) {
+                            console.warn("[FL revoice] Dialog node(s) present in the graph but none matched an entry in the serialized prompt (muted/bypassed, or not reachable from an output node) -- seed override had nothing to stamp onto.");
+                        }
+                    }
+
                     console.log("[FL revoice] prompt built:", {
                         linePosition: pendingRevoiceLineIndex,
                         target: pendingRevoiceTarget,
                         contentHash: pendingRevoiceContentHash,
+                        seed: pendingRevoiceSeed,
+                        seedEntriesStamped: seedStampedCount,
                         postProcessNodesInGraph: ppNodes.length,
                         postProcessEntriesStamped: stamped.length,
                         stampedInputs: stamped,
@@ -427,7 +463,11 @@ if (!app._flScriptLibraryPatched) {
     // (via line_index_override = linePosition, see nodes/_line_audio.py) --
     // it does NOT touch the script's final stitched file any more: that
     // only happens once, when "✅ Done" stitches every line together.
-    queueLineRevoice = async function (node, { act, file, linePosition, speaker, instruct, text, folder, baseName, contentHash }) {
+    // One take = the exact single-run sequence this function always did:
+    // stamp the overrides, build+submit+await one prompt. Pulled out of
+    // queueLineRevoice itself so the takes loop below is just "call this
+    // N times with a different seed" -- no duplicated submit/poll logic.
+    async function queueOneTake(node, { act, file, linePosition, speaker, instruct, text, folder, baseName, contentHash, seed }) {
         const lineOverride = `${speaker} | ${instruct} | ${text}`;
 
         // Lock covers ONLY building the prompt (act/file/line_override are
@@ -441,6 +481,7 @@ if (!app._flScriptLibraryPatched) {
             pendingRevoiceLineIndex = linePosition;
             pendingRevoiceTarget = (folder && baseName) ? { folder, baseName } : null;
             pendingRevoiceContentHash = contentHash || null;
+            pendingRevoiceSeed = seed;
             try {
                 promptResult = await app.graphToPrompt();
             } finally {
@@ -448,10 +489,11 @@ if (!app._flScriptLibraryPatched) {
                 pendingRevoiceLineIndex = null;
                 pendingRevoiceTarget = null;
                 pendingRevoiceContentHash = null;
+                pendingRevoiceSeed = null;
             }
         });
 
-        console.log("[FL revoice] requested:", { act, file, linePosition, folder, baseName, contentHash, lineOverride });
+        console.log("[FL revoice] requested:", { act, file, linePosition, folder, baseName, contentHash, seed, lineOverride });
         const promptId = await submitAndTrackPromptId(promptResult);
         console.log("[FL revoice] queued as prompt_id", promptId, "-- waiting for it to finish");
         const entry = await pollPromptCompletion(promptId);
@@ -460,5 +502,58 @@ if (!app._flScriptLibraryPatched) {
         // "[FL CosyVoice3 AudioPostProcess] ---- run:" block in the ComfyUI
         // console means the node never executed, not that it failed to save.
         console.log("[FL revoice] prompt", promptId, "finished:", entry?.status?.status_str ?? "completed");
+        return entry;
+    }
+
+    const DEFAULT_TAKE_COUNT = 3;
+
+    // Renders `takes` versions of one line (default DEFAULT_TAKE_COUNT),
+    // each with its own seed -- one full ComfyUI queue round-trip per take
+    // (this addon's re-voice has always gone through the graph/queue, not a
+    // direct model call, so it keeps using whatever model/settings the
+    // user's own currently-open workflow has wired -- see queueOneTake's
+    // act/file/line_override forcing). After each take's prompt completes,
+    // its output already landed at the CANONICAL path (Audio Post-Process
+    // always writes there) -- capture_take immediately snapshots that into
+    // its own version file + _history.json entry (see
+    // nodes/script_library.py) before the next take's render can overwrite
+    // it. Once every take is captured, take 1 is promoted back onto the
+    // canonical path (electron-server's /render/line does the same
+    // "first take becomes the active one by default").
+    queueLineRevoice = async function (node, { act, file, linePosition, speaker, instruct, text, folder, baseName, contentHash, takes }) {
+        const takeCount = takes || DEFAULT_TAKE_COUNT;
+        const seeds = Array.from({ length: takeCount }, () => Math.floor(Math.random() * 2 ** 31));
+
+        for (const seed of seeds) {
+            await queueOneTake(node, { act, file, linePosition, speaker, instruct, text, folder, baseName, contentHash, seed });
+
+            if (!folder || !baseName) continue; // no history manifest to write without a target folder
+            try {
+                const resp = await fetch(`${SCRIPT_LIBRARY_API}/line_history/capture_take`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ folder, base_name: baseName, position: linePosition, seed, speaker, instruct, text }),
+                });
+                const data = await resp.json();
+                if (data.error) console.error("[FL revoice] capture_take failed:", data.error);
+                else console.log("[FL revoice] captured take", data.version, "at", data.path);
+            } catch (err) {
+                console.error("[FL revoice] capture_take request failed", err);
+            }
+        }
+
+        if (folder && baseName) {
+            try {
+                const resp = await fetch(`${SCRIPT_LIBRARY_API}/line_history/choose`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ folder, base_name: baseName, position: linePosition, version: 1 }),
+                });
+                const data = await resp.json();
+                if (data.error) console.error("[FL revoice] choosing take 1 as active failed:", data.error);
+            } catch (err) {
+                console.error("[FL revoice] choose request failed", err);
+            }
+        }
     };
 }

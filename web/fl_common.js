@@ -4,15 +4,23 @@
 // vanilla one (script_editor.js). Kept separate from ui_kit.js (DOM widget
 // factories) since nothing here touches the DOM.
 
+// Base origin every API path below is resolved against. Empty in ComfyUI
+// mode (the frontend is served from the same origin as ComfyUI's own
+// routes, so a relative path already reaches them) -- set via
+// VITE_API_BASE at build time for the standalone Electron app, whose
+// frontend is loaded from a different origin than its local Python
+// backend (e.g. "http://127.0.0.1:8765").
+export const API_BASE = (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE) || "";
+
 // Single source of truth for the plugin's REST endpoints (see
 // nodes/script_editor.py / nodes/script_library.py for the routes
 // themselves) -- every editor that talks to the backend imports these
 // instead of repeating the literal paths under its own locally-chosen name.
-export const SCRIPT_EDITOR_API = "/fl_cosyvoice3/script_editor";
-export const SCRIPT_LIBRARY_API = "/fl_cosyvoice3/script_library";
-export const SPEAKER_PRESETS_API = "/fl_cosyvoice3/script_library/speaker_presets";
-export const BROWSE_API = "/fl_cosyvoice3/browse/list_dir";
-export const VO_DUB_API = "/fl_cosyvoice3/vo_dub";
+export const SCRIPT_EDITOR_API = `${API_BASE}/fl_cosyvoice3/script_editor`;
+export const SCRIPT_LIBRARY_API = `${API_BASE}/fl_cosyvoice3/script_library`;
+export const SPEAKER_PRESETS_API = `${API_BASE}/fl_cosyvoice3/script_library/speaker_presets`;
+export const BROWSE_API = `${API_BASE}/fl_cosyvoice3/browse/list_dir`;
+export const VO_DUB_API = `${API_BASE}/fl_cosyvoice3/vo_dub`;
 
 const SCAN_API = SCRIPT_LIBRARY_API;
 

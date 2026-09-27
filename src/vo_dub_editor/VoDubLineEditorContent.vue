@@ -31,6 +31,7 @@ import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
 import LineRowEditor from "../shared/LineRowEditor.vue";
 import InstructPickerDialog from "../shared/InstructPickerDialog.vue";
+import LineHistoryDialog from "../shared/LineHistoryDialog.vue";
 import RoleInfoPopover from "../shared/RoleInfoPopover.vue";
 import { useRoleInfoPopover } from "../shared/role_info_popover.js";
 import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
@@ -123,6 +124,51 @@ const EFFECT_OPTIONS = [
  saved entry must stay untouched by just trying an effect out.
 */
 const previewEffect = reactive({}); // audio_key -> pending effect value, or undefined if untouched this session
+const historyVisible = ref(false);
+const historyRow = ref(null);
+const historyVersions = ref([]);
+const historyChosenVersion = ref(null);
+const historyCounts = reactive({}); // audio_key -> count
+
+async function refreshHistoryCounts() {
+    try {
+        const resp = await fetch(`${VO_DUB_API}/line_history/counts?root=${encodeURIComponent(props.root)}`);
+        const data = await resp.json();
+        if (data && !data.error) Object.assign(historyCounts, data);
+    } catch (e) {
+        console.error("[FL history] couldn't load version counts", e);
+    }
+}
+
+async function openLineHistory(row) {
+    historyRow.value = row;
+    try {
+        const resp = await fetch(`${VO_DUB_API}/line_history?root=${encodeURIComponent(props.root)}&audio_key=${encodeURIComponent(row.audio_key)}`);
+        const data = await resp.json();
+        historyVersions.value = data.versions || [];
+        historyChosenVersion.value = data.chosen_version ?? null;
+    } catch (e) {
+        console.error("[FL history] couldn't load line history", e);
+        historyVersions.value = [];
+        historyChosenVersion.value = null;
+    }
+    historyVisible.value = true;
+}
+
+async function onHistoryVersionChosen(version) {
+    const row = historyRow.value;
+    if (!row) return;
+    try {
+        await fetch(`${VO_DUB_API}/line_history/choose`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ root: props.root, audio_key: row.audio_key, version }),
+        });
+        status.value = `Switched ${row.audio_key} to version ${version}`;
+    } catch (e) {
+        status.value = `Couldn't switch version: ${e.message || e}`;
+    }
+}
 function effectValue(row) {
     const pending = previewEffect[row.audio_key];
     return pending !== undefined ? pending : (entryFor(row).effect || "");
@@ -1033,6 +1079,7 @@ function durationBadge(row) {
 onMounted(async () => {
     loadRoleEntries();
     loadInstructCategories();
+    refreshHistoryCounts();
     await loadState();
     await loadRows();
 });
@@ -1217,6 +1264,14 @@ onMounted(async () => {
                             :title="hasRuTake(row) ? 'Re-render this row and write it to audio_ru\\' : 'Render this row and write it to audio_ru\\'"
                             @click="renderRow(row)"
                         />
+                        <Button
+                            icon="pi pi-history"
+                            size="small"
+                            text
+                            :label="historyCounts[row.audio_key] ? String(historyCounts[row.audio_key]) : ''"
+                            title="Line history (previous takes/versions)"
+                            @click="openLineHistory(row)"
+                        />
                         <Dropdown
                             :model-value="effectValue(row)"
                             :options="EFFECT_OPTIONS"
@@ -1304,6 +1359,14 @@ onMounted(async () => {
         v-model:visible="instructPickerVisible"
         :categories="instructCategories"
         @select="onInstructPicked"
+    />
+
+    <LineHistoryDialog
+        v-model:visible="historyVisible"
+        :versions="historyVersions"
+        :chosen-version="historyChosenVersion"
+        :original="historyRow?.english || ''"
+        @select="onHistoryVersionChosen"
     />
 
     <RoleInfoPopover

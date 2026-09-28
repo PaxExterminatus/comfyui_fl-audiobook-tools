@@ -13,14 +13,29 @@ import PrimeVue from "primevue/config";
 import { ensureStylesLinked } from "../src/shared/styles_link.js";
 import { SCRIPT_LIBRARY_API, VO_DUB_API } from "../web/fl_common.js";
 
-const projectRootInput = document.getElementById("project-root-input");
-projectRootInput.value = localStorage.getItem("FL_Electron.projectRoot") || "";
-projectRootInput.addEventListener("input", (e) => {
-    localStorage.setItem("FL_Electron.projectRoot", e.target.value);
+const voDubRootInput = document.getElementById("vo-dub-root-input");
+const storedRoot = localStorage.getItem("FL_Electron.voDubRoot") || "";
+voDubRootInput.value = storedRoot;
+// If still empty, try to use a default from environment (set by electron main) or fallback to current directory
+if (!voDubRootInput.value) {
+  // Attempt to read from a global set by electron main (optional)
+  if (window.FL_ELECTRON_VODUB_ROOT) {
+    voDubRootInput.value = window.FL_ELECTRON_VODUB_ROOT;
+  } else {
+    // Fallback to the directory where this electron app is launched (process resources)
+    // We cannot access node fs here, so use a sensible default: ask user via alert?
+    // For now set to empty and rely on user to set via UI.
+    console.warn("[electron-ui] VO-Dub root is empty; please set it via the input above.");
+  }
+}
+voDubRootInput.addEventListener("input", (e) => {
+    localStorage.setItem("FL_Electron.voDubRoot", e.target.value);
 });
 
 function getProjectRoot() {
-    return projectRootInput.value;
+    const root = voDubRootInput.value;
+    console.log("[electron-ui] Project root:", root);
+    return root;
 }
 
 function makeWidget(initial = "") {

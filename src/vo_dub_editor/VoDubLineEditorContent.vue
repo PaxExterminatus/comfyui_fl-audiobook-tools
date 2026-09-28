@@ -919,6 +919,10 @@ async function currentContentHash(row) {
 
 async function renderRow(row) {
     if (!props.renderApi || renderingKeys.has(row.audio_key)) return;
+    if (!props.root) {
+      status.value = "Project root is not set. Please set it in the project root input above.";
+      return;
+    }
     renderingKeys.add(row.audio_key);
     status.value = `Rendering ${row.audio_key}...`;
     try {
@@ -1235,9 +1239,22 @@ onMounted(async () => {
 
                         <div class="vo-dub-player">
                             <WaveformCanvas v-if="hasRuTake(row)" :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])" class="vo-dub-waveform" />
+                            <!-- crossorigin is REQUIRED on this element, unlike
+                            the EN player above: this is the one wrapped in
+                            createMediaElementSource (setRuAudioRef ->
+                            createEffectPreview). The file is served from the
+                            BACKEND's origin (127.0.0.1:8765), never the UI's
+                            (localhost:5199/5173), so without this attribute the
+                            browser fetches it no-cors, the stream is opaque, and
+                            the MediaElementAudioSourceNode outputs SILENCE --
+                            while the element still reports a duration and
+                            advances currentTime, so it looks like it is playing
+                            fine. The backend already answers with
+                            Access-Control-Allow-Origin: *, so "anonymous"
+                            resolves cleanly. -->
                             <audio
                                 v-if="hasRuTake(row)"
-                                controls preload="none"
+                                controls preload="none" crossorigin="anonymous"
                                 :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])"
                                 :ref="(el) => setRuAudioRef(row, el)"
                                 @loadedmetadata="onRuMetadata(row, $event)"

@@ -7,7 +7,11 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
     root: "electron-ui",
     plugins: [vue()],
+    server: {
+        port: 5199,
+    },
     define: {
         "process.env.NODE_ENV": JSON.stringify("production"),
+        "import.meta.env.VITE_API_BASE": JSON.stringify("http://127.0.0.1:8765"),
     },
 });

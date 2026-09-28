@@ -11,6 +11,7 @@
 // frontend is loaded from a different origin than its local Python
 // backend (e.g. "http://127.0.0.1:8765").
 export const API_BASE = (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE) || "";
+console.log("[DEBUG] API_BASE:", API_BASE);
 
 // Single source of truth for the plugin's REST endpoints (see
 // nodes/script_editor.py / nodes/script_library.py for the routes

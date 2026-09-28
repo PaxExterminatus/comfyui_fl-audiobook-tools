@@ -14,6 +14,7 @@ import json
 import csv
 import hashlib
 import random
+import traceback
 from datetime import datetime, timezone
 from typing import Tuple, List, Optional, Dict
 
@@ -1515,6 +1516,20 @@ async def fl_cosyvoice3_vo_dub_render_row(request):
     if not speaker:
         return web.json_response({"error": "no speaker resolved for this row"})
     content_hash = row_hash(row, state_entry, None, bool(state.get("use_original_default")))
+    # Determine whether to use the original EN sample as the TTS voice.
+    # Must go through uses_original_as_sample(): a per-row checkbox wins on its
+    # own, the project-wide default only applies when the row was never touched.
+    # An AND of the two was wrong twice over -- it ignored a ticked row whenever
+    # the project default was off, and it disagreed with row_hash() above, which
+    # already uses this helper, so a row could be hashed as "original sample"
+    # and then rendered from a preset.
+    use_original = uses_original_as_sample(
+        state_entry, bool(state.get("use_original_default"))
+    )
+    if use_original:
+        speaker_for_tts = ""   # empty tells CosyVoice to use referenceAudioPath
+    else:
+        speaker_for_tts = speaker
     versions_dir = os.path.join(root, "_dub_versions")
     os.makedirs(versions_dir, exist_ok=True)
     models_dir = _cosyvoice_models_dir()
@@ -1527,19 +1542,25 @@ async def fl_cosyvoice3_vo_dub_render_row(request):
         results = []
         created_at = datetime.now(timezone.utc).isoformat()
         for seed in seeds:
-            version = next_version_number(versions_dir, audio_key)
-            version_path = os.path.join(versions_dir, make_version_filename(audio_key, version, content_hash, seed))
-            duration_s, sample_rate = _tts_engine.synthesize(models_dir, speaker_dir, speaker, instruct, text, version_path, seed=seed)
-            _line_history.append_version(versions_dir, audio_key, version, content_hash, seed, speaker, instruct, text, created_at)
-            results.append({"version": version, "seed": seed, "path": version_path, "duration_s": round(duration_s, 3), "sample_rate": sample_rate})
+                    version = next_version_number(versions_dir, audio_key)
+                    version_path = os.path.join(versions_dir, make_version_filename(audio_key, version, content_hash, seed))
+                    reference_path = audio_en_path(root, audio_key) if use_original else None
+                    duration_s, sample_rate = _tts_engine.synthesize(models_dir, speaker_dir, speaker_for_tts, instruct, text, version_path, seed=seed, reference_audio_path=reference_path)
+                    print(f"[DEBUG] synthesized {version_path} duration={duration_s}")
+                    _line_history.append_version(versions_dir, audio_key, version, content_hash, seed, speaker, instruct, text, created_at)
+                    results.append({"version": version, "seed": seed, "path": version_path, "duration_s": round(duration_s, 3), "sample_rate": sample_rate})
     except Exception as e:
+        # str(e) alone is often unattributable (e.g. a bare libsndfile
+        # "could not find MARK" says nothing about WHICH file or WHICH call
+        # produced it) -- the JSON stays short for the UI, the full stack
+        # goes to the server log where it can actually be diagnosed.
+        traceback.print_exc()
         return web.json_response({"error": f"synthesis failed: {e}"})
     chosen_version = results[0]["version"]
     out_path = promote_version(versions_dir, audio_key, chosen_version, audio_ru_path(root, audio_key))
+    print(f"[DEBUG] promote_version -> {out_path}")
     _line_history.set_chosen_version(versions_dir, audio_key, chosen_version)
     return web.json_response({"ok": True, "path": out_path, "hash": content_hash, "chosen_version": chosen_version, "takes": results})
-
-
 @routes.get("/fl_cosyvoice3/vo_dub/line_history")
 async def fl_cosyvoice3_vo_dub_line_history(request):
     root = request.query.get("root", "").strip()

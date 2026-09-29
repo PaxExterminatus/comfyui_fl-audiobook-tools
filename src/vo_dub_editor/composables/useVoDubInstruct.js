@@ -1,31 +1,5 @@
 /**
- * useVoDubInstruct — instruct-банк (_instruct_categories.json) и
- *                    работа с полем «Instruct» у строки.
- *
- * Отвечает за:
- *   • instructCategories / loadInstructCategories()
- *   • scheduleInstructLibrarySave(row) — автопополнение банка из ввода
- *   • instructPickerVisible / instructPickerRow / openInstructPicker(row)
- *   • onInstructPicked(example) — выбор из банка + предыдущее значение
- *   • prevInstruct / undoInstruct / undoInstructTitle
- *   • instructNoteFor(row) — показать, к какой категории относится
- *     текущий instruct (если он дословно совпал с примером)
- *   • sameRoleCount / applyInstructTitle / applyInstructToSameRole —
- *     «применить instruct ко всем строкам той же роли»
- *
- * Внешние зависимости через ctx:
- *   props { root }                    — путь к _instruct_categories.json
- *   rows, entryFor, onTextEdit,
- *   scheduleSave, setStatus           — из useVoDubState
- *   roleCodeFor                       — из useVoDubRoles
- *
- * Экспортирует:
- *   instructCategories, loadInstructCategories,
- *   instructPickerVisible, instructPickerRow, openInstructPicker,
- *   onInstructPicked, prevInstruct,
- *   undoInstructTitle, undoInstruct,
- *   instructNoteFor,
- *   sameRoleCount, applyInstructTitle, applyInstructToSameRole
+ * useVoDubInstruct — instruct-банк (_instruct_categories.json) и работа с полем «Instruct» у строки.
  */
 
 import { ref, reactive } from "vue";
@@ -154,13 +128,6 @@ export function useVoDubInstruct(ctx) {
         ).length;
     }
 
-    function applyInstructTitle(row) {
-        const count = sameRoleCount(row);
-        return count > 0
-            ? `Apply this instruct to every other "${roleCodeFor(row)}" row in this bucket (${count})`
-            : "No other rows in this bucket use this role";
-    }
-
     function applyInstructToSameRole(row) {
         const count = sameRoleCount(row);
         if (!count) return;
@@ -191,7 +158,6 @@ export function useVoDubInstruct(ctx) {
         undoInstruct,
         instructNoteFor,
         sameRoleCount,
-        applyInstructTitle,
         applyInstructToSameRole,
     };
 }

@@ -620,71 +620,95 @@ if _HAS_SERVER:
         except FileNotFoundError as e:
             return web.json_response({"error": str(e)})
 
-    @routes.post("/fl_cosyvoice3/vo_dub/apply_effect")
-    async def fl_cosyvoice3_vo_dub_apply_effect(request):
-        """
-        Re-applies a chosen Effect to this row's own DRY (pre-effect) take
-        -- see AUDIO_DRY_DIRNAME's own comment -- WITHOUT touching the TTS
-        graph at all, so switching or removing an effect on an already-
-        rendered row takes a fraction of a second instead of a full
-        re-synthesis. `torch`/soundfile/_audio_utils/_audio_effects are
-        imported HERE, not at module level -- this file otherwise never
-        needs torch (see its own module docstring / test file), and this
-        is the one route that genuinely does.
+       @routes.post("/fl_cosyvoice3/vo_dub/apply_effect")
+       async def fl_cosyvoice3_vo_dub_apply_effect(request):
+           """
+           Перерабатывает dry-копию строки (или конкретную версию из
+           _dub_versions/) с новым effect/normalize/speed, без повторного
+           TTS-синтеза. Требует, чтобы dry-копия уже существовала (был хотя
+           бы один полный рендер строки после того, как этот аддон начал
+           писать dry_output_path_override).
+           """
+           try:
+               data = await request.json()
+           except Exception as e:
+               return web.json_response({"error": f"invalid request body: {e}"})
 
-        Requires a dry take to already exist: a row that's never been
-        rendered (or was rendered before this addon started writing dry
-        copies) has nothing to reprocess yet -- the caller falls back to a
-        normal full render in that case.
-        """
-        try:
-            data = await request.json()
-        except Exception as e:
-            return web.json_response({"error": f"invalid request body: {e}"})
-        root = (data.get("root") or "").strip()
-        audio_key = (data.get("audio_key") or "").strip()
-        effect = (data.get("effect") or "").strip()
-        if not root or not os.path.isdir(root):
-            return web.json_response({"error": f"not a folder: {root}"})
-        if not audio_key:
-            return web.json_response({"error": "audio_key is required"})
+           root = (data.get("root") or "").strip()
+           audio_key = (data.get("audio_key") or "").strip()
+           effect = (data.get("effect") or "").strip()
+           normalize = bool(data.get("normalize"))
+           try:
+               speed = float(data.get("speed") or 1.0)
+           except (TypeError, ValueError):
+               speed = 1.0
+           version = data.get("version")
 
-        dry_path = audio_dry_path(root, audio_key)
-        if not os.path.isfile(dry_path):
-            return web.json_response({"error": "no dry take yet for this row -- render it once first"})
+           if not root or not os.path.isdir(root):
+               return web.json_response({"error": f"not a folder: {root}"})
+           if not audio_key:
+               return web.json_response({"error": "audio_key is required"})
 
-        try:
-            import torch
-            import soundfile as sf
-            try:
-                from ._audio_utils import save_wav
-                from ._audio_effects import apply_named_effect
-            except (ImportError, ValueError):
-                from _audio_utils import save_wav
-                from _audio_effects import apply_named_effect
-        except ImportError as e:
-            return web.json_response({"error": f"couldn't load the audio engine: {e}"})
+           # Источник: явная версия из _dub_versions/, или dry-копия
+           if version is not None:
+               try:
+                   version = int(version)
+               except (TypeError, ValueError):
+                   return web.json_response({"error": "version must be an integer"})
 
-        try:
-            data_np, sample_rate = sf.read(dry_path, dtype="float32", always_2d=True)
-        except Exception as e:
-            return web.json_response({"error": f"couldn't read dry take: {e}"})
-        # sf.read gives (frames, channels); save_wav's own convention (see
-        # _audio_utils.py) is (channels, frames) -- .T.copy() rather than a
-        # bare .T so the result is contiguous, not a transposed view.
-        wav = torch.from_numpy(data_np.T.copy())
-        wav = apply_named_effect(wav, sample_rate, effect)
+               versions_dir = os.path.join(root, "_dub_versions")
+               prefix = f"{audio_key}_v{version:03d}_"
+               source_path = None
+               if os.path.isdir(versions_dir):
+                   for f in os.listdir(versions_dir):
+                       if f.startswith(prefix) and f.lower().endswith(".wav"):
+                           source_path = os.path.join(versions_dir, f)
+                           break
+               if source_path is None:
+                   return web.json_response({"error": f"version {version} not found for {audio_key}"})
+           else:
+               source_path = audio_dry_path(root, audio_key)
 
-        ru_path = audio_ru_path(root, audio_key)
-        try:
-            ru_dir = os.path.dirname(ru_path)
-            if ru_dir:
-                os.makedirs(ru_dir, exist_ok=True)
-            save_wav(wav, sample_rate, ru_path)
-        except OSError as e:
-            return web.json_response({"error": f"couldn't write {ru_path}: {e}"})
+           if not os.path.isfile(source_path):
+               return web.json_response({"error": f"no source take: {source_path}"})
 
-        return web.json_response({"ok": True})
+           try:
+               import torch
+               import soundfile as sf
+               try:
+                   from ._audio_utils import save_wav, normalize_loudness, change_speed
+                   from ._audio_effects import apply_named_effect
+               except (ImportError, ValueError):
+                   from _audio_utils import save_wav, normalize_loudness, change_speed
+                   from _audio_effects import apply_named_effect
+           except ImportError as e:
+               return web.json_response({"error": f"couldn't load the audio engine: {e}"})
+
+           try:
+               data_np, sample_rate = sf.read(source_path, dtype="float32", always_2d=True)
+           except Exception as e:
+               return web.json_response({"error": f"couldn't read source take: {e}"})
+
+           wav = torch.from_numpy(data_np.T.copy())
+
+           # Тот же порядок, что в audio_post_process.py: effect → normalize → speed
+           if effect:
+               wav = apply_named_effect(wav, sample_rate, effect)
+           if normalize:
+               wav, _gain = normalize_loudness(wav, sample_rate)
+           if speed != 1.0:
+               wav = change_speed(wav, sample_rate, speed)
+
+           ru_path = audio_ru_path(root, audio_key)
+           try:
+               ru_dir = os.path.dirname(ru_path)
+               if ru_dir:
+                   os.makedirs(ru_dir, exist_ok=True)
+               save_wav(wav, sample_rate, ru_path)
+           except OSError as e:
+               return web.json_response({"error": f"couldn't write {ru_path}: {e}"})
+
+           return web.json_response({"ok": True, "source": os.path.basename(source_path)})
 
 
 class FL_CosyVoice3_VODubLibrary:

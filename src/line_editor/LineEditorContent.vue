@@ -165,7 +165,7 @@ const {
 
   // useRowHelpers
   lastRowIndex, pauseDefaultFor, pauseUnreadable, pauseTitle,
-  roleCountByCode, sameRoleCount, applyInstructTitle, applyInstructToSameRole,
+  roleCountByCode, sameRoleCount, applyInstructToSameRole,
   navIdx, prevDisabled, nextDisabled, goPrev, goNext,
 } = ctx;
 
@@ -215,8 +215,6 @@ provide("lineRowApi", {
   canUndoInstruct:     (row) => row.__prevInstruct !== undefined,
   undoInstructTitle:   (row) => undoInstructTitle(row),
   undoInstruct:        (row) => undoInstruct(row),
-  canApplyInstruct:    (row) => sameRoleCount(row) > 0,
-  applyInstructTitle:  (row) => applyInstructTitle(row),
   applyInstructToSameRole: (row) => applyInstructToSameRole(row),
   instructNoteFor:     (row) => instructNoteFor(row),
   openInstructPicker:  (row) => openInstructPicker(row),

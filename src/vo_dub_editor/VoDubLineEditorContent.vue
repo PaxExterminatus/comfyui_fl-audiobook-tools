@@ -23,6 +23,7 @@
  Логика вынесена в composables/* — этот файл только оркестратор.
 */
 import { ref, watch, onMounted } from "vue";
+import InputGroup from "primevue/inputgroup";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
@@ -117,7 +118,7 @@ const {
   instructCategories, loadInstructCategories,
   instructPickerVisible, instructPickerRow, openInstructPicker,
   onInstructPicked, prevInstruct, undoInstructTitle, undoInstruct,
-  instructNoteFor, sameRoleCount, applyInstructTitle, applyInstructToSameRole,
+  instructNoteFor, sameRoleCount, applyInstructToSameRole,
 
   // effects
   effectValue,
@@ -309,6 +310,7 @@ onMounted(async () => {
               <div class="vo-dub-player">
                 <WaveformCanvas :src="audioUrl('audio_en', row.audio_key)" class="vo-dub-waveform" />
                 <audio
+                    class="w100p"
                     controls preload="none"
                     :src="audioUrl('audio_en', row.audio_key)"
                     :ref="(el) => setEnAudioRef(row.audio_key, el)"
@@ -331,6 +333,7 @@ onMounted(async () => {
               <div class="vo-dub-player">
                 <WaveformCanvas v-if="hasRuTake(row)" :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])" class="vo-dub-waveform" />
                 <audio
+                    class="w100p"
                     v-if="hasRuTake(row)"
                     controls preload="none" crossorigin="anonymous"
                     :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])"

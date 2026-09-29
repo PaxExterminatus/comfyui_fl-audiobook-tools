@@ -5,18 +5,6 @@
  * собранный из функций и refs, которые предоставляют другие composables.
  * Каждый getter/setter знает про форму stateRows[row.audio_key] именно
  * VO Dub'а — этим LineRowEditor остаётся caller-agnostic.
- *
- * Внешние зависимости через ctx:
- *   roleEntries, roleOptionSubLabel,
- *   showRoleInfoPopover, hideRoleInfoPopover,
- *   fontSizePx, autoGrow, setTextareaRef,
- *   entryFor, onTextEdit, scheduleInstructLibrarySave,
- *   roleCodeFor,
- *   prevInstruct, undoInstructTitle, undoInstruct,
- *   sameRoleCount, applyInstructTitle, applyInstructToSameRole,
- *   instructNoteFor, openInstructPicker
- *
- * Ничего не возвращает — только side-effect provide().
  */
 
 import { provide } from "vue";
@@ -42,7 +30,6 @@ export function useVoDubRowApi(ctx) {
         undoInstructTitle,
         undoInstruct,
         sameRoleCount,
-        applyInstructTitle,
         applyInstructToSameRole,
         instructNoteFor,
         openInstructPicker,
@@ -90,8 +77,6 @@ export function useVoDubRowApi(ctx) {
         canUndoInstruct:     (row) => prevInstruct[row.audio_key] !== undefined,
         undoInstructTitle:   (row) => undoInstructTitle(row),
         undoInstruct:        (row) => undoInstruct(row),
-        canApplyInstruct:    (row) => sameRoleCount(row) > 0,
-        applyInstructTitle:  (row) => applyInstructTitle(row),
         applyInstructToSameRole: (row) => applyInstructToSameRole(row),
         instructNoteFor:     (row) => instructNoteFor(row),
         openInstructPicker:  (row) => openInstructPicker(row),

@@ -16,6 +16,10 @@
     --font-lg: 14px;
 }
 
+.w100p {
+    width: 100%;
+}
+
 /* ---- Placeholders ---- */
 
 .ellipsis {
@@ -119,10 +123,6 @@
     min-width: 140px;
 }
 
-.apply-instruct-btn {
-    flex: 0 0 auto;
-}
-
 .instruct-undo-btn {
     flex: 0 0 auto;
 }
@@ -156,4 +156,8 @@
 
 .p-fieldset .p-fieldset-content {
     padding: 1rem 0.25rem;
+}
+
+.p-dropdown-item {
+    display: block;
 }

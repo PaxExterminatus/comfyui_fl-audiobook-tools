@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
@@ -7,14 +7,13 @@ import InputSwitch from "primevue/inputswitch";
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import Fieldset from "primevue/fieldset";
-import { speedMatchLabel } from "../shared/speed_match.js";
 
 const props = defineProps({
   visible: { type: Boolean, required: true },
   audioKey: { type: String, default: "" },
   effect: { type: String, default: "" },
   normalize: { type: Boolean, default: false },
-  speed: { type: Number, default: 1.0 },
+  speedMatch: { type: Boolean, default: false },
   enDurationS: { type: Number, default: null },
   ruDurationS: { type: Number, default: null },
 });
@@ -33,31 +32,33 @@ const effectOptions = [
 
 const localEffect = ref(props.effect);
 const localNormalize = ref(props.normalize);
-const localSpeed = ref(props.speed);
+const localSpeedMatch = ref(props.speedMatch);
 
 watch(() => props.visible, (v) => {
   if (v) {
     localEffect.value = props.effect;
     localNormalize.value = props.normalize;
-    localSpeed.value = props.speed;
+    localSpeedMatch.value = props.speedMatch;
   }
 });
 
-const matchResult = computed(() => speedMatchLabel(props.enDurationS, props.ruDurationS));
-const speedMatchBtnLabel = computed(() => matchResult.value.label);
-const isSpeedMatchDisabled = computed(() => !speedMatchBtnLabel.value);
-
-function applySpeedMatch() {
-  if (!isSpeedMatchDisabled.value) {
-    localSpeed.value = matchResult.value.ratio;
+const speedHint = computed(() => {
+  if (props.enDurationS == null || props.ruDurationS == null) {
+    return "Одна из длительностей неизвестна — сопоставление недоступно.";
   }
-}
+  const ratio = props.ruDurationS / props.enDurationS;
+  const pct = Math.round((ratio - 1) * 100);
+  if (Math.abs(pct) < 1) {
+    return "Длительности уже совпадают.";
+  }
+  return `RU ${pct > 0 ? "длиннее" : "короче"} на ${Math.abs(pct)}% — при включении RU подстроится под EN (тон сохранится).`;
+});
 
 function onApply() {
   emit("apply", {
     effect: localEffect.value,
     normalize: localNormalize.value,
-    speed: localSpeed.value,
+    speedMatch: localSpeedMatch.value,
   });
   emit("update:visible", false);
 }
@@ -78,10 +79,9 @@ function onApply() {
             optionLabel="label"
             optionValue="value"
             placeholder="No effect"
-            aria-describedby="ofd-effect-help"
         />
       </InputGroup>
-      <small id="ofd-effect-help">
+      <small>
         Аудио-эффект. Применяется после нормализации, перед сохранением файла.
       </small>
     </Fieldset>
@@ -92,42 +92,30 @@ function onApply() {
           <i class="pi pi-volume-up" />
         </InputGroupAddon>
         <div class="p-inputgroup-addon">
-          <InputSwitch
-              v-model="localNormalize"
-              inputId="ofd-normalize"
-              aria-describedby="ofd-normalize-help"
-          />
-          <label for="ofd-normalize" style="margin-left: 0.5rem;">
+          <InputSwitch v-model="localNormalize" />
+          <label style="margin-left: 0.5rem;">
             {{ localNormalize ? "On" : "Off" }}
           </label>
         </div>
       </InputGroup>
-      <small id="ofd-normalize-help">
+      <small>
         Приводит пиковую громкость к целевому уровню.
       </small>
     </Fieldset>
 
-    <Fieldset legend="Speed">
+    <Fieldset legend="Match duration">
       <InputGroup>
         <InputGroupAddon>
-          EN&nbsp;{{ props.enDurationS != null ? props.enDurationS.toFixed(1) + "s" : "—" }}
-          &nbsp;·&nbsp;
-          RU&nbsp;{{ props.ruDurationS != null ? props.ruDurationS.toFixed(1) + "s" : "—" }}
+          EN {{ props.enDurationS != null ? props.enDurationS.toFixed(2) + "s" : "—" }} RU {{ props.ruDurationS != null ? props.ruDurationS.toFixed(2) + "s" : "—" }}
         </InputGroupAddon>
-        <Button
-            text
-            size="small"
-            :label="speedMatchBtnLabel || 'Match'"
-            :disabled="isSpeedMatchDisabled"
-            @click="applySpeedMatch"
-        />
-        <InputGroupAddon>
-          <span>{{ localSpeed.toFixed(2) }}×</span>
-        </InputGroupAddon>
+        <div class="p-inputgroup-addon">
+          <InputSwitch v-model="localSpeedMatch" />
+          <label style="margin-left: 0.5rem;">
+            {{ localSpeedMatch ? "On" : "Off" }}
+          </label>
+        </div>
       </InputGroup>
-      <small id="ofd-speed-help">
-        Множитель скорости. «Match» подбирает коэффициент, чтобы RU-длительность совпала с EN.
-      </small>
+      <small>{{ speedHint }}</small>
     </Fieldset>
 
     <template #footer>

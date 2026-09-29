@@ -103,14 +103,6 @@ function onPaste(event) {
           title="Pick an instruct phrase from the category bank"
           @click="api.openInstructPicker(row)"
       />
-      <Button
-          icon="pi pi-users"
-          size="small"
-          class="apply-instruct-btn"
-          :disabled="!api.canApplyInstruct(row)"
-          :title="api.applyInstructTitle(row)"
-          @click="api.applyInstructToSameRole(row)"
-      />
     </InputGroup>
 
     <slot name="trailing" />

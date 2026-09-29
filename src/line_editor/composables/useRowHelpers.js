@@ -76,27 +76,6 @@ export function useRowHelpers(ctx) {
         return total > 0 ? total - 1 : 0
     }
 
-    function applyInstructTitle(row) {
-        const count = sameRoleCount(row)
-        return count > 0
-            ? `Apply this instruct to every other "${row.speaker.trim()}" line in this script (${count})`
-            : "No other lines in this script use this speaker"
-    }
-
-    function applyInstructToSameRole(row) {
-        const count = sameRoleCount(row)
-        if (!count) return
-        const code = row.speaker.trim()
-        rows.value.forEach((r) => {
-            if (r !== row && !r.malformed && (r.speaker || "").trim() === code) {
-                r.instruct = row.instruct
-                updateRowHash(r)
-            }
-        })
-        scheduleSave()
-        setStatus(`Applied instruct to ${count} other "${code}" line(s) in this script`)
-    }
-
     // ──────────────────────────────────────────────────────────────────
     // Prev/Next по списку скриптов
     // ──────────────────────────────────────────────────────────────────
@@ -126,8 +105,6 @@ export function useRowHelpers(ctx) {
         pauseTitle,
         roleCountByCode,
         sameRoleCount,
-        applyInstructTitle,
-        applyInstructToSameRole,
         navIdx,
         prevDisabled,
         nextDisabled,

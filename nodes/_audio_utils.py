@@ -1,11 +1,11 @@
 """
 Vendored subset of FL CosyVoice3's utils/audio_utils.py -- just the
-functions audio_post_process.py actually needs (onset trim, fade,
-loudness normalization, tensor<->ComfyUI-AUDIO conversion, exact-path wav
-write). Copied rather than imported across package boundaries: this addon
-lives in its own custom_nodes folder, separate from FL-CosyVoice3's, so a
-relative import reaching into that other package would break the moment
-either package's internal layout changes, or if FL-CosyVoice3 isn't
+functions audio_post_process.py actually needs (onset trim, loudness
+normalization, speed change, tensor<->ComfyUI-AUDIO conversion, exact-path
+wav write). Copied rather than imported across package boundaries: this
+addon lives in its own custom_nodes folder, separate from FL-CosyVoice3's,
+so a relative import reaching into that other package would break the
+moment either package's internal layout changes, or if FL-CosyVoice3 isn't
 installed at all in a given ComfyUI instance (you'd still want a clear
 Python error, not a silent one from renamed internals). Keep in sync with
 FL-CosyVoice3's copy by hand if its trim/fade/normalize behavior changes.
@@ -131,9 +131,7 @@ def trim_leading_silence(
 
 def save_wav(waveform: torch.Tensor, sample_rate: int, path: str) -> None:
     """Writes a waveform tensor straight to an exact path (no tempfile
-    indirection) -- used for per-line
-    _audio/lines/<script>/<position>_<version>_<hash>.wav files (see
-    nodes/_line_audio.py)."""
+    indirection)."""
     if waveform.device != torch.device("cpu"):
         waveform = waveform.cpu()
     if waveform.ndim == 3:
@@ -142,3 +140,98 @@ def save_wav(waveform: torch.Tensor, sample_rate: int, path: str) -> None:
     if audio_np.ndim == 2:
         audio_np = audio_np.T
     sf.write(path, audio_np, sample_rate)
+
+
+def normalize_loudness(
+    wav: torch.Tensor,
+    sample_rate: int,
+    target_db: float = -20.0,
+    peak_ceiling_db: float = -1.0,
+) -> Tuple[torch.Tensor, float]:
+    """
+    RMS-нормализация к target_db с пиковым потолком. Возвращает
+    (нормализованный_wav, применённый_gain_db).
+    """
+    if wav.numel() == 0:
+        return wav, 0.0
+
+    rms = torch.sqrt(torch.mean(wav.float() ** 2) + 1e-12)
+    rms_db = float(20 * torch.log10(rms + 1e-9))
+    gain_db = target_db - rms_db
+    gain = 10 ** (gain_db / 20)
+    out = wav * gain
+
+    peak = float(out.abs().max())
+    if peak > 0:
+        peak_db = 20 * float(torch.log10(torch.tensor(peak)))
+        if peak_db > peak_ceiling_db:
+            peak_gain_db = peak_ceiling_db - peak_db
+            out = out * (10 ** (peak_gain_db / 20))
+            gain_db += peak_gain_db
+
+    return out, gain_db
+
+
+def change_speed(
+    wav: torch.Tensor,
+    sample_rate: int,
+    speed: float,
+) -> torch.Tensor:
+    """
+    Изменяет скорость. speed > 1.0 = быстрее, < 1.0 = медленнее.
+    Time-stretch через phase vocoder (torchaudio) — тон голоса сохраняется.
+    Fallback — простой ресемплинг, если torchaudio недоступен (тон изменится).
+    """
+    if speed == 1.0 or speed <= 0:
+        return wav
+
+    try:
+        import torchaudio.functional as F
+    except ImportError:
+        print("[FL CosyVoice3] torchaudio не найден — speed через ресемплинг "
+              "(тон будет изменён). Установите torchaudio.")
+        return _change_speed_simple(wav, sample_rate, speed)
+
+    original_shape = wav.shape
+    original_length = wav.shape[-1]
+    was_1d = wav.ndim == 1
+    if was_1d:
+        wav = wav.unsqueeze(0)
+
+    n_fft = 1024
+    hop = n_fft // 4
+    window = torch.hann_window(n_fft, device=wav.device)
+
+    spec = torch.stft(
+        wav, n_fft=n_fft, hop_length=hop, win_length=n_fft,
+        window=window, center=True, pad_mode="reflect", return_complex=True,
+    )
+    stretched = F.phase_vocoder(spec, rate=speed, hop_length=hop)
+    target_samples = max(1, int(round(original_length / speed)))
+    out = torch.istft(
+        stretched, n_fft=n_fft, hop_length=hop, win_length=n_fft,
+        window=window, center=True, length=target_samples,
+    )
+
+    if was_1d:
+        out = out.squeeze(0)
+    if out.ndim != len(original_shape):
+        out = out.reshape(original_shape[:-1] + (target_samples,))
+    return out
+
+
+def _change_speed_simple(
+    wav: torch.Tensor, sample_rate: int, speed: float,
+) -> torch.Tensor:
+    """Fallback: линейный ресемплинг — меняет тон вместе со скоростью."""
+    if speed == 1.0 or speed <= 0:
+        return wav
+    original_length = wav.shape[-1]
+    new_length = max(1, int(round(original_length / speed)))
+    flat = wav.reshape(-1, original_length)
+    positions = torch.linspace(0, original_length - 1, new_length, device=wav.device)
+    lo = positions.floor().long()
+    hi = positions.ceil().long().clamp(max=original_length - 1)
+    frac = (positions - lo.to(positions.dtype)).unsqueeze(0)
+    new_flat = flat[:, lo] * (1 - frac) + flat[:, hi] * frac
+    return new_flat.reshape(wav.shape[:-1] + (new_length,))

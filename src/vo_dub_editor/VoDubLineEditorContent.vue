@@ -87,12 +87,6 @@ const ctx = {
   fontSizePx,
 };
 
-// ── порядок вызовов: базовые → производные ─────────────────────────────
-// useVoDubEffects и useVoDubPlayers используют late-bind на ctx.hasRuTake,
-// ctx.currentContentHash, ctx.finalizeRuTake — потому что Render идёт
-// позже. useVoDubRender использует late-bind на ctx.commitEffect, ctx.audioUrl,
-// ctx.ruFilePath, ctx.dryFilePath, ctx.rawAudioPath — потому что они из
-// Effects и Players. Симметричный late-bind — цикла нет.
 Object.assign(ctx, useVoDubState(ctx));
 Object.assign(ctx, useVoDubHistory(ctx));
 Object.assign(ctx, useVoDubRoles(ctx));
@@ -102,7 +96,6 @@ Object.assign(ctx, useVoDubPlayers(ctx));
 Object.assign(ctx, useVoDubRender(ctx));
 useVoDubRowApi(ctx);
 
-// ── деструктуринг всего, что нужно шаблону ─────────────────────────────
 const {
   // state
   rows, stateRows, statusFilter, searchText, status, loading, useOriginalDefault,
@@ -144,7 +137,6 @@ const {
   resolvedUseOriginal, onToggleRowUseOriginal, onToggleUseOriginalDefault,
 } = ctx;
 
-// ── close ──────────────────────────────────────────────────────────────
 function close() {
   if (closed) return;
   closed = true;
@@ -154,9 +146,9 @@ function close() {
   }
   props.onClose();
 }
+
 watch(visible, (v) => { if (!v) close(); });
 
-// ── lifecycle ──────────────────────────────────────────────────────────
 onMounted(async () => {
   loadRoleEntries();
   loadInstructCategories();
@@ -174,18 +166,13 @@ onMounted(async () => {
         :font-size-decrease="decreaseFontSize" :font-size-increase="increaseFontSize"
     />
 
-    <!-- One StickyPanel, three stacked rows -- position:sticky's own
-    top:0 means a SECOND sticky element right after this one would
-    overlap it instead of stacking below (both stick to the same
-    offset), so the actions row and pager both live inside this same
-    sticky block rather than their own. Same 3-row split as
-    LineEditorApp.vue's own audio-content-row/actions-row/(file nav is
-    folded into actions-row there) -- filters here, then actions, then
-    the pager -- rather than cramming everything into one row that
-    wraps unpredictably at typical panel widths. -->
     <StickyPanel class="vo-dub-editor-controls">
       <div class="vo-dub-filters">
-        <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search" />
+        <InputText
+            v-model="searchText"
+            placeholder="Search text or audio_key..."
+            class="vo-dub-search"
+        />
         <Dropdown
             v-model="statusFilter"
             :options="STATUS_FILTER_OPTIONS"
@@ -193,38 +180,80 @@ onMounted(async () => {
             option-value="value"
             class="vo-dub-status-filter"
         />
-        <Button icon="pi pi-refresh" text size="small" title="Re-scan this bucket" @click="loadRows" />
+        <Button
+            icon="pi pi-refresh"
+            text
+            size="small"
+            title="Re-scan this bucket"
+            @click="loadRows"
+        />
         <span class="vo-dub-editor-status">{{ loading ? "Loading..." : status }}</span>
-        <Button icon="pi pi-times" text size="small" title="Close" @click="visible = false" />
+        <Button
+            icon="pi pi-times"
+            text
+            size="small"
+            title="Close"
+            @click="visible = false"
+        />
       </div>
+
       <div class="actions-row">
-        <Button label="´ Stress mark" text size="small" title="Insert a stress mark at the cursor: click into a row's text, place the cursor right after the vowel to stress (факел|ов), then click this" @mousedown.prevent="insertStressMark(setStatus)" />
+        <div class="vo-dub-pager-inline">
+          <Button
+              label="◀"
+              text
+              size="small"
+              :disabled="currentPage === 0"
+              title="Previous page"
+              @click="currentPage--"
+          />
+          <span class="vo-dub-pager-label">
+        {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }})
+      </span>
+          <Button
+              label="▶"
+              text
+              size="small"
+              :disabled="currentPage >= pageCount - 1"
+              title="Next page"
+              @click="currentPage++"
+          />
+        </div>
+
         <span class="actions-divider" />
+
+        <Button
+            label="´ Stress mark"
+            text
+            size="small"
+            title="Insert a stress mark at the cursor: click into a row's text, place the cursor right after the vowel to stress (факел|ов), then click this"
+            @mousedown.prevent="insertStressMark(setStatus)"
+        />
         <Button
             :label="sequentialPlayingKey ? 'Stop' : '▶ Play in order'"
-            text size="small"
+            text
+            size="small"
             :icon="sequentialPlayingKey ? 'pi pi-stop-circle' : 'pi pi-play'"
-            title="Play through this page's RU takes in order, auto-advancing to the next row with a take when each one ends -- mirrors LineEditorApp.vue's own sequential playback. Pausing a row via its own native controls stops the run instead of continuing past it."
+            title="Play through this page's RU takes in order, auto-advancing to the next row with a take when each one ends."
             @click="toggleSequentialPlayback"
         />
         <Button
             :label="isRenderingAllPending ? 'Rendering...' : '🔁 Render pending'"
-            text size="small"
+            text
+            size="small"
             :icon="isRenderingAllPending ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
             :disabled="!props.renderApi || isRenderingAllPending"
-            title="Render every not-started or stale row in this WHOLE bucket (not just this page), one at a time -- mirrors ScriptLibraryPanel.vue's own '🔁 Re-voice pending' button."
+            title="Render every not-started or stale row in this WHOLE bucket, one at a time."
             @click="renderAllPending"
         />
-        <span class="actions-divider" />
-        <label class="vo-dub-original-default-label" title="Project-wide default for the per-row 'Use original as sample' checkbox below each line -- a row that has ticked/unticked its OWN checkbox always keeps that explicit choice regardless of this default.">
+
+        <label
+            class="vo-dub-original-default-label"
+            title="Project-wide default for the per-row 'Use original as sample' checkbox."
+        >
           <Checkbox v-model="useOriginalDefault" binary @change="onToggleUseOriginalDefault" />
-          Use original as sample by default
+          Original as sample
         </label>
-      </div>
-      <div class="vo-dub-pager">
-        <Button label="◀ Prev" text size="small" :disabled="currentPage === 0" title="Previous page" @click="currentPage--" />
-        <span class="vo-dub-pager-label">Page {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }} row(s))</span>
-        <Button label="Next ▶" text size="small" :disabled="currentPage >= pageCount - 1" title="Next page" @click="currentPage++" />
       </div>
     </StickyPanel>
 
@@ -373,9 +402,6 @@ onMounted(async () => {
                   @click="openOutputDialog(row)"
                   class="output-settings-btn"
               />
-
-              <!-- Effect dropdown and save button removed; editing via OutputFileDialog -->
-
             </div>
           </div>
 

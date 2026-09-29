@@ -1,4 +1,4 @@
-import { _ as ne, r as E, o as ae, H as le, i as h, e as m, u as C, d as p, h as R, F as I, j as z, n as ue, t as x, S as B, l as de, L as D, b as v, s as w, k as A, N as j, m as pe, p as fe, q as he, P as ve } from "./styles_link.js";
+import { _ as ne, k as E, o as ae, T as le, c as h, b as m, u as C, d as p, i as R, F as I, r as z, j as ue, t as x, S as B, l as de, J as D, a as v, s as w, n as A, U as j, m as pe, v as fe, x as he, P as ve } from "./styles_link.js";
 const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = { class: "tools-row" }, be = {
   key: 0,
   class: "tree-empty"
@@ -14,7 +14,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
   key: 2,
   class: "row-icon row-icon-dim",
   title: "Rendered audio already exists for this script"
-}, Ie = { class: "status-line" }, H = "FL_CosyVoice3.ScriptLibrary.lastFolder", Ae = 90, je = 3e3, Pe = "::", qe = {
+}, Ie = { class: "status-line" }, U = "FL_CosyVoice3.ScriptLibrary.lastFolder", Ae = 90, je = 3e3, Pe = "::", Oe = {
   __name: "ScriptLibraryPanel",
   props: {
     node: { type: Object, required: !0 },
@@ -49,13 +49,13 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     }
     function F(e) {
       try {
-        e && localStorage.setItem(H, e);
+        e && localStorage.setItem(U, e);
       } catch {
       }
     }
     function L() {
       try {
-        return localStorage.getItem(H) || "";
+        return localStorage.getItem(U) || "";
       } catch {
         return "";
       }
@@ -68,13 +68,13 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     function d(e) {
       k.value = e, i.node.setDirtyCanvas(!0, !0);
     }
-    function U() {
+    function V() {
       const e = [];
       return a.value.forEach((s) => s.scripts.forEach((t) => {
         r.has(l(s.act, t)) && e.push({ act: s.act, file: t });
       })), e;
     }
-    function V() {
+    function H() {
       i.node.properties = i.node.properties || {}, i.node.properties.checkedScripts = Array.from(r);
     }
     function Y() {
@@ -85,7 +85,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       }));
     }
     function g() {
-      V(), i.node._flCheckedItems = U();
+      H(), i.node._flCheckedItems = V();
       const e = a.value.reduce((t, o) => t + o.scripts.length, 0), s = a.value.length && !a.value.every((t) => t.filter_applied !== !1) ? ` (some acts have no "${_.value}" files -- showing all .txt there)` : "";
       d(`${a.value.length} act(s), ${e} script(s)${s} | ${r.size} checked`);
     }
@@ -98,7 +98,7 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
         });
       }), e;
     }
-    function q(e, s, t) {
+    function O(e, s, t) {
       const o = s.filter(($) => !t.has($));
       if (!o.length) return "none";
       const c = o.filter(($) => r.has(l(e, $))).length;
@@ -107,13 +107,13 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     function b(e) {
       return new Set(e.ready_scripts || []);
     }
-    function O(e) {
+    function q(e) {
       return e.scripts.filter((s) => r.has(l(e.act, s))).length;
     }
-    function K(e, s) {
-      e && (e.indeterminate = q(s.act, s.scripts, b(s)) === "some");
+    function J(e, s) {
+      e && (e.indeterminate = O(s.act, s.scripts, b(s)) === "some");
     }
-    function J(e) {
+    function K(e) {
       u.value = e, i.actWidget.value = e, f.has(e) ? f.delete(e) : f.add(e);
     }
     function Q(e, s) {
@@ -356,21 +356,21 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
         }, [
           p("div", {
             class: A(["act-row", { "act-row-active": t.act === u.value }]),
-            onClick: (o) => J(t.act)
+            onClick: (o) => K(t.act)
           }, [
             p("input", {
               type: "checkbox",
               class: "row-checkbox",
-              checked: q(t.act, t.scripts, b(t)) === "all",
+              checked: O(t.act, t.scripts, b(t)) === "all",
               ref_for: !0,
-              ref: (o) => K(o, t),
+              ref: (o) => J(o, t),
               onClick: s[0] || (s[0] = j(() => {
               }, ["stop"])),
               onChange: (o) => Q(t, o.target.checked)
             }, null, 40, Ce),
             p("span", we, x(f.has(t.act) ? "▾" : "▸"), 1),
             p("span", ye, x(t.act), 1),
-            p("span", Se, x(O(t) ? `${O(t)}/${t.scripts.length}` : t.scripts.length), 1)
+            p("span", Se, x(q(t) ? `${q(t)}/${t.scripts.length}` : t.scripts.length), 1)
           ], 10, me),
           f.has(t.act) ? (v(!0), h(I, { key: 0 }, z(t.scripts, (o) => (v(), h("div", {
             key: o,
@@ -405,12 +405,12 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
       p("div", Ie, x(k.value), 1)
     ]));
   }
-}, Oe = /* @__PURE__ */ ne(qe, [["__scopeId", "data-v-cf1ee19b"]]);
+}, qe = /* @__PURE__ */ ne(Oe, [["__scopeId", "data-v-cf1ee19b"]]);
 function Te({ node: y, folderWidget: i, actWidget: l, filterWidget: F, scriptFileWidget: L, openBrowseDialog: n, openRolesEditor: u, openLineEditor: a, queueLineRevoice: r }) {
   fe(import.meta.url);
   const f = document.createElement("div");
   f.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
-  const k = he(Oe, {
+  const k = he(qe, {
     node: y,
     folderWidget: i,
     actWidget: l,

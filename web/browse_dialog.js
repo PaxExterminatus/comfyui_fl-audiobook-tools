@@ -1,14 +1,14 @@
-import { _ as T, w as H, o as M, c as P, a as w, n as k, u as l, B as O, r as i, b as u, d as z, e as h, s as S, f as G, g as J, t as _, h as F, i as m, F as V, j as Q, k as X, l as b, m as B, p as Y, q as Z, P as ee } from "./styles_link.js";
-import { u as te, a as se, s as ae, D as oe, b as le } from "./DialogHeader.js";
-import { s as ne } from "./inputtext.esm.js";
-const re = { class: "browse-toolbar" }, ie = {
+import { _ as A, w as F, o as T, a as i, c as v, b as h, u as r, d as _, s as S, e as H, f as $, g as B, h as M, t as C, i as x, F as k, r as O, n as G, j as J, k as u, B as Q, l as b, m as z, p as X, q as Y, v as Z, x as ee, P as te } from "./styles_link.js";
+import { u as oe, a as se, D as ae, s as le, b as ne } from "./DialogHeader.js";
+import { s as re } from "./inputtext.esm.js";
+const ie = { class: "fl-browse-dialog-content" }, ue = { class: "browse-toolbar" }, ce = {
   key: 0,
   class: "browse-row browse-row-note"
-}, ue = ["onClick"], ce = {
+}, de = ["onClick"], pe = {
   key: 0,
   class: "browse-row browse-row-note"
-}, de = {
-  __name: "BrowseDialogApp",
+}, fe = { class: "browse-dialog-footer" }, ve = {
+  __name: "BrowseDialogContent",
   props: {
     mode: { type: String, default: "folder" },
     // "folder" | "file"
@@ -17,8 +17,8 @@ const re = { class: "browse-toolbar" }, ie = {
     onSelect: { type: Function, required: !0 },
     onClose: { type: Function, required: !0 }
   },
-  setup(y) {
-    const o = y, f = i(!0), n = i(""), r = i(""), s = i(null), v = i(null), g = i(!1), c = i(null), { cssWidth: $, setWidth: D, presets: E } = te({
+  setup(m) {
+    const s = m, c = u(!0), a = u(""), l = u(""), o = u(null), w = u(null), y = u(!1), d = u(null), { setWidth: V, presets: D } = oe({
       storageKey: "FL_CosyVoice3.BrowseDialog.widthPx",
       defaultWidth: 560,
       presets: [420, 700],
@@ -27,142 +27,156 @@ const re = { class: "browse-toolbar" }, ie = {
        Line/Roles Editor's "100%" does -- capped much narrower.
       */
       fullVw: 70
-    }), { fontSizePx: L, decrease: W, increase: U } = se({
+    }), { fontSizePx: E, decrease: L, increase: U } = se({
       storageKey: "FL_CosyVoice3.BrowseDialog.fontSizePx",
       defaultSize: 13
-    }), I = b(() => o.mode === "folder" ? "Choose a folder" : "Choose a file"), j = b(() => o.mode === "folder" ? "Select This Folder" : "Select File"), A = b(
-      () => o.mode === "folder" ? !n.value : !v.value
+    }), q = b(() => s.mode === "folder" ? "Choose a folder" : "Choose a file"), I = b(() => s.mode === "folder" ? "Select This Folder" : "Select File"), R = b(
+      () => s.mode === "folder" ? !a.value : !w.value
     );
-    function K() {
-      s.value && s.value.parent ? d(s.value.parent) : (s.value && s.value.parent === "" || n.value) && d("");
+    function W() {
+      o.value && o.value.parent ? p(o.value.parent) : (o.value && o.value.parent === "" || a.value) && p("");
     }
-    const x = b(() => {
-      const t = s.value;
+    const P = b(() => {
+      const t = o.value;
       if (!t) return [];
-      const a = [];
-      return (t.drives || []).forEach((e) => a.push({ type: "drive", name: e, icon: "💽", path: e })), (t.dirs || []).forEach((e) => a.push({ type: "dir", name: e, icon: "📁", path: B(n.value, e) })), o.mode === "file" && (t.files || []).forEach((e) => a.push({ type: "file", name: e, icon: "📄", path: B(n.value, e) })), a;
+      const n = [];
+      return (t.drives || []).forEach((e) => n.push({ type: "drive", name: e, icon: "💽", path: e })), (t.dirs || []).forEach((e) => n.push({ type: "dir", name: e, icon: "📁", path: z(a.value, e) })), s.mode === "file" && (t.files || []).forEach((e) => n.push({ type: "file", name: e, icon: "📄", path: z(a.value, e) })), n;
     });
-    function N(t) {
-      t.type === "file" ? v.value = t.path : d(t.path);
+    function j(t) {
+      t.type === "file" ? w.value = t.path : p(t.path);
     }
-    async function d(t) {
-      g.value = !0, c.value = null, v.value = null;
+    async function p(t) {
+      y.value = !0, d.value = null, w.value = null;
       try {
-        const a = `${O}?path=${encodeURIComponent(t)}${o.ext ? `&ext=${encodeURIComponent(o.ext)}` : ""}`, p = await (await fetch(a)).json();
-        if (p.error) {
-          c.value = p.error, s.value = null;
+        const n = `${Q}?path=${encodeURIComponent(t)}${s.ext ? `&ext=${encodeURIComponent(s.ext)}` : ""}`, f = await (await fetch(n)).json();
+        if (f.error) {
+          d.value = f.error, o.value = null;
           return;
         }
-        n.value = p.path, r.value = p.path || "", s.value = p;
-      } catch (a) {
-        c.value = String(a), s.value = null;
+        a.value = f.path, l.value = f.path || "", o.value = f;
+      } catch (n) {
+        d.value = String(n), o.value = null;
       } finally {
-        g.value = !1;
+        y.value = !1;
       }
     }
-    function R() {
-      d(r.value.trim());
+    function K() {
+      p(l.value.trim());
     }
-    function q() {
-      const t = o.mode === "folder" ? n.value : v.value;
-      t && (o.onSelect(t), C());
+    function N() {
+      const t = s.mode === "folder" ? a.value : w.value;
+      t && (s.onSelect(t), g());
     }
-    function C() {
-      o.onClose();
+    function g() {
+      s.onClose();
     }
-    return H(f, (t) => {
-      t || C();
-    }), M(() => d(o.startPath || "")), (t, a) => (u(), P(l(le), {
-      visible: f.value,
-      "onUpdate:visible": a[1] || (a[1] = (e) => f.value = e),
+    return F(c, (t) => {
+      t || g();
+    }), T(() => p(s.startPath || "")), (t, n) => (i(), v("div", ie, [
+      h(ae, {
+        title: q.value,
+        "width-presets": r(D),
+        "set-width": r(V),
+        "font-size-decrease": r(L),
+        "font-size-increase": r(U)
+      }, null, 8, ["title", "width-presets", "set-width", "font-size-decrease", "font-size-increase"]),
+      _("div", ue, [
+        h(r(S), {
+          icon: "pi pi-arrow-up",
+          title: "Up one level",
+          text: "",
+          onClick: W
+        }),
+        h(r(re), {
+          modelValue: l.value,
+          "onUpdate:modelValue": n[0] || (n[0] = (e) => l.value = e),
+          placeholder: "Path -- press Enter to jump here",
+          class: "browse-path-input",
+          onKeydown: H(K, ["enter"])
+        }, null, 8, ["modelValue"])
+      ]),
+      d.value ? (i(), $(r(le), {
+        key: 0,
+        severity: "error",
+        closable: !1
+      }, {
+        default: B(() => [
+          M(C(d.value), 1)
+        ]),
+        _: 1
+      })) : x("", !0),
+      _("div", {
+        class: "browse-list",
+        style: J({ fontSize: `${r(E)}px` })
+      }, [
+        y.value ? (i(), v("div", ce, "Loading...")) : (i(), v(k, { key: 1 }, [
+          (i(!0), v(k, null, O(P.value, (e) => (i(), v("div", {
+            key: `${e.type}:${e.name}`,
+            class: G(["browse-row", { "browse-row-selected": e.type === "file" && e.path === w.value }]),
+            onClick: (f) => j(e)
+          }, C(e.icon) + " " + C(e.name), 11, de))), 128)),
+          !P.value.length && !d.value ? (i(), v("div", pe, "(empty)")) : x("", !0)
+        ], 64))
+      ], 4),
+      _("div", fe, [
+        h(r(S), {
+          label: "Cancel",
+          severity: "secondary",
+          text: "",
+          onClick: g
+        }),
+        h(r(S), {
+          label: I.value,
+          disabled: R.value,
+          onClick: N
+        }, null, 8, ["label", "disabled"])
+      ])
+    ]));
+  }
+}, he = /* @__PURE__ */ A(ve, [["__scopeId", "data-v-bc382bbf"]]), me = {
+  __name: "BrowseDialogApp",
+  props: {
+    mode: { type: String, default: "folder" },
+    startPath: { type: String, default: "" },
+    ext: { type: String, default: "" },
+    onSelect: { type: Function, required: !0 },
+    onClose: { type: Function, required: !0 }
+  },
+  setup(m) {
+    const s = m, c = u(!0);
+    return F(c, (a) => {
+      a || s.onClose();
+    }), (a, l) => (i(), $(r(ne), {
+      visible: c.value,
+      "onUpdate:visible": l[0] || (l[0] = (o) => c.value = o),
       modal: !1,
       draggable: !1,
       "close-on-escape": "",
       header: " ",
-      style: k({ width: l($) }),
       class: "browse-dialog"
     }, {
-      header: w(() => [
-        h(oe, {
-          title: I.value,
-          "width-presets": l(E),
-          "set-width": l(D),
-          "font-size-decrease": l(W),
-          "font-size-increase": l(U)
-        }, null, 8, ["title", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
-      ]),
-      footer: w(() => [
-        h(l(S), {
-          label: "Cancel",
-          severity: "secondary",
-          text: "",
-          onClick: C
-        }),
-        h(l(S), {
-          label: j.value,
-          disabled: A.value,
-          onClick: q
-        }, null, 8, ["label", "disabled"])
-      ]),
-      default: w(() => [
-        z("div", re, [
-          h(l(S), {
-            icon: "pi pi-arrow-up",
-            title: "Up one level",
-            text: "",
-            onClick: K
-          }),
-          h(l(ne), {
-            modelValue: r.value,
-            "onUpdate:modelValue": a[0] || (a[0] = (e) => r.value = e),
-            placeholder: "Path -- press Enter to jump here",
-            class: "browse-path-input",
-            onKeydown: G(R, ["enter"])
-          }, null, 8, ["modelValue"])
-        ]),
-        c.value ? (u(), P(l(ae), {
-          key: 0,
-          severity: "error",
-          closable: !1
-        }, {
-          default: w(() => [
-            J(_(c.value), 1)
-          ]),
-          _: 1
-        })) : F("", !0),
-        z("div", {
-          class: "browse-list",
-          style: k({ fontSize: `${l(L)}px` })
-        }, [
-          g.value ? (u(), m("div", ie, "Loading...")) : (u(), m(V, { key: 1 }, [
-            (u(!0), m(V, null, Q(x.value, (e) => (u(), m("div", {
-              key: `${e.type}:${e.name}`,
-              class: X(["browse-row", { "browse-row-selected": e.type === "file" && e.path === v.value }]),
-              onClick: (p) => N(e)
-            }, _(e.icon) + " " + _(e.name), 11, ue))), 128)),
-            !x.value.length && !c.value ? (u(), m("div", ce, "(empty)")) : F("", !0)
-          ], 64))
-        ], 4)
+      default: B(() => [
+        h(he, X(Y(a.$props)), null, 16)
       ]),
       _: 1
-    }, 8, ["visible", "style"]));
+    }, 8, ["visible"]));
   }
-}, pe = /* @__PURE__ */ T(de, [["__scopeId", "data-v-af3cbce2"]]);
-function me({ mode: y = "folder", startPath: o = "", ext: f = "", onSelect: n }) {
-  Y(import.meta.url);
-  const r = document.createElement("div");
-  document.body.appendChild(r);
-  const s = Z(pe, {
-    mode: y,
-    startPath: o,
-    ext: f,
-    onSelect: n,
+};
+function ge({ mode: m = "folder", startPath: s = "", ext: c = "", onSelect: a }) {
+  Z(import.meta.url);
+  const l = document.createElement("div");
+  document.body.appendChild(l);
+  const o = ee(me, {
+    mode: m,
+    startPath: s,
+    ext: c,
+    onSelect: a,
     onClose: () => {
-      s.unmount(), r.remove();
+      o.unmount(), l.remove();
     }
   });
-  s.use(ee, { ripple: !0 }), s.mount(r);
+  o.use(te, { ripple: !0 }), o.mount(l);
 }
 export {
-  me as openBrowseDialog
+  ge as openBrowseDialog
 };

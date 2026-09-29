@@ -1,210 +1,223 @@
-import { _ as q, m as K, w as H, o as G, H as Q, c as $, a as m, n as x, u as o, I as X, K as b, J as Y, r as h, b as v, g as Z, h as ee, d as C, i as te, F as se, j as ae, e as k, t as A, T as oe, p as ne, q as re, P as ie } from "./styles_link.js";
-import { u as le, a as ce, s as de, D as ue, b as pe } from "./DialogHeader.js";
-import { a as fe, b as me, s as he } from "./dropdown.esm.js";
-const ve = {
+import { _ as N, m as G, w as D, o as H, T as Q, a as v, c as I, b as S, u as r, f as C, g as _, h as X, i as Y, d as $, F as Z, r as ee, j as b, t as A, k as y, N as te, M as F, L as se, Q as oe, p as ae, q as re, v as ne, x as ie, P as le } from "./styles_link.js";
+import { u as ce, a as de, D as ue, s as pe, b as fe } from "./DialogHeader.js";
+import { a as me, s as he, b as ve } from "./dropdown.esm.js";
+const ye = { class: "fl-roles-editor-content" }, Se = {
   class: "role-code",
   title: "Role code (read-only here -- renaming would orphan script lines that already use it)"
-}, ye = { class: "role-name" }, Se = 600, we = 3e3, ge = 1500, _e = {
+}, _e = { class: "role-name" }, ge = 600, we = 3e3, xe = 1500, Ee = {
+  __name: "RolesEditorContent",
+  props: {
+    root: { type: String, required: !0 },
+    suffix: { type: String, default: "" },
+    onClose: { type: Function, required: !0 }
+  },
+  setup(d) {
+    const c = d, n = G(c.root, "_roles.json"), i = y(!0), a = y([]), u = y([]), k = y(""), { setWidth: L, presets: j } = ce({
+      storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
+      defaultWidth: 1200,
+      presets: [900, 1200]
+    }), { fontSizePx: P, decrease: U, increase: B } = de({
+      storageKey: "FL_CosyVoice3.RolesEditor.fontSizePx",
+      defaultSize: 13
+    });
+    let p = null, R = 0, f = null, m = null;
+    const g = /* @__PURE__ */ new Map();
+    function l(e) {
+      k.value = e;
+    }
+    const w = /* @__PURE__ */ new Map();
+    function O(e, s) {
+      if (!s) {
+        w.delete(e);
+        return;
+      }
+      w.set(e, s.$el ?? s);
+    }
+    function M(e) {
+      e && (e.style.height = "auto", e.style.height = `${e.scrollHeight}px`);
+    }
+    function T() {
+      w.forEach(M);
+    }
+    function q() {
+      return JSON.stringify({ roles: a.value }, null, 2);
+    }
+    async function z() {
+      const e = q();
+      if (e !== p)
+        try {
+          const t = await (await fetch(`${F}/write`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: n, content: e })
+          })).json();
+          if (t.error) {
+            l(`Save error: ${t.error}`);
+            return;
+          }
+          p = e, l(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+        } catch (s) {
+          l(`Save failed: ${s}`);
+        }
+    }
+    function x() {
+      R = Date.now(), f && clearTimeout(f), f = setTimeout(z, ge);
+    }
+    function E(e) {
+      !e.code || g.get(e.code) === e.speaker || (g.set(e.code, e.speaker), oe(c.root, e.code, c.suffix).then((t) => l(t.message)));
+    }
+    function J(e) {
+      x(), E(e);
+    }
+    async function W() {
+      try {
+        const s = await (await fetch(te)).json();
+        u.value = s.presets || [];
+      } catch {
+        u.value = [];
+      }
+    }
+    async function V({ isPoll: e = !1 } = {}) {
+      try {
+        const t = await (await fetch(`${F}/read?path=${encodeURIComponent(n)}`)).json();
+        if (t.error) {
+          l(`Read error: ${t.error}`);
+          return;
+        }
+        if (!t.exists) {
+          e || (a.value = [], p = "", l("_roles.json does not exist yet"));
+          return;
+        }
+        if (e && Date.now() - R < xe || t.content === p) return;
+        let o;
+        try {
+          o = JSON.parse(t.content);
+        } catch (h) {
+          l(`_roles.json is not valid JSON: ${h}`);
+          return;
+        }
+        a.value = Array.isArray(o.roles) ? o.roles : [], a.value.forEach((h) => {
+          h.code && g.set(h.code, h.speaker);
+        }), p = t.content, e || l(`Loaded ${a.value.length} role(s)`), se(() => {
+          T(), requestAnimationFrame(T);
+        });
+      } catch (s) {
+        l(`Read failed: ${s}`);
+      }
+    }
+    function K() {
+      f && (clearTimeout(f), z()), a.value.forEach((e) => E(e)), m && clearInterval(m), c.onClose();
+    }
+    return D(i, (e) => {
+      e || K();
+    }), H(async () => {
+      W(), await V(), m = setInterval(() => V({ isPoll: !0 }), we);
+    }), Q(() => {
+      m && clearInterval(m);
+    }), (e, s) => (v(), I("div", ye, [
+      S(ue, {
+        title: "Roles",
+        status: k.value,
+        "width-presets": r(j),
+        "set-width": r(L),
+        "font-size-decrease": r(U),
+        "font-size-increase": r(B)
+      }, null, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"]),
+      a.value.length ? Y("", !0) : (v(), C(r(pe), {
+        key: 0,
+        severity: "info",
+        closable: !1
+      }, {
+        default: _(() => [...s[2] || (s[2] = [
+          X("No roles found", -1)
+        ])]),
+        _: 1
+      })),
+      $("div", {
+        class: "roles-list",
+        style: b({ fontSize: `${r(P)}px` })
+      }, [
+        (v(!0), I(Z, null, ee(a.value, (t) => (v(), C(r(ve), {
+          key: t.code,
+          class: "role-card"
+        }, {
+          title: _(() => [
+            $("span", Se, A(t.code), 1),
+            $("span", _e, A(t.name), 1)
+          ]),
+          content: _(() => [
+            S(r(me), {
+              modelValue: t.speaker,
+              "onUpdate:modelValue": (o) => t.speaker = o,
+              options: u.value,
+              editable: "",
+              filter: "",
+              placeholder: "Speaker preset",
+              title: "Real CosyVoice preset this role resolves to",
+              class: "role-speaker",
+              onInput: s[0] || (s[0] = (o) => x()),
+              onChange: (o) => J(t),
+              onBlur: (o) => E(t)
+            }, null, 8, ["modelValue", "onUpdate:modelValue", "options", "onChange", "onBlur"]),
+            S(r(he), {
+              modelValue: t.description,
+              "onUpdate:modelValue": (o) => t.description = o,
+              ref_for: !0,
+              ref: (o) => O(t.code, o),
+              "auto-resize": "",
+              rows: "1",
+              placeholder: "Description...",
+              class: "role-description",
+              style: b({ fontSize: `${r(P)}px` }),
+              onInput: s[1] || (s[1] = (o) => x())
+            }, null, 8, ["modelValue", "onUpdate:modelValue", "style"])
+          ]),
+          _: 2
+        }, 1024))), 128))
+      ], 4)
+    ]));
+  }
+}, $e = /* @__PURE__ */ N(Ee, [["__scopeId", "data-v-dc55a54a"]]), Ce = {
   __name: "RolesEditorApp",
   props: {
     root: { type: String, required: !0 },
     suffix: { type: String, default: "" },
     onClose: { type: Function, required: !0 }
   },
-  setup(y) {
-    const l = y, c = K(l.root, "_roles.json"), i = h(!0), r = h([]), S = h([]), P = h(""), { cssWidth: D, setWidth: F, presets: N } = le({
-      storageKey: "FL_CosyVoice3.RolesEditor.widthPx",
-      defaultWidth: 1200,
-      presets: [900, 1200]
-    }), { fontSizePx: T, decrease: j, increase: L } = ce({
-      storageKey: "FL_CosyVoice3.RolesEditor.fontSizePx",
-      defaultSize: 13
-    });
-    let d = null, R = 0, u = null, p = null;
-    const w = /* @__PURE__ */ new Map();
-    function n(e) {
-      P.value = e;
-    }
-    const g = /* @__PURE__ */ new Map();
-    function U(e, s) {
-      if (!s) {
-        g.delete(e);
-        return;
-      }
-      g.set(e, s.$el ?? s);
-    }
-    function B(e) {
-      e && (e.style.height = "auto", e.style.height = `${e.scrollHeight}px`);
-    }
-    function V() {
-      g.forEach(B);
-    }
-    function O() {
-      return JSON.stringify({ roles: r.value }, null, 2);
-    }
-    async function z() {
-      const e = O();
-      if (e !== d)
-        try {
-          const t = await (await fetch(`${b}/write`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: c, content: e })
-          })).json();
-          if (t.error) {
-            n(`Save error: ${t.error}`);
-            return;
-          }
-          d = e, n(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
-        } catch (s) {
-          n(`Save failed: ${s}`);
-        }
-    }
-    function _() {
-      R = Date.now(), u && clearTimeout(u), u = setTimeout(z, Se);
-    }
-    function E(e) {
-      !e.code || w.get(e.code) === e.speaker || (w.set(e.code, e.speaker), oe(l.root, e.code, l.suffix).then((t) => n(t.message)));
-    }
-    function M(e) {
-      _(), E(e);
-    }
-    async function W() {
-      try {
-        const s = await (await fetch(X)).json();
-        S.value = s.presets || [];
-      } catch {
-        S.value = [];
-      }
-    }
-    async function I({ isPoll: e = !1 } = {}) {
-      try {
-        const t = await (await fetch(`${b}/read?path=${encodeURIComponent(c)}`)).json();
-        if (t.error) {
-          n(`Read error: ${t.error}`);
-          return;
-        }
-        if (!t.exists) {
-          e || (r.value = [], d = "", n("_roles.json does not exist yet"));
-          return;
-        }
-        if (e && Date.now() - R < ge || t.content === d) return;
-        let a;
-        try {
-          a = JSON.parse(t.content);
-        } catch (f) {
-          n(`_roles.json is not valid JSON: ${f}`);
-          return;
-        }
-        r.value = Array.isArray(a.roles) ? a.roles : [], r.value.forEach((f) => {
-          f.code && w.set(f.code, f.speaker);
-        }), d = t.content, e || n(`Loaded ${r.value.length} role(s)`), Y(() => {
-          V(), requestAnimationFrame(V);
-        });
-      } catch (s) {
-        n(`Read failed: ${s}`);
-      }
-    }
-    function J() {
-      u && (clearTimeout(u), z()), r.value.forEach((e) => E(e)), p && clearInterval(p), l.onClose();
-    }
-    return H(i, (e) => {
-      e || J();
-    }), G(async () => {
-      W(), await I(), p = setInterval(() => I({ isPoll: !0 }), we);
-    }), Q(() => {
-      p && clearInterval(p);
-    }), (e, s) => (v(), $(o(pe), {
-      visible: i.value,
-      "onUpdate:visible": s[2] || (s[2] = (t) => i.value = t),
+  setup(d) {
+    const c = d, n = y(!0);
+    return D(n, (i) => {
+      i || c.onClose();
+    }), (i, a) => (v(), C(r(fe), {
+      visible: n.value,
+      "onUpdate:visible": a[0] || (a[0] = (u) => n.value = u),
       modal: !1,
       draggable: !1,
       "close-on-escape": "",
       header: " ",
-      style: x({ width: o(D) }),
+      style: { width: "1200px" },
       class: "roles-dialog"
     }, {
-      header: m(() => [
-        k(ue, {
-          title: "Roles",
-          status: P.value,
-          "width-presets": o(N),
-          "set-width": o(F),
-          "font-size-decrease": o(j),
-          "font-size-increase": o(L)
-        }, null, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
-      ]),
-      default: m(() => [
-        r.value.length ? ee("", !0) : (v(), $(o(de), {
-          key: 0,
-          severity: "info",
-          closable: !1
-        }, {
-          default: m(() => [...s[3] || (s[3] = [
-            Z("No roles found", -1)
-          ])]),
-          _: 1
-        })),
-        C("div", {
-          class: "roles-list",
-          style: x({ fontSize: `${o(T)}px` })
-        }, [
-          (v(!0), te(se, null, ae(r.value, (t) => (v(), $(o(fe), {
-            key: t.code,
-            class: "role-card"
-          }, {
-            title: m(() => [
-              C("span", ve, A(t.code), 1),
-              C("span", ye, A(t.name), 1)
-            ]),
-            content: m(() => [
-              k(o(me), {
-                modelValue: t.speaker,
-                "onUpdate:modelValue": (a) => t.speaker = a,
-                options: S.value,
-                editable: "",
-                filter: "",
-                placeholder: "Speaker preset",
-                title: "Real CosyVoice preset this role resolves to",
-                class: "role-speaker",
-                onInput: s[0] || (s[0] = (a) => _()),
-                onChange: (a) => M(t),
-                onBlur: (a) => E(t)
-              }, null, 8, ["modelValue", "onUpdate:modelValue", "options", "onChange", "onBlur"]),
-              k(o(he), {
-                modelValue: t.description,
-                "onUpdate:modelValue": (a) => t.description = a,
-                ref_for: !0,
-                ref: (a) => U(t.code, a),
-                "auto-resize": "",
-                rows: "1",
-                placeholder: "Description...",
-                class: "role-description",
-                style: x({ fontSize: `${o(T)}px` }),
-                onInput: s[1] || (s[1] = (a) => _())
-              }, null, 8, ["modelValue", "onUpdate:modelValue", "style"])
-            ]),
-            _: 2
-          }, 1024))), 128))
-        ], 4)
+      default: _(() => [
+        S($e, ae(re(i.$props)), null, 16)
       ]),
       _: 1
-    }, 8, ["visible", "style"]));
+    }, 8, ["visible"]));
   }
-}, Ee = /* @__PURE__ */ q(_e, [["__scopeId", "data-v-d8b0cc39"]]);
-function ke({ root: y, suffix: l = "" }) {
+}, ke = /* @__PURE__ */ N(Ce, [["__scopeId", "data-v-fd09558d"]]);
+function ze({ root: d, suffix: c = "" }) {
   ne(import.meta.url);
-  const c = document.createElement("div");
-  document.body.appendChild(c);
-  const i = re(Ee, {
-    root: y,
-    suffix: l,
+  const n = document.createElement("div");
+  document.body.appendChild(n);
+  const i = ie(ke, {
+    root: d,
+    suffix: c,
     onClose: () => {
-      i.unmount(), c.remove();
+      i.unmount(), n.remove();
     }
   });
-  i.use(ie, { ripple: !0 }), i.mount(c);
+  i.use(le, { ripple: !0 }), i.mount(n);
 }
 export {
-  ke as openRolesEditor
+  ze as openRolesEditor
 };

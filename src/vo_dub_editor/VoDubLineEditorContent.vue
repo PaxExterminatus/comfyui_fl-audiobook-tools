@@ -36,6 +36,7 @@ import InstructPickerDialog from "../shared/InstructPickerDialog.vue";
 import OutputFileDialog from "./OutputFileDialog.vue";
 import LineHistoryDialog from "../shared/LineHistoryDialog.vue";
 import RoleInfoPopover from "../shared/RoleInfoPopover.vue";
+import WaveformCanvas from "./WaveformCanvas.vue";
 import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
 import { insertStressMark } from "../shared/stress_mark.js";
 

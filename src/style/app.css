@@ -143,3 +143,17 @@
 .p-inputgroup {
     width: auto;
 }
+
+.p-fieldset {
+    padding: 0.25rem;
+}
+
+.p-fieldset .p-fieldset-legend {
+    border: none;
+    background: none;
+    padding: 0.25rem 1rem;
+}
+
+.p-fieldset .p-fieldset-content {
+    padding: 1rem 0.25rem;
+}

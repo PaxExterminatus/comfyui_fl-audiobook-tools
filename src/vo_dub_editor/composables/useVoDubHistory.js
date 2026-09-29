@@ -46,7 +46,6 @@ export function useVoDubHistory(ctx) {
                 `${VO_DUB_API}/line_history?root=${encodeURIComponent(props.root)}&audio_key=${encodeURIComponent(row.audio_key)}`,
             );
             const data = await resp.json();
-            console.log("[FL history] versions raw:", data);
             historyVersions.value = data.versions || [];
             historyChosenVersion.value = data.chosen_version ?? null;
         } catch (e) {
@@ -62,7 +61,7 @@ export function useVoDubHistory(ctx) {
         const row = historyRow.value;
         if (!row) return;
         try {
-            await fetch(`${VO_DUB_API}/line_history/choose`, {
+            const resp = await fetch(`${VO_DUB_API}/line_history/choose`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -71,7 +70,27 @@ export function useVoDubHistory(ctx) {
                     version,
                 }),
             });
+            const data = await resp.json();
+            if (data && data.error) {
+                setStatus(`Couldn't switch version: ${data.error}`);
+                return;
+            }
+
+            // Обновить выбранную версию в диалоге
+            historyChosenVersion.value = version;
             setStatus(`Switched ${row.audio_key} to version ${version}`);
+
+            // Сбросить ?v= — иначе <audio> в строке продолжит играть
+            // старый файл из кэша браузера, хотя на диске уже новый.
+            if (ctx.cacheBust) {
+                ctx.cacheBust[row.audio_key] = Date.now();
+            }
+
+            // Перечитать строки — статус (stale/done) мог поменяться
+            if (ctx.loadRows) await ctx.loadRows();
+
+            // Обновить счётчики версий
+            refreshHistoryCounts();
         } catch (e) {
             setStatus(`Couldn't switch version: ${e.message || e}`);
         }

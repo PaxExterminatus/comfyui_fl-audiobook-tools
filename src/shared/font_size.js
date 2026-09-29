@@ -17,7 +17,7 @@ export function useFontSize({ storageKey, defaultSize = 13, min = 9, max = 22 })
         }
     }
     function save(value) {
-        try { localStorage.setItem(storageKey, String(value)); } catch (e) { /* localStorage unavailable -- persistence just won't work this session */ }
+        try { localStorage.setItem(storageKey, String(value)); } catch (e) {}
     }
 
     const fontSizePx = ref(load());

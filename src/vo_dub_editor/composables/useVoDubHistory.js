@@ -46,6 +46,7 @@ export function useVoDubHistory(ctx) {
                 `${VO_DUB_API}/line_history?root=${encodeURIComponent(props.root)}&audio_key=${encodeURIComponent(row.audio_key)}`,
             );
             const data = await resp.json();
+            console.log("[FL history] versions raw:", data);
             historyVersions.value = data.versions || [];
             historyChosenVersion.value = data.chosen_version ?? null;
         } catch (e) {

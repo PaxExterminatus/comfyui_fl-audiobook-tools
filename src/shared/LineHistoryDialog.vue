@@ -1,15 +1,11 @@
 <script setup>
 /*
- History/versions picker for one line's rendered takes -- same "stateless
- picker dialog" contract as SpeakerPickerDialog.vue/InstructPickerDialog.vue:
- props in, emits out, this component never fetches or writes anything
- itself. The caller (LineEditorContent.vue / VoDubLineEditorContent.vue)
- owns fetching `versions` for whichever row is open and applying `select`.
+ History/versions picker for one line's rendered takes -- stateless:
+ props in, emits out, ничего не fetch'ит и не пишет сам.
 
- `original`, when non-empty, means the caller has a real source-language
- text for this row (VO Dub's english field) -- only then is
- TranslationSimilarityRadar worth rendering per version; the audiobook
- Line Editor has no such field and always passes "".
+ Путь к аудио версии собирается из параметров строки:
+   VO Dub:     {root}\_dub_versions\{audioKey}_v{version:03d}_{hash}_s{seed}.wav
+   Аудиокнига: v.path (если бэкенд отдаёт), иначе кнопка Play неактивна.
 */
 import { ref, computed } from "vue";
 import Dialog from "primevue/dialog";
@@ -23,69 +19,98 @@ import TranslationSimilarityRadar from "./TranslationSimilarityRadar.vue";
 import { SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
 
 const props = defineProps({
-    visible: { type: Boolean, required: true },
-    versions: { type: Array, default: () => [] },
-    chosenVersion: { type: Number, default: null },
-    original: { type: String, default: "" },
+  visible: { type: Boolean, required: true },
+  versions: { type: Array, default: () => [] },
+  chosenVersion: { type: Number, default: null },
+  original: { type: String, default: "" },
+  // Параметры строки для сборки пути к аудио версии.
+  root:     { type: String, default: "" },  // VO Dub: корень проекта
+  audioKey: { type: String, default: "" },  // VO Dub: row.audio_key
 });
 const emit = defineEmits(["update:visible", "select"]);
 
 const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
-    storageKey: "FL_CosyVoice3.LineHistory.widthPx",
-    defaultWidth: 1000,
-    presets: [800, 1000, 1300],
+  storageKey: "FL_CosyVoice3.LineHistory.widthPx",
+  defaultWidth: 1000,
+  presets: [800, 1000, 1300],
 });
 const { fontSizePx: cardFontSizePx, decrease: decreaseCardFontSize, increase: increaseCardFontSize } = useFontSize({
-    storageKey: "FL_CosyVoice3.LineHistory.fontSizePx",
-    defaultSize: 13,
+  storageKey: "FL_CosyVoice3.LineHistory.fontSizePx",
+  defaultSize: 13,
 });
 
 const sortedVersions = computed(() => [...props.versions].sort((a, b) => b.version - a.version));
 
 function pick(version) {
-    emit("select", version);
-    emit("update:visible", false);
+  emit("select", version);
+  emit("update:visible", false);
 }
 
-/*
- One shared <audio> for the whole dialog (not one per card) -- same
- posture as SpeakerPickerDialog's playSample, minus the mp3/wav fallback
- dance that exists there only for speaker samples; a version's file is
- always a plain .wav written by this addon's own render path.
-*/
+// ── аудио версии ────────────────────────────────────────────────────────
 const playingVersion = ref(null);
 let audioEl = null;
 
-function audioUrl(path) {
-    return `${SCAN_API}/audio?path=${encodeURIComponent(path)}`;
+// VO Dub: {root}\_dub_versions\{audioKey}_v{NNN}_{hash}_s{seed}.wav
+function voDubPath(v) {
+  if (!props.root || !props.audioKey) return "";
+  if (!v.hash || v.seed == null || v.version == null) return "";
+  const ver = String(v.version).padStart(3, "0");
+  const filename = `${props.audioKey}_v${ver}_${v.hash}_s${v.seed}.wav`;
+  const root = String(props.root).replace(/\\/g, "/").replace(/\/$/, "");
+  return `${root}/_dub_versions/${filename}`;
+}
+
+function audioUrl(v) {
+  // Приоритет: собрать по формуле VO Dub. Fallback: путь из бэкенда.
+  const path = voDubPath(v) || v.path || v.audio_path || v.file || "";
+  if (!path) return "";
+  return `${SCAN_API}/audio?path=${encodeURIComponent(path)}`;
 }
 
 function stopPlayback() {
-    audioEl?.pause();
+  if (audioEl) {
+    audioEl.pause();
     audioEl = null;
-    playingVersion.value = null;
+  }
+  playingVersion.value = null;
 }
 
 function togglePlay(v) {
-    if (playingVersion.value === v.version) {
-        stopPlayback();
-        return;
-    }
+  if (playingVersion.value === v.version) {
     stopPlayback();
-    const el = new Audio(audioUrl(v.path));
-    el.addEventListener("ended", () => { if (playingVersion.value === v.version) stopPlayback(); });
-    el.addEventListener("error", () => { if (playingVersion.value === v.version) stopPlayback(); });
-    el.play().catch(() => stopPlayback());
-    audioEl = el;
-    playingVersion.value = v.version;
+    return;
+  }
+  stopPlayback();
+
+  const url = audioUrl(v);
+  if (!url) {
+    console.warn("[FL history] не удалось собрать путь к версии:", v);
+    return;
+  }
+
+  const el = new Audio(url);
+  audioEl = el;
+  playingVersion.value = v.version;
+
+  el.addEventListener("ended", () => {
+    if (playingVersion.value === v.version) stopPlayback();
+  });
+  el.addEventListener("error", (e) => {
+    console.error("[FL history] audio error", { version: v.version, url, error: e });
+    if (playingVersion.value === v.version) stopPlayback();
+  });
+  el.play().catch((e) => {
+    console.error("[FL history] play() rejected", { version: v.version, url, error: e });
+    if (playingVersion.value === v.version) stopPlayback();
+  });
 }
 
 function formatCreatedAt(iso) {
-    try {
-        return new Date(iso).toLocaleString();
-    } catch {
-        return iso;
-    }
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
 }
 </script>
 
@@ -123,21 +148,9 @@ function formatCreatedAt(iso) {
                         <div class="history-snapshot-text">{{ v.text }}</div>
                     </div>
 
-                    <TranslationSimilarityRadar v-if="original" :original="original" :translation="v.text" />
-
                     <div class="history-card-actions">
-                        <Button
-                            :icon="playingVersion === v.version ? 'pi pi-pause' : 'pi pi-play'"
-                            size="small"
-                            title="Прослушать этот дубль"
-                            @click="togglePlay(v)"
-                        />
-                        <Button
-                            label="Сделать активной"
-                            size="small"
-                            :disabled="v.version === chosenVersion"
-                            @click="pick(v.version)"
-                        />
+                        <Button :icon="playingVersion === v.version ? 'pi pi-pause' : 'pi pi-play'" size="small" title="Прослушать этот дубль" @click="togglePlay(v)"/>
+                        <Button label="Сделать активной" size="small" :disabled="v.version === chosenVersion" @click="pick(v.version)"/>
                     </div>
                 </template>
             </Card>

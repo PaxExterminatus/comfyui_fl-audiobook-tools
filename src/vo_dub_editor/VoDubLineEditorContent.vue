@@ -453,6 +453,8 @@ onMounted(async () => {
       :versions="historyVersions"
       :chosen-version="historyChosenVersion"
       :original="historyRow?.english || ''"
+      :root="props.root"
+      :audio-key="historyRow?.audio_key || ''"
       @select="onHistoryVersionChosen"
   />
 
@@ -460,7 +462,7 @@ onMounted(async () => {
       :visible="roleInfoPopover.visible" :left="roleInfoPopover.left" :top="roleInfoPopover.top"
       :message="roleInfoFields.message" :fields="roleInfoFields.fields"
   />
-  <!-- OutputFileDialog for editing effect, normalize, speed -->
+
   <OutputFileDialog
       v-model:visible="outputDialogVisible"
       :audioKey="dialogRow?.audio_key"

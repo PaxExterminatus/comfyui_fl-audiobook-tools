@@ -208,8 +208,8 @@ onMounted(async () => {
               @click="currentPage--"
           />
           <span class="vo-dub-pager-label">
-        {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }})
-      </span>
+            {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }})
+          </span>
           <Button
               label="▶"
               text
@@ -226,7 +226,7 @@ onMounted(async () => {
             label="´ Stress mark"
             text
             size="small"
-            title="Insert a stress mark at the cursor: click into a row's text, place the cursor right after the vowel to stress (факел|ов), then click this"
+            title="Insert a stress mark at the cursor"
             @mousedown.prevent="insertStressMark(setStatus)"
         />
         <Button
@@ -234,7 +234,7 @@ onMounted(async () => {
             text
             size="small"
             :icon="sequentialPlayingKey ? 'pi pi-stop-circle' : 'pi pi-play'"
-            title="Play through this page's RU takes in order, auto-advancing to the next row with a take when each one ends."
+            title="Play through this page's RU takes in order"
             @click="toggleSequentialPlayback"
         />
         <Button
@@ -243,7 +243,7 @@ onMounted(async () => {
             size="small"
             :icon="isRenderingAllPending ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
             :disabled="!props.renderApi || isRenderingAllPending"
-            title="Render every not-started or stale row in this WHOLE bucket, one at a time."
+            title="Render every not-started or stale row in this WHOLE bucket"
             @click="renderAllPending"
         />
 
@@ -264,6 +264,7 @@ onMounted(async () => {
           :class="{ 'row-playing': sequentialPlayingKey === row.audio_key }"
           :ref="(el) => setRowRef(row.audio_key, el)"
       >
+        <!-- ── Заголовок строки ──────────────────────────────────────── -->
         <div class="vo-dub-row-head">
           <span class="vo-dub-key">{{ row.audio_key }}</span>
           <span :class="['vo-dub-status-pill', `status-${row.status}`]">{{ STATUS_LABELS[row.status] }}</span>
@@ -274,47 +275,37 @@ onMounted(async () => {
               text size="small"
               :icon="manuallyDone(row) ? 'pi pi-check-circle' : 'pi pi-circle'"
               :label="manuallyDone(row) ? 'Done' : 'Mark done'"
-              title="Manually treat this row as done even if its content has drifted since the last render -- sticky until you click it again to unmark it. Doesn't touch the file or the render hash, only how this row's status reads."
+              title="Manually treat this row as done even if its content has drifted since the last render."
               @click="toggleManuallyDone(row)"
           />
         </div>
 
-        <!-- Multi-channel rows (3/4ch, split into .a-.d segment files --
-        see nodes/vo_dub_library.py's SUPPORTED_CHANNELS) have no flat
-        "<audio_key>.wav" to play OR write: this addon can only ever
-        produce/serve a single mono or stereo file. Neither player nor
-        the render button would do anything but fail confusingly, so
-        this row gets an explanation instead of a silently broken UI. -->
+        <!-- Multi-channel rows -- не поддерживаются -->
         <div v-if="row.status === 'unsupported'" class="vo-dub-unsupported-note">
           Unsupported: {{ row.channels }}-channel audio split across multiple files
           (<code>.a</code>-<code>.d</code>) -- this editor can only play or render a single mono/stereo
           file per row. Handle this one outside the tool.
         </div>
+
         <template v-else>
+          <!-- ── Плееры ──────────────────────────────────────────────── -->
           <div class="vo-dub-players">
-            <!-- ONE left-aligned line: "EN 0.4s vs 0.4s RU -57%" --
-            not split across the row (tried, rejected: see the plan
-            file's progress notes). -->
-            <div class="vo-dub-players-labels">
-              <span class="vo-dub-duration-en-tag">{{ enDurationText(row) }}</span>
-              <template v-if="durationBadge(row)">
-                <span class="vo-dub-duration-vs">vs</span>
-                <span :class="['vo-dub-duration-tag', `badge-${durationBadge(row).level}`]">{{ durationBadge(row).ruSeconds }} RU</span>
-                <span :class="['vo-dub-duration-delta', `badge-${durationBadge(row).level}`]">{{ durationBadge(row).pctText }}</span>
-              </template>
+
+            <!-- Компактная строка длительностей -->
+            <div class="vo-dub-duration-line">
+              <span class="vo-dub-duration-en">{{ enDurationText(row) }}</span>
+              <span class="vo-dub-duration-arrow">→</span>
+              <span class="vo-dub-duration-ru">
+                RU {{ durationBadge(row)?.ruSeconds || "—" }}
+              </span>
+              <span
+                  v-if="durationBadge(row)"
+                  :class="['vo-dub-duration-delta', `badge-${durationBadge(row).level}`]"
+              >{{ durationBadge(row).pctText }}</span>
             </div>
 
             <div class="vo-dub-players-row">
               <div class="vo-dub-player">
-                <!-- Purely visual overview above the native
-                player -- decodes+draws eagerly on mount (the
-                one deliberate exception to "fetch nothing
-                until played"); the native element below stays
-                preload="none" regardless, so ACTUAL playback
-                is still fully lazy. guardAgainstUnbufferedPlay
-                (see setEnAudioRef) protects the native play
-                button from clipping the first fraction of a
-                second once pressed. -->
                 <WaveformCanvas :src="audioUrl('audio_en', row.audio_key)" class="vo-dub-waveform" />
                 <audio
                     controls preload="none"
@@ -325,13 +316,6 @@ onMounted(async () => {
                 />
               </div>
 
-              <!-- The one genuinely new command neither native
-              player offers on its own (see playBoth's own
-              comment) -- not a re-skin of play/pause/seek,
-              which stay exactly what the native controls already
-              provide. Centered between the two players, not
-              grouped with Render/Effect below -- those two are
-              about the FILE, this one's about listening to it. -->
               <Button
                   class="play-both-btn"
                   :class="{ playing: dualPlayingRows.has(row.audio_key) }"
@@ -345,19 +329,6 @@ onMounted(async () => {
 
               <div class="vo-dub-player">
                 <WaveformCanvas v-if="hasRuTake(row)" :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])" class="vo-dub-waveform" />
-                <!-- crossorigin is REQUIRED on this element, unlike
-                the EN player above: this is the one wrapped in
-                createMediaElementSource (setRuAudioRef ->
-                createEffectPreview). The file is served from the
-                BACKEND's origin (127.0.0.1:8765), never the UI's
-                (localhost:5199/5173), so without this attribute the
-                browser fetches it no-cors, the stream is opaque, and
-                the MediaElementAudioSourceNode outputs SILENCE --
-                while the element still reports a duration and
-                advances currentTime, so it looks like it is playing
-                fine. The backend already answers with
-                Access-Control-Allow-Origin: *, so "anonymous"
-                resolves cleanly. -->
                 <audio
                     v-if="hasRuTake(row)"
                     controls preload="none" crossorigin="anonymous"
@@ -371,20 +342,18 @@ onMounted(async () => {
               </div>
             </div>
 
-            <!-- Render/Re-render and Effect (+ its Save button, once
-            dirty) on their own row, left-aligned -- both act on the
-            FILE this row writes, distinct from Play both above
-            (which only ever plays what's already there). -->
+            <!-- Компактный actions-row: Re-render (text), history, settings -->
             <div class="vo-dub-players-footer">
               <Button
                   v-if="props.renderApi"
                   class="vo-dub-render-btn"
                   :class="{ stale: row.status === 'stale' }"
+                  text
                   size="small"
                   :label="hasRuTake(row) ? 'Re-render' : 'Render'"
                   :icon="renderingKeys.has(row.audio_key) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
                   :disabled="renderingKeys.has(row.audio_key)"
-                  :title="hasRuTake(row) ? 'Re-render this row and write it to audio_ru\\' : 'Render this row and write it to audio_ru\\'"
+                  :title="hasRuTake(row) ? 'Re-render this row' : 'Render this row'"
                   @click="renderRow(row)"
               />
               <Button
@@ -398,39 +367,45 @@ onMounted(async () => {
               <Button
                   icon="pi pi-cog"
                   size="small"
+                  text
                   title="Edit output settings"
                   @click="openOutputDialog(row)"
-                  class="output-settings-btn"
               />
             </div>
           </div>
 
+          <!-- ── Редактирование полей ────────────────────────────────── -->
           <LineRowEditor :row="row">
             <template #leading>
-                        <span
-                            class="vo-dub-identifier"
-                            title="Identifier extracted from the game's own resources (vo_dataset.csv's speaker column) -- not necessarily a real role, just the raw signal this row's audio_key carried"
-                        >{{ row.speaker_tag || "—" }}</span>
+              <span
+                  class="vo-dub-identifier"
+                  title="Identifier extracted from the game's own resources (vo_dataset.csv's speaker column)"
+              >{{ row.speaker_tag || "—" }}</span>
               <Button
                   icon="pi pi-copy"
                   size="small"
+                  text
                   class="apply-role-btn"
                   :disabled="sameIdentifierCount(row) === 0"
                   :title="applyRoleTitle(row)"
                   @click="applyRoleToSameIdentifier(row)"
               />
+            </template>
+
+            <template #trailing>
               <label
                   class="vo-dub-use-original-label"
-                  title="Use this row's own EN reference take (audio_en\) as the TTS voice-cloning sample for its NEXT render, instead of the Role above -- unticked follows the project-wide default checkbox in the toolbar unless this row's own box has been explicitly touched. Whether an instruct style can still apply together with this depends on your ComfyUI graph/model -- this addon just passes the resolved reference_audio_path through, it doesn't wire it to a specific node."
+                  title="Use this row's own EN take as the voice-cloning sample for its next render."
               >
                 <Checkbox
                     :model-value="resolvedUseOriginal(row)"
                     binary
                     @update:model-value="onToggleRowUseOriginal(row, $event)"
                 />
-                🎙️ Original as sample
+                🎙️ Original
               </label>
             </template>
+
             <template #above-text>
               <div class="vo-dub-english">{{ row.english }}</div>
             </template>

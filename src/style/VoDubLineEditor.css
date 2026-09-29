@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 6px;
 }
+
 .vo-dub-filters {
   display: flex;
   gap: 8px;
@@ -10,13 +11,16 @@
   width: 100%;
   align-items: center;
 }
+
 .vo-dub-search {
   flex: 1 1 240px;
   min-width: 0;
 }
+
 .vo-dub-status-filter {
   flex: 0 0 auto;
 }
+
 .vo-dub-editor-status {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -27,6 +31,7 @@
   margin-left: auto;
   max-width: 260px;
 }
+
 .actions-row {
   display: flex;
   gap: 8px;
@@ -34,6 +39,7 @@
   align-items: center;
   padding: 2px 0;
 }
+
 .actions-divider {
   width: 1px;
   align-self: stretch;
@@ -41,12 +47,14 @@
   margin: 0 4px;
   flex: 0 0 auto;
 }
+
 .vo-dub-pager-inline {
   display: flex;
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
 }
+
 .vo-dub-pager-label {
   font-size: var(--font-sm);
   opacity: 0.75;
@@ -54,6 +62,7 @@
   white-space: nowrap;
   padding: 0 4px;
 }
+
 .vo-dub-original-default-label {
   display: flex;
   align-items: center;
@@ -64,12 +73,14 @@
   user-select: none;
   margin-left: auto;
 }
+
 .vo-dub-rows {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 4px 2px 20px;
 }
+
 .vo-dub-row {
   display: flex;
   flex-direction: column;
@@ -79,162 +90,201 @@
   border-radius: 8px;
   background: var(--bg-recessed);
 }
+
 .vo-dub-row.row-playing {
   background: #242935;
 }
+
 .vo-dub-row-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
 }
+
 .vo-dub-key {
   font-weight: 600;
   font-family: monospace;
   font-size: var(--font-sm);
 }
-.vo-dub-duration-ref {
-  opacity: 0.6;
-  font-size: var(--font-xs);
-}
-.vo-dub-render-btn {
-  flex: 0 0 auto;
-}
-.vo-dub-render-btn.stale {
-  color: var(--color-warning);
-}
+
 .vo-dub-status-pill {
   font-size: var(--font-xs);
   padding: 1px 8px;
   border-radius: 100px;
   background: var(--overlay-soft);
 }
+
 .status-no_text {
   color: var(--color-warning);
 }
+
 .status-needs_translation {
   color: var(--color-active);
 }
+
 .status-not_started {
   opacity: 0.6;
 }
+
 .status-stale {
   color: var(--color-warning);
 }
+
 .status-done {
   color: var(--color-success);
 }
+
 .status-unsupported {
   opacity: 0.5;
   font-style: italic;
 }
+
 .vo-dub-done-btn {
   flex: 0 0 auto;
   margin-left: auto;
-  opacity: 0.6;
+  opacity: 0.55;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 2px 10px;
+  transition: opacity 0.15s, border-color 0.15s;
 }
+
+.vo-dub-done-btn:hover {
+  opacity: 1;
+  border-color: var(--text-muted, #94a3b8);
+}
+
 .vo-dub-done-btn.active {
   color: var(--color-success);
+  border-color: var(--color-success);
   opacity: 1;
 }
+
 .vo-dub-players {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
+
 .vo-dub-players-row {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;
 }
-.vo-dub-players-labels {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--font-xs);
-  opacity: 0.7;
-}
+
 .vo-dub-player {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
+
 .vo-dub-players-footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   padding-top: 2px;
 }
-.vo-dub-effect-select {
-  flex: 0 0 auto;
-  width: 200px;
-}
-.vo-dub-effect-save-btn {
-  flex: 0 0 auto;
-  color: var(--color-active);
-}
+
 .play-both-btn {
   justify-self: center;
 }
+
 .play-both-btn.playing {
   color: var(--color-active);
 }
+
 .vo-dub-no-take {
   opacity: 0.5;
   font-size: var(--font-sm);
   font-style: italic;
 }
-.vo-dub-duration-en-tag,
-.vo-dub-duration-tag,
+
+.vo-dub-duration-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-xs);
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.vo-dub-duration-en {
+  color: var(--text-muted, #94a3b8);
+  font-variant-numeric: tabular-nums;
+}
+
+.vo-dub-duration-ru {
+  color: var(--text, #e2e8f0);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.vo-dub-duration-arrow {
+  opacity: 0.5;
+}
+
 .vo-dub-duration-delta {
-  font-size: var(--font-xs);
-  padding: 1px 6px;
-  border-radius: 100px;
-  background: var(--overlay-soft);
+  font-weight: 600;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
 }
-.vo-dub-duration-vs {
-  font-size: var(--font-xs);
-  padding: 1px 6px;
-  border-radius: 100px;
-  opacity: 0.55;
-}
+
 .badge-good {
   color: var(--color-success);
 }
+
 .badge-warn {
   color: var(--color-active);
 }
+
 .badge-bad {
   color: var(--color-warning);
 }
-.vo-dub-english {
-  opacity: 0.65;
-  font-size: var(--font-sm);
-  font-style: italic;
+
+.vo-dub-render-btn.stale {
+  color: var(--color-warning);
 }
-.vo-dub-unsupported-note {
-  font-size: var(--font-sm);
-  opacity: 0.8;
-  padding: 6px 8px;
-  border-radius: 4px;
-  background: var(--overlay-soft);
-  border-left: 2px solid var(--color-warning);
+
+.vo-dub-row .line-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.vo-dub-row .line-controls-row > .speaker-group {
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.vo-dub-row .line-controls-row > .instruct-group {
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border-subtle);
+}
+
 .vo-dub-identifier {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 0 0 auto;
-  max-width: 180px;
-  font-size: var(--font-xs);
+  max-width: 220px;
+  font-size: var(--font-sm);
   font-family: monospace;
-  opacity: 0.6;
+  font-weight: 500;
+  opacity: 0.9;
+  padding: 2px 6px;
+  background: var(--overlay-soft);
+  border-radius: 4px;
 }
+
 .apply-role-btn {
   flex: 0 0 auto;
 }
+
 .vo-dub-use-original-label {
   display: flex;
   align-items: center;
@@ -245,7 +295,30 @@
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-subtle);
+  margin-left: 4px;
 }
+
+.vo-dub-use-original-label:hover {
+  opacity: 1;
+}
+
+.vo-dub-english {
+  opacity: 0.65;
+  font-size: var(--font-sm);
+  font-style: italic;
+}
+
+.vo-dub-unsupported-note {
+  font-size: var(--font-sm);
+  opacity: 0.8;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--overlay-soft);
+  border-left: 2px solid var(--color-warning);
+}
+
 .vo-dub-empty {
   opacity: 0.6;
   padding: 16px;

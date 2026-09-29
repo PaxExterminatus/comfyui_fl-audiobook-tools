@@ -27,6 +27,48 @@ from typing import Tuple
 import torch
 
 
+def normalize_loudness(wav: torch.Tensor, target_dbfs: float = -20.0, peak_ceiling_dbfs: float = -1.0) -> torch.Tensor:
+    """
+    Normalizes audio loudness based on RMS, with a peak ceiling to prevent clipping.
+
+    - Measures RMS across the whole signal (all channels together).
+    - Applies a single gain to reach the target dBFS.
+    - If the resulting peak exceeds peak_ceiling_dbfs, the signal is scaled down.
+    - Returns the original tensor if it is silent.
+    """
+    rms = torch.sqrt(torch.mean(wav.float()**2))
+
+    if rms <= 0:
+        return wav
+
+    target_rms = 10** (target_dbfs / 20.0)
+    gain = target_rms / rms
+
+    out = wav * gain
+
+    peak_ceiling = 10** (peak_ceiling_dbfs / 20.0)
+    peak = torch.max(torch.abs(out))
+
+    if peak > peak_ceiling:
+        out = out * (peak_ceiling / peak)
+
+    return out.to(wav.dtype)
+
+
+def speed_ratio_for_match(en_duration_s, ru_duration_s):
+    """
+    Computes the speed ratio needed for a RU take to match the duration of an EN take.
+    Clamped to [0.5, 2.0]. Returns 1.0 if durations are missing, zero, or negative.
+    """
+    if en_duration_s is None or ru_duration_s is None:
+        return 1.0
+    if en_duration_s <= 0 or ru_duration_s <= 0:
+        return 1.0
+
+    ratio = ru_duration_s / en_duration_s
+    return max(0.5, min(2.0, ratio))
+
+
 def _smooth_bandpass_mask(freqs: torch.Tensor, low_hz: float, high_hz: float, taper_hz: float = 150.0) -> torch.Tensor:
     """A soft-edged bandpass gain curve over `freqs` (values in [0, 1], one
     per FFT bin) -- a hard brick-wall cutoff rings (Gibbs phenomenon),
@@ -128,6 +170,64 @@ def _telephony_effect(
         voice = voice + noise
 
     return voice
+
+
+def time_stretch(wav: torch.Tensor, rate: float) -> torch.Tensor:
+    """
+    Time-stretches audio without changing pitch using a phase vocoder.
+    `rate > 1.0` -> faster (shorter), `rate < 1.0` -> slower (longer).
+    """
+    import torchaudio
+
+    if rate <= 0 or rate == 1.0:
+        return wav
+
+    orig_dtype = wav.dtype
+    wav_f = wav.float()
+
+    n_fft = 1024
+    hop_length = 256
+    window = torch.hann_window(n_fft).to(wav_f.device)
+
+    spec = torch.stft(
+        wav_f,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        window=window,
+        center=True,
+        return_complex=True,
+    )
+
+    # Phase vocoder expects spec of shape (..., freq, frames)
+    # torch.stft returns (..., freq, frames)
+    # torchaudio.functional.phase_vocoder takes (..., freq, frames)
+    # The issue is phase_advance: it must match the freq dimension.
+    
+    # spec shape: (channels, freq, frames)
+    # bins should be length 'freq'
+    bins = torch.arange(spec.shape[-2], device=wav_f.device)
+    phase_advance = 2 * math.pi * hop_length * bins / n_fft
+    
+    # phase_advance shape: (freq,)
+    # To broadcast with spec (channels, freq, frames), we need (1, freq, 1)
+    phase_advance = phase_advance.view(1, -1, 1)
+
+    # torchaudio's phase_vocoder rate is a speed-up factor (2.0 = twice as fast = half as long).
+    # Our 'rate' is also a speed ratio (2.0 = twice as fast = half as long).
+    stretched_spec = torchaudio.functional.phase_vocoder(spec, rate, phase_advance)
+
+    # Use explicit length to avoid STFT framing errors on short inputs.
+    expected_len = int(wav.shape[-1] / rate)
+    out = torch.istft(
+        stretched_spec,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        window=window,
+        center=True,
+        length=expected_len,
+    )
+
+    return out.to(orig_dtype)
 
 
 def radio_effect(
@@ -287,8 +387,46 @@ EFFECTS = {
 
 def apply_named_effect(wav: torch.Tensor, sample_rate: int, name: str) -> torch.Tensor:
     """Looks `name` up in EFFECTS and applies it -- unknown/empty names are
-    a no-op (returns `wav` unchanged) rather than an error, since an older
-    saved `_dub_state.json` row naming a since-removed effect shouldn't
+    a no‑op (returns `wav` unchanged) rather than an error, since an older
+    saved `_dub_state.json` row naming a since‑removed effect shouldn't
     break rendering."""
     effect = EFFECTS.get(name)
     return effect(wav, sample_rate) if effect else wav
+
+
+def apply_output_chain(
+    wav: torch.Tensor,
+    sample_rate: int,
+    effect: str = "",
+    normalize: bool = False,
+    speed: float = 1.0,
+) -> torch.Tensor:
+    """Apply the audio output chain to ``wav``.
+
+    The chain consists of three optional steps, applied in the order:
+
+    1. ``effect`` – if a non‑empty string, the corresponding named effect from
+       :data:`EFFECTS` is applied via :func:`apply_named_effect`.
+    2. ``normalize`` – if ``True``, loudness normalisation is performed via
+       :func:`normalize_loudness`.
+    3. ``speed`` – a speed ratio (``>0``). Values other than ``1.0`` cause a
+       time‑stretch via :func:`time_stretch`. ``speed`` values of ``0`` or
+       ``<0`` are treated as a no‑op (the underlying :func:`time_stretch`
+       already returns the input unchanged for those cases).
+
+    The original ``wav`` tensor is never mutated – a cloned tensor is processed
+    and returned.
+    """
+    # Clone to avoid mutating the caller's tensor.
+    out = wav.clone()
+    # Step 1: optional effect.
+    if effect:
+        out = apply_named_effect(out, sample_rate, effect)
+    # Step 2: optional normalisation.
+    if normalize:
+        out = normalize_loudness(out)
+    # Step 3: optional time‑stretch.
+    if speed != 1.0:
+        out = time_stretch(out, speed)
+    return out
+

@@ -344,6 +344,14 @@ def row_hash(
     instruct_for_hash = instruct
     if effect:
         instruct_for_hash += f"\x00effect={effect}"
+
+    if (state_entry or {}).get("normalize"):
+        instruct_for_hash += "\x00normalize=1"
+
+    speed = (state_entry or {}).get("speed")
+    if speed is not None and speed != 1.0:
+        instruct_for_hash += f"\x00speed={speed:.4f}"
+
     if original_sample:
         instruct_for_hash += "\x00sample=original"
     return _line_audio.line_hash(resolved_speaker(row, state_entry, role_map), instruct_for_hash, text)

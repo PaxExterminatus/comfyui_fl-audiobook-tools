@@ -31,6 +31,7 @@ import DialogHeader from "../shared/DialogHeader.vue";
 import StickyPanel from "../shared/StickyPanel.vue";
 import LineRowEditor from "../shared/LineRowEditor.vue";
 import InstructPickerDialog from "../shared/InstructPickerDialog.vue";
+import OutputFileDialog from "./OutputFileDialog.vue";
 import LineHistoryDialog from "../shared/LineHistoryDialog.vue";
 import RoleInfoPopover from "../shared/RoleInfoPopover.vue";
 import { useRoleInfoPopover } from "../shared/role_info_popover.js";
@@ -71,8 +72,28 @@ const { autoGrow, setTextareaRef, regrowAll } = useTextareaAutoGrow();
 */
 watch(fontSizePx, regrowAll);
 
+const outputDialogVisible = ref(false);
+const dialogRow = ref(null);
+
+function openOutputDialog(row) {
+    dialogRow.value = row;
+    outputDialogVisible.value = true;
+}
+
+function onDialogApply(payload) {
+    const row = dialogRow.value;
+    if (!row) return;
+    const entry = entryFor(row);
+    entry.effect = payload.effect;
+    entry.normalize = payload.normalize;
+    entry.speed = payload.speed;
+    // persist state via onTextEdit (schedules save)
+    onTextEdit(row);
+    if (hasRuTake(row)) applyEffectToFile(row);
+}
+
 const visible = ref(true);
-let closed = false;
+
 function close() {
     if (closed) return;
     closed = true;
@@ -1289,23 +1310,16 @@ onMounted(async () => {
                             title="Line history (previous takes/versions)"
                             @click="openLineHistory(row)"
                         />
-                        <Dropdown
-                            :model-value="effectValue(row)"
-                            :options="EFFECT_OPTIONS"
-                            option-label="label"
-                            option-value="value"
-                            class="vo-dub-effect-select"
-                            title="Effect -- previews INSTANTLY on the RU take above (no re-render, no save) until you click Save or Render/Re-render"
-                            @update:model-value="onEffectPicked(row, $event)"
-                        />
                         <Button
-                            v-if="effectIsDirty(row)"
-                            icon="pi pi-save"
+                            icon="pi pi-cog"
                             size="small"
-                            class="vo-dub-effect-save-btn"
-                            title="Save this Effect choice (does not re-render the file by itself -- Render/Re-render still needs a click to actually bake it in)"
-                            @click="saveEffect(row)"
+                            title="Edit output settings"
+                            @click="openOutputDialog(row)"
+                            class="output-settings-btn"
                         />
+                        
+                        <!-- Effect dropdown and save button removed; editing via OutputFileDialog -->
+
                     </div>
                 </div>
 
@@ -1389,6 +1403,17 @@ onMounted(async () => {
     <RoleInfoPopover
         :visible="roleInfoPopover.visible" :left="roleInfoPopover.left" :top="roleInfoPopover.top"
         :message="roleInfoFields.message" :fields="roleInfoFields.fields"
+    />
+    <!-- OutputFileDialog for editing effect, normalize, speed -->
+    <OutputFileDialog
+        v-model:visible="outputDialogVisible"
+        :audioKey="dialogRow?.audio_key"
+        :effect="dialogRow ? effectValue(dialogRow) : ''"
+        :normalize="dialogRow ? entryFor(dialogRow).normalize : false"
+        :speed="dialogRow ? entryFor(dialogRow).speed : 1.0"
+        :enDurationS="dialogRow ? dialogRow.duration_s : null"
+        :ruDurationS="dialogRow ? (measuredDuration[dialogRow.audio_key] ?? dialogRow.rendered_duration_s) : null"
+        @apply="onDialogApply"
     />
 </template>
 

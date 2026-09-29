@@ -93,7 +93,30 @@ async function createWindow() {
             nodeIntegration: false,
         },
     });
-    await mainWindow.loadURL(UI_URL);
+    /*
+     The UI is served by electron-ui's OWN Vite dev server, which this process
+     does NOT start (see the module docstring). When it isn't running, loadURL
+     rejects with ERR_CONNECTION_REFUSED -- and since createWindow is only ever
+     awaited inside a .then(), that surfaced as an UnhandledPromiseRejection
+     dump with no hint of the actual cause. Catch it and put the fix on screen
+     instead: an empty window plus a stack trace is the least useful thing to
+     show someone who simply hasn't started the dev server yet.
+    */
+    try {
+        await mainWindow.loadURL(UI_URL);
+    } catch (e) {
+        console.error(`[electron-main] couldn't load ${UI_URL}: ${e.message}`);
+        console.error("[electron-main] start the UI dev server first: npm run dev:electron-ui");
+        const message = `
+            <body style="background:#18181b;color:#e4e4e7;font:14px/1.6 system-ui;padding:48px">
+              <h2 style="margin:0 0 16px">UI dev server isn't running</h2>
+              <p>Nothing is serving <code>${UI_URL}</code>.</p>
+              <p>Start it in a second terminal, then reopen this app:</p>
+              <pre style="background:#27272a;padding:12px 16px;border-radius:6px">npm run dev:electron-ui</pre>
+              <p style="color:#a1a1aa">The Python backend started fine -- only the UI is missing.</p>
+            </body>`;
+        await mainWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(message));
+    }
     // Phase 4 (packaging) hasn't happened yet -- this only ever runs in dev
     // today, so always opening DevTools costs nothing and means a render
     // failure is visible immediately instead of depending on F12 actually

@@ -9,6 +9,7 @@ Run directly for local testing: `python server.py` (defaults to
 127.0.0.1:8765, matching electron-ui's expected VITE_API_BASE).
 """
 import os
+import sys
 import re
 import json
 import csv
@@ -17,6 +18,12 @@ import random
 import traceback
 from datetime import datetime, timezone
 from typing import Tuple, List, Optional, Dict
+
+# Add nodes directory to sys.path to make audio engine importable.
+nodes_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "nodes"))
+if nodes_dir not in sys.path:
+    sys.path.append(nodes_dir)
+
 
 from aiohttp import web
 
@@ -1094,6 +1101,21 @@ def audio_dry_path(root: str, audio_key: str) -> str:
     return os.path.join(root, AUDIO_DRY_DIRNAME, f"{audio_key}.wav")
 
 
+def write_dry_copy(root, audio_key, src_path):
+    """Copies the render result to the dry folder for future effect application."""
+    import shutil
+    if not os.path.isfile(src_path):
+        raise FileNotFoundError(f"source file not found: {src_path}")
+
+    dest_path = audio_dry_path(root, audio_key)
+    dest_dir = os.path.dirname(dest_path)
+    if dest_dir:
+        os.makedirs(dest_dir, exist_ok=True)
+
+    shutil.copyfile(src_path, dest_path)
+    return dest_path
+
+
 def read_dataset(root: str) -> List[dict]:
     path = dataset_path(root)
     if not os.path.isfile(path):
@@ -1215,6 +1237,14 @@ def row_hash(
     instruct_for_hash = instruct
     if effect:
         instruct_for_hash += f"\x00effect={effect}"
+
+    if (state_entry or {}).get("normalize"):
+        instruct_for_hash += "\x00normalize=1"
+
+    speed = (state_entry or {}).get("speed")
+    if speed is not None and speed != 1.0:
+        instruct_for_hash += f"\x00speed={speed:.4f}"
+
     if original_sample:
         instruct_for_hash += "\x00sample=original"
     return line_hash(resolved_speaker(row, state_entry, role_map), instruct_for_hash, text)
@@ -1433,6 +1463,19 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
     root = (data.get("root") or "").strip()
     audio_key = (data.get("audio_key") or "").strip()
     effect = (data.get("effect") or "").strip()
+    normalize = data.get("normalize", False)
+    speed = data.get("speed", 1.0)
+
+    # isinstance(True, int) is True in Python, so the bool check must come
+    # first -- otherwise a JSON `true` would sail through as a valid speed.
+    if not isinstance(normalize, bool):
+        return web.json_response({"error": "'normalize' must be a boolean"})
+
+    if isinstance(speed, bool) or not isinstance(speed, (int, float)):
+        return web.json_response({"error": "'speed' must be a number"})
+    if speed < 0.5 or speed > 2.0:
+        return web.json_response({"error": "'speed' must be between 0.5 and 2.0"})
+
     if not root or not os.path.isdir(root):
         return web.json_response({"error": f"not a folder: {root}"})
     if not audio_key:
@@ -1446,7 +1489,7 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
         import torch
         import soundfile as sf_local
         from _audio_utils import save_wav
-        from _audio_effects import apply_named_effect
+        from _audio_effects import apply_output_chain
     except ImportError as e:
         return web.json_response({"error": f"couldn't load the audio engine: {e}"})
 
@@ -1455,7 +1498,7 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
     except Exception as e:
         return web.json_response({"error": f"couldn't read dry take: {e}"})
     wav = torch.from_numpy(data_np.T.copy())
-    wav = apply_named_effect(wav, sample_rate, effect)
+    wav = apply_output_chain(wav, sample_rate, effect, normalize, speed)
 
     ru_path = audio_ru_path(root, audio_key)
     try:
@@ -1559,6 +1602,10 @@ async def fl_cosyvoice3_vo_dub_render_row(request):
     chosen_version = results[0]["version"]
     out_path = promote_version(versions_dir, audio_key, chosen_version, audio_ru_path(root, audio_key))
     print(f"[DEBUG] promote_version -> {out_path}")
+    try:
+        write_dry_copy(root, audio_key, out_path)
+    except Exception as e:
+        print(f"[electron-server] WARNING: write_dry_copy failed: {e}")
     _line_history.set_chosen_version(versions_dir, audio_key, chosen_version)
     return web.json_response({"ok": True, "path": out_path, "hash": content_hash, "chosen_version": chosen_version, "takes": results})
 @routes.get("/fl_cosyvoice3/vo_dub/line_history")

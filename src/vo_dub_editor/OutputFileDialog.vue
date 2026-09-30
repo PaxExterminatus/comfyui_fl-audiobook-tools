@@ -4,6 +4,7 @@ import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import InputSwitch from "primevue/inputswitch";
+import InputNumber from "primevue/inputnumber";
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import Fieldset from "primevue/fieldset";
@@ -14,6 +15,7 @@ const props = defineProps({
   effect: { type: String, default: "" },
   normalize: { type: Boolean, default: false },
   speedMatch: { type: Boolean, default: false },
+  normalizeDb: { type: Number, default: -20.0 },
   enDurationS: { type: Number, default: null },
   ruDurationS: { type: Number, default: null },
 });
@@ -33,12 +35,14 @@ const effectOptions = [
 const localEffect = ref(props.effect);
 const localNormalize = ref(props.normalize);
 const localSpeedMatch = ref(props.speedMatch);
+const localNormalizeDb = ref(props.normalizeDb);
 
 watch(() => props.visible, (v) => {
   if (v) {
     localEffect.value = props.effect;
     localNormalize.value = props.normalize;
     localSpeedMatch.value = props.speedMatch;
+    localNormalizeDb.value = props.normalizeDb;
   }
 });
 
@@ -59,6 +63,7 @@ function onApply() {
     effect: localEffect.value,
     normalize: localNormalize.value,
     speedMatch: localSpeedMatch.value,
+    normalizeDb: localNormalizeDb.value,
   });
   emit("update:visible", false);
 }
@@ -98,8 +103,25 @@ function onApply() {
           </label>
         </div>
       </InputGroup>
+      <div v-if="localNormalize" class="ofd-target-row">
+        <span class="ofd-target-label">Target level:</span>
+        <InputNumber
+            v-model="localNormalizeDb"
+            :min="-30"
+            :max="-6"
+            :step="0.5"
+            :min-fraction-digits="1"
+            :max-fraction-digits="1"
+            suffix=" dB"
+            show-buttons
+            button-layout="horizontal"
+            class="ofd-target-number"
+        />
+      </div>
       <small>
-        Приводит пиковую громкость к целевому уровню.
+        Приводит RMS-громкость к целевому уровню. −20 dB — комфортный
+        дефолт для диалогов; тише (−26…−24) — для шёпота и фоновых
+        реплик, громче (−16…−14) — для криков.
       </small>
     </Fieldset>
 
@@ -123,3 +145,22 @@ function onApply() {
     </template>
   </Dialog>
 </template>
+
+<style scoped>
+.ofd-target-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 4px;
+}
+
+.ofd-target-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.ofd-target-number {
+  width: 8rem;
+}
+</style>

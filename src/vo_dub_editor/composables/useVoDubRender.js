@@ -97,11 +97,11 @@ export function useVoDubRender(ctx) {
 
         let instructForHash = instruct;
         if (effect) instructForHash += `\x00effect=${effect}`;
-        if (entry.normalize) instructForHash += "\x00normalize=1";
-        const speed = entry.speed;
-        if (speed != null && speed !== 1.0) {
-            instructForHash += `\x00speed=${Number(speed).toFixed(4)}`;
+        if (entry.normalize) {
+            const db = Number(entry.normalize_db ?? -20.0);
+            instructForHash += `\x00normalize=${db.toFixed(1)}`;
         }
+        if (entry.speed_match) instructForHash += "\x00speed=match";
         if (resolvedUseOriginal(row)) instructForHash += "\x00sample=original";
 
         return lineHash(speaker, instructForHash, russianText);
@@ -171,7 +171,8 @@ export function useVoDubRender(ctx) {
                 dryOutputPath,
                 referenceAudioPath,
                 normalize: Boolean(entry.normalize),
-                speed: entry.speed ?? 1.0,
+                normalize_db: Number(entry.normalize_db ?? -20.0),
+                speed_match: Boolean(entry.speed_match),
             });
 
             entry.hash = hash;

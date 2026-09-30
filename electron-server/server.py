@@ -26,62 +26,11 @@ if nodes_dir not in sys.path:
 
 
 from aiohttp import web
-
-
-def _windows_drives():
-    if os.name != "nt":
-        return []
-    drives = []
-    for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-        drive = f"{letter}:\\"
-        if os.path.isdir(drive):
-            drives.append(drive)
-    return drives
-
-
-@web.middleware
-async def cors_middleware(request, handler):
-    if request.method == "OPTIONS":
-        resp = web.Response()
-    else:
-        resp = await handler(request)
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    return resp
-
-
-async def preflight_handler(request):
-    return web.Response()
-
+from _cors import cors_middleware, preflight_handler, windows_drives as _windows_drives
+from _speaker_presets import cosyvoice_models_dir as _cosyvoice_models_dir
+from _speaker_presets import get_speaker_dir, list_speaker_presets
 
 routes = web.RouteTableDef()
-
-
-# --- _speaker_presets replacement ---
-def _cosyvoice_models_dir():
-    env_dir = os.environ.get("FL_COSYVOICE_MODELS_DIR", "").strip()
-    if env_dir and os.path.isdir(env_dir):
-        return env_dir
-    default_guess = r"C:\Comfy-Desktop\ComfyUI-Installs\ComfyUI\ComfyUI\models"
-    if os.path.isdir(default_guess):
-        return default_guess
-    return None
-
-
-def get_speaker_dir():
-    models_dir = _cosyvoice_models_dir()
-    if not models_dir:
-        return None
-    return os.path.join(models_dir, "cosyvoice", "speaker")
-
-
-def list_speaker_presets():
-    speaker_dir = get_speaker_dir()
-    if not speaker_dir or not os.path.isdir(speaker_dir):
-        return ["[none]"]
-    names = [os.path.splitext(f)[0] for f in sorted(os.listdir(speaker_dir)) if f.endswith(".pt")]
-    return names if names else ["[none]"]
 
 
 # --- _line_audio helpers ---

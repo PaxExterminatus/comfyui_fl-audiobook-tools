@@ -44,7 +44,8 @@ export function useVoDubEffects(ctx) {
                     audio_key: row.audio_key,
                     effect: entryFor(row).effect || "",
                     normalize: Boolean(entryFor(row).normalize),
-                    speed: entryFor(row).speed ?? 1.0,
+                    normalize_db: Number(entryFor(row).normalize_db ?? -20.0),
+                    speed_match: Boolean(entryFor(row).speed_match),
                     version: entryFor(row).active_version ?? null,
                 }),
             });
@@ -75,7 +76,8 @@ export function useVoDubEffects(ctx) {
         const entry = entryFor(row);
         entry.effect = payload.effect;
         entry.normalize = payload.normalize;
-        entry.speed = payload.speed;
+        entry.speed_match = payload.speedMatch;
+        entry.normalize_db = payload.normalizeDb;
         onTextEdit(row);
         if (ctx.hasRuTake?.(row)) applyEffectToFile(row);
     }
@@ -87,5 +89,6 @@ export function useVoDubEffects(ctx) {
         onDialogApply,
         effectValue,
         applyEffectToFile,
+        speedMatchValue: (row) => Boolean(entryFor(row).speed_match),
     };
 }

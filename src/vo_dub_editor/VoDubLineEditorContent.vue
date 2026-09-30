@@ -54,14 +54,6 @@ const props = defineProps({
   onClose: { type: Function, required: true },
 });
 
-onMounted(async () => {
-  loadRoleEntries();
-  loadInstructCategories();
-  refreshHistoryCounts();
-  await loadState();
-  await loadRows();
-});
-
 // ── UI-хуки (не переносятся — вызываются в setup-scope) ────────────────
 const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
   storageKey: "FL_CosyVoice3.VODubLineEditor.widthPx",
@@ -126,6 +118,7 @@ const {
 
   // effects
   effectValue,
+  speedMatchValue,
   commitEffect, applyEffectToFile,
   outputDialogVisible, dialogRow, openOutputDialog, onDialogApply,
 
@@ -142,6 +135,14 @@ const {
   measuredDuration, onRuMetadata, durationBadge, enDurationText,
   resolvedUseOriginal, onToggleRowUseOriginal, onToggleUseOriginalDefault,
 } = ctx;
+
+onMounted(async () => {
+  loadRoleEntries();
+  loadInstructCategories();
+  refreshHistoryCounts();
+  await loadState();
+  await loadRows();
+});
 
 function close() {
   if (closed) return;
@@ -419,8 +420,8 @@ watch(visible, (v) => { if (!v) close(); });
       v-model:visible="outputDialogVisible"
       :audioKey="dialogRow?.audio_key"
       :effect="dialogRow ? effectValue(dialogRow) : ''"
-      :normalize="dialogRow ? entryFor(dialogRow).normalize : false"
-      :speed="dialogRow ? entryFor(dialogRow).speed : 1.0"
+      :normalize-db="dialogRow ? (entryFor(dialogRow).normalize_db ?? -20.0) : -20.0"
+      :speed-match="dialogRow ? speedMatchValue(dialogRow) : false"
       :enDurationS="dialogRow ? dialogRow.duration_s : null"
       :ruDurationS="dialogRow ? (measuredDuration[dialogRow.audio_key] ?? dialogRow.rendered_duration_s) : null"
       @apply="onDialogApply"

@@ -19,11 +19,8 @@
  forced to audio_ru\<audio_key>.wav, and its effect_override forced to
  this row's chosen Effect (e.g. "radio") -- see
  nodes/audio_post_process.py's own tooltips for both inputs.
-
- Логика вынесена в composables/* — этот файл только оркестратор.
 */
 import { ref, watch, onMounted } from "vue";
-import InputGroup from "primevue/inputgroup";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
@@ -41,7 +38,6 @@ import WaveformCanvas from "./WaveformCanvas.vue";
 import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
 import { insertStressMark } from "../shared/stress_mark.js";
 
-// ── composables ────────────────────────────────────────────────────────
 import { useVoDubState } from "./composables/useVoDubState.js";
 import { useVoDubHistory } from "./composables/useVoDubHistory.js";
 import { useVoDubRoles } from "./composables/useVoDubRoles.js";
@@ -56,6 +52,14 @@ const props = defineProps({
   bucket: { type: String, required: true },
   renderApi: { type: Object, default: null },
   onClose: { type: Function, required: true },
+});
+
+onMounted(async () => {
+  loadRoleEntries();
+  loadInstructCategories();
+  refreshHistoryCounts();
+  await loadState();
+  await loadRows();
 });
 
 // ── UI-хуки (не переносятся — вызываются в setup-scope) ────────────────
@@ -150,14 +154,6 @@ function close() {
 }
 
 watch(visible, (v) => { if (!v) close(); });
-
-onMounted(async () => {
-  loadRoleEntries();
-  loadInstructCategories();
-  refreshHistoryCounts();
-  await loadState();
-  await loadRows();
-});
 </script>
 
 <template>
@@ -170,33 +166,11 @@ onMounted(async () => {
 
     <StickyPanel class="vo-dub-editor-controls">
       <div class="vo-dub-filters">
-        <InputText
-            v-model="searchText"
-            placeholder="Search text or audio_key..."
-            class="vo-dub-search"
-        />
-        <Dropdown
-            v-model="statusFilter"
-            :options="STATUS_FILTER_OPTIONS"
-            option-label="label"
-            option-value="value"
-            class="vo-dub-status-filter"
-        />
-        <Button
-            icon="pi pi-refresh"
-            text
-            size="small"
-            title="Re-scan this bucket"
-            @click="loadRows"
-        />
+        <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search"/>
+        <Dropdown v-model="statusFilter" :options="STATUS_FILTER_OPTIONS" option-label="label" option-value="value" class="vo-dub-status-filter"/>
+        <Button icon="pi pi-refresh" text size="small" title="Re-scan this bucket" @click="loadRows"/>
         <span class="vo-dub-editor-status">{{ loading ? "Loading..." : status }}</span>
-        <Button
-            icon="pi pi-times"
-            text
-            size="small"
-            title="Close"
-            @click="visible = false"
-        />
+        <Button icon="pi pi-times" text size="small" title="Close" @click="visible = false"/>
       </div>
 
       <div class="actions-row">
@@ -346,7 +320,6 @@ onMounted(async () => {
               </div>
             </div>
 
-            <!-- Компактный actions-row: Re-render (text), history, settings -->
             <div class="vo-dub-players-footer">
               <Button
                   v-if="props.renderApi"

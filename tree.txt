@@ -1,0 +1,265 @@
+comfyui_fl-audiobook-tools/
+├── .claude/
+│   ├── skills/
+│   │   ├── banner-design/
+│   │   │   ├── references/
+│   │   │   └── SKILL.md
+│   │   ├── brand/
+│   │   │   ├── references/
+│   │   │   ├── scripts/
+│   │   │   ├── templates/
+│   │   │   └── SKILL.md
+│   │   ├── design/
+│   │   │   ├── data/
+│   │   │   ├── references/
+│   │   │   ├── scripts/
+│   │   │   └── SKILL.md
+│   │   ├── design-system/
+│   │   │   ├── data/
+│   │   │   ├── references/
+│   │   │   ├── scripts/
+│   │   │   ├── templates/
+│   │   │   └── SKILL.md
+│   │   ├── fl-audiobook-frontend/
+│   │   │   └── SKILL.md
+│   │   ├── slides/
+│   │   │   ├── references/
+│   │   │   └── SKILL.md
+│   │   ├── ui-styling/
+│   │   │   ├── references/
+│   │   │   ├── scripts/
+│   │   │   ├── LICENSE.txt
+│   │   │   └── SKILL.md
+│   │   └── ui-ux-pro-max/
+│   │       ├── data/
+│   │       ├── scripts/
+│   │       └── SKILL.md
+│   └── launch.json
+├── dev-ui/
+│   ├── index.html
+│   ├── main.js
+│   └── mock-api.js
+├── docs/
+│   ├── component-guides/
+│   │   ├── BrowseDialogApp.md
+│   │   ├── DialogHeader.md
+│   │   ├── DubRolesEditorApp.md
+│   │   ├── FontSizeButtons.md
+│   │   ├── InstructPickerDialog.md
+│   │   ├── LineEditorApp.md
+│   │   ├── LineRowEditor.md
+│   │   ├── MarkdownReader.md
+│   │   ├── PanelWidthButtons.md
+│   │   ├── RoleDropdown.md
+│   │   ├── RoleInfoPopover.md
+│   │   ├── RolesEditorApp.md
+│   │   ├── ScriptLibraryPanel.md
+│   │   ├── SpeakerPickerDialog.md
+│   │   ├── StickyPanel.md
+│   │   ├── TranslationSimilarityRadar.md
+│   │   ├── VoDubBrowserPanel.md
+│   │   ├── VoDubLineEditor.md
+│   │   └── WaveformCanvas.md
+│   └── creating_audio_effects.md
+├── electron/
+│   └── main.js
+├── electron-server/
+│   ├── _line_history.py
+│   ├── _tts_engine.py
+│   ├── README.md
+│   ├── server.py
+│   ├── server.py.tmp
+│   ├── tts_prototype_output.wav
+│   └── tts_prototype.py
+├── electron-ui/
+│   ├── .env
+│   ├── index.html
+│   └── main.js
+├── fixtures/
+│   ├── _instruct_categories.json
+│   ├── _roles.json
+│   ├── presets.json
+│   ├── sample.wav
+│   └── Test_speakers.txt
+├── nodes/
+│   ├── tests/
+│   │   ├── test_apply_effect_route.py
+│   │   ├── test_audio_effects_dsp.py
+│   │   ├── test_audio_effects_stretch.py
+│   │   ├── test_audio_effects.py
+│   │   ├── test_dry_copy.py
+│   │   ├── test_dry_imports.py
+│   │   ├── test_line_audio.py
+│   │   ├── test_line_pauses.py
+│   │   ├── test_output_chain.py
+│   │   ├── test_script_library_pending.py
+│   │   ├── test_vo_dub_hash_fold.py
+│   │   └── test_vo_dub_library.py
+│   ├── _audio_effects.py
+│   ├── _audio_utils.py
+│   ├── _line_audio.py
+│   ├── _line_audio.py.tmp
+│   ├── _line_history.py
+│   ├── _speaker_presets.py
+│   ├── audio_post_process.py
+│   ├── script_editor.py
+│   ├── script_library.py
+│   ├── script_library.py.tmp
+│   └── vo_dub_library.py
+├── reference/
+│   └── fl_cosyvoice3/
+│       ├── nodes/
+│       │   ├── speaker_instruct2_dialog.py
+│       │   └── speaker_instruct2.py
+│       ├── utils/
+│       │   └── audio_utils.py
+│       └── README.md
+├── scripts/
+│   └── clean-chunks.mjs
+├── src/
+│   ├── __tests__/
+│   │   ├── BrowseDialogApp.test.js
+│   │   ├── DubRolesEditorApp.test.js
+│   │   ├── effect_preview.test.js
+│   │   ├── fl_common.test.js
+│   │   ├── instruct_library.test.js
+│   │   ├── LineEditorApp.test.js
+│   │   ├── OutputFileDialog.test.js
+│   │   ├── RolesEditorApp.test.js
+│   │   ├── ScriptLibraryPanel.test.js
+│   │   ├── SpeakerPickerDialog.test.js
+│   │   ├── speed_match.test.js
+│   │   ├── translation_metrics.test.js
+│   │   ├── VoDubBrowserPanel.test.js
+│   │   ├── VoDubLineEditor.test.js
+│   │   ├── VoDubOutputWiring.test.js
+│   │   ├── waveform.test.js
+│   │   └── WaveformCanvas.test.js
+│   ├── browse_dialog/
+│   │   ├── BrowseDialogApp.vue
+│   │   ├── BrowseDialogContent.vue
+│   │   └── main.js
+│   ├── line_editor/
+│   │   ├── composables/
+│   │   │   ├── useDialogs.js
+│   │   │   ├── useLineCatalog.js
+│   │   │   ├── useLineFiles.js
+│   │   │   ├── usePlayback.js
+│   │   │   ├── useRevoice.js
+│   │   │   ├── useRowHelpers.js
+│   │   │   ├── useRowOps.js
+│   │   │   ├── useScriptIO.js
+│   │   │   └── useScriptParsing.js
+│   │   ├── LineEditorApp.vue
+│   │   ├── LineEditorContent.vue
+│   │   ├── main.js
+│   │   └── SpeakerPickerDialog.vue
+│   ├── roles_editor/
+│   │   ├── main.js
+│   │   ├── RolesEditorApp.vue
+│   │   └── RolesEditorContent.vue
+│   ├── script_library/
+│   │   ├── main.js
+│   │   └── ScriptLibraryPanel.vue
+│   ├── shared/
+│   │   ├── audio_buffer_guard.js
+│   │   ├── DialogHeader.vue
+│   │   ├── font_size.js
+│   │   ├── FontSizeButtons.vue
+│   │   ├── HelpDialog.vue
+│   │   ├── instruct_library.js
+│   │   ├── InstructPickerDialog.vue
+│   │   ├── line_hash.js
+│   │   ├── LineHistoryDialog.vue
+│   │   ├── LineRowEditor.vue
+│   │   ├── MarkdownReader.vue
+│   │   ├── panel_width.js
+│   │   ├── PanelWidthButtons.vue
+│   │   ├── role_info_popover.js
+│   │   ├── RoleDropdown.vue
+│   │   ├── RoleInfoPopover.vue
+│   │   ├── speaker_accent.js
+│   │   ├── speed_match.js
+│   │   ├── StickyPanel.vue
+│   │   ├── stress_mark.js
+│   │   ├── styles_link.js
+│   │   ├── textarea_autogrow.js
+│   │   ├── translation_metrics.js
+│   │   ├── TranslationSimilarityCompact.vue
+│   │   └── TranslationSimilarityRadar.vue
+│   ├── style/
+│   │   ├── app.css
+│   │   ├── BrowseDialogApp.css
+│   │   ├── DialogHeader.css
+│   │   ├── DubRolesEditorApp.css
+│   │   ├── FontSizeButtons.css
+│   │   ├── InstructPickerDialog.css
+│   │   ├── LineEditorApp.css
+│   │   ├── LineHistoryDialog.css
+│   │   ├── PanelWidthButtons.css
+│   │   ├── RoleDropdown.css
+│   │   ├── RolesEditorApp.css
+│   │   ├── ScriptLibraryPanel.css
+│   │   ├── SpeakerPickerDialog.css
+│   │   ├── StickyPanel.css
+│   │   ├── VoDubBrowserPanel.css
+│   │   └── VoDubLineEditor.css
+│   └── vo_dub_editor/
+│       ├── composables/
+│       │   ├── useVoDubEffects.js
+│       │   ├── useVoDubHistory.js
+│       │   ├── useVoDubInstruct.js
+│       │   ├── useVoDubPlayers.js
+│       │   ├── useVoDubRender.js
+│       │   ├── useVoDubRoles.js
+│       │   ├── useVoDubRowApi.js
+│       │   └── useVoDubState.js
+│       ├── DubRolesEditorApp.vue
+│       ├── effect_preview.js
+│       ├── main.js
+│       ├── OutputFileDialog.vue
+│       ├── VoDubBrowserPanel.vue
+│       ├── VoDubLineEditor.vue
+│       ├── VoDubLineEditorContent.vue
+│       ├── waveform.js
+│       └── WaveformCanvas.vue
+├── web/
+│   ├── audio_post_process.js
+│   ├── browse_dialog.js
+│   ├── DialogHeader.js
+│   ├── dropdown.esm.js
+│   ├── fl_common.js
+│   ├── fl_queue_orchestration.js
+│   ├── fl_shared.css
+│   ├── inputtext.esm.js
+│   ├── instruct_library.js
+│   ├── line_editor.js
+│   ├── line_hash.js
+│   ├── panel_width.js
+│   ├── PanelWidthButtons.js
+│   ├── roles_editor.js
+│   ├── script_editor.js
+│   ├── script_library_panel.js
+│   ├── script_library.js
+│   ├── StickyPanel.js
+│   ├── style.css
+│   ├── styles_link.js
+│   ├── styles.js
+│   ├── ui_kit.js
+│   ├── vo_dub_editor.js
+│   └── vo_dub_library.js
+├── __init__.py
+├── .agent-task-a.log
+├── .agent-task-b.log
+├── .gitignore
+├── fix_radar.py
+├── IDEA.md
+├── INDEX.md
+├── package-lock.json
+├── package.json
+├── pyproject.toml
+├── README.md
+├── tree.cjs
+├── vite.config.js
+├── vite.electron.config.js
+└── vitest.config.js

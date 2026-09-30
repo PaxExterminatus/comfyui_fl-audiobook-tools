@@ -1,6 +1,5 @@
 /**
- * useVoDubEffects — Effect/Normalize/Speed для строки и диалог
- *                    OutputFileDialog.
+ * useVoDubEffects — Effect/Normalize/Speed для строки и диалог OutputFileDialog.
  *
  * Все три параметра применяются через /vo_dub/apply_effect к dry-копии
  * строки (или к выбранной версии в _dub_versions/) — без полного TTS-
@@ -62,6 +61,7 @@ export function useVoDubEffects(ctx) {
             if (ctx.cacheBust) ctx.cacheBust[row.audio_key] = Date.now();
 
             await loadRows();
+            ctx.refreshHistoryCounts?.();
             setStatus(`Applied settings to ${row.audio_key}`);
         } catch (e) {
             setStatus(`Couldn't apply settings to ${row.audio_key}: ${e}`);

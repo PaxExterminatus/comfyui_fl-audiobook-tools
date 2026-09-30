@@ -1,8 +1,6 @@
 /**
- * useVoDubRender — рендер одной строки и пакетный рендер, а также
- *                    метаданные готового take'а (hash, duration, badge).
+ * useVoDubRender — рендер одной строки и пакетный рендер, а также метаданные готового take'а (hash, duration, badge).
  */
-
 import { ref, reactive } from "vue";
 import { lineHash } from "../../shared/line_hash.js";
 import { VO_DUB_API } from "../../../web/fl_common.js";
@@ -180,6 +178,7 @@ export function useVoDubRender(ctx) {
             await finalizeRuTake(row, hash);
             setStatus(`Rendered ${row.audio_key}`);
             await loadRows();
+            ctx.refreshHistoryCounts?.();
         } catch (e) {
             setStatus(`Render failed for ${row.audio_key}: ${e}`);
         } finally {

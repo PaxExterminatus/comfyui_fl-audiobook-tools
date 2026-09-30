@@ -5,27 +5,20 @@
  Editor (VoDubLineEditor.vue).
 
  Caller-agnostic: takes `row` + `index`, and asks a provided API object
- (inject: "lineRowApi") how to READ and WRITE each editable field. Each
- caller provides its own API — audiobook's row has .speaker/.instruct/.text,
- VO Dub's row wraps its state in an entryFor(row) object — but the UI here
- is one component, not two hand-drifted copies.
-
- What this component does NOT own: what sits BEFORE the controls (a play
- button, an Identifier span — see `leading` slot) or AFTER them (speaker
- presets, pause fields, delete buttons — see `trailing`), since those
- differ per caller in ways that aren't "the same widget, different data".
+ (inject: "lineRowApi") how to READ and WRITE each editable field.
 
  A 3-root component (line-controls-row / instruct note / textarea) on
- purpose — these already need to stack as siblings inside the caller's own
- `.line-body`-equivalent wrapper, not nest inside one extra div.
+ purpose -- these already need to stack as siblings inside the caller's
+ own `.line-body`-equivalent wrapper, not nest inside one extra div.
 */
-import { inject } from "vue";
+import { inject, ref } from "vue";
 import InputGroup from "primevue/inputgroup";
 import InputGroupAddon from "primevue/inputgroupaddon";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import Button from "primevue/button";
 import RoleDropdown from "./RoleDropdown.vue";
+import TextTagEditorDialog from "./TextTagEditorDialog.vue";
 
 const props = defineProps({
   row:   { type: Object, required: true },
@@ -39,11 +32,20 @@ if (!api) {
   );
 }
 
+// ── диалог тегов ─────────────────────────────────────────────────────
+const tagEditorVisible = ref(false);
+
+function openTagEditor() {
+  tagEditorVisible.value = true;
+}
+
+function onTagEditorSave(newText) {
+  api.setText(props.row, newText);
+}
+
 /*
  Writes el.value directly and skips PrimeVue's own onInput handler
- entirely (preventDefault stops the native paste from ever firing an
- `input` event) -- pasted text never introduces a literal newline into
- what's meant to stay one line of dialogue.
+ entirely -- pasted text never introduces a literal newline.
 */
 function onPaste(event) {
   event.preventDefault();
@@ -103,6 +105,14 @@ function onPaste(event) {
           title="Pick an instruct phrase from the category bank"
           @click="api.openInstructPicker(row)"
       />
+      <Button
+          icon="pi pi-users"
+          size="small"
+          class="apply-instruct-btn"
+          :disabled="!api.canApplyInstruct(row)"
+          :title="api.applyInstructTitle(row)"
+          @click="api.applyInstructToSameRole(row)"
+      />
     </InputGroup>
 
     <slot name="trailing" />
@@ -112,16 +122,48 @@ function onPaste(event) {
 
   <slot name="above-text" />
 
-  <Textarea
-      :model-value="api.getText(row)"
-      auto-resize
-      rows="1"
-      class="fl-textarea"
-      :style="{ fontSize: `${api.fontSizePx.value}px` }"
-      :placeholder="api.textPlaceholder"
-      :ref="(el) => api.setTextareaRef(api.textKey(row), el)"
-      @update:model-value="api.setText(row, $event)"
-      @keydown.enter.prevent
-      @paste="onPaste"
+  <div class="text-row">
+    <Button
+        icon="pi pi-pencil"
+        text
+        size="small"
+        class="text-edit-btn"
+        title="Edit text with tag palette"
+        @click="openTagEditor"
+    />
+    <Textarea
+        :model-value="api.getText(row)"
+        auto-resize
+        rows="1"
+        class="fl-textarea"
+        :style="{ fontSize: `${api.fontSizePx.value}px` }"
+        :placeholder="api.textPlaceholder"
+        :ref="(el) => api.setTextareaRef(api.textKey(row), el)"
+        @update:model-value="api.setText(row, $event)"
+        @keydown.enter.prevent
+        @paste="onPaste"
+    />
+  </div>
+
+  <TextTagEditorDialog
+      v-model:visible="tagEditorVisible"
+      :text="api.getText(row)"
+      :original-url="api.getOriginalAudioUrl?.(row) || ''"
+      :current-url="api.getCurrentAudioUrl?.(row) || ''"
+      @save="onTagEditorSave"
   />
 </template>
+
+<style scoped>
+.text-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+}
+
+.text-edit-btn {
+  flex: 0 0 auto;
+  margin-top: 4px;
+}
+</style>

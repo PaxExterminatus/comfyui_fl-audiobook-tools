@@ -128,6 +128,13 @@ export function useVoDubInstruct(ctx) {
         ).length;
     }
 
+    function applyInstructTitle(row) {
+        const count = sameRoleCount(row);
+        return count > 0
+            ? `Apply this instruct to every other "${roleCodeFor(row)}" row in this bucket (${count})`
+            : "No other rows in this bucket use this role";
+    }
+
     function applyInstructToSameRole(row) {
         const count = sameRoleCount(row);
         if (!count) return;
@@ -158,6 +165,7 @@ export function useVoDubInstruct(ctx) {
         undoInstruct,
         instructNoteFor,
         sameRoleCount,
+        applyInstructTitle,
         applyInstructToSameRole,
     };
 }

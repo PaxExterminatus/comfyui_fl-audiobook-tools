@@ -13,7 +13,7 @@ import { ref, reactive } from "vue";
 import { VO_DUB_API } from "../../../web/fl_common.js";
 
 export function useVoDubHistory(ctx) {
-    const { props, setStatus } = ctx;
+    const { props, setStatus, entryFor, scheduleSave } = ctx;
 
     // ── состояние диалога ────────────────────────────────────────────────
     const historyVisible = ref(false);
@@ -79,6 +79,12 @@ export function useVoDubHistory(ctx) {
             // Обновить выбранную версию в диалоге
             historyChosenVersion.value = version;
             setStatus(`Switched ${row.audio_key} to version ${version}`);
+
+            // Запомнить активную версию -- apply_effect будет читать
+            // источник из _dub_versions/<эта версия>, а не из _dub_dry
+            // (которая остаётся от последнего ПОЛНОГО рендера).
+            entryFor(row).active_version = version;
+            scheduleSave();
 
             // Сбросить ?v= — иначе <audio> в строке продолжит играть
             // старый файл из кэша браузера, хотя на диске уже новый.

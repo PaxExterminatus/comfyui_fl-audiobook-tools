@@ -1465,6 +1465,7 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
     effect = (data.get("effect") or "").strip()
     normalize = data.get("normalize", False)
     speed = data.get("speed", 1.0)
+    version = data.get("version")
 
     # isinstance(True, int) is True in Python, so the bool check must come
     # first -- otherwise a JSON `true` would sail through as a valid speed.
@@ -1481,9 +1482,32 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
     if not audio_key:
         return web.json_response({"error": "audio_key is required"})
 
-    dry_path = audio_dry_path(root, audio_key)
-    if not os.path.isfile(dry_path):
-        return web.json_response({"error": "no dry take yet for this row -- render it once first"})
+    # Источник: явная версия из _dub_versions/, иначе dry-копия. Если
+    # пользователь выбрал конкретную версию в истории -- применять к ней,
+    # а не к dry (та всегда остаётся от ПЕРВОЙ версии последнего полного
+    # рендера -- см. render/row ниже).
+    if version is not None:
+        try:
+            version = int(version)
+        except (TypeError, ValueError):
+            return web.json_response({"error": "version must be an integer"})
+
+        versions_dir = os.path.join(root, "_dub_versions")
+        match = next(
+            (v for v in list_version_files(versions_dir, audio_key) if v[0] == version),
+            None,
+        )
+        if match is None:
+            return web.json_response(
+                {"error": f"no version {version} for audio_key {audio_key}"}
+            )
+        _, _, _, filename = match
+        source_path = os.path.join(versions_dir, filename)
+    else:
+        source_path = audio_dry_path(root, audio_key)
+
+    if not os.path.isfile(source_path):
+        return web.json_response({"error": f"no source take: {source_path}"})
 
     try:
         import torch
@@ -1494,9 +1518,9 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
         return web.json_response({"error": f"couldn't load the audio engine: {e}"})
 
     try:
-        data_np, sample_rate = sf_local.read(dry_path, dtype="float32", always_2d=True)
+        data_np, sample_rate = sf_local.read(source_path, dtype="float32", always_2d=True)
     except Exception as e:
-        return web.json_response({"error": f"couldn't read dry take: {e}"})
+        return web.json_response({"error": f"couldn't read source take: {e}"})
     wav = torch.from_numpy(data_np.T.copy())
     wav = apply_output_chain(wav, sample_rate, effect, normalize, speed)
 
@@ -1509,7 +1533,7 @@ async def fl_cosyvoice3_vo_dub_apply_effect(request):
     except OSError as e:
         return web.json_response({"error": f"couldn't write {ru_path}: {e}"})
 
-    return web.json_response({"ok": True})
+    return web.json_response({"ok": True, "source": os.path.basename(source_path)})
 
 
 

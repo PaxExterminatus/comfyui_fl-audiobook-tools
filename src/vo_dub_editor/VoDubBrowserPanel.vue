@@ -12,6 +12,7 @@
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
+import InlineMessage from "primevue/inlinemessage";
 import { VO_DUB_API } from "../../web/fl_common.js";
 
 const props = defineProps({
@@ -84,14 +85,21 @@ function openBucket(bucket) {
   });
 }
 
-function pillCount(bucket, key, label) {
-  return bucket[key] ? `${label} ${bucket[key]}` : "";
-}
-
 function openRoles() {
   if (!root.value) return;
   props.openDubRolesEditor({ root: root.value });
 }
+
+// Список счётчиков бакета: [поле, label, severity PrimeVue].
+// Порядок — от «требует внимания» к «всё ок».
+const STATUS_PILLS = [
+  { key: "no_text",           label: "no text",    severity: "warn" },
+  { key: "needs_translation", label: "needs RU",   severity: "info" },
+  { key: "not_started",       label: "not started", severity: "secondary" },
+  { key: "stale",             label: "stale",      severity: "warn" },
+  { key: "done",              label: "done",       severity: "success" },
+  { key: "unsupported",       label: "unsupported", severity: "contrast" },
+];
 
 onMounted(() => {
   loadTree();
@@ -110,30 +118,14 @@ onBeforeUnmount(() => clearInterval(pollTimer));
     </div>
 
     <div class="vo-dub-buckets">
-      <div
-          v-for="b in buckets" :key="b.bucket"
-          class="vo-dub-bucket-row"
-          :class="{ 'has-issues': b.issue > 0 }"
-          @click="openBucket(b)"
-      >
-        <span class="vo-dub-bucket-name">{{ b.bucket }}</span>
-        <span class="vo-dub-bucket-count">{{ b.count }}</span>
-        <span
-            v-if="b.issue > 0"
-            class="vo-dub-bucket-issue"
-            :title="`${b.issue} row(s) marked as issue`"
-        >
-                    <i class="pi pi-exclamation-triangle" style="font-size: 0.75rem;"></i>
-                    {{ b.issue }}
-                </span>
-        <span class="vo-dub-bucket-pills">
-                    <span v-if="b.no_text" class="vo-dub-pill pill-no-text">no text {{ b.no_text }}</span>
-                    <span v-if="b.needs_translation" class="vo-dub-pill pill-needs-translation">needs RU {{ b.needs_translation }}</span>
-                    <span v-if="b.not_started" class="vo-dub-pill pill-not-started">not started {{ b.not_started }}</span>
-                    <span v-if="b.stale" class="vo-dub-pill pill-stale">stale {{ b.stale }}</span>
-                    <span v-if="b.done" class="vo-dub-pill pill-done">done {{ b.done }}</span>
-                    <span v-if="b.unsupported" class="vo-dub-pill pill-unsupported" title="Multi-channel rows this addon can't render or play">unsupported {{ b.unsupported }}</span>
-                </span>
+      <div v-for="b in buckets" :key="b.bucket" class="vo-dub-bucket-row" :class="{ 'has-issues': b.issue > 0 }" @click="openBucket(b)">
+        <InlineMessage severity="secondary">{{ b.bucket }} {{ b.count }}</InlineMessage>
+
+        <template v-for="p in STATUS_PILLS" :key="p.key">
+          <InlineMessage v-if="b[p.key]" :severity="p.severity">{{ p.label }} {{ b[p.key] }}</InlineMessage>
+        </template>
+
+        <InlineMessage v-if="b.issue > 0" severity="error" :title="`${b.issue} row(s) marked as issue`">issue {{ b.issue }}</InlineMessage>
       </div>
     </div>
 

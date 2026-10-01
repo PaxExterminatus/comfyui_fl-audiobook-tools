@@ -24,7 +24,7 @@ const props = defineProps({
   queueVoDubRender: { type: Function, default: null }, // (node, opts) => Promise -- from web/vo_dub_library.js
 });
 
-const TREE_POLL_MS = 3000;
+const TREE_POLL_MS = 9000;
 const STORAGE_KEY = "FL_CosyVoice3.VODubLibrary.lastRoot";
 
 const root = ref(props.projectRootWidget.value || localStorage.getItem(STORAGE_KEY) || "");

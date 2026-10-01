@@ -232,6 +232,8 @@ def row_view(root: str, row: dict, state: dict, role_map: Optional[Dict[str, str
         "channels": _to_int(row.get("channels")),
         "status": status,
         "rendered_duration_s": (entry or {}).get("rendered_duration_s"),
+        "manually_done": bool((entry or {}).get("manually_done")),
+        "manually_issue": bool((entry or {}).get("manually_issue")),
     }
 
 
@@ -263,11 +265,13 @@ def build_tree(root: str) -> dict:
     for row in rows:
         bucket = bucket_key_for(row)
         if bucket not in buckets:
-            buckets[bucket] = {"count": 0, **{s: 0 for s in _STATUS_KEYS}}
+            buckets[bucket] = {"count": 0, "issue": 0, **{s: 0 for s in _STATUS_KEYS}}
             order.append(bucket)
         view = row_view(root, row, state, role_map)
         buckets[bucket]["count"] += 1
         buckets[bucket][view["status"]] += 1
+        if view["manually_issue"]:
+            buckets[bucket]["issue"] += 1
     order.sort(key=lambda b: (b == "Other", b))
     return {"root": root, "buckets": [{"bucket": b, **buckets[b]} for b in order]}
 
@@ -281,7 +285,10 @@ def bucket_rows(root: str, bucket: str, status_filter: str = "") -> List[dict]:
         if bucket_key_for(row) != bucket:
             continue
         view = row_view(root, row, state, role_map)
-        if status_filter and view["status"] != status_filter:
+        if status_filter == "issues":
+            if not view["manually_issue"]:
+                continue
+        elif status_filter and view["status"] != status_filter:
             continue
         out.append(view)
     return out

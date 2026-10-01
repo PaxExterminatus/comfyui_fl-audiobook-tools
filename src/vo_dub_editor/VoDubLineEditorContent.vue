@@ -132,6 +132,7 @@ const {
   cacheBust, renderingKeys, isRenderingAllPending,
   renderRow, renderAllPending,
   hasRuTake, manuallyDone, toggleManuallyDone,
+  manuallyIssue, toggleManuallyIssue,
   measuredDuration, onRuMetadata, durationBadge, enDurationText,
   resolvedUseOriginal, onToggleRowUseOriginal, onToggleUseOriginalDefault,
 } = ctx;
@@ -238,7 +239,7 @@ watch(visible, (v) => { if (!v) close(); });
       <div
           v-for="row in pagedRows" :key="row.audio_key"
           class="vo-dub-row"
-          :class="{ 'row-playing': sequentialPlayingKey === row.audio_key }"
+          :class="{ 'row-playing': sequentialPlayingKey === row.audio_key, 'row-issue': manuallyIssue(row) }"
           :ref="(el) => setRowRef(row.audio_key, el)"
       >
         <!-- ── Заголовок строки ──────────────────────────────────────── -->
@@ -254,6 +255,16 @@ watch(visible, (v) => { if (!v) close(); });
               :label="manuallyDone(row) ? 'Done' : 'Mark done'"
               title="Manually treat this row as done even if its content has drifted since the last render."
               @click="toggleManuallyDone(row)"
+          />
+          <Button
+              class="vo-dub-issue-btn"
+              :class="{ active: manuallyIssue(row) }"
+              text size="small"
+              severity="danger"
+              :icon="manuallyIssue(row) ? 'pi pi-exclamation-triangle' : 'pi pi-exclamation-circle'"
+              :label="manuallyIssue(row) ? 'Issue' : 'Mark issue'"
+              title="Flag this row as needing attention. Independent from Done — both can be set at once."
+              @click="toggleManuallyIssue(row)"
           />
         </div>
 

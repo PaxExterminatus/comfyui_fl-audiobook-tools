@@ -86,6 +86,18 @@ export function useVoDubRender(ctx) {
         onTextEdit(row);
     }
 
+    // ── красная пометка Issue ────────────────────────────────────────────
+    // Независимый флаг, ставится на любой строке (не только озвученной).
+    // Может соседствовать с manually_done — они не влияют друг на друга.
+    function manuallyIssue(row) {
+        return Boolean(entryFor(row).manually_issue);
+    }
+
+    function toggleManuallyIssue(row) {
+        entryFor(row).manually_issue = !manuallyIssue(row);
+        onTextEdit(row);
+    }
+
     // ── hash содержимого ─────────────────────────────────────────────────
     // Формула совпадает с row_hash() в nodes/vo_dub_library.py.
     async function currentContentHash(row) {
@@ -249,6 +261,8 @@ export function useVoDubRender(ctx) {
         hasRuTake,
         manuallyDone,
         toggleManuallyDone,
+        manuallyIssue,
+        toggleManuallyIssue,
         measuredDuration,
         onRuMetadata,
         durationBadge,

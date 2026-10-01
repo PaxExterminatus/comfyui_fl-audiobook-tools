@@ -15,12 +15,12 @@ import InputText from "primevue/inputtext";
 import { VO_DUB_API } from "../../web/fl_common.js";
 
 const props = defineProps({
-    node: { type: Object, required: true },
-    projectRootWidget: { type: Object, required: true },
-    openBrowseDialog: { type: Function, required: true },
-    openVoDubLineEditor: { type: Function, required: true },
-    openDubRolesEditor: { type: Function, required: true },
-    queueVoDubRender: { type: Function, default: null }, // (node, opts) => Promise -- from web/vo_dub_library.js
+  node: { type: Object, required: true },
+  projectRootWidget: { type: Object, required: true },
+  openBrowseDialog: { type: Function, required: true },
+  openVoDubLineEditor: { type: Function, required: true },
+  openDubRolesEditor: { type: Function, required: true },
+  queueVoDubRender: { type: Function, default: null }, // (node, opts) => Promise -- from web/vo_dub_library.js
 });
 
 const TREE_POLL_MS = 3000;
@@ -33,91 +33,100 @@ const loading = ref(false);
 let pollTimer = null;
 
 async function loadTree() {
-    if (!root.value) {
-        buckets.value = [];
-        return;
+  if (!root.value) {
+    buckets.value = [];
+    return;
+  }
+  loading.value = true;
+  try {
+    const resp = await fetch(`${VO_DUB_API}/tree?path=${encodeURIComponent(root.value)}`);
+    const data = await resp.json();
+    if (data.error) {
+      status.value = data.error;
+      buckets.value = [];
+      return;
     }
-    loading.value = true;
-    try {
-        const resp = await fetch(`${VO_DUB_API}/tree?path=${encodeURIComponent(root.value)}`);
-        const data = await resp.json();
-        if (data.error) {
-            status.value = data.error;
-            buckets.value = [];
-            return;
-        }
-        buckets.value = data.buckets || [];
-        status.value = `${buckets.value.length} bucket(s), ${buckets.value.reduce((n, b) => n + b.count, 0)} row(s)`;
-    } catch (e) {
-        status.value = `Couldn't load: ${e}`;
-    } finally {
-        loading.value = false;
-    }
+    buckets.value = data.buckets || [];
+    status.value = `${buckets.value.length} bucket(s), ${buckets.value.reduce((n, b) => n + b.count, 0)} row(s)`;
+  } catch (e) {
+    status.value = `Couldn't load: ${e}`;
+  } finally {
+    loading.value = false;
+  }
 }
 
 function openBrowse() {
-    props.openBrowseDialog({
-        mode: "folder",
-        startPath: root.value,
-        onSelect: (path) => {
-            root.value = path;
-            props.projectRootWidget.value = path;
-            localStorage.setItem(STORAGE_KEY, path);
-            loadTree();
-        },
-    });
+  props.openBrowseDialog({
+    mode: "folder",
+    startPath: root.value,
+    onSelect: (path) => {
+      root.value = path;
+      props.projectRootWidget.value = path;
+      localStorage.setItem(STORAGE_KEY, path);
+      loadTree();
+    },
+  });
 }
 
 function openBucket(bucket) {
-    props.openVoDubLineEditor({
-        root: root.value,
-        bucket: bucket.bucket,
-        /*
-         Only offered when this panel's node-wiring actually has a render
-         mechanism (it always does in practice -- null only ever shows up
-         in a test that doesn't pass one) -- see queueVoDubRender's own
-         docstring in web/vo_dub_library.js for what it does.
-        */
-        renderApi: props.queueVoDubRender ? {
-            renderRow: (opts) => props.queueVoDubRender(props.node, opts),
-        } : null,
-    });
+  props.openVoDubLineEditor({
+    root: root.value,
+    bucket: bucket.bucket,
+    /*
+     Only offered when this panel's node-wiring actually has a render
+     mechanism (it always does in practice -- null only ever shows up
+     in a test that doesn't pass one) -- see queueVoDubRender's own
+     docstring in web/vo_dub_library.js for what it does.
+    */
+    renderApi: props.queueVoDubRender ? {
+      renderRow: (opts) => props.queueVoDubRender(props.node, opts),
+    } : null,
+  });
 }
 
 function pillCount(bucket, key, label) {
-    return bucket[key] ? `${label} ${bucket[key]}` : "";
+  return bucket[key] ? `${label} ${bucket[key]}` : "";
 }
 
 function openRoles() {
-    if (!root.value) return;
-    props.openDubRolesEditor({ root: root.value });
+  if (!root.value) return;
+  props.openDubRolesEditor({ root: root.value });
 }
 
 onMounted(() => {
-    loadTree();
-    pollTimer = setInterval(loadTree, TREE_POLL_MS);
+  loadTree();
+  pollTimer = setInterval(loadTree, TREE_POLL_MS);
 });
 onBeforeUnmount(() => clearInterval(pollTimer));
 </script>
 
 <template>
-    <div class="vo-dub-panel">
-        <div class="vo-dub-toolbar">
-            <InputText v-model="root" class="vo-dub-root-input" placeholder="VO dub project root (holds vo_dataset.csv)" @change="loadTree()" />
-            <Button label="Browse..." size="small" @click="openBrowse" />
-            <Button label="Roles" size="small" :disabled="!root" title="Assign a voice preset to each character tag" @click="openRoles" />
-            <Button icon="pi pi-refresh" size="small" text title="Re-scan" @click="loadTree" />
-        </div>
+  <div class="vo-dub-panel">
+    <div class="vo-dub-toolbar">
+      <InputText v-model="root" class="vo-dub-root-input" placeholder="VO dub project root (holds vo_dataset.csv)" @change="loadTree()" />
+      <Button label="Browse..." size="small" @click="openBrowse" />
+      <Button label="Roles" size="small" :disabled="!root" title="Assign a voice preset to each character tag" @click="openRoles" />
+      <Button icon="pi pi-refresh" size="small" text title="Re-scan" @click="loadTree" />
+    </div>
 
-        <div class="vo-dub-buckets">
-            <div
-                v-for="b in buckets" :key="b.bucket"
-                class="vo-dub-bucket-row"
-                @click="openBucket(b)"
-            >
-                <span class="vo-dub-bucket-name">{{ b.bucket }}</span>
-                <span class="vo-dub-bucket-count">{{ b.count }}</span>
-                <span class="vo-dub-bucket-pills">
+    <div class="vo-dub-buckets">
+      <div
+          v-for="b in buckets" :key="b.bucket"
+          class="vo-dub-bucket-row"
+          :class="{ 'has-issues': b.issue > 0 }"
+          @click="openBucket(b)"
+      >
+        <span class="vo-dub-bucket-name">{{ b.bucket }}</span>
+        <span class="vo-dub-bucket-count">{{ b.count }}</span>
+        <span
+            v-if="b.issue > 0"
+            class="vo-dub-bucket-issue"
+            :title="`${b.issue} row(s) marked as issue`"
+        >
+                    <i class="pi pi-exclamation-triangle" style="font-size: 0.75rem;"></i>
+                    {{ b.issue }}
+                </span>
+        <span class="vo-dub-bucket-pills">
                     <span v-if="b.no_text" class="vo-dub-pill pill-no-text">no text {{ b.no_text }}</span>
                     <span v-if="b.needs_translation" class="vo-dub-pill pill-needs-translation">needs RU {{ b.needs_translation }}</span>
                     <span v-if="b.not_started" class="vo-dub-pill pill-not-started">not started {{ b.not_started }}</span>
@@ -125,11 +134,11 @@ onBeforeUnmount(() => clearInterval(pollTimer));
                     <span v-if="b.done" class="vo-dub-pill pill-done">done {{ b.done }}</span>
                     <span v-if="b.unsupported" class="vo-dub-pill pill-unsupported" title="Multi-channel rows this addon can't render or play">unsupported {{ b.unsupported }}</span>
                 </span>
-            </div>
-        </div>
-
-        <div class="vo-dub-status">{{ loading ? "Loading..." : status }}</div>
+      </div>
     </div>
+
+    <div class="vo-dub-status">{{ loading ? "Loading..." : status }}</div>
+  </div>
 </template>
 
 <style scoped src="../style/VoDubBrowserPanel.css"></style>

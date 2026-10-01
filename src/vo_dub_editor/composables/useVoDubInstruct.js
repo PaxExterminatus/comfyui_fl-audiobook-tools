@@ -156,6 +156,7 @@ export function useVoDubInstruct(ctx) {
     return {
         instructCategories,
         loadInstructCategories,
+        scheduleInstructLibrarySave,
         instructPickerVisible,
         instructPickerRow,
         openInstructPicker,

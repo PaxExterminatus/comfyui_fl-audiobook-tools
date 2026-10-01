@@ -44,8 +44,18 @@ export function useVoDubState(ctx) {
         done: "Done",
         unsupported: "Unsupported (multi-channel)",
     };
-    const STATUS_FILTER_OPTIONS = Object.entries(STATUS_LABELS)
-        .map(([value, label]) => ({ value, label }));
+
+    // Дополнительные фильтры, которые обрабатываются НЕ по row.status,
+    // а по отдельным флагам. Бэкенд знает про значение "issues" и делает
+    // свою фильтрацию (см. bucket_rows в _vo_dub_helpers.py).
+    const EXTRA_FILTERS = [
+        { value: "issues", label: "⚠ Issues only" },
+    ];
+
+    const STATUS_FILTER_OPTIONS = [
+        ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
+        ...EXTRA_FILTERS,
+    ];
 
     // ── путь к _dub_state.json ───────────────────────────────────────────
     function statePath() {
@@ -81,9 +91,17 @@ export function useVoDubState(ctx) {
     async function loadRows() {
         loading.value = true;
         try {
-            const resp = await fetch(
-                `${VO_DUB_API}/rows?path=${encodeURIComponent(props.root)}&bucket=${encodeURIComponent(props.bucket)}`,
-            );
+            // Фильтр по status отправляем на бэкенд: для "issues" — отдельная
+            // ветка логики в bucket_rows, для остальных — прямое сравнение
+            // с row.status. Это позволяет бэкенду считать актуальные флаги
+            // (manually_issue) из state-файла, а не полагаться на клиентский кэш.
+            const params = new URLSearchParams({
+                path: props.root,
+                bucket: props.bucket,
+            });
+            if (statusFilter.value) params.set("status", statusFilter.value);
+
+            const resp = await fetch(`${VO_DUB_API}/rows?${params.toString()}`);
             const data = await resp.json();
             if (data.error) {
                 status.value = data.error;
@@ -165,11 +183,22 @@ export function useVoDubState(ctx) {
         status.value = msg;
     }
 
-    // ── фильтр + поиск ───────────────────────────────────────────────────
+    // ── фильтр + поиск (клиентская страховка) ────────────────────────────
+    // Основной фильтр по status делается на бэкенде (см. loadRows выше).
+    // Здесь — только страховка на случай, если statusFilter изменился
+    // без перезагрузки: клиентский фильтр повторяет логику бэкенда, чтобы
+    // UI не показывал лишнее, пока идёт refetch. Плюс — поиск по тексту
+    // (searchText), который на бэкенд не уходит — он чисто клиентский.
     const visibleRows = computed(() => {
         const needle = searchText.value.trim().toLowerCase();
+        const sf = statusFilter.value;
         return rows.value.filter((row) => {
-            if (statusFilter.value && row.status !== statusFilter.value) return false;
+            // status: "issues" → фильтруем по manually_issue, иначе по row.status
+            if (sf === "issues") {
+                if (!row.manually_issue) return false;
+            } else if (sf && row.status !== sf) {
+                return false;
+            }
             if (!needle) return true;
             const entry = stateRows[row.audio_key];
             const haystack = `${row.audio_key} ${row.speaker_tag} ${row.english} ${(entry && entry.russian_text) || row.russian}`.toLowerCase();
@@ -192,8 +221,15 @@ export function useVoDubState(ctx) {
         return visibleRows.value.slice(start, start + PAGE_SIZE);
     });
 
-    // Смена фильтра/поиска — на первую страницу.
-    watch([statusFilter, searchText], () => {
+    // Смена фильтра — на первую страницу И перезагрузка строк с сервера
+    // (бэкенд делает фильтрацию сам, клиентская страховка — только чтобы
+    // не показывать лишнее во время refetch).
+    watch(statusFilter, () => {
+        currentPage.value = 0;
+        loadRows();
+    });
+
+    watch(searchText, () => {
         currentPage.value = 0;
     });
 

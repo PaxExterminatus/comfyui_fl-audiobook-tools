@@ -58,8 +58,7 @@ const effectPreviews = new Map();
 const visible = ref(true);
 let closed = false;
 
-// ← PINIA: базовое состояние VO Dub — теперь Pinia-стор вместо
-// useVoDubState. Инициализируем root/bucket из props.
+// ── Pinia: базовое состояние VO Dub ────────────────────────────────────
 const voDub = useVoDubStore();
 voDub.init({ root: props.root, bucket: props.bucket });
 
@@ -150,7 +149,7 @@ const {
 
   // render
   cacheBust, renderingKeys, isRenderingAllPending,
-  renderRow, renderAllPending,
+  renderRow, useOriginalForRow, renderAllPending,
   hasRuTake, manuallyDone, toggleManuallyDone,
   manuallyIssue, toggleManuallyIssue,
   measuredDuration, onRuMetadata, durationBadge, enDurationText,
@@ -359,6 +358,19 @@ watch(visible, (v) => { if (!v) close(); });
                   :disabled="renderingKeys.has(row.audio_key)"
                   :title="hasRuTake(row) ? 'Re-render this row' : 'Render this row'"
                   @click="renderRow(row)"
+              />
+              <Button
+                  v-if="props.renderApi"
+                  class="vo-dub-use-en-btn"
+                  text
+                  size="small"
+                  icon="pi pi-arrow-right"
+                  label="Use EN"
+                  :disabled="renderingKeys.has(row.audio_key) || !row.english"
+                  :title="row.english
+                    ? 'Copy the EN reference track to audio_ru/' + row.audio_key + '.wav (no new render). Overwrites the current RU take.'
+                    : 'No EN reference for this row'"
+                  @click="useOriginalForRow(row)"
               />
               <Button
                   icon="pi pi-history"

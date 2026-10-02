@@ -1,5 +1,5 @@
-"""Все роуты VO Dub: tree/rows/mark_*/seed_roles/apply_effect/render_row/
-line_history."""
+"""Все роуты VO Dub: tree/rows/mark_*/seed_roles/use_original/apply_effect/
+render_row/line_history."""
 import os
 import random
 import traceback
@@ -123,6 +123,57 @@ async def fl_cosyvoice3_vo_dub_seed_roles(request):
         return web.json_response(seed_dub_roles(root))
     except FileNotFoundError as e:
         return web.json_response({"error": str(e)})
+
+
+@routes.post("/fl_cosyvoice3/vo_dub/use_original")
+async def fl_cosyvoice3_vo_dub_use_original(request):
+    """
+    Копирует EN-оригинал в RU-выход без TTS-рендера. Dry-копия пишется тоже,
+    чтобы последующий apply_effect (effect/normalize/speed_match) мог
+    работать с тем же файлом. Помечает строку как manually_done.
+    """
+    try:
+        data = await request.json()
+    except Exception as e:
+        return web.json_response({"error": f"invalid request body: {e}"})
+
+    root = (data.get("root") or "").strip()
+    audio_key = (data.get("audio_key") or "").strip()
+
+    if not root or not os.path.isdir(root):
+        return web.json_response({"error": f"not a folder: {root}"})
+    if not audio_key:
+        return web.json_response({"error": "audio_key is required"})
+
+    en_path = audio_en_path(root, audio_key)
+    if not os.path.isfile(en_path):
+        return web.json_response({"error": f"no EN reference: {en_path}"})
+
+    ru_path = audio_ru_path(root, audio_key)
+    ru_dir = os.path.dirname(ru_path)
+    if ru_dir:
+        os.makedirs(ru_dir, exist_ok=True)
+
+    dry_path = audio_dry_path(root, audio_key)
+    dry_dir = os.path.dirname(dry_path)
+    if dry_dir:
+        os.makedirs(dry_dir, exist_ok=True)
+
+    import shutil
+    try:
+        shutil.copyfile(en_path, ru_path)
+        shutil.copyfile(en_path, dry_path)
+    except OSError as e:
+        return web.json_response({"error": f"copy failed: {e}"})
+
+    state = read_dub_state(root)
+    entry = state["rows"].setdefault(audio_key, {})
+    entry["manually_done"] = True
+    entry["source"] = "original"
+    entry.pop("active_version", None)
+    write_dub_state(root, state)
+
+    return web.json_response({"ok": True, "path": ru_path})
 
 
 @routes.post("/fl_cosyvoice3/vo_dub/apply_effect")
@@ -312,6 +363,13 @@ async def fl_cosyvoice3_vo_dub_render_row(request):
     except Exception as e:
         print(f"[electron-server] WARNING: write_dry_copy failed: {e}")
     _line_history.set_chosen_version(versions_dir, audio_key, chosen_version)
+
+    # Сбрасываем маркер "source: original" — это уже настоящий рендер.
+    state = read_dub_state(root)
+    entry = state["rows"].setdefault(audio_key, {})
+    entry.pop("source", None)
+    write_dub_state(root, state)
+
     return web.json_response({
         "ok": True, "path": out_path, "hash": content_hash,
         "chosen_version": chosen_version, "takes": results,
@@ -369,4 +427,12 @@ async def fl_cosyvoice3_vo_dub_line_history_choose(request):
     except FileNotFoundError as e:
         return web.json_response({"error": str(e)})
     _line_history.set_chosen_version(lines_dir, audio_key, version)
+
+    # Сброс маркера "source: original" — выбрана конкретная версия рендера.
+    state = read_dub_state(root)
+    entry = state["rows"].setdefault(audio_key, {})
+    entry.pop("source", None)
+    entry["active_version"] = version
+    write_dub_state(root, state)
+
     return web.json_response({"ok": True, "path": out_path, "chosen_version": version})

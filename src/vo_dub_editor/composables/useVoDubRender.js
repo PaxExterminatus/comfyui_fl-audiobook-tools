@@ -199,6 +199,51 @@ export function useVoDubRender(ctx) {
         }
     }
 
+    // ── Use EN: скопировать оригинал в RU-выход без рендера ─────────────
+    // Бэкенд копирует audio_en/<key>.wav в audio_ru/<key>.wav и в
+    // _dub_dry/<key>.wav, ставит manually_done и source="original".
+    // Ничего не рендерит, но помечает строку как готовую.
+    async function useOriginalForRow(row) {
+        if (renderingKeys.has(row.audio_key)) return;
+        if (!props.root) {
+            setStatus("Project root is not set.");
+            return;
+        }
+        if (!row.english) {
+            setStatus(`No EN reference for ${row.audio_key} — nothing to copy`);
+            return;
+        }
+
+        renderingKeys.add(row.audio_key);
+        setStatus(`Copying EN → RU for ${row.audio_key}...`);
+
+        try {
+            const resp = await fetch(`${VO_DUB_API}/use_original`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ root: props.root, audio_key: row.audio_key }),
+            });
+            const data = await resp.json();
+            if (data.error) {
+                setStatus(`Copy failed: ${data.error}`);
+                return;
+            }
+
+            // Перечитать RU-плеер: файл на диске подменён, но имя то же —
+            // без cacheBust браузер отдаст старый (или пустой) кэш.
+            cacheBust[row.audio_key] = Date.now();
+            renderedOnce.add(row.audio_key);
+
+            await loadRows();
+            ctx.refreshHistoryCounts?.();
+            setStatus(`Used original EN for ${row.audio_key}`);
+        } catch (e) {
+            setStatus(`Copy failed: ${e}`);
+        } finally {
+            renderingKeys.delete(row.audio_key);
+        }
+    }
+
     // ── пакетный рендер ──────────────────────────────────────────────────
     const isRenderingAllPending = ref(false);
 
@@ -257,6 +302,7 @@ export function useVoDubRender(ctx) {
         currentContentHash,
         finalizeRuTake,
         renderRow,
+        useOriginalForRow,
         renderAllPending,
         hasRuTake,
         manuallyDone,

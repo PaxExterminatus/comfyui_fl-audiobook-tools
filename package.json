@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "marked": "^18.0.14",
+    "pinia": "^4.0.3",
     "primeicons": "^7.0.0",
     "primevue": "^3.50.0",
     "vue": "^3.4.21"

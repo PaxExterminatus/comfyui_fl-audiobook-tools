@@ -1,24 +1,6 @@
 <script setup>
 /*
- Full-screen-ish editor for one episode bucket of a VO dub project (see
- nodes/vo_dub_library.py's module docstring). Deliberately NOT
- LineEditorApp.vue with a few fields swapped: there's no position/hash
- filename scheme here (see that module's docstring), no merge/split/
- pause (rows never restructure), and no "stitch into one track" step --
- a row's own rendered take already IS the deliverable. What DOES carry
- over: the debounced-save-to-one-JSON-file pattern (closer to
- RolesEditorApp.vue's own _roles.json save loop than to LineEditorApp's
- per-script save), and lineHash() for the same content-fingerprint
- scheme (see src/shared/line_hash.js).
-
- The 🔁 render button queues the SAME graph a normal Run would (see
- web/vo_dub_library.js's queueVoDubRender, a close mirror of
- web/script_library.js's own per-line queueLineRevoice), with the VO Dub
- Library node's line_override forced to this row's resolved
- "speaker | instruct | text", Audio Post-Process's output_path_override
- forced to audio_ru\<audio_key>.wav, and its effect_override forced to
- this row's chosen Effect (e.g. "radio") -- see
- nodes/audio_post_process.py's own tooltips for both inputs.
+ Full-screen-ish editor for one episode bucket of a VO dub project.
 */
 import { ref, watch, onMounted } from "vue";
 import Button from "primevue/button";
@@ -38,7 +20,9 @@ import WaveformCanvas from "./WaveformCanvas.vue";
 import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
 import { insertStressMark } from "../shared/stress_mark.js";
 
-import { useVoDubState } from "./composables/useVoDubState.js";
+import { storeToRefs } from "pinia";
+import { useVoDubStore } from "../stores/voDubStore.js";
+
 import { useVoDubHistory } from "./composables/useVoDubHistory.js";
 import { useVoDubRoles } from "./composables/useVoDubRoles.js";
 import { useVoDubInstruct } from "./composables/useVoDubInstruct.js";
@@ -54,7 +38,7 @@ const props = defineProps({
   onClose: { type: Function, required: true },
 });
 
-// ── UI-хуки (не переносятся — вызываются в setup-scope) ────────────────
+// ── UI-хуки ──────────────────────────────────────────────────────────────
 const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
   storageKey: "FL_CosyVoice3.VODubLineEditor.widthPx",
   defaultWidth: 1100,
@@ -67,16 +51,19 @@ const { fontSizePx, decrease: decreaseFontSize, increase: increaseFontSize } = u
 const { autoGrow, setTextareaRef, regrowAll } = useTextareaAutoGrow();
 watch(fontSizePx, regrowAll);
 
-// ── шаренные структуры между composables ───────────────────────────────
-// effectPreviews — Map<audio_key, {setEffect}>. Пишется в Players
-// (setRuAudioRef), читается в Effects (onEffectPicked). Должна жить в main.
+// ── шаренные структуры между composables ─────────────────────────────────
 const effectPreviews = new Map();
 
-// ── локальное UI-состояние ─────────────────────────────────────────────
+// ── локальное UI-состояние ──────────────────────────────────────────────
 const visible = ref(true);
 let closed = false;
 
-// ── ctx: то, что нужно всем composables ────────────────────────────────
+// ← PINIA: базовое состояние VO Dub — теперь Pinia-стор вместо
+// useVoDubState. Инициализируем root/bucket из props.
+const voDub = useVoDubStore();
+voDub.init({ root: props.root, bucket: props.bucket });
+
+// ── ctx: то, что нужно всем composables ─────────────────────────────────
 const ctx = {
   props,
   effectPreviews,
@@ -85,7 +72,40 @@ const ctx = {
   fontSizePx,
 };
 
-Object.assign(ctx, useVoDubState(ctx));
+const voDubRefs = storeToRefs(voDub);
+
+Object.assign(ctx, {
+  // refs
+  rows: voDubRefs.rows,
+  statusFilter: voDubRefs.statusFilter,
+  searchText: voDubRefs.searchText,
+  status: voDubRefs.status,
+  loading: voDubRefs.loading,
+  useOriginalDefault: voDubRefs.useOriginalDefault,
+  saveTimer: voDubRefs.saveTimer,
+  currentPage: voDubRefs.currentPage,
+  visibleRows: voDubRefs.visibleRows,
+  pageCount: voDubRefs.pageCount,
+  pagedRows: voDubRefs.pagedRows,
+  // reactive — напрямую
+  stateRows: voDub.stateRows,
+  // функции
+  entryFor: voDub.entryFor,
+  loadState: voDub.loadState,
+  loadRows: voDub.loadRows,
+  scheduleSave: voDub.scheduleSave,
+  flushSave: voDub.flushSave,
+  onTextEdit: voDub.onTextEdit,
+  setStatus: voDub.setStatus,
+  statePath: voDub.statePath,
+  // константы
+  SAVE_DEBOUNCE_MS: voDub.SAVE_DEBOUNCE_MS,
+  PAGE_SIZE: voDub.PAGE_SIZE,
+  STATUS_LABELS: voDub.STATUS_LABELS,
+  STATUS_FILTER_OPTIONS: voDub.STATUS_FILTER_OPTIONS,
+});
+
+// ── остальные composables: без изменений ────────────────────────────────
 Object.assign(ctx, useVoDubHistory(ctx));
 Object.assign(ctx, useVoDubRoles(ctx));
 Object.assign(ctx, useVoDubInstruct(ctx));
@@ -242,7 +262,6 @@ watch(visible, (v) => { if (!v) close(); });
           :class="{ 'row-playing': sequentialPlayingKey === row.audio_key, 'row-issue': manuallyIssue(row) }"
           :ref="(el) => setRowRef(row.audio_key, el)"
       >
-        <!-- ── Заголовок строки ──────────────────────────────────────── -->
         <div class="vo-dub-row-head">
           <span class="vo-dub-key">{{ row.audio_key }}</span>
           <span :class="['vo-dub-status-pill', `status-${row.status}`]">{{ STATUS_LABELS[row.status] }}</span>
@@ -268,7 +287,6 @@ watch(visible, (v) => { if (!v) close(); });
           />
         </div>
 
-        <!-- Multi-channel rows -- не поддерживаются -->
         <div v-if="row.status === 'unsupported'" class="vo-dub-unsupported-note">
           Unsupported: {{ row.channels }}-channel audio split across multiple files
           (<code>.a</code>-<code>.d</code>) -- this editor can only play or render a single mono/stereo
@@ -276,10 +294,7 @@ watch(visible, (v) => { if (!v) close(); });
         </div>
 
         <template v-else>
-          <!-- ── Плееры ──────────────────────────────────────────────── -->
           <div class="vo-dub-players">
-
-            <!-- Компактная строка длительностей -->
             <div class="vo-dub-duration-line">
               <span class="vo-dub-duration-en">{{ enDurationText(row) }}</span>
               <span class="vo-dub-duration-arrow">→</span>
@@ -363,7 +378,6 @@ watch(visible, (v) => { if (!v) close(); });
             </div>
           </div>
 
-          <!-- ── Редактирование полей ────────────────────────────────── -->
           <LineRowEditor :row="row">
             <template #leading>
               <span

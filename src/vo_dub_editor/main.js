@@ -13,6 +13,7 @@ import VoDubBrowserPanel from "./VoDubBrowserPanel.vue";
 import VoDubLineEditor from "./VoDubLineEditor.vue";
 import DubRolesEditorApp from "./DubRolesEditorApp.vue";
 import { ensureStylesLinked } from "../shared/styles_link.js";
+import { pinia } from "../shared/pinia.js";
 
 /**
  * @param {Object} opts
@@ -38,6 +39,7 @@ export function mountVoDubBrowserPanel({ node, projectRootWidget, openBrowseDial
         openDubRolesEditor,
         queueVoDubRender,
     });
+    app.use(pinia);
     app.use(PrimeVue, { ripple: true });
     app.mount(container);
 
@@ -65,6 +67,7 @@ export function openVoDubLineEditor({ root, bucket, renderApi }) {
             container.remove();
         },
     });
+    app.use(pinia);
     app.use(PrimeVue, { ripple: true });
     app.mount(container);
 }
@@ -86,6 +89,7 @@ export function openDubRolesEditor({ root }) {
             container.remove();
         },
     });
+    app.use(pinia);
     app.use(PrimeVue, { ripple: true });
     app.mount(container);
 }

@@ -17,6 +17,7 @@ import OutputFileDialog from "./OutputFileDialog.vue";
 import LineHistoryDialog from "../shared/LineHistoryDialog.vue";
 import RoleInfoPopover from "../shared/RoleInfoPopover.vue";
 import WaveformCanvas from "./WaveformCanvas.vue";
+import TranslationSimilarityCompact from "../shared/TranslationSimilarityCompact.vue";
 import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
 import { insertStressMark } from "../shared/stress_mark.js";
 
@@ -38,7 +39,7 @@ const props = defineProps({
   onClose: { type: Function, required: true },
 });
 
-// ── UI-хуки ──────────────────────────────────────────────────────────────
+// UI-хуки
 const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
   storageKey: "FL_CosyVoice3.VODubLineEditor.widthPx",
   defaultWidth: 1100,
@@ -51,18 +52,18 @@ const { fontSizePx, decrease: decreaseFontSize, increase: increaseFontSize } = u
 const { autoGrow, setTextareaRef, regrowAll } = useTextareaAutoGrow();
 watch(fontSizePx, regrowAll);
 
-// ── шаренные структуры между composables ─────────────────────────────────
+// Шаренные структуры между composables
 const effectPreviews = new Map();
 
-// ── локальное UI-состояние ──────────────────────────────────────────────
+// Локальное UI-состояние
 const visible = ref(true);
 let closed = false;
 
-// ── Pinia: базовое состояние VO Dub ────────────────────────────────────
+// Pinia: базовое состояние VO Dub
 const voDub = useVoDubStore();
 voDub.init({ root: props.root, bucket: props.bucket });
 
-// ── ctx: то, что нужно всем composables ─────────────────────────────────
+// ctx: то, что нужно всем composables
 const ctx = {
   props,
   effectPreviews,
@@ -104,7 +105,7 @@ Object.assign(ctx, {
   STATUS_FILTER_OPTIONS: voDub.STATUS_FILTER_OPTIONS,
 });
 
-// ── остальные composables: без изменений ────────────────────────────────
+// Остальные composables: без изменений
 Object.assign(ctx, useVoDubHistory(ctx));
 Object.assign(ctx, useVoDubRoles(ctx));
 Object.assign(ctx, useVoDubInstruct(ctx));
@@ -304,6 +305,16 @@ watch(visible, (v) => { if (!v) close(); });
                   v-if="durationBadge(row)"
                   :class="['vo-dub-duration-delta', `badge-${durationBadge(row).level}`]"
               >{{ durationBadge(row).pctText }}</span>
+
+              <span
+                  v-if="row.english && entryFor(row).russian_text"
+                  class="vo-dub-similarity-slot"
+              >
+                <TranslationSimilarityCompact
+                    :original="row.english"
+                    :translation="entryFor(row).russian_text"
+                />
+              </span>
             </div>
 
             <div class="vo-dub-players-row">
@@ -466,3 +477,17 @@ watch(visible, (v) => { if (!v) close(); });
 </template>
 
 <style scoped src="../style/VoDubLineEditor.css"></style>
+
+<style scoped>
+.vo-dub-similarity-slot {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.vo-dub-similarity-slot :deep(.compact-circle) {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+</style>

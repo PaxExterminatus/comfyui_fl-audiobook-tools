@@ -176,21 +176,20 @@ def row_hash(
     instruct = (state_entry or {}).get("instruct", "")
     effect = effect_of(state_entry)
     original_sample = uses_original_as_sample(state_entry, use_original_default)
+
     instruct_for_hash = instruct
     if effect:
         instruct_for_hash += f"\x00effect={effect}"
-
     if (state_entry or {}).get("normalize"):
         db = (state_entry or {}).get("normalize_db")
         if db is None:
             db = -20.0
         instruct_for_hash += f"\x00normalize={float(db):.1f}"
-
     if (state_entry or {}).get("speed_match"):
         instruct_for_hash += "\x00speed=match"
-
     if original_sample:
         instruct_for_hash += "\x00sample=original"
+
     return line_hash(resolved_speaker(row, state_entry, role_map), instruct_for_hash, text)
 
 
@@ -232,8 +231,6 @@ def row_view(root: str, row: dict, state: dict, role_map: Optional[Dict[str, str
         "channels": _to_int(row.get("channels")),
         "status": status,
         "rendered_duration_s": (entry or {}).get("rendered_duration_s"),
-        "manually_done": bool((entry or {}).get("manually_done")),
-        "manually_issue": bool((entry or {}).get("manually_issue")),
     }
 
 
@@ -265,13 +262,11 @@ def build_tree(root: str) -> dict:
     for row in rows:
         bucket = bucket_key_for(row)
         if bucket not in buckets:
-            buckets[bucket] = {"count": 0, "issue": 0, **{s: 0 for s in _STATUS_KEYS}}
+            buckets[bucket] = {"count": 0, **{s: 0 for s in _STATUS_KEYS}}
             order.append(bucket)
         view = row_view(root, row, state, role_map)
         buckets[bucket]["count"] += 1
         buckets[bucket][view["status"]] += 1
-        if view["manually_issue"]:
-            buckets[bucket]["issue"] += 1
     order.sort(key=lambda b: (b == "Other", b))
     return {"root": root, "buckets": [{"bucket": b, **buckets[b]} for b in order]}
 
@@ -285,11 +280,17 @@ def bucket_rows(root: str, bucket: str, status_filter: str = "") -> List[dict]:
         if bucket_key_for(row) != bucket:
             continue
         view = row_view(root, row, state, role_map)
-        if status_filter == "issues":
-            if not view["manually_issue"]:
+
+        if status_filter == "not_done":
+            if view["status"] in ("done", "unsupported"):
+                continue
+        elif status_filter == "issues":
+            entry = state.get("rows", {}).get(view["audio_key"]) or {}
+            if not entry.get("manually_issue"):
                 continue
         elif status_filter and view["status"] != status_filter:
             continue
+
         out.append(view)
     return out
 

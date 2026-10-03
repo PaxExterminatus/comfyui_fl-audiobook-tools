@@ -1,10 +1,30 @@
 /**
  * Pure JS translation quality heuristics (no Vue, no DOM).
+ * Updated for CosyVoice 3 TTS model with Stress Parity (Акцентно-ритмический расчёт).
  *
  * Compares an English original against a Russian translation and returns
  * 5 metrics, each { key, label, score } with score in 0-100
  * (100 = perfectly matched, lower = drifted).
  */
+
+const EN_STRESS_STOP = new Set([
+    "a", "an", "the", "and", "or", "but", "if", "then", "else", "when", "at", "by", "for", "with",
+    "about", "against", "between", "into", "through", "during", "before", "after", "above", "below",
+    "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further",
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "can", "could", "should", "would", "may", "might", "must", "shall", "will", "i", "you", "he",
+    "she", "it", "we", "they", "me", "him", "her", "us", "them", "my", "your", "his", "their",
+    "this", "that", "these", "those", "though", "please"
+]);
+
+const RU_STRESS_STOP = new Set([
+    "и", "да", "но", "а", "или", "ли", "бы", "же", "что", "чтобы", "как", "будто", "словно",
+    "в", "во", "на", "с", "со", "к", "ко", "из", "изо", "по", "за", "от", "ото", "до", "без",
+    "под", "над", "при", "про", "о", "об", "обо", "у", "для", "из-за", "из-под",
+    "я", "ты", "он", "она", "оно", "мы", "вы", "они", "меня", "тебя", "его", "ее", "нас", "вас", "их",
+    "мой", "твой", "свой", "наш", "ваш", "это", "этот", "эта", "эти", "то", "тот", "та", "те",
+    "все-таки", "всё-таки", "уж", "вот"
+]);
 
 function round1(value) {
     return Math.round(value * 10) / 10;
@@ -26,21 +46,47 @@ function countRussianSyllables(text) {
     return (text.match(/[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g) || []).length;
 }
 
+function countStressedWords(text, stopWordsSet) {
+    const words = String(text)
+        .toLowerCase()
+        .replace(/[^a-zа-яё\s]/gi, "")
+        .split(/\s+/)
+        .filter(Boolean);
+
+    const contentWords = words.filter(w => !stopWordsSet.has(w));
+    return Math.max(1, contentWords.length);
+}
+
 export function computeTranslationScores(original, translation) {
     const en = String(original);
     const ru = String(translation);
 
-    // 1. syllableRatio — Слогая ёмкость строки
+    // 1. accentRhythm (бывший syllableRatio) — Акцентно-ритмическое соответствие (CosyVoice 3)
+    const enStresses = countStressedWords(en, EN_STRESS_STOP);
+    const ruStresses = countStressedWords(ru, RU_STRESS_STOP);
+    const stressRatio = Math.min(enStresses, ruStresses) / Math.max(enStresses, ruStresses);
+    const stressScore = stressRatio * 100;
+
     const enSyll = countEnglishSyllables(en);
     const ruSyll = countRussianSyllables(ru);
-    let score1;
-    if (enSyll === 0) {
-        score1 = 100;
-    } else {
-        const ratio1 = ruSyll / enSyll;
-        const delta1 = Math.abs(ratio1 - 1);
-        score1 = 100 * Math.exp(-2 * delta1);
+    let corridorScore = 100;
+
+    if (enSyll > 0) {
+        const actualRatio = ruSyll / enSyll;
+        const MAX_SAFE_K = 1.35; // Верхний порог безопасного ускорения CosyVoice 3
+        const MIN_SAFE_K = 0.90; // Нижний порог без растяжения гласных
+
+        if (actualRatio > MAX_SAFE_K) {
+            const overflow = actualRatio - MAX_SAFE_K;
+            corridorScore = Math.max(0, 100 - overflow * 100);
+        } else if (actualRatio < MIN_SAFE_K) {
+            const underflow = MIN_SAFE_K - actualRatio;
+            corridorScore = Math.max(0, 100 - underflow * 100);
+        }
     }
+
+    // Итоговый балл: 60% — акцентные пики, 40% — коридор допустимой длины для TTS
+    const score1 = (stressScore * 0.6) + (corridorScore * 0.4);
 
     // 2. acousticTexture — Звуковая/фонетическая согласованность
     // Part A: interjection density parity (per 100 words)
@@ -119,7 +165,7 @@ export function computeTranslationScores(original, translation) {
     const score5 = 100 * ratio4;
 
     return [
-        { key: "syllableRatio", label: "Слоговая ёмкость строки", score: round1(score1) },
+        { key: "syllableRatio", label: "Акцентно-ритмическое соответствие (CosyVoice 3)", score: round1(score1) },
         { key: "acousticTexture", label: "Звуковая/фонетическая согласованность", score: round1(score2) },
         { key: "edgeParity", label: "Интонационно-краевые маркеры", score: round1(score3) },
         { key: "lexicalDiversity", label: "Лексическое разнообразие (TTR)", score: round1(score4) },

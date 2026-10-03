@@ -1,33 +1,31 @@
 <script setup>
 /*
- History/versions picker for one line's rendered takes -- stateless:
- props in, emits out, ничего не fetch'ит и не пишет сам.
-
- Путь к аудио версии собирается из параметров строки:
-   VO Dub:     {root}\_dub_versions\{audioKey}_v{version:03d}_{hash}_s{seed}.wav
-   Аудиокнига: v.path (если бэкенд отдаёт), иначе кнопка Play неактивна.
+ History/versions picker for one line's rendered takes -- stateless.
+ Все URL строятся через useAudioFiles() из root + audioKey (уже есть в props).
+ Длительность и % отклонения от EN берутся из того же composable.
 */
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import Dialog from "primevue/dialog";
 import Card from "primevue/card";
 import Button from "primevue/button";
+import ButtonGroup from "primevue/buttongroup";
 import Message from "primevue/message";
 import { usePanelWidth } from "./panel_width.js";
 import { useFontSize } from "./font_size.js";
 import DialogHeader from "./DialogHeader.vue";
-import TranslationSimilarityRadar from "./TranslationSimilarityRadar.vue";
-import { SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
+import { useAudioFiles } from "./audio_files.js";
 
 const props = defineProps({
   visible: { type: Boolean, required: true },
   versions: { type: Array, default: () => [] },
   chosenVersion: { type: Number, default: null },
   original: { type: String, default: "" },
-  // Параметры строки для сборки пути к аудио версии.
-  root:     { type: String, default: "" },  // VO Dub: корень проекта
-  audioKey: { type: String, default: "" },  // VO Dub: row.audio_key
+  root: { type: String, default: "" },
+  audioKey: { type: String, default: "" },
 });
 const emit = defineEmits(["update:visible", "select"]);
+
+const { enUrl, versionUrl, getDuration, getCached, calcDelta, formatSeconds } = useAudioFiles();
 
 const { cssWidth: panelWidthCss, setWidth: setPanelWidth, presets: widthPresets } = usePanelWidth({
   storageKey: "FL_CosyVoice3.LineHistory.widthPx",
@@ -41,31 +39,38 @@ const { fontSizePx: cardFontSizePx, decrease: decreaseCardFontSize, increase: in
 
 const sortedVersions = computed(() => [...props.versions].sort((a, b) => b.version - a.version));
 
-function pick(version) {
-  emit("select", version);
-  emit("update:visible", false);
+// EN URL строится на месте, без проброса через родителя
+const originalUrl = computed(() => enUrl(props.root, props.audioKey));
+const originalDuration = computed(() => getCached(originalUrl.value));
+
+function versionFileUrl(v) {
+  return versionUrl(props.root, props.audioKey, v.version, v.hash, v.seed);
 }
 
-// ── аудио версии ────────────────────────────────────────────────────────
-const playingVersion = ref(null);
+function deltaFor(v) {
+  return calcDelta(originalDuration.value, getCached(versionFileUrl(v)));
+}
+
+async function loadDurations() {
+  if (originalUrl.value) await getDuration(originalUrl.value);
+  for (const v of sortedVersions.value) {
+    const u = versionFileUrl(v);
+    if (u) await getDuration(u);
+  }
+}
+
+watch(() => props.visible, (v) => {
+  if (v) {
+    stopPlayback();
+    loadDurations();
+  } else {
+    stopPlayback();
+  }
+});
+
+// ── прослушивание ────────────────────────────────────────────────────
+const playingVersion = ref(null); // null | 'original' | number
 let audioEl = null;
-
-// VO Dub: {root}\_dub_versions\{audioKey}_v{NNN}_{hash}_s{seed}.wav
-function voDubPath(v) {
-  if (!props.root || !props.audioKey) return "";
-  if (!v.hash || v.seed == null || v.version == null) return "";
-  const ver = String(v.version).padStart(3, "0");
-  const filename = `${props.audioKey}_v${ver}_${v.hash}_s${v.seed}.wav`;
-  const root = String(props.root).replace(/\\/g, "/").replace(/\/$/, "");
-  return `${root}/_dub_versions/${filename}`;
-}
-
-function audioUrl(v) {
-  // Приоритет: собрать по формуле VO Dub. Fallback: путь из бэкенда.
-  const path = voDubPath(v) || v.path || v.audio_path || v.file || "";
-  if (!path) return "";
-  return `${SCAN_API}/audio?path=${encodeURIComponent(path)}`;
-}
 
 function stopPlayback() {
   if (audioEl) {
@@ -75,34 +80,41 @@ function stopPlayback() {
   playingVersion.value = null;
 }
 
-function togglePlay(v) {
-  if (playingVersion.value === v.version) {
-    stopPlayback();
-    return;
-  }
+function playUrl(url, mode) {
   stopPlayback();
-
-  const url = audioUrl(v);
-  if (!url) {
-    console.warn("[FL history] не удалось собрать путь к версии:", v);
-    return;
-  }
-
+  if (!url) return;
   const el = new Audio(url);
   audioEl = el;
-  playingVersion.value = v.version;
-
+  playingVersion.value = mode;
   el.addEventListener("ended", () => {
-    if (playingVersion.value === v.version) stopPlayback();
+    if (playingVersion.value === mode) stopPlayback();
   });
-  el.addEventListener("error", (e) => {
-    console.error("[FL history] audio error", { version: v.version, url, error: e });
-    if (playingVersion.value === v.version) stopPlayback();
+  el.addEventListener("error", () => {
+    if (playingVersion.value === mode) stopPlayback();
   });
-  el.play().catch((e) => {
-    console.error("[FL history] play() rejected", { version: v.version, url, error: e });
-    if (playingVersion.value === v.version) stopPlayback();
+  el.play().catch(() => {
+    if (playingVersion.value === mode) stopPlayback();
   });
+}
+
+function toggleOriginal() {
+  if (playingVersion.value === "original") stopPlayback();
+  else playUrl(originalUrl.value, "original");
+}
+
+function togglePlay(v) {
+  const mode = v.version;
+  if (playingVersion.value === mode) stopPlayback();
+  else playUrl(versionFileUrl(v), mode);
+}
+
+function isPlayingVersion(v) {
+  return playingVersion.value === v.version;
+}
+
+function pick(version) {
+  emit("select", version);
+  emit("update:visible", false);
 }
 
 function formatCreatedAt(iso) {
@@ -115,47 +127,83 @@ function formatCreatedAt(iso) {
 </script>
 
 <template>
-    <Dialog
-        :visible="visible"
-        modal
-        header=" "
-        :style="{ width: panelWidthCss }"
-        @update:visible="stopPlayback(); $emit('update:visible', $event)"
-    >
-        <template #header>
-            <DialogHeader
-                title="История строки"
-                :width-presets="widthPresets" :set-width="setPanelWidth"
-                :font-size-decrease="decreaseCardFontSize" :font-size-increase="increaseCardFontSize"
-            />
+  <Dialog :visible="visible" modal header="История строки" :style="{ width: panelWidthCss }"
+          @update:visible="stopPlayback(); $emit('update:visible', $event)"
+  >
+    <!-- Play Original (EN) -->
+    <div v-if="originalUrl" class="history-original-row">
+      <ButtonGroup>
+        <Button
+            size="small"
+            :severity="playingVersion === 'original' ? 'primary' : 'secondary'"
+            :icon="playingVersion === 'original' ? 'pi pi-pause' : 'pi pi-volume-up'"
+            label="Original (EN)"
+            title="Play EN reference take"
+            @click="toggleOriginal"
+        />
+      </ButtonGroup>
+      <span v-if="originalDuration" class="history-original-dur">{{ formatSeconds(originalDuration) }}</span>
+      <span v-if="original" class="history-original-text" :title="original">{{ original }}</span>
+    </div>
+
+    <Message v-if="!versions.length" severity="info" :closable="false">
+      Для этой строки ещё нет истории озвучки.
+    </Message>
+
+    <div v-else class="history-grid" :style="{ fontSize: `${cardFontSizePx}px` }">
+      <Card v-for="v in sortedVersions" :key="v.version" class="history-card">
+        <template #content>
+          <div class="history-card-head">
+            <span class="history-version">Версия {{ v.version }}</span>
+            <span v-if="v.version === chosenVersion" class="history-active-badge">✓ Активна</span>
+          </div>
+
+          <div class="history-meta">
+            сид {{ v.seed }} · {{ formatCreatedAt(v.created_at) }}
+          </div>
+
+          <!-- Длительность + VS Original -->
+          <div class="history-duration-line">
+                        <span class="history-duration-value">
+                            {{ formatSeconds(getCached(versionFileUrl(v))) }}
+                        </span>
+            <span
+                v-if="deltaFor(v)"
+                :class="['history-duration-delta', `badge-${deltaFor(v).level}`]"
+            >
+                            {{ deltaFor(v).pctText }} vs EN
+                        </span>
+          </div>
+
+          <div class="history-snapshot">
+            <div class="history-snapshot-speaker">{{ v.speaker }}</div>
+            <div class="history-snapshot-instruct">{{ v.instruct }}</div>
+            <div class="history-snapshot-text">{{ v.text }}</div>
+          </div>
+
+          <div class="history-card-actions">
+            <ButtonGroup>
+              <Button
+                  size="small"
+                  :severity="isPlayingVersion(v) ? 'primary' : 'secondary'"
+                  :icon="isPlayingVersion(v) ? 'pi pi-pause' : 'pi pi-play'"
+                  label="Play"
+                  title="Прослушать этот дубль"
+                  @click="togglePlay(v)"
+              />
+              <Button
+                  size="small"
+                  label="Сделать активной"
+                  icon="pi pi-check"
+                  :disabled="v.version === chosenVersion"
+                  @click="pick(v.version)"
+              />
+            </ButtonGroup>
+          </div>
         </template>
-
-        <Message v-if="!versions.length" severity="info" :closable="false">
-            Для этой строки ещё нет истории озвучки.
-        </Message>
-
-        <div v-else class="history-grid" :style="{ fontSize: `${cardFontSizePx}px` }">
-            <Card v-for="v in sortedVersions" :key="v.version" class="history-card">
-                <template #content>
-                    <div class="history-card-head">
-                        <span class="history-version">Версия {{ v.version }}</span>
-                        <span v-if="v.version === chosenVersion" class="history-active-badge">✓ Активна</span>
-                    </div>
-                    <div class="history-meta">сид {{ v.seed }} &middot; {{ formatCreatedAt(v.created_at) }}</div>
-                    <div class="history-snapshot">
-                        <div class="history-snapshot-speaker">{{ v.speaker }}</div>
-                        <div class="history-snapshot-instruct">{{ v.instruct }}</div>
-                        <div class="history-snapshot-text">{{ v.text }}</div>
-                    </div>
-
-                    <div class="history-card-actions">
-                        <Button :icon="playingVersion === v.version ? 'pi pi-pause' : 'pi pi-play'" size="small" title="Прослушать этот дубль" @click="togglePlay(v)"/>
-                        <Button label="Сделать активной" size="small" :disabled="v.version === chosenVersion" @click="pick(v.version)"/>
-                    </div>
-                </template>
-            </Card>
-        </div>
-    </Dialog>
+      </Card>
+    </div>
+  </Dialog>
 </template>
 
 <style scoped src="../style/LineHistoryDialog.css"></style>

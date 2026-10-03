@@ -24,12 +24,14 @@ const STATUS_LABELS = {
     needs_translation: "Needs translation",
     not_started: "Not started",
     stale: "Stale",
-    done: "Done",
+    done: "Ready",
     unsupported: "Unsupported (multi-channel)",
 };
 
 const EXTRA_FILTERS = [
-    { value: "issues", label: "⚠ Issues only" },
+    { value: "not_done",      label: "Not done" },
+    { value: "manually_done", label: "Done (manual)" },
+    { value: "issues",        label: "⚠ Issues only" },
 ];
 
 const STATUS_FILTER_OPTIONS = [
@@ -177,6 +179,12 @@ export const useVoDubStore = defineStore("voDub", () => {
         return rows.value.filter((row) => {
             if (sf === "issues") {
                 if (!row.manually_issue) return false;
+            } else if (sf === "manually_done") {
+                const entry = stateRows[row.audio_key];
+                if (!entry || !entry.manually_done) return false;
+            } else if (sf === "not_done") {
+                // Not done = всё, кроме done и unsupported
+                if (row.status === "done" || row.status === "unsupported") return false;
             } else if (sf && row.status !== sf) {
                 return false;
             }

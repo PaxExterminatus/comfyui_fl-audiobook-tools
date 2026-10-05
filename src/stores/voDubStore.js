@@ -1,11 +1,5 @@
 /**
  * voDubStore — Pinia-стор базового состояния VO Dub редактора.
- *
- * Заменяет composable useVoDubState. API совпадает 1-в-1, чтобы остальные
- * composables (roles, history, instruct, ...) продолжали видеть те же
- * имена в ctx и не требовали правок.
- *
- * Инициализация: voDub.init({ root, bucket }) — из props компонента.
  */
 import { ref, reactive, computed, watch } from "vue";
 import { defineStore } from "pinia";
@@ -40,33 +34,25 @@ const STATUS_FILTER_OPTIONS = [
 ];
 
 export const useVoDubStore = defineStore("voDub", () => {
-    // ── конфиг (задаётся через init()) ───────────────────────────────────
     const root = ref("");
     const bucket = ref("");
 
-    // ── серверный список + локальные правки ──────────────────────────────
     const rows = ref([]);
     const stateRows = reactive({});
 
-    // ── UI-состояние ─────────────────────────────────────────────────────
     const statusFilter = ref("");
     const searchText = ref("");
     const status = ref("");
     const loading = ref(false);
     const useOriginalDefault = ref(false);
 
-    // ── дебаунсенное сохранение ──────────────────────────────────────────
     const saveTimer = ref(null);
-
-    // ── пагинация ────────────────────────────────────────────────────────
     const currentPage = ref(0);
 
-    // ── конфиг пути ──────────────────────────────────────────────────────
     function statePath() {
         return joinPath(root.value, "_dub_state.json");
     }
 
-    // ── инициализация при открытии редактора ─────────────────────────────
     function init({ root: r, bucket: b }) {
         root.value = r;
         bucket.value = b;
@@ -75,7 +61,6 @@ export const useVoDubStore = defineStore("voDub", () => {
         currentPage.value = 0;
     }
 
-    // ── загрузка состояния с диска ───────────────────────────────────────
     async function loadState() {
         const resp = await fetch(`${FILE_API}/read?path=${encodeURIComponent(statePath())}`);
         const data = await resp.json();
@@ -95,7 +80,6 @@ export const useVoDubStore = defineStore("voDub", () => {
         useOriginalDefault.value = Boolean(parsed.use_original_default);
     }
 
-    // ── загрузка списка строк с сервера ──────────────────────────────────
     async function loadRows() {
         if (!root.value) return;
         loading.value = true;
@@ -131,12 +115,10 @@ export const useVoDubStore = defineStore("voDub", () => {
         }
     }
 
-    // ── доступ к записи правки ───────────────────────────────────────────
     function entryFor(row) {
         return stateRows[row.audio_key] || (stateRows[row.audio_key] = {});
     }
 
-    // ── дебаунсенное сохранение ──────────────────────────────────────────
     function scheduleSave() {
         if (saveTimer.value) clearTimeout(saveTimer.value);
         saveTimer.value = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
@@ -177,19 +159,22 @@ export const useVoDubStore = defineStore("voDub", () => {
         const needle = searchText.value.trim().toLowerCase();
         const sf = statusFilter.value;
         return rows.value.filter((row) => {
+            const entry = stateRows[row.audio_key];
+
             if (sf === "issues") {
                 if (!row.manually_issue) return false;
             } else if (sf === "manually_done") {
-                const entry = stateRows[row.audio_key];
                 if (!entry || !entry.manually_done) return false;
             } else if (sf === "not_done") {
-                // Not done = всё, кроме done и unsupported
-                if (row.status === "done" || row.status === "unsupported") return false;
+                // Not done = всё, кроме unsupported и строк с РУЧНОЙ отметкой Done.
+                // Auto-Ready (status=done) остаётся в списке — человек ещё не подтвердил.
+                if (row.status === "unsupported") return false;
+                if (entry && entry.manually_done) return false;
             } else if (sf && row.status !== sf) {
                 return false;
             }
+
             if (!needle) return true;
-            const entry = stateRows[row.audio_key];
             const haystack = `${row.audio_key} ${row.speaker_tag} ${row.english} ${(entry && entry.russian_text) || row.russian}`.toLowerCase();
             return haystack.includes(needle);
         });
@@ -204,7 +189,6 @@ export const useVoDubStore = defineStore("voDub", () => {
         return visibleRows.value.slice(start, start + PAGE_SIZE);
     });
 
-    // ── watchers ─────────────────────────────────────────────────────────
     watch(statusFilter, () => {
         currentPage.value = 0;
         loadRows();
@@ -221,17 +205,11 @@ export const useVoDubStore = defineStore("voDub", () => {
     });
 
     return {
-        // конфиг
         root, bucket, init,
-        // состояние
         rows, stateRows, statusFilter, searchText, status, loading, useOriginalDefault,
-        // доступ
         entryFor,
-        // загрузка/сохранение
         loadState, loadRows, scheduleSave, flushSave, onTextEdit, setStatus, saveTimer,
-        // фильтр/пагинация
         visibleRows, PAGE_SIZE, currentPage, pageCount, pagedRows,
-        // константы
         SAVE_DEBOUNCE_MS, statePath,
         STATUS_LABELS, STATUS_FILTER_OPTIONS,
     };

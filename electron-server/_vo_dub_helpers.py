@@ -282,7 +282,10 @@ def bucket_rows(root: str, bucket: str, status_filter: str = "") -> List[dict]:
         view = row_view(root, row, state, role_map)
 
         if status_filter == "not_done":
-            if view["status"] in ("done", "unsupported"):
+            if view["status"] == "unsupported":
+                continue
+            entry = state.get("rows", {}).get(view["audio_key"]) or {}
+            if entry.get("manually_done"):
                 continue
         elif status_filter == "manually_done":
             entry = state.get("rows", {}).get(view["audio_key"]) or {}

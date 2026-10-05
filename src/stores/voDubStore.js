@@ -209,6 +209,27 @@ export const useVoDubStore = defineStore("voDub", () => {
         useOriginalDefault.value = Boolean(parsed.use_original_default);
     }
 
+    /*
+     Снимок русского текста по audio_key — только для поиска. Существует
+     затем, чтобы фильтрация не читала stateRows через реактивный прокси:
+     правка одной строки иначе инвалидирует visibleRows и перерисовывает
+     всю страницу на каждое нажатие клавиши (см. комментарий у toRaw ниже).
+
+     Вызовы этой функции появились в 17-м срезе, а сама она — нет. loadRows
+     падал на ReferenceError внутри собственного try/catch и молча
+     превращался в статус "Couldn't load", то есть строки не грузились
+     вообще. Тесты этого не видели: ни один из них не вызывает loadRows.
+    */
+    function rebuildSearchSnapshot() {
+        const stateRaw = toRaw(stateRows);
+        const snapshot = {};
+        for (const row of rows.value) {
+            const entry = stateRaw[row.audio_key];
+            snapshot[row.audio_key] = (entry && entry.russian_text) || row.russian || "";
+        }
+        searchSnapshot.value = snapshot;
+    }
+
     // Load rows and then rebuild the snapshot of searchable Russian text.
     async function loadRows() {
         if (!root.value) return;
@@ -367,12 +388,14 @@ export const useVoDubStore = defineStore("voDub", () => {
     });
 
     return {
-        root, bucket, init,
-        rows, stateRows, statusFilter, filterStatuses, filterManuallyDone, filterIssues, searchText, status, loading, useOriginalDefault,
-        entryFor,
-        loadState, loadRows, scheduleSave, flushSave, onTextEdit, setStatus, saveTimer,
-        visibleRows, PAGE_SIZE, currentPage, pageCount, pagedRows,
-        SAVE_DEBOUNCE_MS, statePath,
-        STATUS_LABELS, STATUS_FILTER_OPTIONS,
-    };
-});
+            root, bucket, init,
+            rows, stateRows, statusFilter, filterStatuses, filterManuallyDone, filterIssues, searchText, status, loading, useOriginalDefault,
+            entryFor,
+            loadState, loadRows, scheduleSave, flushSave, onTextEdit, setStatus, saveTimer,
+            visibleRows, PAGE_SIZE, currentPage, pageCount, pagedRows,
+            SAVE_DEBOUNCE_MS, statePath,
+            STATUS_LABELS, STATUS_FILTER_OPTIONS,
+            STATUS_TOGGLE_OPTIONS, TRISTATE_FILTERS,
+            toggleStatus, cycleManuallyDone, cycleIssues, clearFilters, hasActiveFilters,
+        };
+    });

@@ -14,6 +14,7 @@ import LineHistoryDialog from "../shared/LineHistoryDialog.vue";
 import RoleInfoPopover from "../shared/RoleInfoPopover.vue";
 import WaveformCanvas from "./WaveformCanvas.vue";
 import TranslationSimilarityCompact from "../shared/TranslationSimilarityCompact.vue";
+import RowFilterBar from "../shared/RowFilterBar.vue";
 import { useTextareaAutoGrow } from "../shared/textarea_autogrow.js";
 import { insertStressMark } from "../shared/stress_mark.js";
 
@@ -83,6 +84,10 @@ Object.assign(ctx, {
   visibleRows: voDubRefs.visibleRows,
   pageCount: voDubRefs.pageCount,
   pagedRows: voDubRefs.pagedRows,
+  filterStatuses: voDubRefs.filterStatuses,
+  filterManuallyDone: voDubRefs.filterManuallyDone,
+  filterIssues: voDubRefs.filterIssues,
+  hasActiveFilters: voDubRefs.hasActiveFilters,
   // reactive — напрямую
   stateRows: voDub.stateRows,
   // функции
@@ -94,11 +99,17 @@ Object.assign(ctx, {
   onTextEdit: voDub.onTextEdit,
   setStatus: voDub.setStatus,
   statePath: voDub.statePath,
+  toggleStatus: voDub.toggleStatus,
+  cycleManuallyDone: voDub.cycleManuallyDone,
+  cycleIssues: voDub.cycleIssues,
+  clearFilters: voDub.clearFilters,
   // константы
   SAVE_DEBOUNCE_MS: voDub.SAVE_DEBOUNCE_MS,
   PAGE_SIZE: voDub.PAGE_SIZE,
   STATUS_LABELS: voDub.STATUS_LABELS,
   STATUS_FILTER_OPTIONS: voDub.STATUS_FILTER_OPTIONS,
+  STATUS_TOGGLE_OPTIONS: voDub.STATUS_TOGGLE_OPTIONS,
+  TRISTATE_FILTERS: voDub.TRISTATE_FILTERS,
 });
 
 // Остальные composables: без изменений
@@ -116,6 +127,9 @@ const {
   entryFor, loadState, loadRows, scheduleSave, flushSave, onTextEdit, setStatus,
   visibleRows, PAGE_SIZE, currentPage, pageCount, pagedRows,
   STATUS_LABELS, STATUS_FILTER_OPTIONS, saveTimer,
+  filterStatuses, filterManuallyDone, filterIssues, hasActiveFilters,
+  toggleStatus, cycleManuallyDone, cycleIssues, clearFilters,
+  STATUS_TOGGLE_OPTIONS, TRISTATE_FILTERS,
 
   // history
   historyVisible, historyRow, historyVersions, historyChosenVersion,
@@ -177,13 +191,21 @@ watch(visible, (v) => { if (!v) close(); });
 <template>
   <div class="fl-vo-dub-line-editor-content">
     <StickyPanel class="vo-dub-editor-controls">
-      <div class="vo-dub-filters">
-        <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search"/>
-        <Dropdown v-model="statusFilter" :options="STATUS_FILTER_OPTIONS" option-label="label" option-value="value" class="vo-dub-status-filter"/>
-        <Button icon="pi pi-refresh" text size="small" title="Re-scan this bucket" @click="loadRows"/>
-        <span class="vo-dub-editor-status">{{ loading ? "Loading..." : status }}</span>
-        <Button icon="pi pi-times" text size="small" title="Close" @click="visible = false"/>
-      </div>
+          <div class="vo-dub-filters">
+            <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search"/>
+            <RowFilterBar
+              :statusOptions="STATUS_TOGGLE_OPTIONS"
+              :selectedStatuses="filterStatuses"
+              :tristates="TRISTATE_FILTERS"
+              :tristateValues="{ manuallyDone: filterManuallyDone, issues: filterIssues }"
+              :hasActive="hasActiveFilters"
+              @toggle-status="toggleStatus"
+              @cycle-tristate="(key) => { if (key === 'manuallyDone') cycleManuallyDone(); else if (key === 'issues') cycleIssues(); }"
+              @clear="clearFilters"
+            />
+            <Button icon="pi pi-refresh" text size="small" title="Re-scan this bucket" @click="loadRows"/>
+            <span class="vo-dub-editor-status">{{ loading ? "Loading..." : status }}</span>
+          </div>
 
       <div class="actions-row">
         <div class="vo-dub-pager-inline">

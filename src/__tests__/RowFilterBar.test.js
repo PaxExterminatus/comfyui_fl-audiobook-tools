@@ -91,6 +91,28 @@ describe("RowFilterBar", () => {
         expect(btn.text()).toBe("Done (manual)");
     });
 
+    it("a stateLabels entry replaces both the label and the mark for that state", () => {
+        const named = [
+            { key: "manuallyDone", label: "Done (manual)", stateLabels: { without: "Not done" } },
+            { key: "issues", label: "⚠ Issues" },
+        ];
+
+        const without = createWrapper({
+            tristates: named,
+            tristateValues: { manuallyDone: "without", issues: "any" },
+        });
+        const btn = without.find('[data-tristate="manuallyDone"]');
+        expect(btn.attributes("data-state")).toBe("without");
+        expect(btn.text()).toBe("Not done");
+
+        // States the map says nothing about keep the plain label plus its mark.
+        const only = createWrapper({
+            tristates: named,
+            tristateValues: { manuallyDone: "only", issues: "any" },
+        });
+        expect(only.find('[data-tristate="manuallyDone"]').text()).toBe("Done (manual) ✓");
+    });
+
     it("emits cycle-tristate when a tri-state button is clicked", async () => {
         const wrapper = createWrapper();
         const btn = wrapper.find('[data-tristate="manuallyDone"]');

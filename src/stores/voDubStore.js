@@ -11,6 +11,8 @@ import {
 import {
     VO_DUB_STATUS_LABELS as STATUS_LABELS,
     VO_DUB_STATUS_FILTER_OPTIONS as STATUS_FILTER_OPTIONS,
+    VO_DUB_STATUS_TOGGLE_OPTIONS as STATUS_TOGGLE_OPTIONS,
+    VO_DUB_TRISTATE_FILTERS as TRISTATE_FILTERS,
 } from "../shared/row_status.js";
 
 /*
@@ -130,6 +132,52 @@ export const useVoDubStore = defineStore("voDub", () => {
     function scheduleSaveFilter() {
         saveFilterState();
     }
+
+    function toggleStatus(value) {
+        // Ignore empty string (dropdown's "all statuses" sentinel) and invalid statuses
+        if (!value || !STATUS_LABELS.hasOwnProperty(value)) {
+            return;
+        }
+        const newSet = new Set(filterStatuses.value);
+        if (newSet.has(value)) {
+            newSet.delete(value);
+        } else {
+            newSet.add(value);
+        }
+        filterStatuses.value = newSet;
+    }
+
+    function cycleManuallyDone() {
+        if (filterManuallyDone.value === "any") {
+            filterManuallyDone.value = "only";
+        } else if (filterManuallyDone.value === "only") {
+            filterManuallyDone.value = "without";
+        } else {
+            filterManuallyDone.value = "any";
+        }
+    }
+
+    function cycleIssues() {
+        if (filterIssues.value === "any") {
+            filterIssues.value = "only";
+        } else if (filterIssues.value === "only") {
+            filterIssues.value = "without";
+        } else {
+            filterIssues.value = "any";
+        }
+    }
+
+    function clearFilters() {
+        filterStatuses.value = new Set();
+        filterManuallyDone.value = "any";
+        filterIssues.value = "any";
+    }
+
+    const hasActiveFilters = computed(() =>
+        filterStatuses.value.size > 0 ||
+        filterManuallyDone.value !== "any" ||
+        filterIssues.value !== "any"
+    );
 
     function init({ root: r, bucket: b }) {
         root.value = r;

@@ -47,3 +47,17 @@ export const VO_DUB_STATUS_FILTER_OPTIONS = buildStatusFilterOptions(
     VO_DUB_STATUS_LABELS,
     VO_DUB_EXTRA_FILTERS,
 );
+
+export const VO_DUB_STATUS_TOGGLE_OPTIONS = [
+    { value: "no_text",           label: "No text" },
+    { value: "needs_translation", label: "Needs translation" },
+    { value: "not_started",       label: "Not started" },
+    { value: "stale",             label: "Stale" },
+    { value: "done",              label: "Ready" },
+    { value: "unsupported",       label: "Unsupported" },
+];
+
+export const VO_DUB_TRISTATE_FILTERS = [
+    { key: "manuallyDone", label: "Done (manual)" },
+    { key: "issues",       label: "\u26a0 Issues" },
+];

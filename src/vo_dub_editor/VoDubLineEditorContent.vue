@@ -176,12 +176,6 @@ watch(visible, (v) => { if (!v) close(); });
 
 <template>
   <div class="fl-vo-dub-line-editor-content">
-    <DialogHeader
-        :title="`VO Dub — ${bucket}`"
-        :width-presets="widthPresets" :set-width="setPanelWidth"
-        :font-size-decrease="decreaseFontSize" :font-size-increase="increaseFontSize"
-    />
-
     <StickyPanel class="vo-dub-editor-controls">
       <div class="vo-dub-filters">
         <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search"/>
@@ -216,35 +210,20 @@ watch(visible, (v) => { if (!v) close(); });
 
         <span class="actions-divider" />
 
-        <Button
-            label="´ Stress mark"
-            text
-            size="small"
-            title="Insert a stress mark at the cursor"
-            @mousedown.prevent="insertStressMark(setStatus)"
-        />
-        <Button
-            :label="sequentialPlayingKey ? 'Stop' : '▶ Play in order'"
-            text
-            size="small"
+        <Button label="´ Stress mark" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark(setStatus)"/>
+
+        <Button :label="sequentialPlayingKey ? 'Stop' : 'Play in order'"
             :icon="sequentialPlayingKey ? 'pi pi-stop-circle' : 'pi pi-play'"
-            title="Play through this page's RU takes in order"
             @click="toggleSequentialPlayback"
         />
-        <Button
-            :label="isRenderingAllPending ? 'Rendering...' : '🔁 Render pending'"
-            text
-            size="small"
+
+        <Button :label="isRenderingAllPending ? 'Rendering...' : 'Render pending'"
             :icon="isRenderingAllPending ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
             :disabled="!props.renderApi || isRenderingAllPending"
-            title="Render every not-started or stale row in this WHOLE bucket"
             @click="renderAllPending"
         />
 
-        <label
-            class="vo-dub-original-default-label"
-            title="Project-wide default for the per-row 'Use original as sample' checkbox."
-        >
+        <label title="Project-wide default for the per-row 'Use original as sample' checkbox.">
           <Checkbox v-model="useOriginalDefault" binary @change="onToggleUseOriginalDefault" />
           Original as sample
         </label>

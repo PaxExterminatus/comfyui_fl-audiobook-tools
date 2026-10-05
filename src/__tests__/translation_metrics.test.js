@@ -24,7 +24,7 @@ describe("computeTranslationScores", () => {
             expect.objectContaining({ key: "lexicalDiversity" }),
             expect.objectContaining({ key: "pauseDensity" }),
         ]);
-        expect(byKey(scores, "syllableRatio").label).toBe("Слоговая ёмкость строки");
+        expect(byKey(scores, "syllableRatio").label).toBe("Акцентно-ритмическое соответствие (CosyVoice 3)");
         expect(byKey(scores, "acousticTexture").label).toBe("Звуковая/фонетическая согласованность");
         expect(byKey(scores, "edgeParity").label).toBe("Интонационно-краевые маркеры");
         expect(byKey(scores, "lexicalDiversity").label).toBe("Лексическое разнообразие (TTR)");
@@ -38,8 +38,12 @@ describe("computeTranslationScores", () => {
     });
 
     it("identical EN/EN text: edges, TTR and pauses are 100; syllables/sounds reflect EN-only vowels", () => {
-        // "The quick brown fox" has 5 EN syllable groups vs 0 RU vowel letters
-        // -> delta 1 -> 100 * exp(-2) -> 13.5
+        // syllableRatio is now 60% stress peaks + 40% TTS length corridor, not
+        // the old exp(-2*delta) curve, so the expected value changed with it.
+        // "The quick brown fox": 0 RU vowels against 5 EN syllable groups ->
+        // ratio 0, below MIN_SAFE_K 0.90 -> corridor 100 - 90 = 10.
+        // Stress: 3 of 4 words count (the EN stop list drops "The", the RU one
+        // does not) -> 75. Total 75*0.6 + 10*0.4 = 49.
         // sound-class: EN vowel prop 5/16 vs RU 0/16, EN sib x 1/16 -> soundScore 81.25, interj 100 -> 90.6
         const scores = computeTranslationScores("The quick brown fox", "The quick brown fox");
 
@@ -47,7 +51,7 @@ describe("computeTranslationScores", () => {
         expect(byKey(scores, "edgeParity").score).toBe(100);
         expect(byKey(scores, "lexicalDiversity").score).toBe(100); // <7 words -> TTR gate
         expect(byKey(scores, "pauseDensity").score).toBe(100);
-        expect(byKey(scores, "syllableRatio").score).toBe(13.5);
+        expect(byKey(scores, "syllableRatio").score).toBe(49);
     });
 
     it("a short original (<7 words) gates lexical diversity to 100", () => {
@@ -92,8 +96,10 @@ describe("computeTranslationScores", () => {
         expect(byKey(scores, "edgeParity").score).toBe(100);
         expect(byKey(scores, "lexicalDiversity").score).toBe(100);
         expect(byKey(scores, "pauseDensity").score).toBe(100);
-        // 10 EN syllable groups vs 13 RU vowels -> delta 0.3 -> 100 * exp(-0.6) -> 54.9
-        expect(byKey(scores, "syllableRatio").score).toBe(54.9);
+        // 10 EN syllable groups vs 13 RU vowels -> ratio 1.3, inside the 0.90..1.35
+        // TTS corridor -> corridor 100. Stress 5 of 6 -> 83.3.
+        // Total 83.3*0.6 + 100*0.4 = 90.
+        expect(byKey(scores, "syllableRatio").score).toBe(90);
         expect(byKey(scores, "acousticTexture").score).toBe(95.6);
     });
 

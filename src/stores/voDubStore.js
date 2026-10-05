@@ -8,30 +8,21 @@ import {
     SCRIPT_EDITOR_API as FILE_API,
     VO_DUB_API,
 } from "../../web/fl_common.js";
+import {
+    VO_DUB_STATUS_LABELS as STATUS_LABELS,
+    VO_DUB_STATUS_FILTER_OPTIONS as STATUS_FILTER_OPTIONS,
+} from "../shared/row_status.js";
+
+/*
+ Re-exported so the vocabulary is reachable without instantiating the store
+ (a Pinia instance just to read two constants is a lot of ceremony). Both
+ names still come out of the store's own return below as well, which is what
+ VoDubLineEditorContent.vue uses -- these are the same objects, not copies.
+*/
+export { STATUS_LABELS, STATUS_FILTER_OPTIONS };
 
 const SAVE_DEBOUNCE_MS = 600;
 const PAGE_SIZE = 50;
-
-const STATUS_LABELS = {
-    "": "All statuses",
-    no_text: "No source text",
-    needs_translation: "Needs translation",
-    not_started: "Not started",
-    stale: "Stale",
-    done: "Ready",
-    unsupported: "Unsupported (multi-channel)",
-};
-
-const EXTRA_FILTERS = [
-    { value: "not_done",      label: "Not done" },
-    { value: "manually_done", label: "Done (manual)" },
-    { value: "issues",        label: "⚠ Issues only" },
-];
-
-const STATUS_FILTER_OPTIONS = [
-    ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
-    ...EXTRA_FILTERS,
-];
 
 export const useVoDubStore = defineStore("voDub", () => {
     const root = ref("");

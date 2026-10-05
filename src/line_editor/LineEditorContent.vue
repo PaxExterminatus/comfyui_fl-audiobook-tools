@@ -215,6 +215,20 @@ provide("lineRowApi", {
   canUndoInstruct:     (row) => row.__prevInstruct !== undefined,
   undoInstructTitle:   (row) => undoInstructTitle(row),
   undoInstruct:        (row) => undoInstruct(row),
+  /*
+   LineRowEditor.vue calls these two WITHOUT optional chaining (its lines
+   112-113, unlike the audio-url pair just below them), so omitting them here
+   crashed the editor outright: "api.canApplyInstruct is not a function".
+   VO Dub's useVoDubRowApi.js supplied both and this side did not -- the two
+   implementations of one shared contract had drifted apart.
+  */
+  canApplyInstruct:    (row) => sameRoleCount(row) > 0,
+  applyInstructTitle:  (row) => {
+    const count = sameRoleCount(row);
+    return count > 0
+      ? `Apply this instruct to every other "${(row.speaker || "").trim()}" row in this script (${count})`
+      : "No other rows in this script use this role";
+  },
   applyInstructToSameRole: (row) => applyInstructToSameRole(row),
   instructNoteFor:     (row) => instructNoteFor(row),
   openInstructPicker:  (row) => openInstructPicker(row),

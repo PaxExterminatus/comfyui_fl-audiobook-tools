@@ -1,7 +1,6 @@
 /**
  * useVoDubRowApi — контракт для LineRowEditor через inject.
  */
-
 import { provide } from "vue";
 
 export function useVoDubRowApi(ctx) {
@@ -13,7 +12,6 @@ export function useVoDubRowApi(ctx) {
         fontSizePx,
         autoGrow,
         setTextareaRef,
-        // audio URL + cacheBust — для диалога редактирования тегов
         audioUrl,
         cacheBust,
         entryFor,
@@ -70,13 +68,8 @@ export function useVoDubRowApi(ctx) {
         instructNoteFor:         (row) => instructNoteFor(row),
         openInstructPicker:      (row) => openInstructPicker(row),
 
-        // ── URL аудио для диалога редактирования тегов ──────────────────
-        // original — EN-эталон (audio_en/<audio_key>.wav)
-        // current — RU-тейк (audio_ru/<audio_key>.wav) с кэш-бастом
-        getOriginalAudioUrl: (row) => audioUrl
-            ? audioUrl("audio_en", row.audio_key)
-            : "",
-        getCurrentAudioUrl: (row) => audioUrl
+        getOriginalAudioUrl: (row) => audioUrl ? audioUrl("audio_en", row.audio_key) : "",
+        getCurrentAudioUrl:  (row) => audioUrl
             ? audioUrl("audio_ru", row.audio_key, cacheBust?.[row.audio_key])
             : "",
     });

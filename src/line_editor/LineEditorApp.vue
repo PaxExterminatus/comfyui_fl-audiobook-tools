@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch } from "vue";
-import Dialog from "primevue/dialog";
 import LineEditorContent from "./LineEditorContent.vue";
 
 const props = defineProps({

@@ -9,6 +9,7 @@
 */
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
+import { registerPrimeVueComponents } from "../shared/primevue_components.js";
 import VoDubBrowserPanel from "./VoDubBrowserPanel.vue";
 import VoDubLineEditor from "./VoDubLineEditor.vue";
 import DubRolesEditorApp from "./DubRolesEditorApp.vue";
@@ -41,6 +42,8 @@ export function mountVoDubBrowserPanel({ node, projectRootWidget, openBrowseDial
     });
     app.use(pinia);
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing plugin.
+    registerPrimeVueComponents(app);
     app.mount(container);
 
     return { element: container, unmount: () => app.unmount() };
@@ -69,6 +72,8 @@ export function openVoDubLineEditor({ root, bucket, renderApi }) {
     });
     app.use(pinia);
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing plugin.
+    registerPrimeVueComponents(app);
     app.mount(container);
 }
 
@@ -91,5 +96,7 @@ export function openDubRolesEditor({ root }) {
     });
     app.use(pinia);
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing plugin.
+    registerPrimeVueComponents(app);
     app.mount(container);
 }

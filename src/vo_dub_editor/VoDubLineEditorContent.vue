@@ -3,10 +3,6 @@
  Full-screen-ish editor for one episode bucket of a VO dub project.
 */
 import { ref, watch, onMounted } from "vue";
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
-import Dropdown from "primevue/dropdown";
-import Checkbox from "primevue/checkbox";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";

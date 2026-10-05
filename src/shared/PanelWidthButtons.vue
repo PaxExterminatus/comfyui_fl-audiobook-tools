@@ -5,7 +5,6 @@
  preset numbers differed) between Roles Editor and Line Editor before
  this existed.
 */
-import Button from "primevue/button";
 
 defineProps({
     presets: { type: Array, required: true }, // px width buttons to show, in order

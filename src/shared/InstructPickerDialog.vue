@@ -11,9 +11,6 @@
  caller (LineEditorApp.vue) decide what to do with it (stash the old
  value, apply the new one).
 */
-import Dialog from "primevue/dialog";
-import Card from "primevue/card";
-import Message from "primevue/message";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";

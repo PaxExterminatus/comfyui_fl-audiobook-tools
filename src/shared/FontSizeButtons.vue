@@ -6,7 +6,6 @@
  text it reads a lot of, the same way PanelWidthButtons already does for
  dialog width.
 */
-import Button from "primevue/button";
 
 defineProps({
     decrease: { type: Function, required: true },

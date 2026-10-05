@@ -6,7 +6,6 @@
  src/roles_editor/main.js's openRolesEditor mounts its own dialog: a fresh
  container appended to document.body, unmounted on close).
 */
-import Dialog from "primevue/dialog";
 import MarkdownReader from "./MarkdownReader.vue";
 
 defineProps({

@@ -15,7 +15,6 @@
  whether this panel is even mounted.
 */
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
-import Button from "primevue/button";
 import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
 
 const props = defineProps({

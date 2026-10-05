@@ -25,10 +25,6 @@
  field at all).
 */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
-import Dialog from "primevue/dialog";
-import Message from "primevue/message";
-import InputText from "primevue/inputtext";
-import Button from "primevue/button";
 import SpeakerPickerDialog from "../line_editor/SpeakerPickerDialog.vue";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";

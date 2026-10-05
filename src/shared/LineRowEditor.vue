@@ -12,11 +12,6 @@
  own `.line-body`-equivalent wrapper, not nest inside one extra div.
 */
 import { inject, ref } from "vue";
-import InputGroup from "primevue/inputgroup";
-import InputGroupAddon from "primevue/inputgroupaddon";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import Button from "primevue/button";
 import RoleDropdown from "./RoleDropdown.vue";
 import TextTagEditorDialog from "./TextTagEditorDialog.vue";
 

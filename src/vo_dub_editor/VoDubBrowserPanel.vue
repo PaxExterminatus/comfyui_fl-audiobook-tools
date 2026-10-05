@@ -10,9 +10,6 @@
  Clicking a bucket opens VoDubLineEditor.vue for it.
 */
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
-import InlineMessage from "primevue/inlinemessage";
 import { VO_DUB_API } from "../../web/fl_common.js";
 
 const props = defineProps({

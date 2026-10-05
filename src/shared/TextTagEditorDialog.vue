@@ -9,10 +9,6 @@
  *   🔁 Loop RU    — RU-тейк в цикле
  */
 import { ref, watch, nextTick, computed } from "vue";
-import Dialog from "primevue/dialog";
-import Button from "primevue/button";
-import ButtonGroup from "primevue/buttongroup";
-import Textarea from "primevue/textarea";
 
 const props = defineProps({
   visible: { type: Boolean, required: true },

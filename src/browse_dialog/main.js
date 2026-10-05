@@ -8,6 +8,7 @@
 */
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
+import { registerPrimeVueComponents } from "../shared/primevue_components.js";
 import BrowseDialogApp from "./BrowseDialogApp.vue";
 import { ensureStylesLinked } from "../shared/styles_link.js";
 
@@ -35,5 +36,7 @@ export function openBrowseDialog({ mode = "folder", startPath = "", ext = "", on
         },
     });
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components used throughout the application.
+    registerPrimeVueComponents(app);
     app.mount(container);
 }

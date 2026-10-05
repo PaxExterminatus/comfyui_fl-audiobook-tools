@@ -1,7 +1,7 @@
 /**
  * voDubStore — Pinia-стор базового состояния VO Dub редактора.
  */
-import { ref, reactive, computed, watch } from "vue";
+import { ref, reactive, computed, watch, toRaw } from "vue";
 import { defineStore } from "pinia";
 import {
     joinPath,
@@ -31,12 +31,57 @@ export const useVoDubStore = defineStore("voDub", () => {
     const rows = ref([]);
     const stateRows = reactive({});
 
-    const statusFilter = ref("");
+    const filterStatuses = ref(new Set());
+    const filterManuallyDone = ref("any");
+    const filterIssues = ref("any");
+    /*
+     Deliberately NOT persisted alongside the filter state: a search term
+     restored from a previous session with no visible sign of it hides rows
+     for no apparent reason. The filter buttons at least show their own state.
+    */
     const searchText = ref("");
     const status = ref("");
+    // Backwards compatibility property for VoDubLineEditorContent.vue and existing references
+    const statusFilter = computed({
+        get() {
+            if (filterStatuses.value.size === 1) {
+                return Array.from(filterStatuses.value)[0];
+            }
+            if (filterManuallyDone.value === "only") return "manually_done";
+            if (filterManuallyDone.value === "without") return "not_done";
+            if (filterIssues.value === "only") return "issues";
+            return "";
+        },
+        set(val) {
+            if (!val) {
+                filterStatuses.value = new Set();
+                filterManuallyDone.value = "any";
+                filterIssues.value = "any";
+            } else if (val === "manually_done") {
+                filterStatuses.value = new Set();
+                filterManuallyDone.value = "only";
+                filterIssues.value = "any";
+            } else if (val === "not_done") {
+                filterStatuses.value = new Set();
+                filterManuallyDone.value = "without";
+                filterIssues.value = "any";
+            } else if (val === "issues") {
+                filterStatuses.value = new Set();
+                filterManuallyDone.value = "any";
+                filterIssues.value = "only";
+            } else {
+                filterStatuses.value = new Set([val]);
+                filterManuallyDone.value = "any";
+                filterIssues.value = "any";
+            }
+            scheduleSaveFilter();
+        }
+    });
     const loading = ref(false);
     const useOriginalDefault = ref(false);
 
+    // snapshot of Russian text for search, indexed by audio_key
+    const searchSnapshot = ref({});
     const saveTimer = ref(null);
     const currentPage = ref(0);
 
@@ -44,10 +89,55 @@ export const useVoDubStore = defineStore("voDub", () => {
         return joinPath(root.value, "_dub_state.json");
     }
 
+    const FILTER_STORAGE_KEY = "FL_VoDub.filterState";
+
+    function loadFilterState() {
+        try {
+            const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === "object") {
+                if (Array.isArray(parsed.statuses)) {
+                    const validStatuses = Object.keys(STATUS_LABELS);
+                    const filtered = parsed.statuses.filter(s => validStatuses.includes(s));
+                    filterStatuses.value = new Set(filtered);
+                }
+                if (["any", "only", "without"].includes(parsed.manuallyDone)) {
+                    filterManuallyDone.value = parsed.manuallyDone;
+                }
+                if (["any", "only", "without"].includes(parsed.issues)) {
+                    filterIssues.value = parsed.issues;
+                }
+            }
+        } catch (e) {
+            // ignore corrupt JSON or throwing storage
+        }
+    }
+
+    function saveFilterState() {
+        try {
+            const state = {
+                statuses: Array.from(filterStatuses.value),
+                manuallyDone: filterManuallyDone.value,
+                issues: filterIssues.value,
+            };
+            localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            // ignore throwing storage
+        }
+    }
+
+    function scheduleSaveFilter() {
+        saveFilterState();
+    }
+
     function init({ root: r, bucket: b }) {
         root.value = r;
         bucket.value = b;
-        statusFilter.value = "";
+        filterStatuses.value = new Set();
+        filterManuallyDone.value = "any";
+        filterIssues.value = "any";
+        loadFilterState();
         searchText.value = "";
         currentPage.value = 0;
     }
@@ -71,6 +161,7 @@ export const useVoDubStore = defineStore("voDub", () => {
         useOriginalDefault.value = Boolean(parsed.use_original_default);
     }
 
+    // Load rows and then rebuild the snapshot of searchable Russian text.
     async function loadRows() {
         if (!root.value) return;
         loading.value = true;
@@ -99,6 +190,8 @@ export const useVoDubStore = defineStore("voDub", () => {
             }
 
             status.value = `${rows.value.length} row(s) in ${bucket.value}`;
+            // Snapshot the Russian text for searching after rows have been loaded.
+            rebuildSearchSnapshot();
         } catch (e) {
             status.value = `Couldn't load: ${e}`;
         } finally {
@@ -148,25 +241,50 @@ export const useVoDubStore = defineStore("voDub", () => {
     // ── фильтр + поиск + пагинация ───────────────────────────────────────
     const visibleRows = computed(() => {
         const needle = searchText.value.trim().toLowerCase();
-        const sf = statusFilter.value;
+        const statuses = filterStatuses.value;
+        const mDone = filterManuallyDone.value;
+        const issues = filterIssues.value;
+        // Use the cached snapshot for Russian text to avoid recomputing on every keystroke.
+        const snapshot = searchSnapshot.value;
+        /*
+         toRaw BEFORE the key lookup, not after. Reading stateRows[key] through
+         the reactive proxy registers a dependency on that entry, and calling
+         toRaw on the result afterwards does not undo it -- the tracking has
+         already happened. That was the whole bug: one keystroke invalidated
+         this computed, re-filtered all ~617 rows and re-rendered the page.
+        */
+        const stateRaw = toRaw(stateRows);
         return rows.value.filter((row) => {
-            const entry = stateRows[row.audio_key];
+            const entryRaw = stateRaw[row.audio_key] || null;
+            const isManuallyDone = Boolean(entryRaw && entryRaw.manually_done);
+            const isIssue = Boolean(row.manually_issue);
 
-            if (sf === "issues") {
-                if (!row.manually_issue) return false;
-            } else if (sf === "manually_done") {
-                if (!entry || !entry.manually_done) return false;
-            } else if (sf === "not_done") {
-                // Not done = всё, кроме unsupported и строк с РУЧНОЙ отметкой Done.
-                // Auto-Ready (status=done) остаётся в списке — человек ещё не подтвердил.
-                if (row.status === "unsupported") return false;
-                if (entry && entry.manually_done) return false;
-            } else if (sf && row.status !== sf) {
+            // Status group: OR within the group. EMPTY set means every status passes.
+            if (statuses.size > 0 && !statuses.has(row.status)) {
                 return false;
             }
 
+            // ManuallyDone tri-state
+            if (mDone === "only") {
+                if (!isManuallyDone) return false;
+            } else if (mDone === "without") {
+                if (isManuallyDone) return false;
+                // When manuallyDone is "without", unsupported rows stay hidden unless the user has explicitly selected "unsupported" in the status group.
+                if (row.status === "unsupported" && !statuses.has("unsupported")) {
+                    return false;
+                }
+            }
+
+            // Issues tri-state
+            if (issues === "only") {
+                if (!isIssue) return false;
+            } else if (issues === "without") {
+                if (isIssue) return false;
+            }
+
             if (!needle) return true;
-            const haystack = `${row.audio_key} ${row.speaker_tag} ${row.english} ${(entry && entry.russian_text) || row.russian}`.toLowerCase();
+            const russianText = snapshot[row.audio_key] || row.russian;
+            const haystack = `${row.audio_key} ${row.speaker_tag} ${row.english} ${russianText}`.toLowerCase();
             return haystack.includes(needle);
         });
     });
@@ -180,14 +298,19 @@ export const useVoDubStore = defineStore("voDub", () => {
         return visibleRows.value.slice(start, start + PAGE_SIZE);
     });
 
-    watch(statusFilter, () => {
+    watch([filterStatuses, filterManuallyDone, filterIssues], () => {
         currentPage.value = 0;
         loadRows();
+        saveFilterState();
     });
 
+    // When search text changes, rebuild the snapshot (so new changes to stateRows are considered).
     watch(searchText, () => {
+        // Rebuild snapshot to ensure latest russian_text values are used when a new search is performed.
+        rebuildSearchSnapshot();
         currentPage.value = 0;
     });
+
 
     watch(visibleRows, () => {
         if (currentPage.value > pageCount.value - 1) {
@@ -197,7 +320,7 @@ export const useVoDubStore = defineStore("voDub", () => {
 
     return {
         root, bucket, init,
-        rows, stateRows, statusFilter, searchText, status, loading, useOriginalDefault,
+        rows, stateRows, statusFilter, filterStatuses, filterManuallyDone, filterIssues, searchText, status, loading, useOriginalDefault,
         entryFor,
         loadState, loadRows, scheduleSave, flushSave, onTextEdit, setStatus, saveTimer,
         visibleRows, PAGE_SIZE, currentPage, pageCount, pagedRows,

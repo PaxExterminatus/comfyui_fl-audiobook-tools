@@ -9,6 +9,7 @@
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
+import { registerPrimeVueComponents } from "../shared/primevue_components.js";
 import LineEditorApp from "./LineEditorApp.vue";
 import { ensureStylesLinked } from "../shared/styles_link.js";
 
@@ -38,6 +39,8 @@ export function openLineEditor({ folder, filename, suffix = "", checkedApi, revo
         },
     });
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing the PrimeVue plugin.
+    registerPrimeVueComponents(app);
     app.use(ConfirmationService);
     app.mount(container);
 }

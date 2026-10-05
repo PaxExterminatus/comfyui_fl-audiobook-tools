@@ -5,11 +5,6 @@
  Длительность и % отклонения от EN берутся из того же composable.
 */
 import { ref, computed, watch } from "vue";
-import Dialog from "primevue/dialog";
-import Card from "primevue/card";
-import Button from "primevue/button";
-import ButtonGroup from "primevue/buttongroup";
-import Message from "primevue/message";
 import { usePanelWidth } from "./panel_width.js";
 import { useFontSize } from "./font_size.js";
 import DialogHeader from "./DialogHeader.vue";

@@ -7,6 +7,7 @@
 */
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
+import { registerPrimeVueComponents } from "../shared/primevue_components.js";
 import ScriptLibraryPanel from "./ScriptLibraryPanel.vue";
 import { ensureStylesLinked } from "../shared/styles_link.js";
 
@@ -41,6 +42,8 @@ export function mountScriptLibraryPanel({ node, folderWidget, actWidget, filterW
         queueLineRevoice,
     });
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing the plugin.
+    registerPrimeVueComponents(app);
     app.mount(container);
 
     return { element: container, unmount: () => app.unmount() };

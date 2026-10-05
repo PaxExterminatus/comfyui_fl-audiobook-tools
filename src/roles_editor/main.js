@@ -9,6 +9,7 @@
 */
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
+import { registerPrimeVueComponents } from "../shared/primevue_components.js";
 import RolesEditorApp from "./RolesEditorApp.vue";
 import { ensureStylesLinked } from "../shared/styles_link.js";
 
@@ -32,5 +33,7 @@ export function openRolesEditor({ root, suffix = "" }) {
         },
     });
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing the PrimeVue plugin.
+    registerPrimeVueComponents(app);
     app.mount(container);
 }

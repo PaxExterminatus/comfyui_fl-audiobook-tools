@@ -8,10 +8,6 @@
  it -- same contract as InstructPickerDialog's own `select` emit.
 */
 import { ref } from "vue";
-import Dialog from "primevue/dialog";
-import Card from "primevue/card";
-import Button from "primevue/button";
-import Message from "primevue/message";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import { speakerAccent, speakerInitials } from "../shared/speaker_accent.js";

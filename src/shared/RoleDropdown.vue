@@ -10,7 +10,6 @@
  own role resolution already does the same: `role_map.get(value,
  value)`, never an error for an unrecognized value).
 */
-import Dropdown from "primevue/dropdown";
 
 const props = defineProps({
     modelValue: { type: String, default: "" },

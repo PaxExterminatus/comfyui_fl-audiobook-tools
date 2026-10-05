@@ -1,12 +1,6 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick, provide } from "vue";
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import InputGroup from "primevue/inputgroup";
-import InputGroupAddon from "primevue/inputgroupaddon";
 import { useConfirm } from "primevue/useconfirm";
-import ConfirmDialog from "primevue/confirmdialog";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";

@@ -10,33 +10,37 @@ import {
 import HelpDialog from "../src/shared/HelpDialog.vue";
 import { createApp } from "vue";
 import PrimeVue from "primevue/config";
+import { registerPrimeVueComponents } from "../src/shared/primevue_components.js";
 import { ensureStylesLinked } from "../src/shared/styles_link.js";
 import { SCRIPT_LIBRARY_API, VO_DUB_API } from "../web/fl_common.js";
 import { pinia } from "../src/shared/pinia.js";
+import { makeRootStore } from "./root_store.js";
 
 const voDubRootInput = document.getElementById("vo-dub-root-input");
-const storedRoot = localStorage.getItem("FL_Electron.voDubRoot") || "";
-voDubRootInput.value = storedRoot;
-// If still empty, try to use a default from environment (set by electron main) or fallback to current directory
-if (!voDubRootInput.value) {
-    // Attempt to read from a global set by electron main (optional)
-    if (window.FL_ELECTRON_VODUB_ROOT) {
-        voDubRootInput.value = window.FL_ELECTRON_VODUB_ROOT;
-    } else {
-        // Fallback to the directory where this electron app is launched (process resources)
-        // We cannot access node fs here, so use a sensible default: ask user via alert?
-        // For now set to empty and rely on user to set via UI.
-        console.warn("[electron-ui] VO-Dub root is empty; please set it via the input above.");
-    }
+
+/*
+ One input, two projects. Voicing works on a folder of act/script .txt files;
+ dubbing works on a folder holding vo_dataset.csv. They are never the same
+ directory, so a single remembered path meant switching mode silently pointed
+ the new mode at the other one's folder. The store keeps one path per mode and
+ migrates the old single key -- see electron-ui/root_store.js.
+*/
+const rootStore = makeRootStore(localStorage);
+
+function syncRootInput() {
+    const mode = rootStore.getCurrentMode();
+    voDubRootInput.value = rootStore.getCurrentModeRoot();
+    voDubRootInput.placeholder = mode === "dubbing"
+        ? "Dub project folder (holds vo_dataset.csv)"
+        : "Voicing project folder (holds act/script .txt files)";
 }
+
 voDubRootInput.addEventListener("input", (e) => {
-    localStorage.setItem("FL_Electron.voDubRoot", e.target.value);
+    rootStore.setCurrentModeRoot(e.target.value);
 });
 
 function getProjectRoot() {
-    const root = voDubRootInput.value;
-    console.log("[electron-ui] Project root:", root);
-    return root;
+    return rootStore.getCurrentModeRoot();
 }
 
 function makeWidget(initial = "") {
@@ -142,6 +146,13 @@ const helpBtn = document.getElementById("help-btn");
 
 function selectMode(mode) {
     currentMode = mode;
+    /*
+     Swap the input to this mode's own folder BEFORE the panel is built: the
+     render functions below call getProjectRoot(), so doing it afterwards
+     would hand the panel the previous mode's path.
+    */
+    rootStore.setCurrentMode(mode);
+    syncRootInput();
     voicingBtn.classList.toggle("active", mode === "voicing");
     dubbingBtn.classList.toggle("active", mode === "dubbing");
     MODES[mode].render();
@@ -170,6 +181,8 @@ function openHelp(componentName) {
     });
     app.use(pinia);
     app.use(PrimeVue, { ripple: true });
+    // Register global PrimeVue components after installing the PrimeVue plugin.
+    registerPrimeVueComponents(app);
     app.mount(container);
 }
 

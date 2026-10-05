@@ -1,13 +1,5 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import Dialog from "primevue/dialog";
-import Button from "primevue/button";
-import Dropdown from "primevue/dropdown";
-import InputSwitch from "primevue/inputswitch";
-import InputNumber from "primevue/inputnumber";
-import InputGroup from "primevue/inputgroup";
-import InputGroupAddon from "primevue/inputgroupaddon";
-import Fieldset from "primevue/fieldset";
 
 const props = defineProps({
   visible: { type: Boolean, required: true },

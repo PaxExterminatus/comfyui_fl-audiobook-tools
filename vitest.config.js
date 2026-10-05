@@ -23,5 +23,11 @@ export default defineConfig({
     test: {
         environment: "happy-dom",
         globals: false,
+        // Registers the PrimeVue components globally for every mount(), the
+        // same way the eight createApp sites do it for the real app. Without
+        // it a template referencing Button or InputText silently resolves to
+        // nothing here while working fine in the browser -- see
+        // vitest.setup.js.
+        setupFiles: ["./vitest.setup.js"],
     },
 });

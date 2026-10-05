@@ -1,9 +1,5 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
-import Card from "primevue/card";
-import Message from "primevue/message";
-import Dropdown from "primevue/dropdown";
-import Textarea from "primevue/textarea";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";

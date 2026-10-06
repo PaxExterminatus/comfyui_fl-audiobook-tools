@@ -4,8 +4,20 @@
     {
       "name": "dev-ui",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:ui"],
+      "runtimeArgs": [
+        "run",
+        "dev:ui"
+      ],
       "port": 5173
+    },
+    {
+      "name": "electron-ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:electron-ui"
+      ],
+      "port": 5199
     }
   ]
 }

@@ -81,7 +81,7 @@
                 gap: 8px;
                 margin-left: auto;
             }
-            #project-root-input {
+            #vo-dub-root-input {
                 background: #18181b;
                 border: 1px solid #444;
                 color: #eee;
@@ -106,23 +106,7 @@
         </style>
     </head>
     <body>
-        <div id="app-shell">
-            <div id="app-header">
-                <span id="app-title">FL Audiobook Tools</span>
-                <div id="mode-switcher">
-                    <button id="mode-voicing-btn" type="button">Озвучка</button>
-                    <button id="mode-dubbing-btn" type="button">Дубляж</button>
-                </div>
-                <button id="help-btn" type="button" title="Справка по текущему режиму">?</button>
-                <div id="project-root-container">
-                    <span style="font-size: 12px; color: #999;">VO-Dub Root:</span>
-                    <input type="text" id="vo-dub-root-input" placeholder="C:\Path\To\Project">
-                </div>
-            </div>
-            <div id="main-content">
-                <div id="panel-host"></div>
-            </div>
-        </div>
+        <div id="app"></div>
         <script type="module" src="./main.js"></script>
     </body>
 </html>

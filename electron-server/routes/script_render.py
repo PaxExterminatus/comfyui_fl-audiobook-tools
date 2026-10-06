@@ -21,7 +21,7 @@ DEFAULT_TAKE_COUNT = 3
 routes = web.RouteTableDef()
 
 
-@routes.post("/fl_cosyvoice3/render/line")
+@routes.post("/fl_cosyvoice3/script_library/render/line")
 async def fl_cosyvoice3_render_line(request):
     try:
         data = await request.json()

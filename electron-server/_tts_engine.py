@@ -1,7 +1,7 @@
 """
 Direct FL-CosyVoice3 invocation, no ComfyUI involved -- module form of
 tts_prototype.py's already-proven call sequence (saved-preset + instruct2),
-reusable by server.py's /fl_cosyvoice3/render/line route.
+reusable by server.py's /fl_cosyvoice3/script_library/render/line route.
 
 Nothing here imports torch/cosyvoice at module level, so this file stays
 importable even on a system Python without the ML stack -- the actual heavy

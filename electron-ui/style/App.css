@@ -1,0 +1,86 @@
+/* App.vue scoped styles - mirror the existing index.html styles for compatibility */
+#app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+#app-header {
+    flex: none;
+    padding: 10px 16px;
+    background: #202024;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+#app-title {
+    white-space: nowrap;
+}
+#mode-switcher {
+    display: flex;
+    gap: 4px;
+    background: #18181b;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 3px;
+}
+#mode-switcher button {
+    background: transparent;
+    color: #aaa;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+#mode-switcher button:hover {
+    color: #fff;
+}
+#mode-switcher button.active {
+    background: #34343a;
+    color: #fff;
+}
+#help-btn {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #444;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+}
+#help-btn:hover {
+    color: #fff;
+    border-color: #666;
+}
+#project-root-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+#vo-dub-root-input {
+    background: #18181b;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: 300px;
+    font-size: 12px;
+}
+#main-content {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
+    overflow: auto;
+    padding: 16px;
+    box-sizing: border-box;
+}

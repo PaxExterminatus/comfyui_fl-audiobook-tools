@@ -6,14 +6,18 @@
 */
 import VoDubBrowserPanel from "../src/vo_dub_editor/VoDubBrowserPanel.vue";
 import { openBrowseDialog } from "../src/browse_dialog/main.js";
-import { openVoDubLineEditor, openDubRolesEditor } from "../src/vo_dub_editor/main.js";
+import { useRouter } from "vue-router";
 import { renderApi, makeWidget } from "./apis.js";
 import { rootStore } from "./root_store_instance.js";
 
 const node = { properties: {}, setDirtyCanvas: () => {} };
 const projectRootWidget = makeWidget(rootStore.getCurrentModeRoot());
 
-const openLineEditorWithRender = (opts) => openVoDubLineEditor({ ...opts, renderApi });
+const router = useRouter();
+const openLineEditorWithRender = ({ root: r, bucket }) =>
+    router.push({ name: "dubbing-bucket", query: { root: r, bucket } });
+const openDubRolesEditor = ({ root: r }) =>
+    router.push({ name: "dubbing-roles", query: { root: r } });
 const queueVoDubRender = async (_node, opts) => renderApi.renderRow(opts);
 </script>
 

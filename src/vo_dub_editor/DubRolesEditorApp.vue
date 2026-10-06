@@ -37,6 +37,7 @@ import {
 const props = defineProps({
     root: { type: String, required: true },
     onClose: { type: Function, required: true },
+    inline: { type: Boolean, default: false },
 });
 
 const SAVE_DEBOUNCE_MS = 600;
@@ -295,7 +296,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Dialog
+    <component
+        :is="inline ? 'div' : 'Dialog'"
         v-model:visible="visible"
         :modal="false"
         :draggable="false"
@@ -304,7 +306,7 @@ onBeforeUnmount(() => {
         :style="{ width: panelWidthCss }"
         class="roles-dialog"
     >
-        <template #header>
+        <div class="roles-header-row">
             <DialogHeader
                 title="VO Dub Roles" :status="status"
                 :width-presets="widthPresets" :set-width="setPanelWidth"
@@ -320,7 +322,7 @@ onBeforeUnmount(() => {
                     />
                 </template>
             </DialogHeader>
-        </template>
+        </div>
 
         <Message v-if="!roleEntries.length" severity="info" :closable="false">
             No roles yet -- click "Seed from dataset" above to create one per distinct speaker tag.
@@ -369,7 +371,7 @@ onBeforeUnmount(() => {
                 </div>
             </div>
         </div>
-    </Dialog>
+    </component>
 
     <SpeakerPickerDialog
         v-model:visible="speakerPickerVisible"

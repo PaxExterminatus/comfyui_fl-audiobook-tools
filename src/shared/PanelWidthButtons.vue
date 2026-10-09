@@ -18,11 +18,10 @@ defineProps({
             v-for="px in presets"
             :key="px"
             :label="String(px)"
-            text size="small"
             :title="`Set editor width to ${px}px (capped to the window's width)`"
             @click="setWidth(px)"
         />
-        <Button label="100%" text size="small" title="Use the full available window width" @click="setWidth('full')" />
+        <Button label="100%" title="Use the full available window width" @click="setWidth('full')" />
     </div>
 </template>
 

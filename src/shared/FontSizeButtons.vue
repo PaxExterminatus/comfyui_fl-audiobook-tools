@@ -15,8 +15,8 @@ defineProps({
 
 <template>
     <div class="font-size-row">
-        <Button label="A−" text size="small" title="Decrease text size" @click="decrease" />
-        <Button label="A+" text size="small" title="Increase text size" @click="increase" />
+        <Button label="A−" title="Decrease text size" @click="decrease" />
+        <Button label="A+" title="Increase text size" @click="increase" />
     </div>
 </template>
 

@@ -485,7 +485,6 @@ onBeforeUnmount(() => {
             <Button
                 label="🎭 Roles"
                 title="Assign a real speaker preset to each role code (edits _roles.json)"
-                size="small"
                 outlined
                 class="tool-btn"
                 @click="openRoles"
@@ -493,7 +492,6 @@ onBeforeUnmount(() => {
             <Button
                 label="🔁 Re-voice pending"
                 title="Re-voice every line across the whole project marked as needing it (stale or never voiced)"
-                size="small"
                 outlined
                 class="tool-btn"
                 @click="revoiceAllPending"
@@ -501,9 +499,9 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="tools-row">
-            <Button label="☑ All" title="Check every script in every act (skips scripts marked ready)" size="small" outlined class="tool-btn" @click="selectAll" />
-            <Button label="☐ None" title="Uncheck every script" size="small" outlined class="tool-btn" @click="selectNone" />
-            <Button label="⇄ Invert" title="Flip every script's checked state (skips scripts marked ready)" size="small" outlined class="tool-btn" @click="invertSelection" />
+            <Button label="☑ All" title="Check every script in every act (skips scripts marked ready)" outlined class="tool-btn" @click="selectAll" />
+            <Button label="☐ None" title="Uncheck every script" outlined class="tool-btn" @click="selectNone" />
+            <Button label="⇄ Invert" title="Flip every script's checked state (skips scripts marked ready)" outlined class="tool-btn" @click="invertSelection" />
         </div>
 
         <div class="tree" :style="{ minHeight: `${MIN_TREE_HEIGHT}px` }">

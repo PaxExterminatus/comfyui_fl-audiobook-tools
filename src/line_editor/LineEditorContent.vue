@@ -298,7 +298,7 @@ onBeforeUnmount(() => {
               @ended="audioIsPlaying = false"
           />
           <Button
-              label="Delete audio" text size="small"
+              label="Delete audio"
               :disabled="deleteAudioDisabled"
               :title="isCurrentlyReady ? 'Delete the final file -- this also un-marks the script as done' : 'Delete the rendered audio for this script'"
               @click="deleteAudio"
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
           />
         </template>
 
-        <Button icon="pi pi-refresh" text size="small" title="Re-check _audio\ for this script's rendered audio" @click="loadAudio()" />
+        <Button icon="pi pi-refresh" title="Re-check _audio\ for this script's rendered audio" @click="loadAudio()" />
       </div>
       <div v-if="timingWarningVisible" class="timing-warning">⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер</div>
 
@@ -321,26 +321,24 @@ onBeforeUnmount(() => {
         />
         <Button
             :label="isCurrentlyReady ? 'Done ✓' : 'Done'"
-            size="small"
             :outlined="!isCurrentlyReady"
             :disabled="doneDisabled"
             :title="doneTitle"
             @click="toggleDone"
         />
         <div class="actions-divider" />
-        <Button label="´ Stress mark" text size="small" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark" />
-        <Button label="✂ Split line" text size="small" title="Split this line into two at the cursor" @mousedown.prevent="splitFocusedLine" />
-        <Button label="+ Add line" text size="small" title="Add a new empty line at the end of the script" @click="addLine" />
+        <Button label="´ Stress mark" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark" />
+        <Button label="✂ Split line" title="Split this line into two at the cursor" @mousedown.prevent="splitFocusedLine" />
+        <Button label="+ Add line" title="Add a new empty line at the end of the script" @click="addLine" />
         <Button
-            label="🔁 Re-voice pending"
-            text size="small"
+            label="Re-voice pending"
             :disabled="!revoiceApi || isCurrentlyReady || staleRowCount === 0 || isRevoicingStale"
             :title="revoiceStaleTitle"
             @click="revoiceStaleRows"
         />
         <div class="actions-divider" />
-        <Button label="◀ Prev" text size="small" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
-        <Button label="Next ▶" text size="small" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
+        <Button label="Prev" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
+        <Button label="Next" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
       </div>
     </StickyPanel>
 
@@ -365,7 +363,7 @@ onBeforeUnmount(() => {
           <template v-if="row.malformed">
             <div class="malformed-warn-line">
               <div class="malformed-warn">⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:</div>
-              <Button icon="pi pi-trash" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.raw)" />
+              <Button icon="pi pi-trash" title="Delete this line" @click="confirmDeleteRow(index, row.raw)" />
             </div>
             <Textarea
                 v-model="row.raw"
@@ -393,7 +391,6 @@ onBeforeUnmount(() => {
                   <Button
                       v-if="revoiceApi && !isCurrentlyReady"
                       class="revoice-btn"
-                      size="small"
                       :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
                       :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
                       :disabled="pendingRevoiceRows.has(row)"
@@ -410,7 +407,6 @@ onBeforeUnmount(() => {
                   />
                   <Button
                       icon="pi pi-microphone"
-                      size="small"
                       :disabled="!roleEntryFor(row)"
                       title="Pick a speaker from the preset gallery"
                       @click="openSpeakerPicker(row)"
@@ -434,13 +430,11 @@ onBeforeUnmount(() => {
                 <div class="spacer" />
                 <Button
                     icon="pi pi-history"
-                    size="small"
-                    text
                     :label="historyCounts.get(positionByIndex.get(index)) ? String(historyCounts.get(positionByIndex.get(index))) : ''"
                     title="Line history (previous takes/versions)"
                     @click="openLineHistory(row, index)"
                 />
-                <Button icon="pi pi-times" color="red" text size="small" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
+                <Button icon="pi pi-times" color="red" title="Delete this line" @click="confirmDeleteRow(index, row.text)" />
               </template>
             </LineRowEditor>
           </template>

@@ -129,7 +129,6 @@ function formatCreatedAt(iso) {
     <div v-if="originalUrl" class="history-original-row">
       <ButtonGroup>
         <Button
-            size="small"
             :severity="playingVersion === 'original' ? 'primary' : 'secondary'"
             :icon="playingVersion === 'original' ? 'pi pi-pause' : 'pi pi-volume-up'"
             label="Original (EN)"
@@ -179,7 +178,6 @@ function formatCreatedAt(iso) {
           <div class="history-card-actions">
             <ButtonGroup>
               <Button
-                  size="small"
                   :severity="isPlayingVersion(v) ? 'primary' : 'secondary'"
                   :icon="isPlayingVersion(v) ? 'pi pi-pause' : 'pi pi-play'"
                   label="Play"

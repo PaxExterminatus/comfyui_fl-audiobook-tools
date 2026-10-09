@@ -138,7 +138,6 @@ function playSample(preset) {
                         <span class="speaker-play-wrap" @click.stop="playSample(preset)">
                             <Button
                                 :icon="playingPreset === preset ? 'pi pi-pause' : 'pi pi-play'"
-                                size="small"
                                 :disabled="!sampleDir"
                                 title="Preview this speaker's sample"
                             />

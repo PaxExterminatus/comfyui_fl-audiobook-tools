@@ -35,15 +35,9 @@ const emit = defineEmits(["update:modelValue"]);
         @update:model-value="emit('update:modelValue', $event)"
     >
         <template #option="{ option }">
-            <div class="dropdown-option-label ellipsis">{{ option.code }}</div>
-            <div v-if="optionSubLabel(option)" class="muted ellipsis">{{ optionSubLabel(option) }}</div>
+            <div class="ellipsis">{{ option.code }}</div>
+            <div v-if="optionSubLabel(option)" class="ellipsis p-text-secondary">{{ optionSubLabel(option) }}</div>
         </template>
     </Dropdown>
 </template>
-
-<style scoped>
-.dropdown-option-label {
-    font-size: var(--font-md);
-}
-</style>
 

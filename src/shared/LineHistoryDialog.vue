@@ -137,7 +137,7 @@ function formatCreatedAt(iso) {
             @click="toggleOriginal"
         />
       </ButtonGroup>
-      <span v-if="originalDuration" class="muted">{{ formatSeconds(originalDuration) }}</span>
+      <span v-if="originalDuration" class="p-text-secondary">{{ formatSeconds(originalDuration) }}</span>
       <span v-if="original" :title="original">{{ original }}</span>
     </div>
 
@@ -147,19 +147,19 @@ function formatCreatedAt(iso) {
 
     <div v-else class="grid" style="--grid-min: 320px;" :style="{ fontSize: `${cardFontSizePx}px` }">
       <Card v-for="v in sortedVersions" :key="v.version">
-        <template #content>
+        <template #title>
           <div class="row">
-            <span class="title">Версия {{ v.version }}</span>
-            <span v-if="v.version === chosenVersion" class="pill text-success">✓ Активна</span>
+            <span>Версия {{ v.version }}</span>
+            <InlineMessage v-if="v.version === chosenVersion" severity="success">✓ Активна</InlineMessage>
           </div>
-
-          <div class="muted">
-            сид {{ v.seed }} · {{ formatCreatedAt(v.created_at) }}
-          </div>
-
+        </template>
+        <template #subtitle>
+          сид {{ v.seed }} · {{ formatCreatedAt(v.created_at) }}
+        </template>
+        <template #content>
           <!-- Длительность + VS Original -->
           <div class="row">
-                        <span class="mono muted">
+                        <span class="p-text-secondary">
                             {{ formatSeconds(getCached(versionFileUrl(v))) }}
                         </span>
             <span
@@ -172,8 +172,8 @@ function formatCreatedAt(iso) {
           </div>
 
           <div class="history-snapshot card">
-            <div class="mono muted">{{ v.speaker }}</div>
-            <div class="muted">{{ v.instruct }}</div>
+            <div>{{ v.speaker }}</div>
+            <div class="p-text-secondary">{{ v.instruct }}</div>
             <div class="history-snapshot-text">{{ v.text }}</div>
           </div>
 
@@ -204,10 +204,6 @@ function formatCreatedAt(iso) {
 .history-original-row {
   padding: 8px 12px;
   margin-bottom: 12px;
-}
-.history-duration-delta {
-  font-weight: 700;
-  font-size: 11px;
 }
 .history-snapshot {
   margin-top: 8px;

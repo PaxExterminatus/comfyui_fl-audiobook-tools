@@ -326,7 +326,7 @@ onBeforeUnmount(() => {
             :title="doneTitle"
             @click="toggleDone"
         />
-        <div class="divider" />
+        <Divider layout="vertical" />
         <Button label="´ Stress mark" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark" />
         <Button label="✂ Split line" title="Split this line into two at the cursor" @mousedown.prevent="splitFocusedLine" />
         <Button label="+ Add line" title="Add a new empty line at the end of the script" @click="addLine" />
@@ -336,7 +336,7 @@ onBeforeUnmount(() => {
             :title="revoiceStaleTitle"
             @click="revoiceStaleRows"
         />
-        <div class="divider" />
+        <Divider layout="vertical" />
         <Button label="Prev" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
         <Button label="Next" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
       </div>
@@ -492,7 +492,6 @@ onBeforeUnmount(() => {
 }
 .timing-warning {
   width: 100%;
-  font-size: var(--font-sm);
   padding: 2px 16px 6px;
 }
 .rows-container {
@@ -509,7 +508,6 @@ onBeforeUnmount(() => {
 }
 .malformed-warn {
   flex: 1;
-  font-size: var(--font-xs);
 }
 .malformed-textarea {
   border-color: #7f5f27;

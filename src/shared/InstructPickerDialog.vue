@@ -84,7 +84,6 @@ function pick(example) {
 .instruct-example-btn {
     justify-content: flex-start;
     text-align: left;
-    font-size: var(--font-sm);
 }
 </style>
 

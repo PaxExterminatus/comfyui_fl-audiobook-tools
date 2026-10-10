@@ -24,8 +24,8 @@ defineProps({
 
 <template>
     <div class="row">
-        <div class="dialog-title title ellipsis">{{ title }}</div>
-        <div class="dialog-status muted ellipsis">{{ status }}</div>
+        <div class="dialog-title ellipsis">{{ title }}</div>
+        <div class="dialog-status ellipsis p-text-secondary">{{ status }}</div>
         <PanelWidthButtons :presets="widthPresets" :set-width="setWidth" />
         <FontSizeButtons v-if="fontSizeDecrease && fontSizeIncrease" :decrease="fontSizeDecrease" :increase="fontSizeIncrease" />
         <slot name="after" />
@@ -35,7 +35,6 @@ defineProps({
 <style scoped>
 .dialog-title {
     flex: 1;
-    font-size: var(--font-lg);
 }
 .dialog-status {
     flex: 0 0 auto;

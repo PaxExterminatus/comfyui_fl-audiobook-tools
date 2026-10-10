@@ -183,7 +183,7 @@ function onTextareaClick() { rememberSelection(); }
   >
     <template #header>
       <div class="tte-header row space-between">
-        <span class="title">{{ title }}</span>
+        <span>{{ title }}</span>
         <ButtonGroup>
           <Button
               label="Cancel"
@@ -204,7 +204,7 @@ function onTextareaClick() { rememberSelection(); }
     <div class="tte-body list">
       <!-- Прослушивание -->
       <div class="tte-play-row row">
-        <span class="tte-play-label muted">EN</span>
+        <span class="tte-play-label p-text-secondary">EN</span>
         <ButtonGroup>
           <Button
               :severity="playingMode === 'original' ? 'primary' : 'secondary'"
@@ -224,9 +224,9 @@ function onTextareaClick() { rememberSelection(); }
           />
         </ButtonGroup>
 
-        <span class="divider" />
+        <Divider layout="vertical" />
 
-        <span class="tte-play-label muted">RU</span>
+        <span class="tte-play-label p-text-secondary">RU</span>
         <ButtonGroup>
           <Button
               :severity="playingMode === 'current' ? 'primary' : 'secondary'"
@@ -249,7 +249,7 @@ function onTextareaClick() { rememberSelection(); }
 
       <!-- Одиночные тэги -->
       <div class="tte-section list">
-        <div class="tte-section-title muted">Insert tag</div>
+        <div class="tte-section-title p-text-secondary">Insert tag</div>
         <div class="tte-tag-grid actions">
           <Button
               v-for="t in [
@@ -277,7 +277,7 @@ function onTextareaClick() { rememberSelection(); }
 
       <!-- Wrapper-тэги -->
       <div class="tte-section list">
-        <div class="tte-section-title muted">Wrapper tags</div>
+        <div class="tte-section-title p-text-secondary">Wrapper tags</div>
         <div class="tte-tag-grid actions">
           <Button
               v-for="t in [
@@ -294,13 +294,13 @@ function onTextareaClick() { rememberSelection(); }
 
       <!-- Текст -->
       <div class="tte-section list">
-        <div class="tte-section-title muted">Text</div>
+        <div class="tte-section-title p-text-secondary">Text</div>
         <Textarea
             ref="textareaRef"
             v-model="localText"
             auto-resize
             rows="6"
-            class="tte-textarea w100p"
+            class="w100p"
             @input="onTextareaInput"
             @keyup="onTextareaKeyup"
             @click="onTextareaClick"
@@ -324,15 +324,6 @@ function onTextareaClick() { rememberSelection(); }
   border-radius: 6px;
 }
 .tte-play-label {
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   min-width: 24px;
-}
-.tte-section-title {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.tte-textarea {
-  font-family: inherit;
 }
 </style>

@@ -6,9 +6,9 @@
  _dub_roles.json entries don't share a shape), so it just renders
  whatever [key, value] pairs the caller's own field-extractor produced.
  `.role-info-popover` (the fixed-position shell) lives in src/style/app.css
- (forwarded into every entry already); the rows/key inside it use the
- shared `.row`/`.space-between`/`.muted` type classes -- this component
- has no scoped style of its own.
+ (forwarded into every entry already); the rows inside it use the shared
+ `.row`/`.space-between` type classes plus PrimeVue's own `.p-text-secondary`
+ utility for the key -- this component has no scoped style of its own.
 */
 defineProps({
     visible: { type: Boolean, default: false },
@@ -23,7 +23,7 @@ defineProps({
     <div v-if="visible" class="role-info-popover" :style="{ left: `${left}px`, top: `${top}px` }">
         <div v-if="message">{{ message }}</div>
         <div v-for="([k, v]) in fields" :key="k" class="row space-between">
-            <span class="muted">{{ k }}</span>
+            <span class="p-text-secondary">{{ k }}</span>
             <span>{{ v }}</span>
         </div>
     </div>

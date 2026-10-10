@@ -120,10 +120,15 @@ function playSample(preset) {
                     listener on the Card tag itself is silently never
                     attached. This div is ours, no such surprise. -->
                     <div class="speaker-card-row row" @click="pick(preset)">
-                        <div class="avatar" :style="{ backgroundColor: speakerAccent(preset) }">{{ speakerInitials(preset) }}</div>
+                        <Avatar
+                            :label="speakerInitials(preset)"
+                            shape="circle"
+                            :style="{ backgroundColor: speakerAccent(preset) }"
+                            class="shrink-0"
+                        />
                         <div class="speaker-card-text">
-                            <div class="speaker-name mono">{{ preset }}</div>
-                            <div v-if="usageFor && usageFor(preset)" class="muted">{{ usageFor(preset) }}</div>
+                            <div class="speaker-name">{{ preset }}</div>
+                            <div v-if="usageFor && usageFor(preset)" class="p-text-secondary">{{ usageFor(preset) }}</div>
                         </div>
                         <!-- Same story as Card above: Button also has
                         `inheritAttrs: false`, so a bare @click.stop placed

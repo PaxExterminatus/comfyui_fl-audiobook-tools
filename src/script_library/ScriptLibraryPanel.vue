@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="tree panel">
-            <div v-if="!treeData.length" class="tree-empty muted">(no acts found)</div>
+            <div v-if="!treeData.length" class="tree-empty p-text-secondary">(no acts found)</div>
             <template v-for="entry in treeData" :key="entry.act">
                 <div
                     class="act-row row"
@@ -519,9 +519,9 @@ onBeforeUnmount(() => {
                         @click.stop
                         @change="onActCheckboxChange(entry, $event.target.checked)"
                     />
-                    <span class="chevron muted">{{ expanded.has(entry.act) ? "▾" : "▸" }}</span>
-                    <span class="act-name title ellipsis">{{ entry.act }}</span>
-                    <span class="act-count muted">{{ checkedCountOf(entry) ? `${checkedCountOf(entry)}/${entry.scripts.length}` : entry.scripts.length }}</span>
+                    <span class="chevron p-text-secondary">{{ expanded.has(entry.act) ? "▾" : "▸" }}</span>
+                    <span class="act-name ellipsis">{{ entry.act }}</span>
+                    <span class="act-count p-text-secondary">{{ checkedCountOf(entry) ? `${checkedCountOf(entry)}/${entry.scripts.length}` : entry.scripts.length }}</span>
                 </div>
 
                 <template v-if="expanded.has(entry.act)">
@@ -547,7 +547,7 @@ onBeforeUnmount(() => {
                             @click.stop="editScript(entry.act, filename)"
                         >✏️</button>
                         <span v-if="readySetOf(entry).has(filename)" title="Marked done / ready to release">✅</span>
-                        <span class="script-name ellipsis" :class="{ 'script-name-active title': entry.act === activeAct && scriptFileWidget.value === filename }" :title="filename">{{ filename }}</span>
+                        <span class="script-name ellipsis" :title="filename">{{ filename }}</span>
                         <span v-if="(entry.pending_scripts || []).includes(filename)" title="Has line(s) marked as needing re-voice (edited, or a role's speaker was recast)">⚠️</span>
                         <span v-if="(entry.audio_scripts || []).includes(filename)" class="row-icon-dim" title="Rendered audio already exists for this script">🔊</span>
                     </div>
@@ -555,7 +555,7 @@ onBeforeUnmount(() => {
             </template>
         </div>
 
-        <div class="status-line muted">{{ status }}</div>
+        <div class="status-line p-text-secondary">{{ status }}</div>
     </div>
 </template>
 
@@ -582,7 +582,6 @@ onBeforeUnmount(() => {
 }
 .script-row {
   padding-left: 24px;
-  font-size: var(--font-sm);
 }
 .chevron {
   width: 10px;
@@ -596,7 +595,6 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   cursor: pointer;
   padding: 1px 4px;
-  font-size: var(--font-xs);
 }
 .row-icon-dim {
   opacity: 0.85;

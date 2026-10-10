@@ -96,7 +96,7 @@ function onApply() {
         </div>
       </InputGroup>
       <div v-if="localNormalize" class="ofd-target-row row">
-        <span class="muted">Target level:</span>
+        <span class="p-text-secondary">Target level:</span>
         <InputNumber
             v-model="localNormalizeDb"
             :min="-30"

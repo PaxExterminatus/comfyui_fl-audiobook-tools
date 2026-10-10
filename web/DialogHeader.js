@@ -1,5 +1,5 @@
 import { l as p, m as g, w as F, r as w, a as o, c as d, F as _, j as k, f as y, b as f, _ as z, d as v, t as S, i as B, a4 as C } from "./styles_link.js";
-function A({ storageKey: e, defaultWidth: n, presets: a, fullVw: s = 94 }) {
+function A({ storageKey: e, defaultWidth: n, presets: r, fullVw: s = 94 }) {
   function i() {
     try {
       const t = localStorage.getItem(e);
@@ -16,16 +16,16 @@ function A({ storageKey: e, defaultWidth: n, presets: a, fullVw: s = 94 }) {
     } catch {
     }
   }
-  function r(t) {
+  function a(t) {
     return t === "full" ? `${s}vw` : `min(94vw, ${t}px)`;
   }
-  const u = p(i()), h = g(() => r(u.value));
+  const u = p(i()), h = g(() => a(u.value));
   function c(t) {
     u.value = t, l(t);
   }
-  return { cssWidth: h, setWidth: c, presets: a };
+  return { cssWidth: h, setWidth: c, presets: r };
 }
-function V({ storageKey: e, defaultSize: n = 13, min: a = 9, max: s = 22 }) {
+function V({ storageKey: e, defaultSize: n = 13, min: r = 9, max: s = 22 }) {
   function i() {
     try {
       const c = parseFloat(localStorage.getItem(e));
@@ -40,15 +40,15 @@ function V({ storageKey: e, defaultSize: n = 13, min: a = 9, max: s = 22 }) {
     } catch {
     }
   }
-  const r = p(i());
-  F(r, l);
+  const a = p(i());
+  F(a, l);
   function u() {
-    r.value = Math.max(a, r.value - 1);
+    a.value = Math.max(r, a.value - 1);
   }
   function h() {
-    r.value = Math.min(s, r.value + 1);
+    a.value = Math.min(s, a.value + 1);
   }
-  return { fontSizePx: r, decrease: u, increase: h };
+  return { fontSizePx: a, decrease: u, increase: h };
 }
 const $ = { class: "actions" }, b = {
   __name: "PanelWidthButtons",
@@ -59,7 +59,7 @@ const $ = { class: "actions" }, b = {
     // (value: number | "full") => void
   },
   setup(e) {
-    return (n, a) => {
+    return (n, r) => {
       const s = w("Button");
       return o(), d("div", $, [
         (o(!0), d(_, null, k(e.presets, (i) => (o(), y(s, {
@@ -71,19 +71,19 @@ const $ = { class: "actions" }, b = {
         f(s, {
           label: "100%",
           title: "Use the full available window width",
-          onClick: a[0] || (a[0] = (i) => e.setWidth("full"))
+          onClick: r[0] || (r[0] = (i) => e.setWidth("full"))
         })
       ]);
     };
   }
-}, I = { class: "actions" }, D = {
+}, I = { class: "actions" }, x = {
   __name: "FontSizeButtons",
   props: {
     decrease: { type: Function, required: !0 },
     increase: { type: Function, required: !0 }
   },
   setup(e) {
-    return (n, a) => {
+    return (n, r) => {
       const s = w("Button");
       return o(), d("div", I, [
         f(s, {
@@ -99,7 +99,7 @@ const $ = { class: "actions" }, b = {
       ]);
     };
   }
-}, W = { class: "row" }, q = { class: "dialog-title title ellipsis" }, x = { class: "dialog-status muted ellipsis" }, P = {
+}, D = { class: "row" }, W = { class: "dialog-title ellipsis" }, q = { class: "dialog-status ellipsis p-text-secondary" }, P = {
   __name: "DialogHeader",
   props: {
     title: { type: String, required: !0 },
@@ -110,14 +110,14 @@ const $ = { class: "actions" }, b = {
     fontSizeIncrease: { type: Function, default: null }
   },
   setup(e) {
-    return (n, a) => (o(), d("div", W, [
-      v("div", q, S(e.title), 1),
-      v("div", x, S(e.status), 1),
+    return (n, r) => (o(), d("div", D, [
+      v("div", W, S(e.title), 1),
+      v("div", q, S(e.status), 1),
       f(b, {
         presets: e.widthPresets,
         "set-width": e.setWidth
       }, null, 8, ["presets", "set-width"]),
-      e.fontSizeDecrease && e.fontSizeIncrease ? (o(), y(D, {
+      e.fontSizeDecrease && e.fontSizeIncrease ? (o(), y(x, {
         key: 0,
         decrease: e.fontSizeDecrease,
         increase: e.fontSizeIncrease
@@ -125,7 +125,7 @@ const $ = { class: "actions" }, b = {
       C(n.$slots, "after", {}, void 0, !0)
     ]));
   }
-}, H = /* @__PURE__ */ z(P, [["__scopeId", "data-v-93c2771a"]]);
+}, H = /* @__PURE__ */ z(P, [["__scopeId", "data-v-7d4c52c8"]]);
 export {
   H as D,
   V as a,

@@ -189,9 +189,9 @@ onBeforeUnmount(() => {
         <div class="grid" :style="{ fontSize: `${cardFontSizePx}px` }">
             <Card v-for="role in roles" :key="role.code">
                 <template #title>
-                    <span class="role-code mono" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
-                    <span class="role-name muted">{{ role.name }}</span>
+                    <span class="role-code" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
                 </template>
+                <template #subtitle>{{ role.name }}</template>
                 <template #content>
                     <Dropdown
                         v-model="role.speaker"
@@ -222,13 +222,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.role-code {
-    margin-right: 8px;
-}
-.role-name {
-    font-size: 0.85em;
-    font-weight: 400;
-}
 .role-speaker {
     margin-bottom: 8px;
 }

@@ -110,7 +110,7 @@ function onPaste(event) {
     <slot name="trailing" />
   </div>
 
-  <div v-if="api.instructNoteFor(row)" class="instruct-desc muted">↳ {{ api.instructNoteFor(row) }}</div>
+  <div v-if="api.instructNoteFor(row)" class="instruct-desc p-text-secondary">↳ {{ api.instructNoteFor(row) }}</div>
 
   <slot name="above-text" />
 

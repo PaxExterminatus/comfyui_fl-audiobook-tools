@@ -28,7 +28,7 @@ import { useVoDubEffects } from "./composables/useVoDubEffects.js";
 import { useVoDubPlayers } from "./composables/useVoDubPlayers.js";
 import { useVoDubRender } from "./composables/useVoDubRender.js";
 import { useVoDubRowApi } from "./composables/useVoDubRowApi.js";
-import { statusColorClass } from "../shared/row_status.js";
+import { severityForStatus } from "../shared/row_status.js";
 import { levelColorClass } from "../shared/level_color.js";
 
 const props = defineProps({
@@ -206,7 +206,7 @@ watch(visible, (v) => { if (!v) close(); });
               @clear="clearFilters"
             />
             <Button icon="pi pi-refresh" title="Re-scan this bucket" @click="loadRows" />
-            <span class="vo-dub-editor-status muted ellipsis">{{ loading ? "Loading..." : status }}</span>
+            <span class="vo-dub-editor-status p-text-secondary ellipsis">{{ loading ? "Loading..." : status }}</span>
           </div>
 
       <div class="actions">
@@ -217,7 +217,7 @@ watch(visible, (v) => { if (!v) close(); });
               title="Previous page"
               @click="currentPage--"
           />
-          <span class="vo-dub-pager-label muted">
+          <span class="vo-dub-pager-label p-text-secondary">
             {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }})
           </span>
           <Button
@@ -228,7 +228,7 @@ watch(visible, (v) => { if (!v) close(); });
           />
         </div>
 
-        <span class="divider" />
+        <Divider layout="vertical" />
 
         <Button label="´ Stress mark" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark(setStatus)"/>
 
@@ -251,15 +251,16 @@ watch(visible, (v) => { if (!v) close(); });
     </StickyPanel>
 
     <div class="vo-dub-rows list" :style="{ fontSize: `${fontSizePx}px` }">
-      <div
+      <Card
           v-for="row in pagedRows" :key="row.audio_key"
-          class="vo-dub-row card"
+          class="vo-dub-row"
           :class="{ 'row-playing': sequentialPlayingKey === row.audio_key, 'row-issue': manuallyIssue(row) }"
-          :ref="(el) => setRowRef(row.audio_key, el)"
+          :ref="(el) => setRowRef(row.audio_key, el?.$el ?? el)"
       >
+      <template #title>
         <div class="row">
-          <span class="vo-dub-key mono title">{{ row.audio_key }}</span>
-          <span class="pill" :class="statusColorClass(row.status)">{{ STATUS_LABELS[row.status] }}</span>
+          <span class="vo-dub-key">{{ row.audio_key }}</span>
+          <InlineMessage :severity="severityForStatus(row.status)">{{ STATUS_LABELS[row.status] }}</InlineMessage>
           <Button
               v-if="hasRuTake(row)"
               class="vo-dub-done-btn"
@@ -279,12 +280,13 @@ watch(visible, (v) => { if (!v) close(); });
               @click="toggleManuallyIssue(row)"
           />
         </div>
-
-        <div v-if="row.status === 'unsupported'" class="vo-dub-unsupported-note">
+      </template>
+      <template #content>
+        <Message v-if="row.status === 'unsupported'" class="vo-dub-unsupported-note" severity="warn" :closable="false">
           Unsupported: {{ row.channels }}-channel audio split across multiple files
           (<code>.a</code>-<code>.d</code>) -- this editor can only play or render a single mono/stereo
           file per row. Handle this one outside the tool.
-        </div>
+        </Message>
 
         <template v-else>
           <div class="vo-dub-players list">
@@ -346,7 +348,7 @@ watch(visible, (v) => { if (!v) close(); });
                     @pause="onTrackPaused(row, 'ru')"
                     @ended="onTrackPaused(row, 'ru')"
                 />
-                <span v-else class="vo-dub-no-take muted">not rendered yet</span>
+                <span v-else class="vo-dub-no-take p-text-secondary">not rendered yet</span>
               </div>
             </div>
 
@@ -388,7 +390,7 @@ watch(visible, (v) => { if (!v) close(); });
           <LineRowEditor :row="row">
             <template #leading>
               <span
-                  class="vo-dub-identifier ellipsis mono"
+                  class="vo-dub-identifier ellipsis"
                   title="Identifier extracted from the game's own resources (vo_dataset.csv's speaker column)"
               >{{ row.speaker_tag || "—" }}</span>
               <Button
@@ -415,13 +417,14 @@ watch(visible, (v) => { if (!v) close(); });
             </template>
 
             <template #above-text>
-              <div class="vo-dub-english muted">{{ row.english }}</div>
+              <div class="vo-dub-english p-text-secondary">{{ row.english }}</div>
             </template>
           </LineRowEditor>
         </template>
-      </div>
+      </template>
+      </Card>
 
-      <div v-if="!visibleRows.length" class="vo-dub-empty muted">No rows match this filter.</div>
+      <div v-if="!visibleRows.length" class="vo-dub-empty p-text-secondary">No rows match this filter.</div>
     </div>
   </div>
 
@@ -476,7 +479,6 @@ watch(visible, (v) => { if (!v) close(); });
   min-width: 0;
 }
 .vo-dub-pager-label {
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   padding: 0 4px;
 }
@@ -484,40 +486,11 @@ watch(visible, (v) => { if (!v) close(); });
   gap: 10px;
   padding: 4px 2px 20px;
 }
-.vo-dub-key {
-  font-size: var(--font-sm);
-}
-.vo-dub-unsupported-note {
-  font-size: var(--font-sm);
-  padding: 6px 8px;
-  border-radius: 4px;
-  background: var(--overlay-soft);
-  border-left: 2px solid var(--color-warning);
-}
 .vo-dub-players {
   gap: 4px;
 }
 .vo-dub-duration-line {
-  font-size: var(--font-xs);
-  opacity: 0.8;
   margin-bottom: 4px;
-}
-.vo-dub-duration-en {
-  color: var(--text-muted, #94a3b8);
-  font-variant-numeric: tabular-nums;
-}
-.vo-dub-duration-arrow {
-  opacity: 0.5;
-}
-.vo-dub-duration-ru {
-  color: var(--text, #e2e8f0);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-.vo-dub-duration-delta {
-  font-weight: 600;
-  padding: 0 4px;
-  font-variant-numeric: tabular-nums;
 }
 .vo-dub-similarity-slot {
   margin-left: auto;
@@ -537,38 +510,24 @@ watch(visible, (v) => { if (!v) close(); });
 .play-both-btn {
   justify-self: center;
 }
-.vo-dub-no-take {
-  font-style: italic;
-}
 .vo-dub-players-footer {
   padding-top: 2px;
 }
 .vo-dub-identifier {
   flex: 0 0 auto;
   max-width: 220px;
-  font-size: var(--font-sm);
-  font-weight: 500;
-  opacity: 0.9;
   padding: 2px 6px;
   background: var(--overlay-soft);
   border-radius: 4px;
 }
 .vo-dub-use-original-label {
   flex: 0 0 auto;
-  font-size: var(--font-xs);
-  opacity: 0.75;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
   padding-left: 8px;
   border-left: 1px solid var(--border-subtle);
   margin-left: 4px;
-}
-.vo-dub-use-original-label:hover {
-  opacity: 1;
-}
-.vo-dub-english {
-  font-style: italic;
 }
 .vo-dub-empty {
   padding: 16px;

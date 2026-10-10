@@ -9,8 +9,9 @@
  drives one row at a time, there's no "run everything checked").
  Clicking a bucket opens VoDubLineEditor.vue for it.
 */
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { VO_DUB_API } from "../../web/fl_common.js";
+import { severityForStatus } from "../shared/row_status.js";
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -25,6 +26,7 @@ const TREE_POLL_MS = 9000;
 const STORAGE_KEY = "FL_CosyVoice3.VODubLibrary.lastRoot";
 
 const root = ref(props.projectRootWidget.value || localStorage.getItem(STORAGE_KEY) || "");
+const browseLabel = computed(() => (root.value ? `📁 ${root.value}` : "📁 Click to browse for a VO dub project folder"));
 const buckets = ref([]);
 const status = ref("");
 const loading = ref(false);
@@ -87,15 +89,13 @@ function openRoles() {
   props.openDubRolesEditor({ root: root.value });
 }
 
-// Список счётчиков бакета: [поле, label, severity PrimeVue].
-// Порядок — от «требует внимания» к «всё ок».
 const STATUS_PILLS = [
-  { key: "no_text",           label: "no text",    severity: "warn" },
-  { key: "needs_translation", label: "needs RU",   severity: "info" },
-  { key: "not_started",       label: "not started", severity: "secondary" },
-  { key: "stale",             label: "stale",      severity: "warn" },
-  { key: "done",              label: "done",       severity: "success" },
-  { key: "unsupported",       label: "unsupported", severity: "contrast" },
+  { key: "no_text",           label: "no text" },
+  { key: "needs_translation", label: "needs RU" },
+  { key: "not_started",       label: "not started" },
+  { key: "stale",             label: "stale" },
+  { key: "done",              label: "done" },
+  { key: "unsupported",       label: "unsupported" },
 ];
 
 onMounted(() => {
@@ -107,9 +107,15 @@ onBeforeUnmount(() => clearInterval(pollTimer));
 
 <template>
   <div class="vo-dub-panel list">
+    <Button
+        :label="browseLabel"
+        :title="root"
+        text
+        class="browse-button ellipsis w100p"
+        @click="openBrowse"
+    />
+
     <div class="vo-dub-toolbar actions">
-      <InputText v-model="root" class="vo-dub-root-input" placeholder="VO dub project root (holds vo_dataset.csv)" @change="loadTree()" />
-      <Button label="Browse..." @click="openBrowse" />
       <Button label="Roles" :disabled="!root" title="Assign a voice preset to each character tag" @click="openRoles" />
       <Button icon="pi pi-refresh" title="Re-scan" @click="loadTree" />
     </div>
@@ -124,14 +130,14 @@ onBeforeUnmount(() => clearInterval(pollTimer));
         <InlineMessage severity="secondary">{{ b.bucket }} {{ b.count }}</InlineMessage>
 
         <template v-for="p in STATUS_PILLS" :key="p.key">
-          <InlineMessage v-if="b[p.key]" :severity="p.severity">{{ p.label }} {{ b[p.key] }}</InlineMessage>
+          <InlineMessage v-if="b[p.key]" :severity="severityForStatus(p.key)">{{ p.label }} {{ b[p.key] }}</InlineMessage>
         </template>
 
         <InlineMessage v-if="b.issue > 0" severity="error" :title="`${b.issue} row(s) marked as issue`">issue {{ b.issue }}</InlineMessage>
       </div>
     </div>
 
-    <div class="vo-dub-status muted">{{ loading ? "Loading..." : status }}</div>
+    <div class="vo-dub-status p-text-secondary">{{ loading ? "Loading..." : status }}</div>
   </div>
 </template>
 
@@ -142,9 +148,8 @@ onBeforeUnmount(() => clearInterval(pollTimer));
   box-sizing: border-box;
   gap: 5px;
 }
-.vo-dub-root-input {
-  flex: 1 1 auto;
-  min-width: 0;
+.browse-button {
+  justify-content: flex-start;
 }
 .vo-dub-buckets {
   flex: 1 1 auto;
@@ -157,7 +162,6 @@ onBeforeUnmount(() => clearInterval(pollTimer));
   padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: var(--font-md);
 }
 .vo-dub-status {
   flex: 0 0 auto;

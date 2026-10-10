@@ -329,46 +329,49 @@ onBeforeUnmount(() => {
         </Message>
 
         <div class="roles-list list" :style="{ fontSize: `${cardFontSizePx}px` }">
-            <div v-for="[code, entry] in roleEntries" :key="code" class="role-card card">
-                <div class="role-head row">
-                    <span class="role-name title">{{ displayName(entry, code) }}</span>
-                    <span class="role-code mono muted" title="Role code -- read-only here, this addon doesn't own this file's identity model">{{ code }}</span>
-                    <span v-if="entry.gender" class="role-gender muted" :title="entry.gender_evidence || ''">{{ entry.gender }}</span>
-                    <span v-if="entry.actor" class="role-actor muted">{{ entry.actor }}</span>
-                </div>
+            <Card v-for="[code, entry] in roleEntries" :key="code" class="role-card">
+                <template #title><span class="role-name">{{ displayName(entry, code) }}</span></template>
+                <template #subtitle>
+                    <span class="role-head row">
+                        <span class="role-code" title="Role code -- read-only here, this addon doesn't own this file's identity model">{{ code }}</span>
+                        <span v-if="entry.gender" class="role-gender" :title="entry.gender_evidence || ''">{{ entry.gender }}</span>
+                        <span v-if="entry.actor" class="role-actor">{{ entry.actor }}</span>
+                    </span>
+                </template>
+                <template #content>
+                    <p v-if="entry.description" class="role-description p-text-secondary">{{ entry.description }}</p>
+                    <p v-if="entry.dub_direction" class="role-dub-direction">{{ entry.dub_direction }}</p>
+                    <ul v-if="notesList(entry).length" class="role-notes p-text-secondary">
+                        <li v-for="(note, i) in notesList(entry)" :key="i">{{ note }}</li>
+                    </ul>
 
-                <p v-if="entry.description" class="role-description">{{ entry.description }}</p>
-                <p v-if="entry.dub_direction" class="role-dub-direction">{{ entry.dub_direction }}</p>
-                <ul v-if="notesList(entry).length" class="role-notes muted">
-                    <li v-for="(note, i) in notesList(entry)" :key="i">{{ note }}</li>
-                </ul>
+                    <div class="role-stats row p-text-secondary">
+                        <span v-if="entry.lines !== undefined">{{ entry.lines }} line(s)</span>
+                        <span v-if="entry.audio_minutes !== undefined">{{ entry.audio_minutes }} min</span>
+                        <span v-if="entry.lines_needing_translation">{{ entry.lines_needing_translation }} need translation</span>
+                        <span v-if="entry.lines_without_any_text">{{ entry.lines_without_any_text }} no text</span>
+                    </div>
+                    <div v-if="exampleFiles(entry).length" class="role-examples p-text-secondary" title="Longest lines for this role -- a quick sample to listen to">
+                        e.g. {{ exampleFiles(entry).join(", ") }}
+                    </div>
 
-                <div class="role-stats row">
-                    <span v-if="entry.lines !== undefined">{{ entry.lines }} line(s)</span>
-                    <span v-if="entry.audio_minutes !== undefined">{{ entry.audio_minutes }} min</span>
-                    <span v-if="entry.lines_needing_translation">{{ entry.lines_needing_translation }} need translation</span>
-                    <span v-if="entry.lines_without_any_text">{{ entry.lines_without_any_text }} no text</span>
-                </div>
-                <div v-if="exampleFiles(entry).length" class="role-examples mono" title="Longest lines for this role -- a quick sample to listen to">
-                    e.g. {{ exampleFiles(entry).join(", ") }}
-                </div>
-
-                <div class="role-speaker-row row">
-                    <InputText
-                        v-model="entry.speaker"
-                        placeholder="Speaker preset"
-                        title="Real CosyVoice preset this role resolves to"
-                        class="role-speaker"
-                        @update:model-value="scheduleSave()"
-                        @blur="notifyIfSpeakerChanged(code, entry)"
-                    />
-                    <Button
-                        icon="pi pi-microphone"
-                        title="Pick a speaker from the preset gallery"
-                        @click="openSpeakerPicker(code, entry)"
-                    />
-                </div>
-            </div>
+                    <div class="role-speaker-row row">
+                        <InputText
+                            v-model="entry.speaker"
+                            placeholder="Speaker preset"
+                            title="Real CosyVoice preset this role resolves to"
+                            class="role-speaker"
+                            @update:model-value="scheduleSave()"
+                            @blur="notifyIfSpeakerChanged(code, entry)"
+                        />
+                        <Button
+                            icon="pi pi-microphone"
+                            title="Pick a speaker from the preset gallery"
+                            @click="openSpeakerPicker(code, entry)"
+                        />
+                    </div>
+                </template>
+            </Card>
         </div>
     </component>
 
@@ -385,20 +388,17 @@ onBeforeUnmount(() => {
     max-height: 74vh;
     overflow-y: auto;
 }
-.role-name {
-    font-size: 1.05em;
-}
 .role-gender {
-    text-transform: capitalize;
     cursor: help;
 }
 .role-actor {
     margin-left: auto;
-    font-style: italic;
 }
-.role-description {
+.role-description, .role-notes, .role-stats, .role-examples {
     margin: 0;
-    opacity: 0.85;
+}
+.role-notes {
+    padding-left: 18px;
 }
 .role-dub-direction {
     margin: 0;
@@ -406,19 +406,6 @@ onBeforeUnmount(() => {
     border-left: 2px solid var(--color-accent);
     background: var(--overlay-soft);
     border-radius: 0 4px 4px 0;
-}
-.role-notes {
-    margin: 0;
-    padding-left: 18px;
-}
-.role-stats {
-    font-size: var(--font-xs);
-    opacity: 0.6;
-    font-variant-numeric: tabular-nums;
-}
-.role-examples {
-    font-size: var(--font-xs);
-    opacity: 0.5;
 }
 .role-speaker {
     width: 260px;

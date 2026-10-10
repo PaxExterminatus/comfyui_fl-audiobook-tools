@@ -1,7 +1,51 @@
-import { _ as Re, l as V, o as qe, L as ut, c as A, d as $, b as N, F as ne, j as ue, t as F, V as me, r as te, a as E, n as pe, g as Y, h as ce, f as de, i as X, w as ye, m as ae, k as De, T as gn, R as xt, U as Lt, N as ve, W as ct, X as bn, Y as He, z as Sn, Z as kn, $ as Rn, a0 as Tn, A as he, E as wn, a1 as En, p as $e, G as we, S as Cn, Q as In, u as i, M as $n, q as Pn, s as On, a2 as Dn, H as An, a3 as Mn, v as dt, x as ft, P as pt, y as vt } from "./styles_link.js";
-import { u as Vt, a as Nt, D as xn } from "./DialogHeader.js";
-import { e as Ln, s as Vn, l as Nn, i as Fn, S as Un, f as Bn, L as jn, I as zn, d as Hn, _ as qn, u as Wn, c as Gn } from "./instruct_library.js";
-const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions" }, Zn = { class: "vo-dub-buckets panel" }, Yn = ["onClick"], Xn = { class: "vo-dub-status muted" }, Qn = 9e3, wt = "FL_CosyVoice3.VODubLibrary.lastRoot", eo = {
+import { _ as Te, l as F, o as We, L as ct, c as N, b as L, d as $, F as oe, j as de, t as V, V as be, m as ne, r as Q, a as E, n as ge, g as K, h as ce, f as le, u as i, i as X, w as ve, k as Me, T as Tn, R as xt, U as Lt, N as he, W as dt, X as wn, Y as qe, z as En, Z as Cn, $ as In, a0 as $n, A as ye, E as Pn, a1 as On, p as Pe, G as Ee, S as Dn, Q as Mn, M as An, q as xn, s as Ln, a2 as Nn, H as Fn, a3 as Vn, v as ft, x as pt, P as ht, y as yt } from "./styles_link.js";
+import { u as Nt, a as Ft, D as Un } from "./DialogHeader.js";
+import { e as Bn, s as jn, l as zn, i as Hn, S as qn, f as Wn, L as Gn, I as Jn, d as Kn, _ as Zn, u as Yn, c as Xn } from "./instruct_library.js";
+const He = {
+  "": "All statuses",
+  no_text: "No source text",
+  needs_translation: "Needs translation",
+  not_started: "Not started",
+  stale: "Stale",
+  done: "Ready",
+  unsupported: "Unsupported (multi-channel)"
+}, Qn = [
+  { value: "not_done", label: "Not done" },
+  { value: "manually_done", label: "Done (manual)" },
+  { value: "issues", label: "⚠ Issues only" }
+];
+function eo(e, a) {
+  return [...Object.entries(e || {}).map(([n, o]) => ({ value: n, label: o })), ...a || []];
+}
+const to = eo(
+  He,
+  Qn
+), no = {
+  no_text: "warn",
+  needs_translation: "info",
+  not_started: "secondary",
+  stale: "warn",
+  done: "success",
+  unsupported: "contrast"
+};
+function Vt(e) {
+  return no[e] || "secondary";
+}
+const oo = [
+  { value: "no_text", label: "No text" },
+  { value: "needs_translation", label: "Needs translation" },
+  { value: "not_started", label: "Not started" },
+  { value: "stale", label: "Stale" },
+  { value: "done", label: "Ready" },
+  { value: "unsupported", label: "Unsupported" }
+], so = [
+  {
+    key: "manuallyDone",
+    label: "Done (manual)",
+    stateLabels: { without: "Not done" }
+  },
+  { key: "issues", label: "⚠ Issues" }
+], ao = { class: "vo-dub-panel list" }, io = { class: "vo-dub-toolbar actions" }, lo = { class: "vo-dub-buckets panel" }, ro = ["onClick"], uo = { class: "vo-dub-status p-text-secondary" }, co = 9e3, wt = "FL_CosyVoice3.VODubLibrary.lastRoot", fo = {
   __name: "VoDubBrowserPanel",
   props: {
     node: { type: Object, required: !0 },
@@ -13,136 +57,132 @@ const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions
     // (node, opts) => Promise -- from web/vo_dub_library.js
   },
   setup(e) {
-    const o = e, t = V(o.projectRootWidget.value || localStorage.getItem(wt) || ""), n = V([]), s = V(""), a = V(!1);
-    let r = null;
-    async function v() {
+    const a = e, t = F(a.projectRootWidget.value || localStorage.getItem(wt) || ""), n = ne(() => t.value ? `📁 ${t.value}` : "📁 Click to browse for a VO dub project folder"), o = F([]), s = F(""), l = F(!1);
+    let y = null;
+    async function g() {
       if (!t.value) {
-        n.value = [];
+        o.value = [];
         return;
       }
-      a.value = !0;
+      l.value = !0;
       try {
-        const d = await (await fetch(`${me}/tree?path=${encodeURIComponent(t.value)}`)).json();
-        if (d.error) {
-          s.value = d.error, n.value = [];
+        const u = await (await fetch(`${be}/tree?path=${encodeURIComponent(t.value)}`)).json();
+        if (u.error) {
+          s.value = u.error, o.value = [];
           return;
         }
-        n.value = d.buckets || [], s.value = `${n.value.length} bucket(s), ${n.value.reduce((f, _) => f + _.count, 0)} row(s)`;
-      } catch (l) {
-        s.value = `Couldn't load: ${l}`;
+        o.value = u.buckets || [], s.value = `${o.value.length} bucket(s), ${o.value.reduce((m, v) => m + v.count, 0)} row(s)`;
+      } catch (d) {
+        s.value = `Couldn't load: ${d}`;
       } finally {
-        a.value = !1;
+        l.value = !1;
       }
     }
-    function k() {
-      o.openBrowseDialog({
+    function h() {
+      a.openBrowseDialog({
         mode: "folder",
         startPath: t.value,
-        onSelect: (l) => {
-          t.value = l, o.projectRootWidget.value = l, localStorage.setItem(wt, l), v();
+        onSelect: (d) => {
+          t.value = d, a.projectRootWidget.value = d, localStorage.setItem(wt, d), g();
         }
       });
     }
-    function h(l) {
-      o.openVoDubLineEditor({
+    function p(d) {
+      a.openVoDubLineEditor({
         root: t.value,
-        bucket: l.bucket,
+        bucket: d.bucket,
         /*
          Only offered when this panel's node-wiring actually has a render
          mechanism (it always does in practice -- null only ever shows up
          in a test that doesn't pass one) -- see queueVoDubRender's own
          docstring in web/vo_dub_library.js for what it does.
         */
-        renderApi: o.queueVoDubRender ? {
-          renderRow: (d) => o.queueVoDubRender(o.node, d)
+        renderApi: a.queueVoDubRender ? {
+          renderRow: (u) => a.queueVoDubRender(a.node, u)
         } : null
       });
     }
-    function p() {
-      t.value && o.openDubRolesEditor({ root: t.value });
+    function S() {
+      t.value && a.openDubRolesEditor({ root: t.value });
     }
-    const b = [
-      { key: "no_text", label: "no text", severity: "warn" },
-      { key: "needs_translation", label: "needs RU", severity: "info" },
-      { key: "not_started", label: "not started", severity: "secondary" },
-      { key: "stale", label: "stale", severity: "warn" },
-      { key: "done", label: "done", severity: "success" },
-      { key: "unsupported", label: "unsupported", severity: "contrast" }
+    const r = [
+      { key: "no_text", label: "no text" },
+      { key: "needs_translation", label: "needs RU" },
+      { key: "not_started", label: "not started" },
+      { key: "stale", label: "stale" },
+      { key: "done", label: "done" },
+      { key: "unsupported", label: "unsupported" }
     ];
-    return qe(() => {
-      v(), r = setInterval(v, Qn);
-    }), ut(() => clearInterval(r)), (l, d) => {
-      const f = te("InputText"), _ = te("Button"), m = te("InlineMessage");
-      return E(), A("div", Jn, [
-        $("div", Kn, [
-          N(f, {
-            modelValue: t.value,
-            "onUpdate:modelValue": d[0] || (d[0] = (c) => t.value = c),
-            class: "vo-dub-root-input",
-            placeholder: "VO dub project root (holds vo_dataset.csv)",
-            onChange: d[1] || (d[1] = (c) => v())
-          }, null, 8, ["modelValue"]),
-          N(_, {
-            label: "Browse...",
-            onClick: k
-          }),
-          N(_, {
+    return We(() => {
+      g(), y = setInterval(g, co);
+    }), ct(() => clearInterval(y)), (d, u) => {
+      const m = Q("Button"), v = Q("InlineMessage");
+      return E(), N("div", ao, [
+        L(m, {
+          label: n.value,
+          title: t.value,
+          text: "",
+          class: "browse-button ellipsis w100p",
+          onClick: h
+        }, null, 8, ["label", "title"]),
+        $("div", io, [
+          L(m, {
             label: "Roles",
             disabled: !t.value,
             title: "Assign a voice preset to each character tag",
-            onClick: p
+            onClick: S
           }, null, 8, ["disabled"]),
-          N(_, {
+          L(m, {
             icon: "pi pi-refresh",
             title: "Re-scan",
-            onClick: v
+            onClick: g
           })
         ]),
-        $("div", Zn, [
-          (E(!0), A(ne, null, ue(n.value, (c) => (E(), A("div", {
-            key: c.bucket,
-            class: pe(["vo-dub-bucket-row row", { "has-issues": c.issue > 0 }]),
-            onClick: (T) => h(c)
+        $("div", lo, [
+          (E(!0), N(oe, null, de(o.value, (f) => (E(), N("div", {
+            key: f.bucket,
+            class: ge(["vo-dub-bucket-row row", { "has-issues": f.issue > 0 }]),
+            onClick: (T) => p(f)
           }, [
-            N(m, { severity: "secondary" }, {
-              default: Y(() => [
-                ce(F(c.bucket) + " " + F(c.count), 1)
+            L(v, { severity: "secondary" }, {
+              default: K(() => [
+                ce(V(f.bucket) + " " + V(f.count), 1)
               ]),
               _: 2
             }, 1024),
-            (E(), A(ne, null, ue(b, (T) => (E(), A(ne, {
+            (E(), N(oe, null, de(r, (T) => (E(), N(oe, {
               key: T.key
             }, [
-              c[T.key] ? (E(), de(m, {
+              f[T.key] ? (E(), le(v, {
                 key: 0,
-                severity: T.severity
+                severity: i(Vt)(T.key)
               }, {
-                default: Y(() => [
-                  ce(F(T.label) + " " + F(c[T.key]), 1)
+                default: K(() => [
+                  ce(V(T.label) + " " + V(f[T.key]), 1)
                 ]),
                 _: 2
               }, 1032, ["severity"])) : X("", !0)
             ], 64))), 64)),
-            c.issue > 0 ? (E(), de(m, {
+            f.issue > 0 ? (E(), le(v, {
               key: 0,
               severity: "error",
-              title: `${c.issue} row(s) marked as issue`
+              title: `${f.issue} row(s) marked as issue`
             }, {
-              default: Y(() => [
-                ce("issue " + F(c.issue), 1)
+              default: K(() => [
+                ce("issue " + V(f.issue), 1)
               ]),
               _: 2
             }, 1032, ["title"])) : X("", !0)
-          ], 10, Yn))), 128))
+          ], 10, ro))), 128))
         ]),
-        $("div", Xn, F(a.value ? "Loading..." : s.value), 1)
+        $("div", uo, V(l.value ? "Loading..." : s.value), 1)
       ]);
     };
   }
-}, to = /* @__PURE__ */ Re(eo, [["__scopeId", "data-v-052b866f"]]), no = { class: "p-inputgroup-addon" }, oo = { style: { "margin-left": "0.5rem" } }, so = {
+}, po = /* @__PURE__ */ Te(fo, [["__scopeId", "data-v-9edfe647"]]), ho = { class: "p-inputgroup-addon" }, yo = { style: { "margin-left": "0.5rem" } }, vo = {
   key: 0,
   class: "ofd-target-row row"
-}, ao = { class: "p-inputgroup-addon" }, io = { style: { "margin-left": "0.5rem" } }, lo = {
+}, _o = { class: "p-inputgroup-addon" }, mo = { style: { "margin-left": "0.5rem" } }, go = {
   __name: "OutputFileDialog",
   props: {
     visible: { type: Boolean, required: !0 },
@@ -155,8 +195,8 @@ const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions
     ruDurationS: { type: Number, default: null }
   },
   emits: ["update:visible", "apply"],
-  setup(e, { emit: o }) {
-    const t = e, n = o, s = [
+  setup(e, { emit: a }) {
+    const t = e, n = a, o = [
       { value: "", label: "No effect" },
       { value: "radio", label: "📻 Radio" },
       { value: "phone", label: "📞 Phone" },
@@ -164,54 +204,54 @@ const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions
       { value: "radio_dry", label: "📻 Radio (no static)" },
       { value: "intercom", label: "🔊 Intercom" },
       { value: "suit", label: "🧑‍🚀 Suit" }
-    ], a = V(t.effect), r = V(t.normalize), v = V(t.speedMatch), k = V(t.normalizeDb);
-    ye(() => t.visible, (b) => {
-      b && (a.value = t.effect, r.value = t.normalize, v.value = t.speedMatch, k.value = t.normalizeDb);
+    ], s = F(t.effect), l = F(t.normalize), y = F(t.speedMatch), g = F(t.normalizeDb);
+    ve(() => t.visible, (S) => {
+      S && (s.value = t.effect, l.value = t.normalize, y.value = t.speedMatch, g.value = t.normalizeDb);
     });
-    const h = ae(() => {
+    const h = ne(() => {
       if (t.enDurationS == null || t.ruDurationS == null)
         return "Одна из длительностей неизвестна — сопоставление недоступно.";
-      const b = t.ruDurationS / t.enDurationS, l = Math.round((b - 1) * 100);
-      return Math.abs(l) < 1 ? "Длительности уже совпадают." : `RU ${l > 0 ? "длиннее" : "короче"} на ${Math.abs(l)}% — при включении RU подстроится под EN (тон сохранится).`;
+      const S = t.ruDurationS / t.enDurationS, r = Math.round((S - 1) * 100);
+      return Math.abs(r) < 1 ? "Длительности уже совпадают." : `RU ${r > 0 ? "длиннее" : "короче"} на ${Math.abs(r)}% — при включении RU подстроится под EN (тон сохранится).`;
     });
     function p() {
       n("apply", {
-        effect: a.value,
-        normalize: r.value,
-        speedMatch: v.value,
-        normalizeDb: k.value
+        effect: s.value,
+        normalize: l.value,
+        speedMatch: y.value,
+        normalizeDb: g.value
       }), n("update:visible", !1);
     }
-    return (b, l) => {
-      const d = te("InputGroupAddon"), f = te("Dropdown"), _ = te("InputGroup"), m = te("Fieldset"), c = te("InputSwitch"), T = te("InputNumber"), O = te("Button"), x = te("Dialog");
-      return E(), de(x, {
+    return (S, r) => {
+      const d = Q("InputGroupAddon"), u = Q("Dropdown"), m = Q("InputGroup"), v = Q("Fieldset"), f = Q("InputSwitch"), T = Q("InputNumber"), O = Q("Button"), A = Q("Dialog");
+      return E(), le(A, {
         visible: e.visible,
         modal: "",
         header: "Output File Settings",
-        "onUpdate:visible": l[4] || (l[4] = (D) => b.$emit("update:visible", D))
+        "onUpdate:visible": r[4] || (r[4] = (D) => S.$emit("update:visible", D))
       }, {
-        footer: Y(() => [
-          N(O, {
+        footer: K(() => [
+          L(O, {
             label: "Apply",
             onClick: p
           })
         ]),
-        default: Y(() => [
-          N(m, { legend: "Effect" }, {
-            default: Y(() => [
-              N(_, null, {
-                default: Y(() => [
-                  N(d, null, {
-                    default: Y(() => [...l[5] || (l[5] = [
+        default: K(() => [
+          L(v, { legend: "Effect" }, {
+            default: K(() => [
+              L(m, null, {
+                default: K(() => [
+                  L(d, null, {
+                    default: K(() => [...r[5] || (r[5] = [
                       $("i", { class: "pi pi-sliders-h" }, null, -1)
                     ])]),
                     _: 1
                   }),
-                  N(f, {
+                  L(u, {
                     inputId: "ofd-effect",
-                    modelValue: a.value,
-                    "onUpdate:modelValue": l[0] || (l[0] = (D) => a.value = D),
-                    options: s,
+                    modelValue: s.value,
+                    "onUpdate:modelValue": r[0] || (r[0] = (D) => s.value = D),
+                    options: o,
                     optionLabel: "label",
                     optionValue: "value",
                     placeholder: "No effect"
@@ -219,35 +259,35 @@ const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions
                 ]),
                 _: 1
               }),
-              l[6] || (l[6] = $("small", null, " Аудио-эффект. Применяется после нормализации, перед сохранением файла. ", -1))
+              r[6] || (r[6] = $("small", null, " Аудио-эффект. Применяется после нормализации, перед сохранением файла. ", -1))
             ]),
             _: 1
           }),
-          N(m, { legend: "Normalize" }, {
-            default: Y(() => [
-              N(_, null, {
-                default: Y(() => [
-                  N(d, null, {
-                    default: Y(() => [...l[7] || (l[7] = [
+          L(v, { legend: "Normalize" }, {
+            default: K(() => [
+              L(m, null, {
+                default: K(() => [
+                  L(d, null, {
+                    default: K(() => [...r[7] || (r[7] = [
                       $("i", { class: "pi pi-volume-up" }, null, -1)
                     ])]),
                     _: 1
                   }),
-                  $("div", no, [
-                    N(c, {
-                      modelValue: r.value,
-                      "onUpdate:modelValue": l[1] || (l[1] = (D) => r.value = D)
+                  $("div", ho, [
+                    L(f, {
+                      modelValue: l.value,
+                      "onUpdate:modelValue": r[1] || (r[1] = (D) => l.value = D)
                     }, null, 8, ["modelValue"]),
-                    $("label", oo, F(r.value ? "On" : "Off"), 1)
+                    $("label", yo, V(l.value ? "On" : "Off"), 1)
                   ])
                 ]),
                 _: 1
               }),
-              r.value ? (E(), A("div", so, [
-                l[8] || (l[8] = $("span", { class: "muted" }, "Target level:", -1)),
-                N(T, {
-                  modelValue: k.value,
-                  "onUpdate:modelValue": l[2] || (l[2] = (D) => k.value = D),
+              l.value ? (E(), N("div", vo, [
+                r[8] || (r[8] = $("span", { class: "p-text-secondary" }, "Target level:", -1)),
+                L(T, {
+                  modelValue: g.value,
+                  "onUpdate:modelValue": r[2] || (r[2] = (D) => g.value = D),
                   min: -30,
                   max: -6,
                   step: 0.5,
@@ -259,31 +299,31 @@ const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions
                   class: "ofd-target-number"
                 }, null, 8, ["modelValue"])
               ])) : X("", !0),
-              l[9] || (l[9] = $("small", null, " Приводит RMS-громкость к целевому уровню. −20 dB — комфортный дефолт для диалогов; тише (−26…−24) — для шёпота и фоновых реплик, громче (−16…−14) — для криков. ", -1))
+              r[9] || (r[9] = $("small", null, " Приводит RMS-громкость к целевому уровню. −20 dB — комфортный дефолт для диалогов; тише (−26…−24) — для шёпота и фоновых реплик, громче (−16…−14) — для криков. ", -1))
             ]),
             _: 1
           }),
-          N(m, { legend: "Match duration" }, {
-            default: Y(() => [
-              N(_, null, {
-                default: Y(() => [
-                  N(d, null, {
-                    default: Y(() => [
-                      ce(" EN " + F(t.enDurationS != null ? t.enDurationS.toFixed(2) + "s" : "—") + " RU " + F(t.ruDurationS != null ? t.ruDurationS.toFixed(2) + "s" : "—"), 1)
+          L(v, { legend: "Match duration" }, {
+            default: K(() => [
+              L(m, null, {
+                default: K(() => [
+                  L(d, null, {
+                    default: K(() => [
+                      ce(" EN " + V(t.enDurationS != null ? t.enDurationS.toFixed(2) + "s" : "—") + " RU " + V(t.ruDurationS != null ? t.ruDurationS.toFixed(2) + "s" : "—"), 1)
                     ]),
                     _: 1
                   }),
-                  $("div", ao, [
-                    N(c, {
-                      modelValue: v.value,
-                      "onUpdate:modelValue": l[3] || (l[3] = (D) => v.value = D)
+                  $("div", _o, [
+                    L(f, {
+                      modelValue: y.value,
+                      "onUpdate:modelValue": r[3] || (r[3] = (D) => y.value = D)
                     }, null, 8, ["modelValue"]),
-                    $("label", io, F(v.value ? "On" : "Off"), 1)
+                    $("label", mo, V(y.value ? "On" : "Off"), 1)
                   ])
                 ]),
                 _: 1
               }),
-              $("small", null, F(h.value), 1)
+              $("small", null, V(h.value), 1)
             ]),
             _: 1
           })
@@ -292,80 +332,80 @@ const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions
       }, 8, ["visible"]);
     };
   }
-}, ro = /* @__PURE__ */ Re(lo, [["__scopeId", "data-v-0b1ebea7"]]);
-let tt = null;
-function uo() {
+}, bo = /* @__PURE__ */ Te(go, [["__scopeId", "data-v-a21190be"]]);
+let nt = null;
+function So() {
   const e = typeof window < "u" && (window.AudioContext || window.webkitAudioContext);
-  return e ? (tt || (tt = new e()), tt) : null;
+  return e ? (nt || (nt = new e()), nt) : null;
 }
-async function co(e, o = 100) {
-  const t = uo();
+async function ko(e, a = 100) {
+  const t = So();
   if (!t) throw new Error("Web Audio not supported -- can't decode a waveform");
   const n = await fetch(e);
   if (!n.ok) throw new Error(`couldn't fetch ${e}: ${n.status}`);
-  const s = await n.arrayBuffer(), r = (await t.decodeAudioData(s)).getChannelData(0), v = Math.max(1, Math.floor(r.length / o)), k = new Float32Array(o);
-  for (let h = 0; h < o; h++) {
-    const p = h * v, b = Math.min(r.length, p + v);
-    let l = 0;
-    for (let d = p; d < b; d++) {
-      const f = Math.abs(r[d]);
-      f > l && (l = f);
+  const o = await n.arrayBuffer(), l = (await t.decodeAudioData(o)).getChannelData(0), y = Math.max(1, Math.floor(l.length / a)), g = new Float32Array(a);
+  for (let h = 0; h < a; h++) {
+    const p = h * y, S = Math.min(l.length, p + y);
+    let r = 0;
+    for (let d = p; d < S; d++) {
+      const u = Math.abs(l[d]);
+      u > r && (r = u);
     }
-    k[h] = l;
+    g[h] = r;
   }
-  return k;
+  return g;
 }
-const fo = { class: "waveform-wrap" }, po = {
+const Ro = { class: "waveform-wrap" }, To = {
   key: 0,
   class: "waveform-status"
-}, vo = {
+}, wo = {
   key: 1,
   class: "waveform-status",
   title: "Couldn't load a waveform for this file"
-}, ho = {
+}, Eo = {
   __name: "WaveformCanvas",
   props: {
     src: { type: String, default: "" }
   },
   setup(e) {
-    const o = e, t = V(null), n = V(!1), s = V(!1);
-    function a(v, k) {
-      if (typeof v.getContext != "function") return;
-      const h = window.devicePixelRatio || 1, p = v.clientWidth || 200, b = v.clientHeight || 28;
-      v.width = Math.max(1, Math.round(p * h)), v.height = Math.max(1, Math.round(b * h));
-      const l = v.getContext("2d");
-      if (!l) return;
-      l.setTransform(h, 0, 0, h, 0, 0), l.clearRect(0, 0, p, b);
-      const d = p / k.length, f = b / 2;
-      l.fillStyle = getComputedStyle(v).color || "#4caf50";
-      for (let _ = 0; _ < k.length; _++) {
-        const m = Math.max(1, k[_] * b);
-        l.fillRect(_ * d, f - m / 2, Math.max(1, d - 1), m);
+    const a = e, t = F(null), n = F(!1), o = F(!1);
+    function s(y, g) {
+      if (typeof y.getContext != "function") return;
+      const h = window.devicePixelRatio || 1, p = y.clientWidth || 200, S = y.clientHeight || 28;
+      y.width = Math.max(1, Math.round(p * h)), y.height = Math.max(1, Math.round(S * h));
+      const r = y.getContext("2d");
+      if (!r) return;
+      r.setTransform(h, 0, 0, h, 0, 0), r.clearRect(0, 0, p, S);
+      const d = p / g.length, u = S / 2;
+      r.fillStyle = getComputedStyle(y).color || "#4caf50";
+      for (let m = 0; m < g.length; m++) {
+        const v = Math.max(1, g[m] * S);
+        r.fillRect(m * d, u - v / 2, Math.max(1, d - 1), v);
       }
     }
-    async function r() {
-      if (!(!o.src || !t.value)) {
-        n.value = !0, s.value = !1;
+    async function l() {
+      if (!(!a.src || !t.value)) {
+        n.value = !0, o.value = !1;
         try {
-          const v = t.value.clientWidth || 200, k = await co(o.src, Math.max(20, Math.round(v / 3)));
-          t.value && a(t.value, k);
+          const y = t.value.clientWidth || 200, g = await ko(a.src, Math.max(20, Math.round(y / 3)));
+          t.value && s(t.value, g);
         } catch {
-          s.value = !0;
+          o.value = !0;
         } finally {
           n.value = !1;
         }
       }
     }
-    return qe(r), ye(() => o.src, r), (v, k) => (E(), A("div", fo, [
+    return We(l), ve(() => a.src, l), (y, g) => (E(), N("div", Ro, [
       $("canvas", {
         ref_key: "canvasEl",
         ref: t,
         class: "waveform-canvas"
       }, null, 512),
-      n.value ? (E(), A("span", po, "…")) : s.value ? (E(), A("span", vo, "⚠")) : X("", !0)
+      n.value ? (E(), N("span", To, "…")) : o.value ? (E(), N("span", wo, "⚠")) : X("", !0)
     ]));
   }
-}, Et = /* @__PURE__ */ Re(ho, [["__scopeId", "data-v-413ffbd4"]]), yo = /* @__PURE__ */ new Set([
+}, Et = /* @__PURE__ */ Te(Eo, [["__scopeId", "data-v-413ffbd4"]]), Co = /* @__PURE__ */ new Set([
   "a",
   "an",
   "the",
@@ -446,7 +486,7 @@ const fo = { class: "waveform-wrap" }, po = {
   "those",
   "though",
   "please"
-]), _o = /* @__PURE__ */ new Set([
+]), Io = /* @__PURE__ */ new Set([
   "и",
   "да",
   "но",
@@ -519,52 +559,52 @@ const fo = { class: "waveform-wrap" }, po = {
   "уж",
   "вот"
 ]);
-function Pe(e) {
+function Oe(e) {
   return Math.round(e * 10) / 10;
 }
-function Ue(e) {
+function Be(e) {
   return String(e).split(/\s+/).filter(Boolean);
 }
-function Ct(e, o) {
-  return (e.match(/[,;]/g) || []).length + (e.match(o) || []).length;
+function Ct(e, a) {
+  return (e.match(/[,;]/g) || []).length + (e.match(a) || []).length;
 }
-function mo(e) {
+function $o(e) {
   return (e.match(/[aeiouyAEIOUY]+/g) || []).length;
 }
-function go(e) {
+function Po(e) {
   return (e.match(/[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g) || []).length;
 }
-function It(e, o) {
-  const n = String(e).toLowerCase().replace(/[^a-zа-яё\s]/gi, "").split(/\s+/).filter(Boolean).filter((s) => !o.has(s));
+function It(e, a) {
+  const n = String(e).toLowerCase().replace(/[^a-zа-яё\s]/gi, "").split(/\s+/).filter(Boolean).filter((o) => !a.has(o));
   return Math.max(1, n.length);
 }
-function it(e, o) {
-  const t = String(e), n = String(o), s = It(t, yo), a = It(n, _o), v = Math.min(s, a) / Math.max(s, a) * 100, k = mo(t), h = go(n);
+function lt(e, a) {
+  const t = String(e), n = String(a), o = It(t, Co), s = It(n, Io), y = Math.min(o, s) / Math.max(o, s) * 100, g = $o(t), h = Po(n);
   let p = 100;
-  if (k > 0) {
-    const K = h / k, ge = 1.35, _e = 0.9;
-    if (K > ge) {
-      const be = K - ge;
-      p = Math.max(0, 100 - be * 100);
-    } else if (K < _e) {
-      const be = _e - K;
-      p = Math.max(0, 100 - be * 100);
+  if (g > 0) {
+    const W = h / g, pe = 1.35, _e = 0.9;
+    if (W > pe) {
+      const Se = W - pe;
+      p = Math.max(0, 100 - Se * 100);
+    } else if (W < _e) {
+      const Se = _e - W;
+      p = Math.max(0, 100 - Se * 100);
     }
   }
-  const b = v * 0.6 + p * 0.4, l = /\b(oh|ah|hm|ha|hey|ugh|wow|oops|tsk)\b/gi, d = /\b(ох|ах|хм|ха|эй|уф|ого|ой|упс|мда)\b/gi, f = (t.match(l) || []).length / Math.max(1, Ue(t).length) * 100, _ = (n.match(d) || []).length / Math.max(1, Ue(n).length) * 100, c = 100 * ((Math.min(f, _) + 0.01) / (Math.max(f, _) + 0.01)), T = /[aeiouyAEIOUY]/g, O = /[sxzSXZ]/g, x = /[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g, D = /[шжщчсзШЖЩЧСЗ]/g, w = (t.match(/[a-zA-Z]/g) || []).length || 1, L = (n.match(/[а-яёА-ЯЁ]/g) || []).length || 1, u = (t.match(T) || []).length / w, R = (n.match(x) || []).length / L, P = (t.match(O) || []).length / w, q = (n.match(D) || []).length / L, z = Math.abs(u - R), oe = Math.abs(P - q), le = 100 * (1 - Math.min(1, (z + oe) / 2)), y = (c + le) / 2, M = (K) => [
-    K.includes("?"),
-    K.includes("!"),
-    K.includes("...") || K.includes("…"),
-    /["«»]/.test(K),
-    /^\s*[—-]/.test(K)
-  ], J = M(t), H = M(n);
-  let Z = 0;
-  for (let K = 0; K < 5; K++)
-    J[K] === H[K] && (Z += 1);
-  const ee = Z / 5 * 100, I = Ue(t);
-  let S = 100;
+  const S = y * 0.6 + p * 0.4, r = /\b(oh|ah|hm|ha|hey|ugh|wow|oops|tsk)\b/gi, d = /\b(ох|ах|хм|ха|эй|уф|ого|ой|упс|мда)\b/gi, u = (t.match(r) || []).length / Math.max(1, Be(t).length) * 100, m = (n.match(d) || []).length / Math.max(1, Be(n).length) * 100, f = 100 * ((Math.min(u, m) + 0.01) / (Math.max(u, m) + 0.01)), T = /[aeiouyAEIOUY]/g, O = /[sxzSXZ]/g, A = /[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g, D = /[шжщчсзШЖЩЧСЗ]/g, w = (t.match(/[a-zA-Z]/g) || []).length || 1, x = (n.match(/[а-яёА-ЯЁ]/g) || []).length || 1, c = (t.match(T) || []).length / w, R = (n.match(A) || []).length / x, P = (t.match(O) || []).length / w, H = (n.match(D) || []).length / x, B = Math.abs(c - R), se = Math.abs(P - H), re = 100 * (1 - Math.min(1, (B + se) / 2)), _ = (f + re) / 2, M = (W) => [
+    W.includes("?"),
+    W.includes("!"),
+    W.includes("...") || W.includes("…"),
+    /["«»]/.test(W),
+    /^\s*[—-]/.test(W)
+  ], J = M(t), z = M(n);
+  let Y = 0;
+  for (let W = 0; W < 5; W++)
+    J[W] === z[W] && (Y += 1);
+  const te = Y / 5 * 100, I = Be(t);
+  let k = 100;
   if (I.length >= 7) {
-    const K = /* @__PURE__ */ new Set([
+    const W = /* @__PURE__ */ new Set([
       "the",
       "a",
       "an",
@@ -581,7 +621,7 @@ function it(e, o) {
       "on",
       "at",
       "it"
-    ]), ge = /* @__PURE__ */ new Set([
+    ]), pe = /* @__PURE__ */ new Set([
       "и",
       "а",
       "но",
@@ -597,248 +637,248 @@ function it(e, o) {
       "ты",
       "он",
       "она"
-    ]), _e = (Ee) => String(Ee).toLowerCase().replace(/[^a-zа-яё\s]/gi, "").split(/\s+/).filter(Boolean), be = _e(t).filter((Ee) => !K.has(Ee)), Me = _e(n).filter((Ee) => !ge.has(Ee)), xe = new Set(be).size / Math.max(1, be.length), Ge = new Set(Me).size / Math.max(1, Me.length);
-    S = Math.min(xe, Ge) / Math.max(xe, Ge, 1e-4) * 100;
+    ]), _e = (Ce) => String(Ce).toLowerCase().replace(/[^a-zа-яё\s]/gi, "").split(/\s+/).filter(Boolean), Se = _e(t).filter((Ce) => !W.has(Ce)), xe = _e(n).filter((Ce) => !pe.has(Ce)), Le = new Set(Se).size / Math.max(1, Se.length), Je = new Set(xe).size / Math.max(1, xe.length);
+    k = Math.min(Le, Je) / Math.max(Le, Je, 1e-4) * 100;
   }
-  const C = /\b(and|but|or|so|because|although)\b/gi, U = /\b(и|а|но|или|потому|хотя)\b/gi, G = Ue(n), se = Ct(t, C) / (I.length || 1) * 10, j = Ct(n, U) / (G.length || 1) * 10, ie = 100 * ((Math.min(se, j) + 0.01) / (Math.max(se, j) + 0.01));
+  const C = /\b(and|but|or|so|because|although)\b/gi, U = /\b(и|а|но|или|потому|хотя)\b/gi, q = Be(n), ae = Ct(t, C) / (I.length || 1) * 10, Z = Ct(n, U) / (q.length || 1) * 10, j = 100 * ((Math.min(ae, Z) + 0.01) / (Math.max(ae, Z) + 0.01));
   return [
-    { key: "syllableRatio", label: "Акцентно-ритмическое соответствие (CosyVoice 3)", score: Pe(b) },
-    { key: "acousticTexture", label: "Звуковая/фонетическая согласованность", score: Pe(y) },
-    { key: "edgeParity", label: "Интонационно-краевые маркеры", score: Pe(ee) },
-    { key: "lexicalDiversity", label: "Лексическое разнообразие (TTR)", score: Pe(S) },
-    { key: "pauseDensity", label: "Плотность микропауз", score: Pe(ie) }
+    { key: "syllableRatio", label: "Акцентно-ритмическое соответствие (CosyVoice 3)", score: Oe(S) },
+    { key: "acousticTexture", label: "Звуковая/фонетическая согласованность", score: Oe(_) },
+    { key: "edgeParity", label: "Интонационно-краевые маркеры", score: Oe(te) },
+    { key: "lexicalDiversity", label: "Лексическое разнообразие (TTR)", score: Oe(k) },
+    { key: "pauseDensity", label: "Плотность микропауз", score: Oe(j) }
   ];
 }
-const bo = { class: "translation-similarity-radar" }, So = { class: "radar-chart-container" }, ko = ["viewBox"], Ro = ["points"], To = ["x2", "y2"], wo = ["d"], Eo = ["y"], Co = ["cx", "cy", "onMouseenter"], Io = ["x", "y"], $o = ["x", "y", "text-anchor", "dy"], Po = { class: "radar-metrics-list" }, Oo = { class: "metric-info" }, Do = { class: "metric-label" }, Ao = { class: "metric-score-val" }, Mo = { class: "metric-bar-bg" }, Oe = 300, Se = 95, $t = 3, Be = 30, xo = {
+const Oo = { class: "translation-similarity-radar" }, Do = { class: "radar-chart-container" }, Mo = ["viewBox"], Ao = ["points"], xo = ["x2", "y2"], Lo = ["d"], No = ["y"], Fo = ["cx", "cy", "onMouseenter"], Vo = ["x", "y"], Uo = ["x", "y", "text-anchor", "dy"], Bo = { class: "radar-metrics-list" }, jo = { class: "metric-info" }, zo = { class: "metric-label" }, Ho = { class: "metric-score-val" }, qo = { class: "metric-bar-bg" }, De = 300, ke = 95, $t = 3, je = 30, Wo = {
   __name: "TranslationSimilarityRadar",
   props: {
     original: { type: String, default: "" },
     translation: { type: String, default: "" }
   },
   setup(e) {
-    const o = V(null), t = {
+    const a = F(null), t = {
       syllableRatio: "Слоги",
       acousticTexture: "Фонетика",
       edgeParity: "Маркеры",
       lexicalDiversity: "TTR",
       pauseDensity: "Паузы"
-    }, n = e, s = ae(() => {
+    }, n = e, o = ne(() => {
       try {
-        if (typeof it == "function") {
-          const T = it(n.original, n.translation);
+        if (typeof lt == "function") {
+          const T = lt(n.original, n.translation);
           if (Array.isArray(T) && T.length > 0)
             return T;
         }
       } catch {
       }
-      const f = n.original || "", _ = n.translation || "", m = Math.abs(_.length - f.length), c = Math.max(0, Math.min(100, Math.round(100 - m / Math.max(f.length, 1) * 50)));
+      const u = n.original || "", m = n.translation || "", v = Math.abs(m.length - u.length), f = Math.max(0, Math.min(100, Math.round(100 - v / Math.max(u.length, 1) * 50)));
       return [
-        { key: "semantic", label: "Semantic Match", score: _.length > 0 ? 85 : 0 },
-        { key: "length", label: "Length Ratio", score: c },
-        { key: "completeness", label: "Completeness", score: _.length > 0 ? 90 : 0 },
-        { key: "fluency", label: "Fluency", score: _.length > 0 ? 80 : 0 },
-        { key: "vocabulary", label: "Vocabulary", score: _.length > 0 ? 78 : 0 }
+        { key: "semantic", label: "Semantic Match", score: m.length > 0 ? 85 : 0 },
+        { key: "length", label: "Length Ratio", score: f },
+        { key: "completeness", label: "Completeness", score: m.length > 0 ? 90 : 0 },
+        { key: "fluency", label: "Fluency", score: m.length > 0 ? 80 : 0 },
+        { key: "vocabulary", label: "Vocabulary", score: m.length > 0 ? 78 : 0 }
       ];
-    }), a = Oe / 2, r = ae(() => {
-      const f = s.value.reduce((_, m) => _ + m.score, 0);
-      return Math.round(f / s.value.length);
-    }), v = ae(() => s.value.length || 5), k = ae(() => {
-      const f = v.value, _ = [];
-      for (let m = 0; m < f; m++) {
-        const c = m * 2 * Math.PI / f - Math.PI / 2;
-        _.push({
-          x: a + Se * Math.cos(c),
-          y: a + Se * Math.sin(c),
-          angle: c
+    }), s = De / 2, l = ne(() => {
+      const u = o.value.reduce((m, v) => m + v.score, 0);
+      return Math.round(u / o.value.length);
+    }), y = ne(() => o.value.length || 5), g = ne(() => {
+      const u = y.value, m = [];
+      for (let v = 0; v < u; v++) {
+        const f = v * 2 * Math.PI / u - Math.PI / 2;
+        m.push({
+          x: s + ke * Math.cos(f),
+          y: s + ke * Math.sin(f),
+          angle: f
         });
       }
-      return _;
-    }), h = ae(() => {
-      const f = v.value, _ = [];
-      for (let m = 1; m <= $t; m++) {
-        const c = Se * m / $t, T = [];
-        for (let O = 0; O < f; O++) {
-          const x = O * 2 * Math.PI / f - Math.PI / 2, D = a + c * Math.cos(x), w = a + c * Math.sin(x);
+      return m;
+    }), h = ne(() => {
+      const u = y.value, m = [];
+      for (let v = 1; v <= $t; v++) {
+        const f = ke * v / $t, T = [];
+        for (let O = 0; O < u; O++) {
+          const A = O * 2 * Math.PI / u - Math.PI / 2, D = s + f * Math.cos(A), w = s + f * Math.sin(A);
           T.push(`${D},${w}`);
         }
-        _.push({ level: m, points: T.join(" ") });
+        m.push({ level: v, points: T.join(" ") });
       }
-      return _;
-    }), p = ae(() => {
-      const f = v.value, _ = [];
-      return s.value.forEach((m, c) => {
-        const T = c * 2 * Math.PI / f - Math.PI / 2, O = Math.max(0, Math.min(100, m.score ?? 0)), x = Se * O / 100, D = Math.max(x, Be), w = a + D * Math.cos(T), L = a + D * Math.sin(T);
-        _.push({ x: w, y: L, score: O, label: m.label, key: m.key, clamped: x <= Be });
-      }), _;
-    }), b = ae(() => {
-      const f = p.value, _ = f.length;
-      if (_ === 0) return "";
-      let m = `M ${f[0].x} ${f[0].y}`;
-      for (let c = 1; c <= _; c++) {
-        const T = f[c - 1], O = f[c % _];
-        T.clamped && O.clamped ? m += ` A ${Be} ${Be} 0 0 1 ${O.x} ${O.y}` : m += ` L ${O.x} ${O.y}`;
+      return m;
+    }), p = ne(() => {
+      const u = y.value, m = [];
+      return o.value.forEach((v, f) => {
+        const T = f * 2 * Math.PI / u - Math.PI / 2, O = Math.max(0, Math.min(100, v.score ?? 0)), A = ke * O / 100, D = Math.max(A, je), w = s + D * Math.cos(T), x = s + D * Math.sin(T);
+        m.push({ x: w, y: x, score: O, label: v.label, key: v.key, clamped: A <= je });
+      }), m;
+    }), S = ne(() => {
+      const u = p.value, m = u.length;
+      if (m === 0) return "";
+      let v = `M ${u[0].x} ${u[0].y}`;
+      for (let f = 1; f <= m; f++) {
+        const T = u[f - 1], O = u[f % m];
+        T.clamped && O.clamped ? v += ` A ${je} ${je} 0 0 1 ${O.x} ${O.y}` : v += ` L ${O.x} ${O.y}`;
       }
-      return `${m} Z`;
+      return `${v} Z`;
     });
-    function l(f) {
-      const _ = Math.cos(f);
-      return Math.abs(_) < 0.25 ? "middle" : _ > 0 ? "start" : "end";
+    function r(u) {
+      const m = Math.cos(u);
+      return Math.abs(m) < 0.25 ? "middle" : m > 0 ? "start" : "end";
     }
-    function d(f) {
-      const _ = Math.sin(f);
-      return _ < -0.5 ? "-6" : _ > 0.5 ? "14" : "4";
+    function d(u) {
+      const m = Math.sin(u);
+      return m < -0.5 ? "-6" : m > 0.5 ? "14" : "4";
     }
-    return (f, _) => (E(), A("div", bo, [
-      $("div", So, [
-        (E(), A("svg", {
-          width: Oe,
-          height: Oe,
-          viewBox: `0 0 ${Oe} ${Oe}`,
+    return (u, m) => (E(), N("div", Oo, [
+      $("div", Do, [
+        (E(), N("svg", {
+          width: De,
+          height: De,
+          viewBox: `0 0 ${De} ${De}`,
           class: "radar-svg"
         }, [
-          (E(!0), A(ne, null, ue(h.value, (m) => (E(), A("polygon", {
-            key: m.level,
-            points: m.points,
+          (E(!0), N(oe, null, de(h.value, (v) => (E(), N("polygon", {
+            key: v.level,
+            points: v.points,
             class: "radar-grid-polygon"
-          }, null, 8, Ro))), 128)),
-          (E(!0), A(ne, null, ue(k.value, (m, c) => (E(), A("line", {
-            key: "axis-" + c,
-            x1: a,
-            y1: a,
-            x2: m.x,
-            y2: m.y,
+          }, null, 8, Ao))), 128)),
+          (E(!0), N(oe, null, de(g.value, (v, f) => (E(), N("line", {
+            key: "axis-" + f,
+            x1: s,
+            y1: s,
+            x2: v.x,
+            y2: v.y,
             class: "radar-axis-line"
-          }, null, 8, To))), 128)),
-          p.value.length > 0 ? (E(), A("path", {
+          }, null, 8, xo))), 128)),
+          p.value.length > 0 ? (E(), N("path", {
             key: 0,
-            d: b.value,
+            d: S.value,
             class: "radar-data-polygon"
-          }, null, 8, wo)) : X("", !0),
+          }, null, 8, Lo)) : X("", !0),
           $("circle", {
-            cx: a,
-            cy: a,
+            cx: s,
+            cy: s,
             r: "30",
             fill: "#1e1e22"
           }),
           $("text", {
-            x: a,
-            y: a + 5,
+            x: s,
+            y: s + 5,
             "text-anchor": "middle",
             class: "radar-center-text-main"
-          }, F(r.value) + "%", 9, Eo),
-          (E(!0), A(ne, null, ue(p.value, (m, c) => (E(), A("circle", {
-            key: "pt-" + c,
-            cx: m.x,
-            cy: m.y,
+          }, V(l.value) + "%", 9, No),
+          (E(!0), N(oe, null, de(p.value, (v, f) => (E(), N("circle", {
+            key: "pt-" + f,
+            cx: v.x,
+            cy: v.y,
             r: "4",
-            class: pe(["radar-data-node", { "radar-data-node-active": c === o.value }]),
-            onMouseenter: (T) => o.value = c,
-            onMouseleave: _[0] || (_[0] = (T) => o.value = null)
-          }, null, 42, Co))), 128)),
-          (E(!0), A(ne, null, ue(p.value, (m, c) => (E(), A("text", {
-            key: "pct-" + c,
-            x: a + Math.max(Se * m.score / 100 + 14, 40) * Math.cos(c * 2 * Math.PI / v.value - Math.PI / 2),
-            y: a + Math.max(Se * m.score / 100 + 14, 40) * Math.sin(c * 2 * Math.PI / v.value - Math.PI / 2),
+            class: ge(["radar-data-node", { "radar-data-node-active": f === a.value }]),
+            onMouseenter: (T) => a.value = f,
+            onMouseleave: m[0] || (m[0] = (T) => a.value = null)
+          }, null, 42, Fo))), 128)),
+          (E(!0), N(oe, null, de(p.value, (v, f) => (E(), N("text", {
+            key: "pct-" + f,
+            x: s + Math.max(ke * v.score / 100 + 14, 40) * Math.cos(f * 2 * Math.PI / y.value - Math.PI / 2),
+            y: s + Math.max(ke * v.score / 100 + 14, 40) * Math.sin(f * 2 * Math.PI / y.value - Math.PI / 2),
             "text-anchor": "middle",
             class: "radar-node-percent"
-          }, F(Math.round(m.score)) + "% ", 9, Io))), 128)),
-          (E(!0), A(ne, null, ue(k.value, (m, c) => {
-            var T, O, x;
-            return E(), A("text", {
-              key: "label-" + c,
-              x: a + (Se + 22) * Math.cos(m.angle),
-              y: a + (Se + 22) * Math.sin(m.angle),
-              "text-anchor": l(m.angle),
-              dy: d(m.angle),
+          }, V(Math.round(v.score)) + "% ", 9, Vo))), 128)),
+          (E(!0), N(oe, null, de(g.value, (v, f) => {
+            var T, O, A;
+            return E(), N("text", {
+              key: "label-" + f,
+              x: s + (ke + 22) * Math.cos(v.angle),
+              y: s + (ke + 22) * Math.sin(v.angle),
+              "text-anchor": r(v.angle),
+              dy: d(v.angle),
               class: "radar-axis-label"
             }, [
-              $("title", null, F((T = s.value[c]) == null ? void 0 : T.label), 1),
-              ce(" " + F(t[(O = s.value[c]) == null ? void 0 : O.key] || ((x = s.value[c]) == null ? void 0 : x.label) || `Metric ${c + 1}`), 1)
-            ], 8, $o);
+              $("title", null, V((T = o.value[f]) == null ? void 0 : T.label), 1),
+              ce(" " + V(t[(O = o.value[f]) == null ? void 0 : O.key] || ((A = o.value[f]) == null ? void 0 : A.label) || `Metric ${f + 1}`), 1)
+            ], 8, Uo);
           }), 128))
-        ], 8, ko))
+        ], 8, Mo))
       ]),
-      $("div", Po, [
-        (E(!0), A(ne, null, ue(s.value, (m, c) => (E(), A("div", {
-          key: m.key,
-          class: pe(["radar-metric-item", { "radar-metric-item-active": c === o.value }])
+      $("div", Bo, [
+        (E(!0), N(oe, null, de(o.value, (v, f) => (E(), N("div", {
+          key: v.key,
+          class: ge(["radar-metric-item", { "radar-metric-item-active": f === a.value }])
         }, [
-          $("div", Oo, [
-            $("span", Do, F(m.label), 1),
-            $("span", Ao, F(Math.round(m.score)) + "%", 1)
+          $("div", jo, [
+            $("span", zo, V(v.label), 1),
+            $("span", Ho, V(Math.round(v.score)) + "%", 1)
           ]),
-          $("div", Mo, [
+          $("div", qo, [
             $("div", {
               class: "metric-bar-fill",
-              style: De({ width: Math.max(0, Math.min(100, m.score)) + "%" })
+              style: Me({ width: Math.max(0, Math.min(100, v.score)) + "%" })
             }, null, 4)
           ])
         ], 2))), 128))
       ])
     ]));
   }
-}, Lo = /* @__PURE__ */ Re(xo, [["__scopeId", "data-v-2f7dabc6"]]), Vo = { class: "compact-circle" }, No = 400, nt = 8, Fo = {
+}, Go = /* @__PURE__ */ Te(Wo, [["__scopeId", "data-v-2f7dabc6"]]), Jo = { class: "compact-circle" }, Ko = 400, ot = 8, Zo = {
   __name: "TranslationSimilarityCompact",
   props: {
     original: { type: String, default: "" },
     translation: { type: String, default: "" }
   },
   setup(e) {
-    const o = e, t = ae(() => {
+    const a = e, t = ne(() => {
       try {
-        const l = it(o.original, o.translation);
-        if (!Array.isArray(l) || l.length === 0) return 0;
-        const d = l.reduce((f, _) => f + (_.score || 0), 0);
-        return Math.round(d / l.length);
+        const r = lt(a.original, a.translation);
+        if (!Array.isArray(r) || r.length === 0) return 0;
+        const d = r.reduce((u, m) => u + (m.score || 0), 0);
+        return Math.round(d / r.length);
       } catch {
         return 0;
       }
-    }), n = V(null), s = V({ top: 0, left: 0, placement: "below" }), a = V(!1);
-    let r = null;
-    function v() {
-      const l = n.value;
-      if (!l) return;
-      const d = l.getBoundingClientRect(), f = window.innerWidth, _ = window.innerHeight, m = No, c = 540;
-      let T = "below", O = d.bottom + nt;
-      O + c > _ && d.top - c - nt > 0 && (T = "above", O = d.top - c - nt);
-      let x = d.left + d.width / 2 - m / 2;
-      x + m > f - 8 && (x = f - m - 8), x < 8 && (x = 8), s.value = { top: O, left: x, placement: T };
+    }), n = F(null), o = F({ top: 0, left: 0, placement: "below" }), s = F(!1);
+    let l = null;
+    function y() {
+      const r = n.value;
+      if (!r) return;
+      const d = r.getBoundingClientRect(), u = window.innerWidth, m = window.innerHeight, v = Ko, f = 540;
+      let T = "below", O = d.bottom + ot;
+      O + f > m && d.top - f - ot > 0 && (T = "above", O = d.top - f - ot);
+      let A = d.left + d.width / 2 - v / 2;
+      A + v > u - 8 && (A = u - v - 8), A < 8 && (A = 8), o.value = { top: O, left: A, placement: T };
     }
-    function k() {
-      clearTimeout(r), v(), a.value = !0;
+    function g() {
+      clearTimeout(l), y(), s.value = !0;
     }
     function h() {
-      clearTimeout(r), r = setTimeout(() => {
-        a.value = !1;
+      clearTimeout(l), l = setTimeout(() => {
+        s.value = !1;
       }, 120);
     }
     function p() {
-      clearTimeout(r);
+      clearTimeout(l);
     }
-    function b() {
-      a.value && v();
+    function S() {
+      s.value && y();
     }
-    return window.addEventListener("scroll", b, !0), window.addEventListener("resize", b), ut(() => {
-      window.removeEventListener("scroll", b, !0), window.removeEventListener("resize", b), clearTimeout(r);
-    }), (l, d) => (E(), A(ne, null, [
+    return window.addEventListener("scroll", S, !0), window.addEventListener("resize", S), ct(() => {
+      window.removeEventListener("scroll", S, !0), window.removeEventListener("resize", S), clearTimeout(l);
+    }), (r, d) => (E(), N(oe, null, [
       $("div", {
         ref_key: "circleRef",
         ref: n,
         class: "similarity-compact-wrapper",
-        onMouseenter: k,
+        onMouseenter: g,
         onMouseleave: h
       }, [
-        $("div", Vo, F(t.value) + "% ", 1)
+        $("div", Jo, V(t.value) + "% ", 1)
       ], 544),
-      (E(), de(gn, { to: "body" }, [
-        a.value ? (E(), A("div", {
+      (E(), le(Tn, { to: "body" }, [
+        s.value ? (E(), N("div", {
           key: 0,
           class: "similarity-popover",
-          style: De({ top: s.value.top + "px", left: s.value.left + "px" }),
+          style: Me({ top: o.value.top + "px", left: o.value.left + "px" }),
           onMouseenter: p,
           onMouseleave: h
         }, [
-          N(Lo, {
+          L(Go, {
             original: e.original,
             translation: e.translation
           }, null, 8, ["original", "translation"])
@@ -846,7 +886,7 @@ const bo = { class: "translation-similarity-radar" }, So = { class: "radar-chart
       ]))
     ], 64));
   }
-}, Uo = /* @__PURE__ */ Re(Fo, [["__scopeId", "data-v-9f2bc65b"]]), Bo = { class: "row" }, jo = { class: "row" }, zo = { class: "row" }, Ho = { class: "filter-clear-wrapper row" }, qo = {
+}, Yo = /* @__PURE__ */ Te(Zo, [["__scopeId", "data-v-9f2bc65b"]]), Xo = { class: "row" }, Qo = { class: "row" }, es = { class: "row" }, ts = { class: "filter-clear-wrapper row" }, ns = {
   __name: "RowFilterBar",
   props: {
     statusOptions: {
@@ -871,347 +911,305 @@ const bo = { class: "translation-similarity-radar" }, So = { class: "radar-chart
     }
   },
   emits: ["toggle-status", "cycle-tristate", "clear"],
-  setup(e, { emit: o }) {
-    const t = e, n = o;
-    function s(p) {
+  setup(e, { emit: a }) {
+    const t = e, n = a;
+    function o(p) {
       n("toggle-status", p);
     }
-    function a(p) {
+    function s(p) {
       n("cycle-tristate", p);
     }
-    function r() {
+    function l() {
       n("clear");
     }
-    function v(p) {
-      const b = t.tristateValues[p.key], l = p.stateLabels && p.stateLabels[b];
-      return l || (b === "only" ? `${p.label} ✓` : b === "without" ? `${p.label} ✗` : p.label);
+    function y(p) {
+      const S = t.tristateValues[p.key], r = p.stateLabels && p.stateLabels[S];
+      return r || (S === "only" ? `${p.label} ✓` : S === "without" ? `${p.label} ✗` : p.label);
     }
-    function k(p) {
-      const b = t.tristateValues[p.key];
-      return b === "only" ? "success" : b === "without" ? "danger" : null;
+    function g(p) {
+      const S = t.tristateValues[p.key];
+      return S === "only" ? "success" : S === "without" ? "danger" : null;
     }
     function h(p) {
       return t.selectedStatuses.has(p);
     }
-    return (p, b) => {
-      const l = te("Button");
-      return E(), A("div", Bo, [
-        $("div", jo, [
-          (E(!0), A(ne, null, ue(e.statusOptions, (d) => (E(), de(l, {
+    return (p, S) => {
+      const r = Q("Button");
+      return E(), N("div", Xo, [
+        $("div", Qo, [
+          (E(!0), N(oe, null, de(e.statusOptions, (d) => (E(), le(r, {
             key: d.value,
             "data-status": d.value,
             "aria-pressed": h(d.value),
             outlined: !h(d.value),
-            onClick: (f) => s(d.value)
+            onClick: (u) => o(d.value)
           }, {
-            default: Y(() => [
-              ce(F(d.label), 1)
+            default: K(() => [
+              ce(V(d.label), 1)
             ]),
             _: 2
           }, 1032, ["data-status", "aria-pressed", "outlined", "onClick"]))), 128))
         ]),
-        $("div", zo, [
-          (E(!0), A(ne, null, ue(e.tristates, (d) => (E(), de(l, {
+        $("div", es, [
+          (E(!0), N(oe, null, de(e.tristates, (d) => (E(), le(r, {
             key: d.key,
             "data-tristate": d.key,
             "data-state": e.tristateValues[d.key],
-            severity: k(d),
+            severity: g(d),
             outlined: e.tristateValues[d.key] === "any",
-            onClick: (f) => a(d.key)
+            onClick: (u) => s(d.key)
           }, {
-            default: Y(() => [
-              ce(F(v(d)), 1)
+            default: K(() => [
+              ce(V(y(d)), 1)
             ]),
             _: 2
           }, 1032, ["data-tristate", "data-state", "severity", "outlined", "onClick"]))), 128))
         ]),
-        $("div", Ho, [
-          N(l, {
+        $("div", ts, [
+          L(r, {
             "data-testid": "filter-clear",
             label: "Clear",
             disabled: !e.hasActive,
-            onClick: r
+            onClick: l
           }, null, 8, ["disabled"])
         ])
       ]);
     };
   }
-}, Wo = /* @__PURE__ */ Re(qo, [["__scopeId", "data-v-227b9cf0"]]);
+}, os = /* @__PURE__ */ Te(ns, [["__scopeId", "data-v-227b9cf0"]]);
 /*!
  * pinia v4.0.3
  * (c) 2026 Eduardo San Martin Morote
  * @license MIT
  */
-let Ft;
-const Ae = (e) => Ft = e, Ut = (
+let Ut;
+const Ae = (e) => Ut = e, Bt = (
   /* istanbul ignore next */
   Symbol()
 );
 function Pt(e) {
   return e && typeof e == "object" && Object.prototype.toString.call(e) === "[object Object]" && typeof e.toJSON != "function";
 }
-function Go() {
-  const e = Lt(!0), o = e.run(() => V({}));
+function ss() {
+  const e = Lt(!0), a = e.run(() => F({}));
   let t = [], n = [];
-  const s = xt({
-    install(a) {
-      Ae(s), s._a = a, a.provide(Ut, s), a.config.globalProperties.$pinia = s, n.forEach((r) => t.push(r)), n = [];
+  const o = xt({
+    install(s) {
+      Ae(o), o._a = s, s.provide(Bt, o), s.config.globalProperties.$pinia = o, n.forEach((l) => t.push(l)), n = [];
     },
-    use(a) {
-      return this._a ? t.push(a) : n.push(a), this;
+    use(s) {
+      return this._a ? t.push(s) : n.push(s), this;
     },
     _p: t,
     _a: null,
     _e: e,
     _s: /* @__PURE__ */ new Map(),
-    state: o
+    state: a
   });
-  return s;
+  return o;
 }
-const lt = () => {
+const rt = () => {
 };
-function Ot(e, o, t, n = lt) {
-  e.add(o);
-  const s = () => {
-    e.delete(o) && n();
+function Ot(e, a, t, n = rt) {
+  e.add(a);
+  const o = () => {
+    e.delete(a) && n();
   };
-  return !t && Rn() && Tn(s), s;
+  return !t && In() && $n(o), o;
 }
-function Ce(e, ...o) {
+function Ie(e, ...a) {
   e.forEach((t) => {
-    t(...o);
+    t(...a);
   });
 }
-const Jo = (e) => e(), Dt = Symbol(), ot = Symbol();
-function rt(e, o) {
-  e instanceof Map && o instanceof Map ? o.forEach((t, n) => e.set(n, t)) : e instanceof Set && o instanceof Set && o.forEach(e.add, e);
-  for (const t in o) {
-    if (!Object.hasOwn(o, t)) continue;
-    const n = o[t], s = e[t];
-    Pt(s) && Pt(n) && Object.hasOwn(e, t) && !ve(n) && !ct(n) ? e[t] = rt(s, n) : e[t] = n;
+const as = (e) => e(), Dt = Symbol(), st = Symbol();
+function ut(e, a) {
+  e instanceof Map && a instanceof Map ? a.forEach((t, n) => e.set(n, t)) : e instanceof Set && a instanceof Set && a.forEach(e.add, e);
+  for (const t in a) {
+    if (!Object.hasOwn(a, t)) continue;
+    const n = a[t], o = e[t];
+    Pt(o) && Pt(n) && Object.hasOwn(e, t) && !he(n) && !dt(n) ? e[t] = ut(o, n) : e[t] = n;
   }
   return e;
 }
-const Ko = (
+const is = (
   /* istanbul ignore next */
   Symbol()
 );
-function Zo(e) {
-  return !e || typeof e != "object" || !Object.hasOwn(e, Ko);
+function ls(e) {
+  return !e || typeof e != "object" || !Object.hasOwn(e, is);
 }
-const { assign: ke } = Object;
-function Yo(e) {
-  return !!(ve(e) && e.effect);
+const { assign: Re } = Object;
+function rs(e) {
+  return !!(he(e) && e.effect);
 }
-function Xo(e, o, t, n) {
-  const { state: s, actions: a, getters: r } = o, v = t.state.value[e];
-  let k;
+function us(e, a, t, n) {
+  const { state: o, actions: s, getters: l } = a, y = t.state.value[e];
+  let g;
   function h() {
-    v || (t.state.value[e] = s ? s() : {});
-    const p = En(t.state.value[e]);
-    return ke(p, a, Object.keys(r || {}).reduce((b, l) => (b[l] = xt(ae(() => {
+    y || (t.state.value[e] = o ? o() : {});
+    const p = On(t.state.value[e]);
+    return Re(p, s, Object.keys(l || {}).reduce((S, r) => (S[r] = xt(ne(() => {
       Ae(t);
       const d = t._s.get(e);
-      return r[l].call(d, d);
-    })), b), {}));
+      return l[r].call(d, d);
+    })), S), {}));
   }
-  return k = Bt(e, h, o, t, n, !0), k;
+  return g = jt(e, h, a, t, n, !0), g;
 }
-function Bt(e, o, t = {}, n, s, a) {
-  let r;
-  const v = ke({ actions: {} }, t), k = { deep: !0 };
-  let h, p, b = /* @__PURE__ */ new Set(), l = /* @__PURE__ */ new Set(), d;
-  const f = n.state.value[e];
-  !a && !f && (n.state.value[e] = {});
-  let _;
-  function m(L) {
-    let u;
-    h = p = !1, typeof L == "function" ? (L(n.state.value[e]), u = {
+function jt(e, a, t = {}, n, o, s) {
+  let l;
+  const y = Re({ actions: {} }, t), g = { deep: !0 };
+  let h, p, S = /* @__PURE__ */ new Set(), r = /* @__PURE__ */ new Set(), d;
+  const u = n.state.value[e];
+  !s && !u && (n.state.value[e] = {});
+  let m;
+  function v(x) {
+    let c;
+    h = p = !1, typeof x == "function" ? (x(n.state.value[e]), c = {
       type: "patch function",
       storeId: e,
       events: d
-    }) : (rt(n.state.value[e], L), u = {
+    }) : (ut(n.state.value[e], x), c = {
       type: "patch object",
-      payload: L,
+      payload: x,
       storeId: e,
       events: d
     });
-    const R = _ = Symbol();
-    wn().then(() => {
-      _ === R && (h = !0);
-    }), p = !0, Ce(b, u, n.state.value[e]);
+    const R = m = Symbol();
+    Pn().then(() => {
+      m === R && (h = !0);
+    }), p = !0, Ie(S, c, n.state.value[e]);
   }
-  const c = a ? function() {
-    const { state: u } = t, R = u ? u() : {};
+  const f = s ? function() {
+    const { state: c } = t, R = c ? c() : {};
     this.$patch((P) => {
-      ke(P, R);
+      Re(P, R);
     });
-  } : lt;
+  } : rt;
   function T() {
-    r.stop(), b.clear(), l.clear(), n._s.delete(e);
+    l.stop(), S.clear(), r.clear(), n._s.delete(e);
   }
-  const O = (L, u = "") => {
-    if (Dt in L)
-      return L[ot] = u, L;
+  const O = (x, c = "") => {
+    if (Dt in x)
+      return x[st] = c, x;
     const R = function() {
       Ae(n);
-      const P = Array.from(arguments), q = /* @__PURE__ */ new Set(), z = /* @__PURE__ */ new Set();
-      function oe(M) {
-        q.add(M);
+      const P = Array.from(arguments), H = /* @__PURE__ */ new Set(), B = /* @__PURE__ */ new Set();
+      function se(M) {
+        H.add(M);
       }
-      function le(M) {
-        z.add(M);
+      function re(M) {
+        B.add(M);
       }
-      Ce(l, {
+      Ie(r, {
         args: P,
-        name: R[ot],
+        name: R[st],
         store: D,
-        after: oe,
-        onError: le
+        after: se,
+        onError: re
       });
-      let y;
+      let _;
       try {
-        y = L.apply(this && this.$id === e ? this : D, P);
+        _ = x.apply(this && this.$id === e ? this : D, P);
       } catch (M) {
-        throw Ce(z, M), M;
+        throw Ie(B, M), M;
       }
-      return y instanceof Promise ? y.then((M) => (Ce(q, M), M)).catch((M) => (Ce(z, M), Promise.reject(M))) : (Ce(q, y), y);
+      return _ instanceof Promise ? _.then((M) => (Ie(H, M), M)).catch((M) => (Ie(B, M), Promise.reject(M))) : (Ie(H, _), _);
     };
-    return R[Dt] = !0, R[ot] = u, R;
-  }, x = {
+    return R[Dt] = !0, R[st] = c, R;
+  }, A = {
     _p: n,
     $id: e,
-    $onAction: Ot.bind(null, l),
-    $patch: m,
-    $reset: c,
-    $subscribe(L, u = {}) {
-      if (b.has(L))
-        return lt;
-      const R = Ot(b, L, u.detached, () => P()), P = r.run(() => ye(() => n.state.value[e], (q) => {
-        (u.flush === "sync" ? p : h) && L({
+    $onAction: Ot.bind(null, r),
+    $patch: v,
+    $reset: f,
+    $subscribe(x, c = {}) {
+      if (S.has(x))
+        return rt;
+      const R = Ot(S, x, c.detached, () => P()), P = l.run(() => ve(() => n.state.value[e], (H) => {
+        (c.flush === "sync" ? p : h) && x({
           storeId: e,
           type: "direct",
           events: d
-        }, q);
-      }, ke({}, k, u)));
+        }, H);
+      }, Re({}, g, c)));
       return R;
     },
     $dispose: T
-  }, D = he(x);
+  }, D = ye(A);
   n._s.set(e, D);
-  const w = (n._a && n._a.runWithContext || Jo)(() => n._e.run(() => (r = Lt()).run(() => o({ action: O }))));
-  for (const L in w) {
-    const u = w[L];
-    ve(u) && !Yo(u) || ct(u) ? a || (f && Zo(u) && (ve(u) ? u.value = f[L] : ((u instanceof Set || u instanceof Map) && u.clear(), rt(u, f[L]))), n.state.value[e][L] = u) : typeof u == "function" && (w[L] = O(u, L), v.actions[L] = u);
+  const w = (n._a && n._a.runWithContext || as)(() => n._e.run(() => (l = Lt()).run(() => a({ action: O }))));
+  for (const x in w) {
+    const c = w[x];
+    he(c) && !rs(c) || dt(c) ? s || (u && ls(c) && (he(c) ? c.value = u[x] : ((c instanceof Set || c instanceof Map) && c.clear(), ut(c, u[x]))), n.state.value[e][x] = c) : typeof c == "function" && (w[x] = O(c, x), y.actions[x] = c);
   }
-  return ke(D, w), ke(He(D), w), Object.defineProperty(D, "$state", {
+  return Re(D, w), Re(qe(D), w), Object.defineProperty(D, "$state", {
     get: () => n.state.value[e],
-    set: (L) => {
-      m((u) => {
-        ke(u, L);
+    set: (x) => {
+      v((c) => {
+        Re(c, x);
       });
     }
-  }), n._p.forEach((L) => {
-    const u = r.run(() => L({
+  }), n._p.forEach((x) => {
+    const c = l.run(() => x({
       store: D,
       app: n._a,
       pinia: n,
-      options: v
+      options: y
     }));
-    ke(D, u);
-  }), f && a && t.hydrate && t.hydrate(D.$state, f), h = !0, p = !0, D;
+    Re(D, c);
+  }), u && s && t.hydrate && t.hydrate(D.$state, u), h = !0, p = !0, D;
 }
 /*! #__NO_SIDE_EFFECTS__ */
 // @__NO_SIDE_EFFECTS__
-function Qo(e, o, t) {
+function cs(e, a, t) {
   let n;
-  const s = typeof o == "function";
-  n = s ? t : o;
-  function a(r, v) {
-    const k = kn();
-    return r = r || (k ? Sn(Ut, null) : null), r && Ae(r), r = Ft, r._s.has(e) || (s ? Bt(e, o, n, r) : Xo(e, n, r)), r._s.get(e);
+  const o = typeof a == "function";
+  n = o ? t : a;
+  function s(l, y) {
+    const g = Cn();
+    return l = l || (g ? En(Bt, null) : null), l && Ae(l), l = Ut, l._s.has(e) || (o ? jt(e, a, n, l) : us(e, n, l)), l._s.get(e);
   }
-  return a.$id = e, a;
+  return s.$id = e, s;
 }
-function es(e) {
-  const o = He(e), t = {};
-  for (const n in o) {
-    const s = o[n];
-    s != null && s.effect ? t[n] = ae({
+function ds(e) {
+  const a = qe(e), t = {};
+  for (const n in a) {
+    const o = a[n];
+    o != null && o.effect ? t[n] = ne({
       get: () => e[n],
-      set(a) {
-        e[n] = a;
+      set(s) {
+        e[n] = s;
       }
-    }) : (ve(s) || ct(s)) && (t[n] = bn(e, n));
+    }) : (he(o) || dt(o)) && (t[n] = wn(e, n));
   }
   return t;
 }
-const ze = {
-  "": "All statuses",
-  no_text: "No source text",
-  needs_translation: "Needs translation",
-  not_started: "Not started",
-  stale: "Stale",
-  done: "Ready",
-  unsupported: "Unsupported (multi-channel)"
-}, ts = [
-  { value: "not_done", label: "Not done" },
-  { value: "manually_done", label: "Done (manual)" },
-  { value: "issues", label: "⚠ Issues only" }
-];
-function ns(e, o) {
-  return [...Object.entries(e || {}).map(([n, s]) => ({ value: n, label: s })), ...o || []];
-}
-const os = ns(
-  ze,
-  ts
-), ss = {
-  no_text: "text-warning",
-  needs_translation: "text-active",
-  stale: "text-warning",
-  done: "text-success"
-};
-function as(e) {
-  return ss[e] || "muted";
-}
-const is = [
-  { value: "no_text", label: "No text" },
-  { value: "needs_translation", label: "Needs translation" },
-  { value: "not_started", label: "Not started" },
-  { value: "stale", label: "Stale" },
-  { value: "done", label: "Ready" },
-  { value: "unsupported", label: "Unsupported" }
-], ls = [
-  {
-    key: "manuallyDone",
-    label: "Done (manual)",
-    stateLabels: { without: "Not done" }
-  },
-  { key: "issues", label: "⚠ Issues" }
-], At = 600, je = 50, rs = /* @__PURE__ */ Qo("voDub", () => {
-  const e = V(""), o = V(""), t = V([]), n = he({}), s = V(/* @__PURE__ */ new Set()), a = V("any"), r = V("any"), v = V(""), k = V(""), h = ae({
+const Mt = 600, ze = 50, fs = /* @__PURE__ */ cs("voDub", () => {
+  const e = F(""), a = F(""), t = F([]), n = ye({}), o = F(/* @__PURE__ */ new Set()), s = F("any"), l = F("any"), y = F(""), g = F(""), h = ne({
     get() {
-      return s.value.size === 1 ? Array.from(s.value)[0] : a.value === "only" ? "manually_done" : a.value === "without" ? "not_done" : r.value === "only" ? "issues" : "";
+      return o.value.size === 1 ? Array.from(o.value)[0] : s.value === "only" ? "manually_done" : s.value === "without" ? "not_done" : l.value === "only" ? "issues" : "";
     },
     set(I) {
-      I ? I === "manually_done" ? (s.value = /* @__PURE__ */ new Set(), a.value = "only", r.value = "any") : I === "not_done" ? (s.value = /* @__PURE__ */ new Set(), a.value = "without", r.value = "any") : I === "issues" ? (s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "only") : (s.value = /* @__PURE__ */ new Set([I]), a.value = "any", r.value = "any") : (s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "any"), O();
+      I ? I === "manually_done" ? (o.value = /* @__PURE__ */ new Set(), s.value = "only", l.value = "any") : I === "not_done" ? (o.value = /* @__PURE__ */ new Set(), s.value = "without", l.value = "any") : I === "issues" ? (o.value = /* @__PURE__ */ new Set(), s.value = "any", l.value = "only") : (o.value = /* @__PURE__ */ new Set([I]), s.value = "any", l.value = "any") : (o.value = /* @__PURE__ */ new Set(), s.value = "any", l.value = "any"), O();
     }
-  }), p = V(!1), b = V(!1), l = V({}), d = V(null), f = V(0);
-  function _() {
-    return $e(e.value, "_dub_state.json");
+  }), p = F(!1), S = F(!1), r = F({}), d = F(null), u = F(0);
+  function m() {
+    return Pe(e.value, "_dub_state.json");
   }
-  const m = "FL_VoDub.filterState";
-  function c() {
+  const v = "FL_VoDub.filterState";
+  function f() {
     try {
-      const I = localStorage.getItem(m);
+      const I = localStorage.getItem(v);
       if (!I) return;
-      const S = JSON.parse(I);
-      if (S && typeof S == "object") {
-        if (Array.isArray(S.statuses)) {
-          const C = Object.keys(ze), U = S.statuses.filter((G) => C.includes(G));
-          s.value = new Set(U);
+      const k = JSON.parse(I);
+      if (k && typeof k == "object") {
+        if (Array.isArray(k.statuses)) {
+          const C = Object.keys(He), U = k.statuses.filter((q) => C.includes(q));
+          o.value = new Set(U);
         }
-        ["any", "only", "without"].includes(S.manuallyDone) && (a.value = S.manuallyDone), ["any", "only", "without"].includes(S.issues) && (r.value = S.issues);
+        ["any", "only", "without"].includes(k.manuallyDone) && (s.value = k.manuallyDone), ["any", "only", "without"].includes(k.issues) && (l.value = k.issues);
       }
     } catch {
     }
@@ -1219,1003 +1217,1000 @@ const is = [
   function T() {
     try {
       const I = {
-        statuses: Array.from(s.value),
-        manuallyDone: a.value,
-        issues: r.value
+        statuses: Array.from(o.value),
+        manuallyDone: s.value,
+        issues: l.value
       };
-      localStorage.setItem(m, JSON.stringify(I));
+      localStorage.setItem(v, JSON.stringify(I));
     } catch {
     }
   }
   function O() {
     T();
   }
-  function x(I) {
-    if (!I || !ze.hasOwnProperty(I))
+  function A(I) {
+    if (!I || !He.hasOwnProperty(I))
       return;
-    const S = new Set(s.value);
-    S.has(I) ? S.delete(I) : S.add(I), s.value = S;
+    const k = new Set(o.value);
+    k.has(I) ? k.delete(I) : k.add(I), o.value = k;
   }
   function D() {
-    a.value === "any" ? a.value = "only" : a.value === "only" ? a.value = "without" : a.value = "any";
+    s.value === "any" ? s.value = "only" : s.value === "only" ? s.value = "without" : s.value = "any";
   }
   function w() {
-    r.value === "any" ? r.value = "only" : r.value === "only" ? r.value = "without" : r.value = "any";
+    l.value === "any" ? l.value = "only" : l.value === "only" ? l.value = "without" : l.value = "any";
   }
-  function L() {
-    s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "any";
+  function x() {
+    o.value = /* @__PURE__ */ new Set(), s.value = "any", l.value = "any";
   }
-  const u = ae(
-    () => s.value.size > 0 || a.value !== "any" || r.value !== "any"
+  const c = ne(
+    () => o.value.size > 0 || s.value !== "any" || l.value !== "any"
   );
-  function R({ root: I, bucket: S }) {
-    e.value = I, o.value = S, s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "any", c(), v.value = "", f.value = 0;
+  function R({ root: I, bucket: k }) {
+    e.value = I, a.value = k, o.value = /* @__PURE__ */ new Set(), s.value = "any", l.value = "any", f(), y.value = "", u.value = 0;
   }
   async function P() {
-    const S = await (await fetch(`${we}/read?path=${encodeURIComponent(_())}`)).json();
+    const k = await (await fetch(`${Ee}/read?path=${encodeURIComponent(m())}`)).json();
     let C = { rows: {} };
-    if (S.exists)
+    if (k.exists)
       try {
-        const U = JSON.parse(S.content);
+        const U = JSON.parse(k.content);
         U && typeof U.rows == "object" && (C = U);
       } catch (U) {
         console.warn("[VODubStore] _dub_state.json is not valid JSON:", U);
       }
-    Object.keys(n).forEach((U) => delete n[U]), Object.assign(n, C.rows), b.value = !!C.use_original_default;
+    Object.keys(n).forEach((U) => delete n[U]), Object.assign(n, C.rows), S.value = !!C.use_original_default;
   }
-  function q() {
-    const I = He(n), S = {};
+  function H() {
+    const I = qe(n), k = {};
     for (const C of t.value) {
       const U = I[C.audio_key];
-      S[C.audio_key] = U && U.russian_text || C.russian || "";
+      k[C.audio_key] = U && U.russian_text || C.russian || "";
     }
-    l.value = S;
+    r.value = k;
   }
-  async function z() {
+  async function B() {
     if (e.value) {
       p.value = !0;
       try {
         const I = new URLSearchParams({
           path: e.value,
-          bucket: o.value
+          bucket: a.value
         });
         h.value && I.set("status", h.value);
-        const C = await (await fetch(`${me}/rows?${I.toString()}`)).json();
+        const C = await (await fetch(`${be}/rows?${I.toString()}`)).json();
         if (C.error) {
-          k.value = C.error, t.value = [];
+          g.value = C.error, t.value = [];
           return;
         }
         t.value = C.rows || [];
         for (const U of t.value) {
-          const G = n[U.audio_key] || (n[U.audio_key] = {});
-          G.russian_text || (G.russian_text = U.russian || ""), G.instruct === void 0 && (G.instruct = U.instruct || ""), G.speaker_override === void 0 && (G.speaker_override = ""), G.effect === void 0 && (G.effect = "");
+          const q = n[U.audio_key] || (n[U.audio_key] = {});
+          q.russian_text || (q.russian_text = U.russian || ""), q.instruct === void 0 && (q.instruct = U.instruct || ""), q.speaker_override === void 0 && (q.speaker_override = ""), q.effect === void 0 && (q.effect = "");
         }
-        k.value = `${t.value.length} row(s) in ${o.value}`, q();
+        g.value = `${t.value.length} row(s) in ${a.value}`, H();
       } catch (I) {
-        k.value = `Couldn't load: ${I}`;
+        g.value = `Couldn't load: ${I}`;
       } finally {
         p.value = !1;
       }
     }
   }
-  function oe(I) {
+  function se(I) {
     return n[I.audio_key] || (n[I.audio_key] = {});
   }
-  function le() {
-    d.value && clearTimeout(d.value), d.value = setTimeout(y, At);
+  function re() {
+    d.value && clearTimeout(d.value), d.value = setTimeout(_, Mt);
   }
-  async function y() {
+  async function _() {
     try {
-      await fetch(`${we}/write`, {
+      await fetch(`${Ee}/write`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          path: _(),
+          path: m(),
           content: JSON.stringify(
-            { rows: n, use_original_default: b.value },
+            { rows: n, use_original_default: S.value },
             null,
             2
           )
         })
-      }), k.value = "Saved", z();
+      }), g.value = "Saved", B();
     } catch (I) {
-      k.value = `Save failed: ${I}`;
+      g.value = `Save failed: ${I}`;
     }
   }
   function M(I) {
-    oe(I), le();
+    se(I), re();
   }
   function J(I) {
-    k.value = I;
+    g.value = I;
   }
-  const H = ae(() => {
-    const I = v.value.trim().toLowerCase(), S = s.value, C = a.value, U = r.value, G = l.value, se = He(n);
-    return t.value.filter((j) => {
-      const B = se[j.audio_key] || null, ie = !!(B && B.manually_done), K = !!j.manually_issue;
-      if (S.size > 0 && !S.has(j.status))
+  const z = ne(() => {
+    const I = y.value.trim().toLowerCase(), k = o.value, C = s.value, U = l.value, q = r.value, ae = qe(n);
+    return t.value.filter((Z) => {
+      const ee = ae[Z.audio_key] || null, j = !!(ee && ee.manually_done), W = !!Z.manually_issue;
+      if (k.size > 0 && !k.has(Z.status))
         return !1;
       if (C === "only") {
-        if (!ie) return !1;
-      } else if (C === "without" && (ie || j.status === "unsupported" && !S.has("unsupported")))
+        if (!j) return !1;
+      } else if (C === "without" && (j || Z.status === "unsupported" && !k.has("unsupported")))
         return !1;
       if (U === "only") {
-        if (!K) return !1;
-      } else if (U === "without" && K)
+        if (!W) return !1;
+      } else if (U === "without" && W)
         return !1;
       if (!I) return !0;
-      const ge = G[j.audio_key] || j.russian;
-      return `${j.audio_key} ${j.speaker_tag} ${j.english} ${ge}`.toLowerCase().includes(I);
+      const pe = q[Z.audio_key] || Z.russian;
+      return `${Z.audio_key} ${Z.speaker_tag} ${Z.english} ${pe}`.toLowerCase().includes(I);
     });
-  }), Z = ae(
-    () => Math.max(1, Math.ceil(H.value.length / je))
-  ), ee = ae(() => {
-    const I = f.value * je;
-    return H.value.slice(I, I + je);
+  }), Y = ne(
+    () => Math.max(1, Math.ceil(z.value.length / ze))
+  ), te = ne(() => {
+    const I = u.value * ze;
+    return z.value.slice(I, I + ze);
   });
-  return ye([s, a, r], () => {
-    f.value = 0, z(), T();
-  }), ye(v, () => {
-    q(), f.value = 0;
-  }), ye(H, () => {
-    f.value > Z.value - 1 && (f.value = Math.max(0, Z.value - 1));
+  return ve([o, s, l], () => {
+    u.value = 0, B(), T();
+  }), ve(y, () => {
+    H(), u.value = 0;
+  }), ve(z, () => {
+    u.value > Y.value - 1 && (u.value = Math.max(0, Y.value - 1));
   }), {
     root: e,
-    bucket: o,
+    bucket: a,
     init: R,
     rows: t,
     stateRows: n,
     statusFilter: h,
-    filterStatuses: s,
-    filterManuallyDone: a,
-    filterIssues: r,
-    searchText: v,
-    status: k,
+    filterStatuses: o,
+    filterManuallyDone: s,
+    filterIssues: l,
+    searchText: y,
+    status: g,
     loading: p,
-    useOriginalDefault: b,
-    entryFor: oe,
+    useOriginalDefault: S,
+    entryFor: se,
     loadState: P,
-    loadRows: z,
-    scheduleSave: le,
-    flushSave: y,
+    loadRows: B,
+    scheduleSave: re,
+    flushSave: _,
     onTextEdit: M,
     setStatus: J,
     saveTimer: d,
-    visibleRows: H,
-    PAGE_SIZE: je,
-    currentPage: f,
-    pageCount: Z,
-    pagedRows: ee,
-    SAVE_DEBOUNCE_MS: At,
-    statePath: _,
-    STATUS_LABELS: ze,
-    STATUS_FILTER_OPTIONS: os,
-    STATUS_TOGGLE_OPTIONS: is,
-    TRISTATE_FILTERS: ls,
-    toggleStatus: x,
+    visibleRows: z,
+    PAGE_SIZE: ze,
+    currentPage: u,
+    pageCount: Y,
+    pagedRows: te,
+    SAVE_DEBOUNCE_MS: Mt,
+    statePath: m,
+    STATUS_LABELS: He,
+    STATUS_FILTER_OPTIONS: to,
+    STATUS_TOGGLE_OPTIONS: oo,
+    TRISTATE_FILTERS: so,
+    toggleStatus: A,
     cycleManuallyDone: D,
     cycleIssues: w,
-    clearFilters: L,
-    hasActiveFilters: u
+    clearFilters: x,
+    hasActiveFilters: c
   };
 });
-function us(e) {
-  const { props: o, setStatus: t, entryFor: n, scheduleSave: s } = e, a = V(!1), r = V(null), v = V([]), k = V(null), h = he({});
+function ps(e) {
+  const { props: a, setStatus: t, entryFor: n, scheduleSave: o } = e, s = F(!1), l = F(null), y = F([]), g = F(null), h = ye({});
   async function p() {
     try {
-      const f = await (await fetch(
-        `${me}/line_history/counts?root=${encodeURIComponent(o.root)}`
+      const u = await (await fetch(
+        `${be}/line_history/counts?root=${encodeURIComponent(a.root)}`
       )).json();
-      f && !f.error && Object.assign(h, f);
+      u && !u.error && Object.assign(h, u);
     } catch (d) {
       console.error("[FL history] couldn't load version counts", d);
     }
   }
-  async function b(d) {
-    r.value = d;
+  async function S(d) {
+    l.value = d;
     try {
-      const _ = await (await fetch(
-        `${me}/line_history?root=${encodeURIComponent(o.root)}&audio_key=${encodeURIComponent(d.audio_key)}`
+      const m = await (await fetch(
+        `${be}/line_history?root=${encodeURIComponent(a.root)}&audio_key=${encodeURIComponent(d.audio_key)}`
       )).json();
-      v.value = _.versions || [], k.value = _.chosen_version ?? null;
-    } catch (f) {
-      console.error("[FL history] couldn't load line history", f), v.value = [], k.value = null;
+      y.value = m.versions || [], g.value = m.chosen_version ?? null;
+    } catch (u) {
+      console.error("[FL history] couldn't load line history", u), y.value = [], g.value = null;
     }
-    a.value = !0;
+    s.value = !0;
   }
-  async function l(d) {
-    const f = r.value;
-    if (f)
+  async function r(d) {
+    const u = l.value;
+    if (u)
       try {
-        const m = await (await fetch(`${me}/line_history/choose`, {
+        const v = await (await fetch(`${be}/line_history/choose`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            root: o.root,
-            audio_key: f.audio_key,
+            root: a.root,
+            audio_key: u.audio_key,
             version: d
           })
         })).json();
-        if (m && m.error) {
-          t(`Couldn't switch version: ${m.error}`);
+        if (v && v.error) {
+          t(`Couldn't switch version: ${v.error}`);
           return;
         }
-        k.value = d, t(`Switched ${f.audio_key} to version ${d}`), n(f).active_version = d, s(), e.cacheBust && (e.cacheBust[f.audio_key] = Date.now()), e.loadRows && await e.loadRows(), p();
-      } catch (_) {
-        t(`Couldn't switch version: ${_.message || _}`);
+        g.value = d, t(`Switched ${u.audio_key} to version ${d}`), n(u).active_version = d, o(), e.cacheBust && (e.cacheBust[u.audio_key] = Date.now()), e.loadRows && await e.loadRows(), p();
+      } catch (m) {
+        t(`Couldn't switch version: ${m.message || m}`);
       }
   }
   return {
-    historyVisible: a,
-    historyRow: r,
-    historyVersions: v,
-    historyChosenVersion: k,
+    historyVisible: s,
+    historyRow: l,
+    historyVersions: y,
+    historyChosenVersion: g,
     historyCounts: h,
     refreshHistoryCounts: p,
-    openLineHistory: b,
-    onHistoryVersionChosen: l
+    openLineHistory: S,
+    onHistoryVersionChosen: r
   };
 }
-function cs(e) {
-  const { props: o, rows: t, entryFor: n, setStatus: s, scheduleSave: a } = e, r = V([]);
-  async function v() {
+function hs(e) {
+  const { props: a, rows: t, entryFor: n, setStatus: o, scheduleSave: s } = e, l = F([]);
+  async function y() {
     try {
       const T = await (await fetch(
-        `${we}/read?path=${encodeURIComponent($e(o.root, "_dub_roles.json"))}`
+        `${Ee}/read?path=${encodeURIComponent(Pe(a.root, "_dub_roles.json"))}`
       )).json();
       if (!T.exists) {
-        r.value = [];
+        l.value = [];
         return;
       }
-      const O = JSON.parse(T.content), x = O && typeof O.roles == "object" && O.roles || {};
-      r.value = Object.entries(x).map(([D, w]) => ({ code: D, ...w }));
+      const O = JSON.parse(T.content), A = O && typeof O.roles == "object" && O.roles || {};
+      l.value = Object.entries(A).map(([D, w]) => ({ code: D, ...w }));
     } catch {
-      r.value = [];
+      l.value = [];
     }
   }
-  function k(c) {
-    return [c.character, c.speaker].filter(Boolean).join(" -- ");
+  function g(f) {
+    return [f.character, f.speaker].filter(Boolean).join(" -- ");
   }
-  function h(c) {
-    return (n(c).speaker_override || c.speaker_tag || "").trim();
+  function h(f) {
+    return (n(f).speaker_override || f.speaker_tag || "").trim();
   }
   const {
     popover: p,
-    show: b,
-    hide: l,
+    show: S,
+    hide: r,
     info: d
-  } = Ln(
-    r,
-    (c) => [
-      ["character", c.character],
-      ["gender", c.gender],
-      ["actor", c.actor],
-      ["description", c.description],
-      ["dub direction", c.dub_direction],
-      ["notes", Array.isArray(c.notes) ? c.notes.join(" ") : c.notes],
-      ["voice", c.speaker]
+  } = Bn(
+    l,
+    (f) => [
+      ["character", f.character],
+      ["gender", f.gender],
+      ["actor", f.actor],
+      ["description", f.description],
+      ["dub direction", f.dub_direction],
+      ["notes", Array.isArray(f.notes) ? f.notes.join(" ") : f.notes],
+      ["voice", f.speaker]
     ].filter(([, T]) => T != null && T !== "")
   );
-  function f(c) {
-    const T = (c.speaker_tag || "").trim();
+  function u(f) {
+    const T = (f.speaker_tag || "").trim();
     return T ? t.value.filter(
-      (O) => O !== c && O.status !== "unsupported" && (O.speaker_tag || "").trim() === T
+      (O) => O !== f && O.status !== "unsupported" && (O.speaker_tag || "").trim() === T
     ).length : 0;
   }
-  function _(c) {
-    const T = f(c);
-    return T > 0 ? `Apply this Role to every other "${c.speaker_tag}" row in this bucket (${T})` : "No other rows in this bucket share this Identifier";
+  function m(f) {
+    const T = u(f);
+    return T > 0 ? `Apply this Role to every other "${f.speaker_tag}" row in this bucket (${T})` : "No other rows in this bucket share this Identifier";
   }
-  function m(c) {
-    const T = f(c);
+  function v(f) {
+    const T = u(f);
     if (!T) return;
-    const O = (c.speaker_tag || "").trim(), x = n(c).speaker_override || c.speaker_tag;
+    const O = (f.speaker_tag || "").trim(), A = n(f).speaker_override || f.speaker_tag;
     t.value.forEach((D) => {
-      D !== c && D.status !== "unsupported" && (D.speaker_tag || "").trim() === O && (n(D).speaker_override = x);
-    }), a(), s(`Applied Role to ${T} other "${O}" row(s) in this bucket`);
+      D !== f && D.status !== "unsupported" && (D.speaker_tag || "").trim() === O && (n(D).speaker_override = A);
+    }), s(), o(`Applied Role to ${T} other "${O}" row(s) in this bucket`);
   }
   return {
-    roleEntries: r,
-    loadRoleEntries: v,
+    roleEntries: l,
+    loadRoleEntries: y,
     roleCodeFor: h,
-    roleOptionSubLabel: k,
-    sameIdentifierCount: f,
-    applyRoleTitle: _,
-    applyRoleToSameIdentifier: m,
+    roleOptionSubLabel: g,
+    sameIdentifierCount: u,
+    applyRoleTitle: m,
+    applyRoleToSameIdentifier: v,
     roleInfoPopover: p,
-    showRoleInfoPopover: b,
-    hideRoleInfoPopover: l,
+    showRoleInfoPopover: S,
+    hideRoleInfoPopover: r,
     roleInfoFields: d
   };
 }
-function ds(e) {
+function ys(e) {
   const {
-    props: o,
+    props: a,
     rows: t,
     entryFor: n,
-    onTextEdit: s,
-    setStatus: a,
-    scheduleSave: r,
-    roleCodeFor: v
-  } = e, k = V([]);
+    onTextEdit: o,
+    setStatus: s,
+    scheduleSave: l,
+    roleCodeFor: y
+  } = e, g = F([]);
   function h() {
-    return $e(o.root, "_instruct_categories.json");
+    return Pe(a.root, "_instruct_categories.json");
   }
   async function p() {
     try {
       const R = await (await fetch(
-        `${we}/read?path=${encodeURIComponent(h())}`
+        `${Ee}/read?path=${encodeURIComponent(h())}`
       )).json();
       if (!R.exists) {
-        k.value = [];
+        g.value = [];
         return;
       }
       const P = JSON.parse(R.content);
-      k.value = P && P.categories || [];
+      g.value = P && P.categories || [];
     } catch {
-      k.value = [];
+      g.value = [];
     }
   }
-  const b = /* @__PURE__ */ new Map();
-  function l(u) {
-    clearTimeout(b.get(u.audio_key)), b.set(
-      u.audio_key,
+  const S = /* @__PURE__ */ new Map();
+  function r(c) {
+    clearTimeout(S.get(c.audio_key)), S.set(
+      c.audio_key,
       setTimeout(async () => {
-        const R = n(u).instruct, P = await Vn(
-          we,
+        const R = n(c).instruct, P = await jn(
+          Ee,
           h(),
           R
         );
-        P && (k.value = P);
+        P && (g.value = P);
       }, 600)
       // синхронно с SAVE_DEBOUNCE_MS из state
     );
   }
-  const d = V(!1), f = V(null);
-  function _(u) {
-    f.value = u, d.value = !0;
+  const d = F(!1), u = F(null);
+  function m(c) {
+    u.value = c, d.value = !0;
   }
-  const m = he({});
-  function c(u) {
-    const R = f.value;
-    R && (m[R.audio_key] = n(R).instruct, n(R).instruct = u, s(R), l(R));
+  const v = ye({});
+  function f(c) {
+    const R = u.value;
+    R && (v[R.audio_key] = n(R).instruct, n(R).instruct = c, o(R), r(R));
   }
-  function T(u) {
-    return m[u.audio_key] !== void 0 ? `Restore previous instruct: "${m[u.audio_key]}"` : "No previous instruct to restore";
+  function T(c) {
+    return v[c.audio_key] !== void 0 ? `Restore previous instruct: "${v[c.audio_key]}"` : "No previous instruct to restore";
   }
-  function O(u) {
-    if (m[u.audio_key] === void 0) return;
-    const R = n(u).instruct;
-    n(u).instruct = m[u.audio_key], m[u.audio_key] = R, s(u);
+  function O(c) {
+    if (v[c.audio_key] === void 0) return;
+    const R = n(c).instruct;
+    n(c).instruct = v[c.audio_key], v[c.audio_key] = R, o(c);
   }
-  function x(u) {
-    const R = (n(u).instruct || "").trim(), P = k.value.find(
-      (q) => (q.examples || []).some((z) => z.trim() === R)
+  function A(c) {
+    const R = (n(c).instruct || "").trim(), P = g.value.find(
+      (H) => (H.examples || []).some((B) => B.trim() === R)
     );
     return P ? P.title : null;
   }
-  function D(u) {
-    const R = v(u);
+  function D(c) {
+    const R = y(c);
     return R ? t.value.filter(
-      (P) => P !== u && P.status !== "unsupported" && v(P) === R
+      (P) => P !== c && P.status !== "unsupported" && y(P) === R
     ).length : 0;
   }
-  function w(u) {
-    const R = D(u);
-    return R > 0 ? `Apply this instruct to every other "${v(u)}" row in this bucket (${R})` : "No other rows in this bucket use this role";
+  function w(c) {
+    const R = D(c);
+    return R > 0 ? `Apply this instruct to every other "${y(c)}" row in this bucket (${R})` : "No other rows in this bucket use this role";
   }
-  function L(u) {
-    const R = D(u);
+  function x(c) {
+    const R = D(c);
     if (!R) return;
-    const P = v(u), q = n(u).instruct;
-    t.value.forEach((z) => {
-      z !== u && z.status !== "unsupported" && v(z) === P && (n(z).instruct = q);
-    }), r(), a(`Applied instruct to ${R} other "${P}" row(s) in this bucket`);
+    const P = y(c), H = n(c).instruct;
+    t.value.forEach((B) => {
+      B !== c && B.status !== "unsupported" && y(B) === P && (n(B).instruct = H);
+    }), l(), s(`Applied instruct to ${R} other "${P}" row(s) in this bucket`);
   }
   return {
-    instructCategories: k,
+    instructCategories: g,
     loadInstructCategories: p,
-    scheduleInstructLibrarySave: l,
+    scheduleInstructLibrarySave: r,
     instructPickerVisible: d,
-    instructPickerRow: f,
-    openInstructPicker: _,
-    onInstructPicked: c,
-    prevInstruct: m,
+    instructPickerRow: u,
+    openInstructPicker: m,
+    onInstructPicked: f,
+    prevInstruct: v,
     undoInstructTitle: T,
     undoInstruct: O,
-    instructNoteFor: x,
+    instructNoteFor: A,
     sameRoleCount: D,
     applyInstructTitle: w,
-    applyInstructToSameRole: L
+    applyInstructToSameRole: x
   };
 }
-function fs(e) {
+function vs(e) {
   const {
-    props: o,
+    props: a,
     entryFor: t,
     onTextEdit: n,
-    setStatus: s,
-    loadRows: a
-  } = e, r = V(!1), v = V(null);
-  function k(l) {
-    v.value = l, r.value = !0;
+    setStatus: o,
+    loadRows: s
+  } = e, l = F(!1), y = F(null);
+  function g(r) {
+    y.value = r, l.value = !0;
   }
-  function h(l) {
-    return t(l).effect || "";
+  function h(r) {
+    return t(r).effect || "";
   }
-  async function p(l) {
+  async function p(r) {
     var d;
-    s(`Applying settings to ${l.audio_key}...`);
+    o(`Applying settings to ${r.audio_key}...`);
     try {
-      const _ = await (await fetch(`${me}/apply_effect`, {
+      const m = await (await fetch(`${be}/apply_effect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          root: o.root,
-          audio_key: l.audio_key,
-          effect: t(l).effect || "",
-          normalize: !!t(l).normalize,
-          normalize_db: Number(t(l).normalize_db ?? -20),
-          speed_match: !!t(l).speed_match,
-          version: t(l).active_version ?? null
+          root: a.root,
+          audio_key: r.audio_key,
+          effect: t(r).effect || "",
+          normalize: !!t(r).normalize,
+          normalize_db: Number(t(r).normalize_db ?? -20),
+          speed_match: !!t(r).speed_match,
+          version: t(r).active_version ?? null
         })
       })).json();
-      if (_.error) {
-        s(`Couldn't apply settings to ${l.audio_key}: ${_.error}`);
+      if (m.error) {
+        o(`Couldn't apply settings to ${r.audio_key}: ${m.error}`);
         return;
       }
-      const m = await e.currentContentHash(l);
-      t(l).hash = m, e.cacheBust && (e.cacheBust[l.audio_key] = Date.now()), await a(), (d = e.refreshHistoryCounts) == null || d.call(e), s(`Applied settings to ${l.audio_key}`);
-    } catch (f) {
-      s(`Couldn't apply settings to ${l.audio_key}: ${f}`);
+      const v = await e.currentContentHash(r);
+      t(r).hash = v, e.cacheBust && (e.cacheBust[r.audio_key] = Date.now()), await s(), (d = e.refreshHistoryCounts) == null || d.call(e), o(`Applied settings to ${r.audio_key}`);
+    } catch (u) {
+      o(`Couldn't apply settings to ${r.audio_key}: ${u}`);
     }
   }
-  function b(l) {
-    var _;
-    const d = v.value;
+  function S(r) {
+    var m;
+    const d = y.value;
     if (!d) return;
-    const f = t(d);
-    f.effect = l.effect, f.normalize = l.normalize, f.speed_match = l.speedMatch, f.normalize_db = l.normalizeDb, n(d), (_ = e.hasRuTake) != null && _.call(e, d) && p(d);
+    const u = t(d);
+    u.effect = r.effect, u.normalize = r.normalize, u.speed_match = r.speedMatch, u.normalize_db = r.normalizeDb, n(d), (m = e.hasRuTake) != null && m.call(e, d) && p(d);
   }
   return {
-    outputDialogVisible: r,
-    dialogRow: v,
-    openOutputDialog: k,
-    onDialogApply: b,
+    outputDialogVisible: l,
+    dialogRow: y,
+    openOutputDialog: g,
+    onDialogApply: S,
     effectValue: h,
     applyEffectToFile: p,
-    speedMatchValue: (l) => !!t(l).speed_match
+    speedMatchValue: (r) => !!t(r).speed_match
   };
 }
-const jt = 3;
-function Mt(e) {
-  let o = !1;
+const zt = 3;
+function At(e) {
+  let a = !1;
   e.addEventListener("play", () => {
-    if (o || e.readyState >= jt) return;
-    o = !0, e.pause();
+    if (a || e.readyState >= zt) return;
+    a = !0, e.pause();
     const t = () => {
-      e.removeEventListener("canplaythrough", t), o = !1, e.play().catch(() => {
+      e.removeEventListener("canplaythrough", t), a = !1, e.play().catch(() => {
       });
     };
     e.addEventListener("canplaythrough", t);
   });
 }
-function st(e) {
-  return new Promise((o) => {
-    if (e.readyState >= jt) {
-      o();
+function at(e) {
+  return new Promise((a) => {
+    if (e.readyState >= zt) {
+      a();
       return;
     }
     const t = () => {
-      e.removeEventListener("canplaythrough", t), o();
+      e.removeEventListener("canplaythrough", t), a();
     };
     e.addEventListener("canplaythrough", t), e.load();
   });
 }
-let at = null;
-function ps() {
+let it = null;
+function _s() {
   const e = typeof window < "u" && (window.AudioContext || window.webkitAudioContext);
-  return e ? (at || (at = new e()), at) : null;
+  return e ? (it || (it = new e()), it) : null;
 }
-function vs(e, o = 1024) {
-  const t = new Float32Array(o), n = Math.tanh(e) || 1;
-  for (let s = 0; s < o; s++) {
-    const a = s / (o - 1) * 2 - 1;
-    t[s] = Math.tanh(a * e) / n;
+function ms(e, a = 1024) {
+  const t = new Float32Array(a), n = Math.tanh(e) || 1;
+  for (let o = 0; o < a; o++) {
+    const s = o / (a - 1) * 2 - 1;
+    t[o] = Math.tanh(s * e) / n;
   }
   return t;
 }
-function hs(e, o, t) {
-  const s = e.createBuffer(1, Math.max(1, Math.floor(e.sampleRate * 2)), e.sampleRate), a = s.getChannelData(0);
-  for (let h = 0; h < a.length; h++) a[h] = Math.random() * 2 - 1;
-  const r = e.createBufferSource();
-  r.buffer = s, r.loop = !0;
-  const v = e.createBiquadFilter();
-  v.type = "highpass", v.frequency.value = o;
-  const k = e.createBiquadFilter();
-  return k.type = "lowpass", k.frequency.value = t, r.connect(v), v.connect(k), r.start(), k;
+function gs(e, a, t) {
+  const o = e.createBuffer(1, Math.max(1, Math.floor(e.sampleRate * 2)), e.sampleRate), s = o.getChannelData(0);
+  for (let h = 0; h < s.length; h++) s[h] = Math.random() * 2 - 1;
+  const l = e.createBufferSource();
+  l.buffer = o, l.loop = !0;
+  const y = e.createBiquadFilter();
+  y.type = "highpass", y.frequency.value = a;
+  const g = e.createBiquadFilter();
+  return g.type = "lowpass", g.frequency.value = t, l.connect(y), y.connect(g), l.start(), g;
 }
-function Ie(e, { lowHz: o, highHz: t, drive: n, noiseLevel: s }) {
-  const a = e.createBiquadFilter();
-  a.type = "highpass", a.frequency.value = o;
-  const r = e.createBiquadFilter();
-  r.type = "lowpass", r.frequency.value = t, a.connect(r);
-  let v = r;
+function $e(e, { lowHz: a, highHz: t, drive: n, noiseLevel: o }) {
+  const s = e.createBiquadFilter();
+  s.type = "highpass", s.frequency.value = a;
+  const l = e.createBiquadFilter();
+  l.type = "lowpass", l.frequency.value = t, s.connect(l);
+  let y = l;
   if (n > 0) {
     const p = e.createWaveShaper();
-    p.curve = vs(n), p.oversample = "2x", r.connect(p), v = p;
+    p.curve = ms(n), p.oversample = "2x", l.connect(p), y = p;
   }
-  if (s <= 0) return { input: a, output: v };
-  const k = e.createGain();
-  k.gain.value = s, hs(e, o, t).connect(k);
+  if (o <= 0) return { input: s, output: y };
+  const g = e.createGain();
+  g.gain.value = o, gs(e, a, t).connect(g);
   const h = e.createGain();
-  return v.connect(h), k.connect(h), { input: a, output: h };
+  return y.connect(h), g.connect(h), { input: s, output: h };
 }
-const ys = {
-  radio: (e) => Ie(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0.05 }),
-  phone: (e) => Ie(e, { lowHz: 300, highHz: 3400, drive: 1.05, noiseLevel: 0 }),
+const bs = {
+  radio: (e) => $e(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0.05 }),
+  phone: (e) => $e(e, { lowHz: 300, highHz: 3400, drive: 1.05, noiseLevel: 0 }),
   /*
    Wide passband, no clip, no noise -- a natural muffled quality, not a
    telephony one. See nodes/_audio_effects.py's muffled_effect for the
    same params and the reasoning/reference behind them.
   */
-  muffled: (e) => Ie(e, { lowHz: 120, highHz: 6e3, drive: 0, noiseLevel: 0 }),
+  muffled: (e) => $e(e, { lowHz: 120, highHz: 6e3, drive: 0, noiseLevel: 0 }),
   /*
    radio's band and grit with NO static of its own -- for dubbing a game
    that already layers its own channel noise over the line as a separate
    sound, where baking in a second layer would stack the two. See
    nodes/_audio_effects.py's radio_dry_effect for the case behind it.
   */
-  radio_dry: (e) => Ie(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0 }),
+  radio_dry: (e) => $e(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0 }),
   /*
    Hard-wired intercom/PA panel -- between phone and radio at both ends,
    more grit than phone, no static.
   */
-  intercom: (e) => Ie(e, { lowHz: 250, highHz: 4e3, drive: 1.2, noiseLevel: 0 }),
+  intercom: (e) => $e(e, { lowHz: 250, highHz: 4e3, drive: 1.2, noiseLevel: 0 }),
   /*
    Inside a sealed helmet -- low end largely kept, only the top rolled
    off, drive below 1.0 so the clip stays in its near-identity region.
   */
-  suit: (e) => Ie(e, { lowHz: 150, highHz: 5e3, drive: 0.6, noiseLevel: 0 })
+  suit: (e) => $e(e, { lowHz: 150, highHz: 5e3, drive: 0.6, noiseLevel: 0 })
 };
-function _s(e) {
-  const o = { setEffect() {
-  } }, t = ps();
-  if (!t) return o;
+function Ss(e) {
+  const a = { setEffect() {
+  } }, t = _s();
+  if (!t) return a;
   let n;
   try {
     n = t.createMediaElementSource(e);
   } catch {
-    return o;
+    return a;
   }
-  const s = t.createGain();
-  s.gain.value = e.paused ? 0 : 1, s.connect(t.destination);
-  function a() {
-    s.gain.value = e.paused ? 0 : 1;
+  const o = t.createGain();
+  o.gain.value = e.paused ? 0 : 1, o.connect(t.destination);
+  function s() {
+    o.gain.value = e.paused ? 0 : 1;
   }
-  e.addEventListener("play", a), e.addEventListener("pause", a), e.addEventListener("ended", a);
-  const r = t.createGain();
-  n.connect(r), r.connect(s);
-  const v = {};
-  function k(b) {
-    if (v[b]) return v[b];
-    const l = ys[b];
-    if (!l) return null;
-    const d = l(t);
+  e.addEventListener("play", s), e.addEventListener("pause", s), e.addEventListener("ended", s);
+  const l = t.createGain();
+  n.connect(l), l.connect(o);
+  const y = {};
+  function g(S) {
+    if (y[S]) return y[S];
+    const r = bs[S];
+    if (!r) return null;
+    const d = r(t);
     n.connect(d.input);
-    const f = t.createGain();
-    return f.gain.value = 0, d.output.connect(f), f.connect(s), v[b] = f, f;
+    const u = t.createGain();
+    return u.gain.value = 0, d.output.connect(u), u.connect(o), y[S] = u, u;
   }
   let h = "";
-  function p(b) {
-    const l = b || "";
-    if (l === h) return;
-    if (h && v[h] && (v[h].gain.value = 0), h = "", !l) {
-      r.gain.value = 1;
+  function p(S) {
+    const r = S || "";
+    if (r === h) return;
+    if (h && y[h] && (y[h].gain.value = 0), h = "", !r) {
+      l.gain.value = 1;
       return;
     }
-    const d = k(l);
+    const d = g(r);
     if (!d) {
-      r.gain.value = 1;
+      l.gain.value = 1;
       return;
     }
-    h = l, r.gain.value = 0, d.gain.value = 1, t.state === "suspended" && t.resume().catch(() => {
+    h = r, l.gain.value = 0, d.gain.value = 1, t.state === "suspended" && t.resume().catch(() => {
     });
   }
   return { setEffect: p };
 }
-function ms(e) {
+function ks(e) {
   const {
-    props: o,
+    props: a,
     pagedRows: t,
     effectValue: n,
-    effectPreviews: s
+    effectPreviews: o
     // hasRuTake — через ctx.hasRuTake?.() в момент вызова (Render позже)
   } = e;
-  function a(u, R) {
-    return $e($e(o.root, u), `${R}.wav`);
+  function s(c, R) {
+    return Pe(Pe(a.root, c), `${R}.wav`);
   }
-  function r(u, R, P) {
-    const q = `${Cn}/audio?path=${encodeURIComponent(a(u, R))}`;
-    return P ? `${q}&v=${P}` : q;
+  function l(c, R, P) {
+    const H = `${Dn}/audio?path=${encodeURIComponent(s(c, R))}`;
+    return P ? `${H}&v=${P}` : H;
   }
-  function v(u) {
-    return a("audio_ru", u.audio_key);
+  function y(c) {
+    return s("audio_ru", c.audio_key);
   }
-  function k(u) {
-    return a("_dub_dry", u.audio_key);
+  function g(c) {
+    return s("_dub_dry", c.audio_key);
   }
   const h = /* @__PURE__ */ new Map(), p = /* @__PURE__ */ new Map();
-  function b(u, R) {
+  function S(c, R) {
     if (!R) {
-      h.delete(u);
+      h.delete(c);
       return;
     }
-    h.set(u, R), Mt(R);
+    h.set(c, R), At(R);
   }
-  function l(u, R) {
-    const P = u.audio_key;
+  function r(c, R) {
+    const P = c.audio_key;
     if (!R) {
-      p.delete(P), s.delete(P);
+      p.delete(P), o.delete(P);
       return;
     }
-    p.set(P, R), Mt(R);
-    const q = _s(R);
-    s.set(P, q), q.setEffect(n(u));
+    p.set(P, R), At(R);
+    const H = Ss(R);
+    o.set(P, H), H.setEffect(n(c));
   }
-  const d = he(/* @__PURE__ */ new Set()), f = he(/* @__PURE__ */ new Set());
-  function _(u, R) {
-    if (d.delete(u.audio_key), R === "ru" && c.value === u.audio_key) {
-      const P = p.get(u.audio_key);
+  const d = ye(/* @__PURE__ */ new Set()), u = ye(/* @__PURE__ */ new Set());
+  function m(c, R) {
+    if (d.delete(c.audio_key), R === "ru" && f.value === c.audio_key) {
+      const P = p.get(c.audio_key);
       P && !P.ended && O();
     }
   }
-  async function m(u) {
-    const R = h.get(u.audio_key), P = p.get(u.audio_key);
+  async function v(c) {
+    const R = h.get(c.audio_key), P = p.get(c.audio_key);
     if (!(!R || !P)) {
-      if (d.has(u.audio_key) || f.has(u.audio_key)) {
-        f.delete(u.audio_key), d.delete(u.audio_key), R.pause(), P.pause();
+      if (d.has(c.audio_key) || u.has(c.audio_key)) {
+        u.delete(c.audio_key), d.delete(c.audio_key), R.pause(), P.pause();
         return;
       }
-      R.pause(), P.pause(), R.currentTime = 0, P.currentTime = 0, f.add(u.audio_key), await Promise.all([st(R), st(P)]), f.delete(u.audio_key), h.has(u.audio_key) && (R.currentTime = 0, P.currentTime = 0, d.add(u.audio_key), R.play().catch(() => {
+      R.pause(), P.pause(), R.currentTime = 0, P.currentTime = 0, u.add(c.audio_key), await Promise.all([at(R), at(P)]), u.delete(c.audio_key), h.has(c.audio_key) && (R.currentTime = 0, P.currentTime = 0, d.add(c.audio_key), R.play().catch(() => {
       }), P.play().catch(() => {
       }));
     }
   }
-  const c = V(null);
+  const f = F(null);
   let T = null;
   function O() {
     var R;
     T && (T.el.removeEventListener("ended", T.fn), T = null);
-    const u = c.value;
-    c.value = null, u && ((R = p.get(u)) == null || R.pause());
+    const c = f.value;
+    f.value = null, c && ((R = p.get(c)) == null || R.pause());
   }
-  async function x(u) {
-    var le, y;
+  async function A(c) {
+    var re, _;
     O();
     const R = t.value;
-    let P = u;
-    for (; P < R.length && !((le = e.hasRuTake) != null && le.call(e, R[P])); ) P++;
+    let P = c;
+    for (; P < R.length && !((re = e.hasRuTake) != null && re.call(e, R[P])); ) P++;
     if (P >= R.length) return;
-    const q = R[P], z = p.get(q.audio_key);
-    if (!z || (c.value = q.audio_key, (y = w.get(q.audio_key)) == null || y.scrollIntoView({ behavior: "smooth", block: "nearest" }), await st(z), c.value !== q.audio_key)) return;
-    const oe = () => {
-      z.removeEventListener("ended", oe), T = null, x(P + 1);
+    const H = R[P], B = p.get(H.audio_key);
+    if (!B || (f.value = H.audio_key, (_ = w.get(H.audio_key)) == null || _.scrollIntoView({ behavior: "smooth", block: "nearest" }), await at(B), f.value !== H.audio_key)) return;
+    const se = () => {
+      B.removeEventListener("ended", se), T = null, A(P + 1);
     };
-    T = { el: z, fn: oe }, z.addEventListener("ended", oe), z.currentTime = 0, z.play().catch(() => {
+    T = { el: B, fn: se }, B.addEventListener("ended", se), B.currentTime = 0, B.play().catch(() => {
     });
   }
   function D() {
-    c.value ? O() : x(0);
+    f.value ? O() : A(0);
   }
   const w = /* @__PURE__ */ new Map();
-  function L(u, R) {
+  function x(c, R) {
     if (!R) {
-      w.delete(u);
+      w.delete(c);
       return;
     }
-    w.set(u, R);
+    w.set(c, R);
   }
   return {
-    rawAudioPath: a,
-    audioUrl: r,
-    ruFilePath: v,
-    dryFilePath: k,
-    setEnAudioRef: b,
-    setRuAudioRef: l,
+    rawAudioPath: s,
+    audioUrl: l,
+    ruFilePath: y,
+    dryFilePath: g,
+    setEnAudioRef: S,
+    setRuAudioRef: r,
     dualPlayingRows: d,
-    dualLoadingRows: f,
-    playBoth: m,
-    onTrackPaused: _,
-    sequentialPlayingKey: c,
+    dualLoadingRows: u,
+    playBoth: v,
+    onTrackPaused: m,
+    sequentialPlayingKey: f,
     stopSequentialPlayback: O,
-    playSequentialFrom: x,
+    playSequentialFrom: A,
     toggleSequentialPlayback: D,
     rowEls: w,
-    setRowRef: L
+    setRowRef: x
   };
 }
-const gs = 0.15, bs = 0.4;
-function Ss(e) {
+const Rs = 0.15, Ts = 0.4;
+function ws(e) {
   const {
-    props: o,
+    props: a,
     rows: t,
     entryFor: n,
-    onTextEdit: s,
-    setStatus: a,
-    loadRows: r,
-    scheduleSave: v,
-    useOriginalDefault: k
+    onTextEdit: o,
+    setStatus: s,
+    loadRows: l,
+    scheduleSave: y,
+    useOriginalDefault: g
   } = e;
-  function h(y) {
-    const M = n(y).use_original_sample;
-    return M === void 0 ? k.value : !!M;
+  function h(_) {
+    const M = n(_).use_original_sample;
+    return M === void 0 ? g.value : !!M;
   }
-  function p(y, M) {
-    n(y).use_original_sample = M, s(y);
+  function p(_, M) {
+    n(_).use_original_sample = M, o(_);
   }
-  function b() {
-    v();
+  function S() {
+    y();
   }
-  const l = he(/* @__PURE__ */ new Set()), d = he(/* @__PURE__ */ new Set()), f = he({}), _ = he({});
-  function m(y, M) {
-    f[y.audio_key] = M.target.duration;
+  const r = ye(/* @__PURE__ */ new Set()), d = ye(/* @__PURE__ */ new Set()), u = ye({}), m = ye({});
+  function v(_, M) {
+    u[_.audio_key] = M.target.duration;
   }
-  function c(y, M = 8e3) {
+  function f(_, M = 8e3) {
     return new Promise((J) => {
-      const H = new Audio();
-      let Z = !1;
-      const ee = (C) => {
-        Z || (Z = !0, H.removeEventListener("loadedmetadata", I), H.removeEventListener("error", S), J(C));
-      }, I = () => ee(H.duration || null), S = () => ee(null);
-      H.addEventListener("loadedmetadata", I), H.addEventListener("error", S), setTimeout(() => ee(null), M), H.preload = "metadata", H.src = y;
+      const z = new Audio();
+      let Y = !1;
+      const te = (C) => {
+        Y || (Y = !0, z.removeEventListener("loadedmetadata", I), z.removeEventListener("error", k), J(C));
+      }, I = () => te(z.duration || null), k = () => te(null);
+      z.addEventListener("loadedmetadata", I), z.addEventListener("error", k), setTimeout(() => te(null), M), z.preload = "metadata", z.src = _;
     });
   }
-  function T(y) {
-    return y.status === "done" || y.status === "stale" || l.has(y.audio_key);
+  function T(_) {
+    return _.status === "done" || _.status === "stale" || r.has(_.audio_key);
   }
-  function O(y) {
-    return !!n(y).manually_done;
+  function O(_) {
+    return !!n(_).manually_done;
   }
-  function x(y) {
-    n(y).manually_done = !O(y), s(y);
+  function A(_) {
+    n(_).manually_done = !O(_), o(_);
   }
-  function D(y) {
-    return !!n(y).manually_issue;
+  function D(_) {
+    return !!n(_).manually_issue;
   }
-  function w(y) {
-    n(y).manually_issue = !D(y), s(y);
+  function w(_) {
+    n(_).manually_issue = !D(_), o(_);
   }
-  async function L(y) {
-    const M = n(y), J = y.speaker, H = M.instruct || "", Z = M.russian_text || "", ee = M.effect || "";
-    let I = H;
-    if (ee && (I += `\0effect=${ee}`), M.normalize) {
-      const S = Number(M.normalize_db ?? -20);
-      I += `\0normalize=${S.toFixed(1)}`;
+  async function x(_) {
+    const M = n(_), J = _.speaker, z = M.instruct || "", Y = M.russian_text || "", te = M.effect || "";
+    let I = z;
+    if (te && (I += `\0effect=${te}`), M.normalize) {
+      const k = Number(M.normalize_db ?? -20);
+      I += `\0normalize=${k.toFixed(1)}`;
     }
-    return M.speed_match && (I += "\0speed=match"), h(y) && (I += "\0sample=original"), Nn(J, I, Z);
+    return M.speed_match && (I += "\0speed=match"), h(_) && (I += "\0sample=original"), zn(J, I, Y);
   }
-  async function u(y, M) {
-    var Z;
-    const J = Date.now(), H = await c(
-      ((Z = e.audioUrl) == null ? void 0 : Z.call(e, "audio_ru", y.audio_key, J)) || ""
+  async function c(_, M) {
+    var Y;
+    const J = Date.now(), z = await f(
+      ((Y = e.audioUrl) == null ? void 0 : Y.call(e, "audio_ru", _.audio_key, J)) || ""
     );
-    await fetch(`${me}/mark_rendered`, {
+    await fetch(`${be}/mark_rendered`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        root: o.root,
-        audio_key: y.audio_key,
+        root: a.root,
+        audio_key: _.audio_key,
         hash: M,
-        duration_s: H
+        duration_s: z
       })
-    }), H !== null && (f[y.audio_key] = H), l.add(y.audio_key), _[y.audio_key] = J;
+    }), z !== null && (u[_.audio_key] = z), r.add(_.audio_key), m[_.audio_key] = J;
   }
-  async function R(y) {
-    var M, J, H, Z, ee, I;
-    if (!(!o.renderApi || d.has(y.audio_key))) {
-      if (!o.root) {
-        a("Project root is not set.");
+  async function R(_) {
+    var M, J, z, Y, te, I;
+    if (!(!a.renderApi || d.has(_.audio_key))) {
+      if (!a.root) {
+        s("Project root is not set.");
         return;
       }
-      d.add(y.audio_key), a(`Rendering ${y.audio_key}...`);
+      d.add(_.audio_key), s(`Rendering ${_.audio_key}...`);
       try {
         (M = e.saveTimer) != null && M.value && clearTimeout(e.saveTimer.value), await ((J = e.flushSave) == null ? void 0 : J.call(e));
-        const S = n(y), C = y.speaker, U = S.instruct || "", G = S.russian_text || "", se = S.effect || "", j = h(y) && ((H = e.rawAudioPath) == null ? void 0 : H.call(e, "audio_en", y.audio_key)) || "", B = await L(y), ie = ((Z = e.ruFilePath) == null ? void 0 : Z.call(e, y)) || "", K = ((ee = e.dryFilePath) == null ? void 0 : ee.call(e, y)) || "";
-        await o.renderApi.renderRow({
-          audioKey: y.audio_key,
+        const k = n(_), C = _.speaker, U = k.instruct || "", q = k.russian_text || "", ae = k.effect || "", Z = h(_) && ((z = e.rawAudioPath) == null ? void 0 : z.call(e, "audio_en", _.audio_key)) || "", ee = await x(_), j = ((Y = e.ruFilePath) == null ? void 0 : Y.call(e, _)) || "", W = ((te = e.dryFilePath) == null ? void 0 : te.call(e, _)) || "";
+        await a.renderApi.renderRow({
+          audioKey: _.audio_key,
           speaker: C,
           instruct: U,
-          russianText: G,
-          effect: se,
-          outputPath: ie,
-          dryOutputPath: K,
-          referenceAudioPath: j,
-          normalize: !!S.normalize,
-          normalize_db: Number(S.normalize_db ?? -20),
-          speed_match: !!S.speed_match
-        }), S.hash = B, await u(y, B), a(`Rendered ${y.audio_key}`), await r(), (I = e.refreshHistoryCounts) == null || I.call(e);
-      } catch (S) {
-        a(`Render failed for ${y.audio_key}: ${S}`);
+          russianText: q,
+          effect: ae,
+          outputPath: j,
+          dryOutputPath: W,
+          referenceAudioPath: Z,
+          normalize: !!k.normalize,
+          normalize_db: Number(k.normalize_db ?? -20),
+          speed_match: !!k.speed_match
+        }), k.hash = ee, await c(_, ee), s(`Rendered ${_.audio_key}`), await l(), (I = e.refreshHistoryCounts) == null || I.call(e);
+      } catch (k) {
+        s(`Render failed for ${_.audio_key}: ${k}`);
       } finally {
-        d.delete(y.audio_key);
+        d.delete(_.audio_key);
       }
     }
   }
-  async function P(y) {
+  async function P(_) {
     var M;
-    if (!d.has(y.audio_key)) {
-      if (!o.root) {
-        a("Project root is not set.");
+    if (!d.has(_.audio_key)) {
+      if (!a.root) {
+        s("Project root is not set.");
         return;
       }
-      if (!y.english) {
-        a(`No EN reference for ${y.audio_key} — nothing to copy`);
+      if (!_.english) {
+        s(`No EN reference for ${_.audio_key} — nothing to copy`);
         return;
       }
-      d.add(y.audio_key), a(`Copying EN → RU for ${y.audio_key}...`);
+      d.add(_.audio_key), s(`Copying EN → RU for ${_.audio_key}...`);
       try {
-        const H = await (await fetch(`${me}/use_original`, {
+        const z = await (await fetch(`${be}/use_original`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ root: o.root, audio_key: y.audio_key })
+          body: JSON.stringify({ root: a.root, audio_key: _.audio_key })
         })).json();
-        if (H.error) {
-          a(`Copy failed: ${H.error}`);
+        if (z.error) {
+          s(`Copy failed: ${z.error}`);
           return;
         }
-        _[y.audio_key] = Date.now(), l.add(y.audio_key), await r(), (M = e.refreshHistoryCounts) == null || M.call(e), a(`Used original EN for ${y.audio_key}`);
+        m[_.audio_key] = Date.now(), r.add(_.audio_key), await l(), (M = e.refreshHistoryCounts) == null || M.call(e), s(`Used original EN for ${_.audio_key}`);
       } catch (J) {
-        a(`Copy failed: ${J}`);
+        s(`Copy failed: ${J}`);
       } finally {
-        d.delete(y.audio_key);
+        d.delete(_.audio_key);
       }
     }
   }
-  const q = V(!1);
-  async function z() {
-    if (!o.renderApi || q.value) return;
-    const y = t.value.filter(
+  const H = F(!1);
+  async function B() {
+    if (!a.renderApi || H.value) return;
+    const _ = t.value.filter(
       (J) => J.status === "not_started" || J.status === "stale"
     );
-    if (!y.length) {
-      a("Nothing needs rendering in this bucket");
+    if (!_.length) {
+      s("Nothing needs rendering in this bucket");
       return;
     }
-    q.value = !0;
+    H.value = !0;
     let M = 0;
-    a(`Rendering 0/${y.length}...`);
+    s(`Rendering 0/${_.length}...`);
     try {
-      for (const J of y) {
+      for (const J of _) {
         try {
           await R(J);
-        } catch (H) {
-          console.error(`[FL VODubEditor] render-all-pending failed for ${J.audio_key}`, H);
+        } catch (z) {
+          console.error(`[FL VODubEditor] render-all-pending failed for ${J.audio_key}`, z);
         }
-        M++, a(`Rendering ${M}/${y.length}...`);
+        M++, s(`Rendering ${M}/${_.length}...`);
       }
     } finally {
-      q.value = !1;
+      H.value = !1;
     }
   }
-  function oe(y) {
-    return y.duration_s ? `EN ${y.duration_s.toFixed(1)}s` : "EN";
+  function se(_) {
+    return _.duration_s ? `EN ${_.duration_s.toFixed(1)}s` : "EN";
   }
-  function le(y) {
-    const M = f[y.audio_key] ?? y.rendered_duration_s, J = y.duration_s;
-    if (!T(y) || M == null || !J) return null;
-    const H = (M - J) / J, Z = Math.round(H * 100), ee = Math.abs(H);
+  function re(_) {
+    const M = u[_.audio_key] ?? _.rendered_duration_s, J = _.duration_s;
+    if (!T(_) || M == null || !J) return null;
+    const z = (M - J) / J, Y = Math.round(z * 100), te = Math.abs(z);
     return {
-      level: ee <= gs ? "good" : ee <= bs ? "warn" : "bad",
+      level: te <= Rs ? "good" : te <= Ts ? "warn" : "bad",
       ruSeconds: `${M.toFixed(1)}s`,
-      pctText: `${Z >= 0 ? "+" : ""}${Z}%`
+      pctText: `${Y >= 0 ? "+" : ""}${Y}%`
     };
   }
   return {
-    renderedOnce: l,
+    renderedOnce: r,
     renderingKeys: d,
-    cacheBust: _,
-    isRenderingAllPending: q,
-    currentContentHash: L,
-    finalizeRuTake: u,
+    cacheBust: m,
+    isRenderingAllPending: H,
+    currentContentHash: x,
+    finalizeRuTake: c,
     renderRow: R,
     useOriginalForRow: P,
-    renderAllPending: z,
+    renderAllPending: B,
     hasRuTake: T,
     manuallyDone: O,
-    toggleManuallyDone: x,
+    toggleManuallyDone: A,
     manuallyIssue: D,
     toggleManuallyIssue: w,
-    measuredDuration: f,
-    onRuMetadata: m,
-    durationBadge: le,
-    enDurationText: oe,
+    measuredDuration: u,
+    onRuMetadata: v,
+    durationBadge: re,
+    enDurationText: se,
     resolvedUseOriginal: h,
     onToggleRowUseOriginal: p,
-    onToggleUseOriginalDefault: b
+    onToggleUseOriginalDefault: S
   };
 }
-function ks(e) {
+function Es(e) {
   const {
-    roleEntries: o,
+    roleEntries: a,
     roleOptionSubLabel: t,
     showRoleInfoPopover: n,
-    hideRoleInfoPopover: s,
-    fontSizePx: a,
-    autoGrow: r,
-    setTextareaRef: v,
-    audioUrl: k,
+    hideRoleInfoPopover: o,
+    fontSizePx: s,
+    autoGrow: l,
+    setTextareaRef: y,
+    audioUrl: g,
     cacheBust: h,
     entryFor: p,
-    onTextEdit: b,
-    scheduleInstructLibrarySave: l,
+    onTextEdit: S,
+    scheduleInstructLibrarySave: r,
     roleCodeFor: d,
-    prevInstruct: f,
-    undoInstructTitle: _,
-    undoInstruct: m,
-    sameRoleCount: c,
+    prevInstruct: u,
+    undoInstructTitle: m,
+    undoInstruct: v,
+    sameRoleCount: f,
     applyInstructTitle: T,
     applyInstructToSameRole: O,
-    instructNoteFor: x,
+    instructNoteFor: A,
     openInstructPicker: D
   } = e;
-  In("lineRowApi", {
-    roleEntries: o,
+  Mn("lineRowApi", {
+    roleEntries: a,
     roleOptionSubLabel: t,
-    fontSizePx: a,
-    autoGrow: r,
-    setTextareaRef: v,
+    fontSizePx: s,
+    autoGrow: l,
+    setTextareaRef: y,
     showRoleInfoPopover: n,
-    hideRoleInfoPopover: s,
+    hideRoleInfoPopover: o,
     speakerPlaceholder: "Role",
     speakerTitle: "Role code (resolves to that role's assigned voice), or a literal preset/preset#tag",
     instructPlaceholder: "Instruct",
     instructTitle: "Instruct text -- type freely, or pick from the phrase bank",
     textPlaceholder: "Russian text for this line",
     getSpeaker: (w) => p(w).speaker_override || w.speaker_tag,
-    setSpeaker: (w, L) => {
-      p(w).speaker_override = L, b(w);
+    setSpeaker: (w, x) => {
+      p(w).speaker_override = x, S(w);
     },
     getInstruct: (w) => p(w).instruct,
-    setInstruct: (w, L) => {
-      p(w).instruct = L, b(w), l(w);
+    setInstruct: (w, x) => {
+      p(w).instruct = x, S(w), r(w);
     },
     getText: (w) => p(w).russian_text,
-    setText: (w, L) => {
-      p(w).russian_text = L, b(w);
+    setText: (w, x) => {
+      p(w).russian_text = x, S(w);
     },
     getRoleInfoCode: (w) => d(w),
     textKey: (w) => w.audio_key,
-    canUndoInstruct: (w) => f[w.audio_key] !== void 0,
-    undoInstructTitle: (w) => _(w),
-    undoInstruct: (w) => m(w),
-    canApplyInstruct: (w) => c(w) > 0,
+    canUndoInstruct: (w) => u[w.audio_key] !== void 0,
+    undoInstructTitle: (w) => m(w),
+    undoInstruct: (w) => v(w),
+    canApplyInstruct: (w) => f(w) > 0,
     applyInstructTitle: (w) => T(w),
     applyInstructToSameRole: (w) => O(w),
-    instructNoteFor: (w) => x(w),
+    instructNoteFor: (w) => A(w),
     openInstructPicker: (w) => D(w),
-    getOriginalAudioUrl: (w) => k ? k("audio_en", w.audio_key) : "",
-    getCurrentAudioUrl: (w) => k ? k("audio_ru", w.audio_key, h == null ? void 0 : h[w.audio_key]) : ""
+    getOriginalAudioUrl: (w) => g ? g("audio_en", w.audio_key) : "",
+    getCurrentAudioUrl: (w) => g ? g("audio_ru", w.audio_key, h == null ? void 0 : h[w.audio_key]) : ""
   });
 }
-const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws = { class: "vo-dub-editor-status muted ellipsis" }, Es = { class: "actions" }, Cs = { class: "row" }, Is = { class: "vo-dub-pager-label muted" }, $s = { title: "Project-wide default for the per-row 'Use original as sample' checkbox." }, Ps = { class: "row" }, Os = { class: "vo-dub-key mono title" }, Ds = {
-  key: 0,
-  class: "vo-dub-unsupported-note"
-}, As = { class: "vo-dub-players list" }, Ms = { class: "vo-dub-duration-line row" }, xs = { class: "vo-dub-duration-en" }, Ls = { class: "vo-dub-duration-ru" }, Vs = {
+const Cs = { class: "fl-vo-dub-line-editor-content" }, Is = { class: "row" }, $s = { class: "vo-dub-editor-status p-text-secondary ellipsis" }, Ps = { class: "actions" }, Os = { class: "row" }, Ds = { class: "vo-dub-pager-label p-text-secondary" }, Ms = { title: "Project-wide default for the per-row 'Use original as sample' checkbox." }, As = { class: "row" }, xs = { class: "vo-dub-key" }, Ls = { class: "vo-dub-players list" }, Ns = { class: "vo-dub-duration-line row" }, Fs = { class: "vo-dub-duration-en" }, Vs = { class: "vo-dub-duration-ru" }, Us = {
   key: 1,
   class: "vo-dub-similarity-slot"
-}, Ns = { class: "vo-dub-players-row" }, Fs = { class: "vo-dub-player list" }, Us = ["src", "onPause", "onEnded"], Bs = { class: "vo-dub-player list" }, js = ["src", "onLoadedmetadata", "onPause", "onEnded"], zs = {
+}, Bs = { class: "vo-dub-players-row" }, js = { class: "vo-dub-player list" }, zs = ["src", "onPause", "onEnded"], Hs = { class: "vo-dub-player list" }, qs = ["src", "onLoadedmetadata", "onPause", "onEnded"], Ws = {
   key: 2,
-  class: "vo-dub-no-take muted"
-}, Hs = { class: "vo-dub-players-footer actions" }, qs = {
-  class: "vo-dub-identifier ellipsis mono",
+  class: "vo-dub-no-take p-text-secondary"
+}, Gs = { class: "vo-dub-players-footer actions" }, Js = {
+  class: "vo-dub-identifier ellipsis",
   title: "Identifier extracted from the game's own resources (vo_dataset.csv's speaker column)"
-}, Ws = {
+}, Ks = {
   class: "vo-dub-use-original-label row",
   title: "Use this row's own EN take as the voice-cloning sample for its next render."
-}, Gs = { class: "vo-dub-english muted" }, Js = {
+}, Zs = { class: "vo-dub-english p-text-secondary" }, Ys = {
   key: 0,
-  class: "vo-dub-empty muted"
-}, Ks = {
+  class: "vo-dub-empty p-text-secondary"
+}, Xs = {
   __name: "VoDubLineEditorContent",
   props: {
     root: { type: String, required: !0 },
@@ -2224,45 +2219,45 @@ const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws
     onClose: { type: Function, required: !0 }
   },
   setup(e) {
-    const o = e;
-    Vt({
+    const a = e;
+    Nt({
       storageKey: "FL_CosyVoice3.VODubLineEditor.widthPx",
       defaultWidth: 1100,
       presets: [800, 1100, 1500]
     });
-    const { fontSizePx: t } = Nt({
+    const { fontSizePx: t } = Ft({
       storageKey: "FL_CosyVoice3.VODubLineEditor.fontSizePx",
       defaultSize: 13
-    }), { autoGrow: n, setTextareaRef: s, regrowAll: a } = Wn();
-    ye(t, a);
-    const r = /* @__PURE__ */ new Map(), v = V(!0);
-    let k = !1;
-    const h = rs();
-    h.init({ root: o.root, bucket: o.bucket });
+    }), { autoGrow: n, setTextareaRef: o, regrowAll: s } = Yn();
+    ve(t, s);
+    const l = /* @__PURE__ */ new Map(), y = F(!0);
+    let g = !1;
+    const h = fs();
+    h.init({ root: a.root, bucket: a.bucket });
     const p = {
-      props: o,
-      effectPreviews: r,
+      props: a,
+      effectPreviews: l,
       autoGrow: n,
-      setTextareaRef: s,
+      setTextareaRef: o,
       fontSizePx: t
-    }, b = es(h);
+    }, S = ds(h);
     Object.assign(p, {
       // refs
-      rows: b.rows,
-      statusFilter: b.statusFilter,
-      searchText: b.searchText,
-      status: b.status,
-      loading: b.loading,
-      useOriginalDefault: b.useOriginalDefault,
-      saveTimer: b.saveTimer,
-      currentPage: b.currentPage,
-      visibleRows: b.visibleRows,
-      pageCount: b.pageCount,
-      pagedRows: b.pagedRows,
-      filterStatuses: b.filterStatuses,
-      filterManuallyDone: b.filterManuallyDone,
-      filterIssues: b.filterIssues,
-      hasActiveFilters: b.hasActiveFilters,
+      rows: S.rows,
+      statusFilter: S.statusFilter,
+      searchText: S.searchText,
+      status: S.status,
+      loading: S.loading,
+      useOriginalDefault: S.useOriginalDefault,
+      saveTimer: S.saveTimer,
+      currentPage: S.currentPage,
+      visibleRows: S.visibleRows,
+      pageCount: S.pageCount,
+      pagedRows: S.pagedRows,
+      filterStatuses: S.filterStatuses,
+      filterManuallyDone: S.filterManuallyDone,
+      filterIssues: S.filterIssues,
+      hasActiveFilters: S.hasActiveFilters,
       // reactive — напрямую
       stateRows: h.stateRows,
       // функции
@@ -2285,197 +2280,197 @@ const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws
       STATUS_FILTER_OPTIONS: h.STATUS_FILTER_OPTIONS,
       STATUS_TOGGLE_OPTIONS: h.STATUS_TOGGLE_OPTIONS,
       TRISTATE_FILTERS: h.TRISTATE_FILTERS
-    }), Object.assign(p, us(p)), Object.assign(p, cs(p)), Object.assign(p, ds(p)), Object.assign(p, fs(p)), Object.assign(p, ms(p)), Object.assign(p, Ss(p)), ks(p);
+    }), Object.assign(p, ps(p)), Object.assign(p, hs(p)), Object.assign(p, ys(p)), Object.assign(p, vs(p)), Object.assign(p, ks(p)), Object.assign(p, ws(p)), Es(p);
     const {
       // state
-      rows: l,
+      rows: r,
       stateRows: d,
-      statusFilter: f,
-      searchText: _,
-      status: m,
-      loading: c,
+      statusFilter: u,
+      searchText: m,
+      status: v,
+      loading: f,
       useOriginalDefault: T,
       entryFor: O,
-      loadState: x,
+      loadState: A,
       loadRows: D,
       scheduleSave: w,
-      flushSave: L,
-      onTextEdit: u,
+      flushSave: x,
+      onTextEdit: c,
       setStatus: R,
       visibleRows: P,
-      PAGE_SIZE: q,
-      currentPage: z,
-      pageCount: oe,
-      pagedRows: le,
-      STATUS_LABELS: y,
+      PAGE_SIZE: H,
+      currentPage: B,
+      pageCount: se,
+      pagedRows: re,
+      STATUS_LABELS: _,
       STATUS_FILTER_OPTIONS: M,
       saveTimer: J,
-      filterStatuses: H,
-      filterManuallyDone: Z,
-      filterIssues: ee,
+      filterStatuses: z,
+      filterManuallyDone: Y,
+      filterIssues: te,
       hasActiveFilters: I,
-      toggleStatus: S,
+      toggleStatus: k,
       cycleManuallyDone: C,
       cycleIssues: U,
-      clearFilters: G,
-      STATUS_TOGGLE_OPTIONS: se,
-      TRISTATE_FILTERS: j,
+      clearFilters: q,
+      STATUS_TOGGLE_OPTIONS: ae,
+      TRISTATE_FILTERS: Z,
       // history
-      historyVisible: B,
-      historyRow: ie,
-      historyVersions: K,
-      historyChosenVersion: ge,
+      historyVisible: ee,
+      historyRow: j,
+      historyVersions: W,
+      historyChosenVersion: pe,
       historyCounts: _e,
-      refreshHistoryCounts: be,
-      openLineHistory: Me,
-      onHistoryVersionChosen: xe,
+      refreshHistoryCounts: Se,
+      openLineHistory: xe,
+      onHistoryVersionChosen: Le,
       // roles
-      roleEntries: Ge,
-      loadRoleEntries: ht,
-      roleCodeFor: Ee,
-      roleOptionSubLabel: ga,
-      sameIdentifierCount: zt,
-      applyRoleTitle: Ht,
-      applyRoleToSameIdentifier: qt,
-      roleInfoPopover: Je,
-      showRoleInfoPopover: ba,
-      hideRoleInfoPopover: Sa,
-      roleInfoFields: yt,
+      roleEntries: Je,
+      loadRoleEntries: vt,
+      roleCodeFor: Ce,
+      roleOptionSubLabel: ka,
+      sameIdentifierCount: Ht,
+      applyRoleTitle: qt,
+      applyRoleToSameIdentifier: Wt,
+      roleInfoPopover: Ke,
+      showRoleInfoPopover: Ra,
+      hideRoleInfoPopover: Ta,
+      roleInfoFields: _t,
       // instruct
-      instructCategories: Wt,
-      loadInstructCategories: Gt,
-      instructPickerVisible: Ke,
-      instructPickerRow: ka,
-      openInstructPicker: Ra,
-      onInstructPicked: Jt,
-      prevInstruct: Ta,
-      undoInstructTitle: wa,
-      undoInstruct: Ea,
-      instructNoteFor: Ca,
-      sameRoleCount: Ia,
-      applyInstructToSameRole: $a,
+      instructCategories: Gt,
+      loadInstructCategories: Jt,
+      instructPickerVisible: Ze,
+      instructPickerRow: wa,
+      openInstructPicker: Ea,
+      onInstructPicked: Kt,
+      prevInstruct: Ca,
+      undoInstructTitle: Ia,
+      undoInstruct: $a,
+      instructNoteFor: Pa,
+      sameRoleCount: Oa,
+      applyInstructToSameRole: Da,
       // effects
-      effectValue: Kt,
-      speedMatchValue: Zt,
-      commitEffect: Pa,
-      applyEffectToFile: Oa,
-      outputDialogVisible: Ze,
+      effectValue: Zt,
+      speedMatchValue: Yt,
+      commitEffect: Ma,
+      applyEffectToFile: Aa,
+      outputDialogVisible: Ye,
       dialogRow: fe,
-      openOutputDialog: Yt,
-      onDialogApply: Xt,
+      openOutputDialog: Xt,
+      onDialogApply: Qt,
       // players
-      audioUrl: Le,
-      setEnAudioRef: Qt,
-      setRuAudioRef: en,
-      dualPlayingRows: _t,
-      dualLoadingRows: tn,
-      playBoth: nn,
-      onTrackPaused: Ve,
-      sequentialPlayingKey: Ye,
-      toggleSequentialPlayback: on,
-      setRowRef: sn,
+      audioUrl: Ne,
+      setEnAudioRef: en,
+      setRuAudioRef: tn,
+      dualPlayingRows: mt,
+      dualLoadingRows: nn,
+      playBoth: on,
+      onTrackPaused: Fe,
+      sequentialPlayingKey: Xe,
+      toggleSequentialPlayback: sn,
+      setRowRef: an,
       // render
-      cacheBust: mt,
-      renderingKeys: Xe,
-      isRenderingAllPending: Qe,
-      renderRow: an,
-      useOriginalForRow: ln,
-      renderAllPending: rn,
-      hasRuTake: Te,
-      manuallyDone: et,
-      toggleManuallyDone: un,
-      manuallyIssue: Ne,
-      toggleManuallyIssue: cn,
-      measuredDuration: dn,
-      onRuMetadata: fn,
-      durationBadge: Fe,
-      enDurationText: pn,
-      resolvedUseOriginal: vn,
-      onToggleRowUseOriginal: hn,
-      onToggleUseOriginalDefault: yn
+      cacheBust: gt,
+      renderingKeys: Qe,
+      isRenderingAllPending: et,
+      renderRow: ln,
+      useOriginalForRow: rn,
+      renderAllPending: un,
+      hasRuTake: we,
+      manuallyDone: tt,
+      toggleManuallyDone: cn,
+      manuallyIssue: Ve,
+      toggleManuallyIssue: dn,
+      measuredDuration: fn,
+      onRuMetadata: pn,
+      durationBadge: Ue,
+      enDurationText: hn,
+      resolvedUseOriginal: yn,
+      onToggleRowUseOriginal: vn,
+      onToggleUseOriginalDefault: _n
     } = p;
-    qe(async () => {
-      ht(), Gt(), be(), await x(), await D();
+    We(async () => {
+      vt(), Jt(), Se(), await A(), await D();
     });
-    function _n() {
-      k || (k = !0, J.value && (clearTimeout(J.value), L()), o.onClose());
+    function mn() {
+      g || (g = !0, J.value && (clearTimeout(J.value), x()), a.onClose());
     }
-    return ye(v, (gt) => {
-      gt || _n();
-    }), (gt, W) => {
-      var St, kt, Rt;
-      const mn = te("InputText"), re = te("Button"), bt = te("Checkbox");
-      return E(), A(ne, null, [
-        $("div", Rs, [
-          N(Un, { class: "vo-dub-editor-controls" }, {
-            default: Y(() => [
-              $("div", Ts, [
-                N(mn, {
-                  modelValue: i(_),
-                  "onUpdate:modelValue": W[0] || (W[0] = (g) => ve(_) ? _.value = g : null),
+    return ve(y, (bt) => {
+      bt || mn();
+    }), (bt, G) => {
+      var kt, Rt, Tt;
+      const gn = Q("InputText"), ue = Q("Button"), bn = Q("Divider"), St = Q("Checkbox"), Sn = Q("InlineMessage"), kn = Q("Message"), Rn = Q("Card");
+      return E(), N(oe, null, [
+        $("div", Cs, [
+          L(qn, { class: "vo-dub-editor-controls" }, {
+            default: K(() => [
+              $("div", Is, [
+                L(gn, {
+                  modelValue: i(m),
+                  "onUpdate:modelValue": G[0] || (G[0] = (b) => he(m) ? m.value = b : null),
                   placeholder: "Search text or audio_key...",
                   class: "vo-dub-search"
                 }, null, 8, ["modelValue"]),
-                N(Wo, {
-                  statusOptions: i(se),
-                  selectedStatuses: i(H),
-                  tristates: i(j),
-                  tristateValues: { manuallyDone: i(Z), issues: i(ee) },
+                L(os, {
+                  statusOptions: i(ae),
+                  selectedStatuses: i(z),
+                  tristates: i(Z),
+                  tristateValues: { manuallyDone: i(Y), issues: i(te) },
                   hasActive: i(I),
-                  onToggleStatus: i(S),
-                  onCycleTristate: W[1] || (W[1] = (g) => {
-                    g === "manuallyDone" ? i(C)() : g === "issues" && i(U)();
+                  onToggleStatus: i(k),
+                  onCycleTristate: G[1] || (G[1] = (b) => {
+                    b === "manuallyDone" ? i(C)() : b === "issues" && i(U)();
                   }),
-                  onClear: i(G)
+                  onClear: i(q)
                 }, null, 8, ["statusOptions", "selectedStatuses", "tristates", "tristateValues", "hasActive", "onToggleStatus", "onClear"]),
-                N(re, {
+                L(ue, {
                   icon: "pi pi-refresh",
                   title: "Re-scan this bucket",
                   onClick: i(D)
                 }, null, 8, ["onClick"]),
-                $("span", ws, F(i(c) ? "Loading..." : i(m)), 1)
+                $("span", $s, V(i(f) ? "Loading..." : i(v)), 1)
               ]),
-              $("div", Es, [
-                $("div", Cs, [
-                  N(re, {
+              $("div", Ps, [
+                $("div", Os, [
+                  L(ue, {
                     label: "◀",
-                    disabled: i(z) === 0,
+                    disabled: i(B) === 0,
                     title: "Previous page",
-                    onClick: W[2] || (W[2] = (g) => z.value--)
+                    onClick: G[2] || (G[2] = (b) => B.value--)
                   }, null, 8, ["disabled"]),
-                  $("span", Is, F(i(z) + 1) + " / " + F(i(oe)) + " (" + F(i(P).length) + ") ", 1),
-                  N(re, {
+                  $("span", Ds, V(i(B) + 1) + " / " + V(i(se)) + " (" + V(i(P).length) + ") ", 1),
+                  L(ue, {
                     label: "▶",
-                    disabled: i(z) >= i(oe) - 1,
+                    disabled: i(B) >= i(se) - 1,
                     title: "Next page",
-                    onClick: W[3] || (W[3] = (g) => z.value++)
+                    onClick: G[3] || (G[3] = (b) => B.value++)
                   }, null, 8, ["disabled"])
                 ]),
-                W[10] || (W[10] = $("span", { class: "divider" }, null, -1)),
-                N(re, {
+                L(bn, { layout: "vertical" }),
+                L(ue, {
                   label: "´ Stress mark",
                   title: "Insert a stress mark at the cursor",
-                  onMousedown: W[4] || (W[4] = $n((g) => i(Fn)(i(R)), ["prevent"]))
+                  onMousedown: G[4] || (G[4] = An((b) => i(Hn)(i(R)), ["prevent"]))
                 }),
-                N(re, {
-                  label: i(Ye) ? "Stop" : "Play in order",
-                  icon: i(Ye) ? "pi pi-stop-circle" : "pi pi-play",
-                  onClick: i(on)
+                L(ue, {
+                  label: i(Xe) ? "Stop" : "Play in order",
+                  icon: i(Xe) ? "pi pi-stop-circle" : "pi pi-play",
+                  onClick: i(sn)
                 }, null, 8, ["label", "icon", "onClick"]),
-                N(re, {
-                  label: i(Qe) ? "Rendering..." : "Render pending",
-                  icon: i(Qe) ? "pi pi-spin pi-spinner" : "pi pi-play",
-                  disabled: !o.renderApi || i(Qe),
-                  onClick: i(rn)
+                L(ue, {
+                  label: i(et) ? "Rendering..." : "Render pending",
+                  icon: i(et) ? "pi pi-spin pi-spinner" : "pi pi-play",
+                  disabled: !a.renderApi || i(et),
+                  onClick: i(un)
                 }, null, 8, ["label", "icon", "disabled", "onClick"]),
-                $("label", $s, [
-                  N(bt, {
+                $("label", Ms, [
+                  L(St, {
                     modelValue: i(T),
-                    "onUpdate:modelValue": W[5] || (W[5] = (g) => ve(T) ? T.value = g : null),
+                    "onUpdate:modelValue": G[5] || (G[5] = (b) => he(T) ? T.value = b : null),
                     binary: "",
-                    onChange: i(yn)
+                    onChange: i(_n)
                   }, null, 8, ["modelValue", "onChange"]),
-                  W[9] || (W[9] = ce(" Original as sample ", -1))
+                  G[9] || (G[9] = ce(" Original as sample ", -1))
                 ])
               ])
             ]),
@@ -2483,206 +2478,224 @@ const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws
           }),
           $("div", {
             class: "vo-dub-rows list",
-            style: De({ fontSize: `${i(t)}px` })
+            style: Me({ fontSize: `${i(t)}px` })
           }, [
-            (E(!0), A(ne, null, ue(i(le), (g) => {
-              var Tt;
-              return E(), A("div", {
-                key: g.audio_key,
-                class: pe(["vo-dub-row card", { "row-playing": i(Ye) === g.audio_key, "row-issue": i(Ne)(g) }]),
-                ref_for: !0,
-                ref: (Q) => i(sn)(g.audio_key, Q)
-              }, [
-                $("div", Ps, [
-                  $("span", Os, F(g.audio_key), 1),
-                  $("span", {
-                    class: pe(["pill", i(as)(g.status)])
-                  }, F(i(y)[g.status]), 3),
-                  i(Te)(g) ? (E(), de(re, {
-                    key: 0,
-                    class: pe(["vo-dub-done-btn", { active: i(et)(g) }]),
-                    icon: i(et)(g) ? "pi pi-check-circle" : "pi pi-circle",
-                    label: i(et)(g) ? "Done" : "Mark done",
-                    title: "Manually treat this row as done even if its content has drifted since the last render.",
-                    onClick: (Q) => i(un)(g)
-                  }, null, 8, ["class", "icon", "label", "onClick"])) : X("", !0),
-                  N(re, {
-                    class: pe(["vo-dub-issue-btn", { active: i(Ne)(g) }]),
-                    severity: "danger",
-                    icon: i(Ne)(g) ? "pi pi-exclamation-triangle" : "pi pi-exclamation-circle",
-                    label: i(Ne)(g) ? "Issue" : "Mark issue",
-                    title: "Flag this row as needing attention. Independent from Done — both can be set at once.",
-                    onClick: (Q) => i(cn)(g)
-                  }, null, 8, ["class", "icon", "label", "onClick"])
-                ]),
-                g.status === "unsupported" ? (E(), A("div", Ds, [
-                  ce(" Unsupported: " + F(g.channels) + "-channel audio split across multiple files (", 1),
-                  W[11] || (W[11] = $("code", null, ".a", -1)),
-                  W[12] || (W[12] = ce("-", -1)),
-                  W[13] || (W[13] = $("code", null, ".d", -1)),
-                  W[14] || (W[14] = ce(") -- this editor can only play or render a single mono/stereo file per row. Handle this one outside the tool. ", -1))
-                ])) : (E(), A(ne, { key: 1 }, [
-                  $("div", As, [
-                    $("div", Ms, [
-                      $("span", xs, F(i(pn)(g)), 1),
-                      W[15] || (W[15] = $("span", { class: "vo-dub-duration-arrow" }, "→", -1)),
-                      $("span", Ls, " RU " + F(((Tt = i(Fe)(g)) == null ? void 0 : Tt.ruSeconds) || "—"), 1),
-                      i(Fe)(g) ? (E(), A("span", {
-                        key: 0,
-                        class: pe(["vo-dub-duration-delta", i(Bn)(i(Fe)(g).level)])
-                      }, F(i(Fe)(g).pctText), 3)) : X("", !0),
-                      g.english && i(O)(g).russian_text ? (E(), A("span", Vs, [
-                        N(Uo, {
-                          original: g.english,
-                          translation: i(O)(g).russian_text
-                        }, null, 8, ["original", "translation"])
-                      ])) : X("", !0)
-                    ]),
-                    $("div", Ns, [
-                      $("div", Fs, [
-                        N(Et, {
-                          src: i(Le)("audio_en", g.audio_key)
-                        }, null, 8, ["src"]),
-                        $("audio", {
-                          class: "w100p",
-                          controls: "",
-                          preload: "none",
-                          src: i(Le)("audio_en", g.audio_key),
-                          ref_for: !0,
-                          ref: (Q) => i(Qt)(g.audio_key, Q),
-                          onPause: (Q) => i(Ve)(g, "en"),
-                          onEnded: (Q) => i(Ve)(g, "en")
-                        }, null, 40, Us)
-                      ]),
-                      N(re, {
-                        class: pe(["play-both-btn", { playing: i(_t).has(g.audio_key) }]),
-                        label: "Play both",
-                        icon: i(tn).has(g.audio_key) ? "pi pi-spin pi-spinner" : i(_t).has(g.audio_key) ? "pi pi-pause" : "pi pi-play",
-                        disabled: !i(Te)(g),
-                        title: i(Te)(g) ? "Play EN and RU together, from the start" : "No RU take yet -- nothing to compare",
-                        onClick: (Q) => i(nn)(g)
-                      }, null, 8, ["class", "icon", "disabled", "title", "onClick"]),
-                      $("div", Bs, [
-                        i(Te)(g) ? (E(), de(Et, {
-                          key: 0,
-                          src: i(Le)("audio_ru", g.audio_key, i(mt)[g.audio_key])
-                        }, null, 8, ["src"])) : X("", !0),
-                        i(Te)(g) ? (E(), A("audio", {
-                          key: 1,
-                          class: "w100p",
-                          controls: "",
-                          preload: "none",
-                          crossorigin: "anonymous",
-                          src: i(Le)("audio_ru", g.audio_key, i(mt)[g.audio_key]),
-                          ref_for: !0,
-                          ref: (Q) => i(en)(g, Q),
-                          onLoadedmetadata: (Q) => i(fn)(g, Q),
-                          onPause: (Q) => i(Ve)(g, "ru"),
-                          onEnded: (Q) => i(Ve)(g, "ru")
-                        }, null, 40, js)) : (E(), A("span", zs, "not rendered yet"))
-                      ])
-                    ]),
-                    $("div", Hs, [
-                      o.renderApi ? (E(), de(re, {
-                        key: 0,
-                        class: pe(["vo-dub-render-btn", { stale: g.status === "stale" }]),
-                        label: i(Te)(g) ? "Re-render" : "Render",
-                        icon: i(Xe).has(g.audio_key) ? "pi pi-spin pi-spinner" : "pi pi-refresh",
-                        disabled: i(Xe).has(g.audio_key),
-                        title: i(Te)(g) ? "Re-render this row" : "Render this row",
-                        onClick: (Q) => i(an)(g)
-                      }, null, 8, ["class", "label", "icon", "disabled", "title", "onClick"])) : X("", !0),
-                      o.renderApi ? (E(), de(re, {
-                        key: 1,
-                        icon: "pi pi-arrow-right",
-                        label: "Use EN",
-                        disabled: i(Xe).has(g.audio_key) || !g.english,
-                        title: g.english ? "Copy the EN reference track to audio_ru/" + g.audio_key + ".wav (no new render). Overwrites the current RU take." : "No EN reference for this row",
-                        onClick: (Q) => i(ln)(g)
-                      }, null, 8, ["disabled", "title", "onClick"])) : X("", !0),
-                      N(re, {
-                        icon: "pi pi-history",
-                        label: i(_e)[g.audio_key] ? String(i(_e)[g.audio_key]) : "",
-                        title: "Line history (previous takes/versions)",
-                        onClick: (Q) => i(Me)(g)
-                      }, null, 8, ["label", "onClick"]),
-                      N(re, {
-                        icon: "pi pi-cog",
-                        title: "Edit output settings",
-                        onClick: (Q) => i(Yt)(g)
-                      }, null, 8, ["onClick"])
-                    ])
-                  ]),
-                  N(jn, { row: g }, {
-                    leading: Y(() => [
-                      $("span", qs, F(g.speaker_tag || "—"), 1),
-                      N(re, {
-                        icon: "pi pi-copy",
-                        class: "apply-role-btn",
-                        disabled: i(zt)(g) === 0,
-                        title: i(Ht)(g),
-                        onClick: (Q) => i(qt)(g)
-                      }, null, 8, ["disabled", "title", "onClick"])
-                    ]),
-                    trailing: Y(() => [
-                      $("label", Ws, [
-                        N(bt, {
-                          "model-value": i(vn)(g),
-                          binary: "",
-                          "onUpdate:modelValue": (Q) => i(hn)(g, Q)
-                        }, null, 8, ["model-value", "onUpdate:modelValue"]),
-                        W[16] || (W[16] = ce(" 🎙️ Original ", -1))
-                      ])
-                    ]),
-                    "above-text": Y(() => [
-                      $("div", Gs, F(g.english), 1)
+            (E(!0), N(oe, null, de(i(re), (b) => (E(), le(Rn, {
+              key: b.audio_key,
+              class: ge(["vo-dub-row", { "row-playing": i(Xe) === b.audio_key, "row-issue": i(Ve)(b) }]),
+              ref_for: !0,
+              ref: (me) => i(an)(b.audio_key, (me == null ? void 0 : me.$el) ?? me)
+            }, {
+              title: K(() => [
+                $("div", As, [
+                  $("span", xs, V(b.audio_key), 1),
+                  L(Sn, {
+                    severity: i(Vt)(b.status)
+                  }, {
+                    default: K(() => [
+                      ce(V(i(_)[b.status]), 1)
                     ]),
                     _: 2
-                  }, 1032, ["row"])
-                ], 64))
-              ], 2);
-            }), 128)),
-            i(P).length ? X("", !0) : (E(), A("div", Js, "No rows match this filter."))
+                  }, 1032, ["severity"]),
+                  i(we)(b) ? (E(), le(ue, {
+                    key: 0,
+                    class: ge(["vo-dub-done-btn", { active: i(tt)(b) }]),
+                    icon: i(tt)(b) ? "pi pi-check-circle" : "pi pi-circle",
+                    label: i(tt)(b) ? "Done" : "Mark done",
+                    title: "Manually treat this row as done even if its content has drifted since the last render.",
+                    onClick: (me) => i(cn)(b)
+                  }, null, 8, ["class", "icon", "label", "onClick"])) : X("", !0),
+                  L(ue, {
+                    class: ge(["vo-dub-issue-btn", { active: i(Ve)(b) }]),
+                    severity: "danger",
+                    icon: i(Ve)(b) ? "pi pi-exclamation-triangle" : "pi pi-exclamation-circle",
+                    label: i(Ve)(b) ? "Issue" : "Mark issue",
+                    title: "Flag this row as needing attention. Independent from Done — both can be set at once.",
+                    onClick: (me) => i(dn)(b)
+                  }, null, 8, ["class", "icon", "label", "onClick"])
+                ])
+              ]),
+              content: K(() => {
+                var me;
+                return [
+                  b.status === "unsupported" ? (E(), le(kn, {
+                    key: 0,
+                    class: "vo-dub-unsupported-note",
+                    severity: "warn",
+                    closable: !1
+                  }, {
+                    default: K(() => [
+                      ce(" Unsupported: " + V(b.channels) + "-channel audio split across multiple files (", 1),
+                      G[10] || (G[10] = $("code", null, ".a", -1)),
+                      G[11] || (G[11] = ce("-", -1)),
+                      G[12] || (G[12] = $("code", null, ".d", -1)),
+                      G[13] || (G[13] = ce(") -- this editor can only play or render a single mono/stereo file per row. Handle this one outside the tool. ", -1))
+                    ]),
+                    _: 2
+                  }, 1024)) : (E(), N(oe, { key: 1 }, [
+                    $("div", Ls, [
+                      $("div", Ns, [
+                        $("span", Fs, V(i(hn)(b)), 1),
+                        G[14] || (G[14] = $("span", { class: "vo-dub-duration-arrow" }, "→", -1)),
+                        $("span", Vs, " RU " + V(((me = i(Ue)(b)) == null ? void 0 : me.ruSeconds) || "—"), 1),
+                        i(Ue)(b) ? (E(), N("span", {
+                          key: 0,
+                          class: ge(["vo-dub-duration-delta", i(Wn)(i(Ue)(b).level)])
+                        }, V(i(Ue)(b).pctText), 3)) : X("", !0),
+                        b.english && i(O)(b).russian_text ? (E(), N("span", Us, [
+                          L(Yo, {
+                            original: b.english,
+                            translation: i(O)(b).russian_text
+                          }, null, 8, ["original", "translation"])
+                        ])) : X("", !0)
+                      ]),
+                      $("div", Bs, [
+                        $("div", js, [
+                          L(Et, {
+                            src: i(Ne)("audio_en", b.audio_key)
+                          }, null, 8, ["src"]),
+                          $("audio", {
+                            class: "w100p",
+                            controls: "",
+                            preload: "none",
+                            src: i(Ne)("audio_en", b.audio_key),
+                            ref_for: !0,
+                            ref: (ie) => i(en)(b.audio_key, ie),
+                            onPause: (ie) => i(Fe)(b, "en"),
+                            onEnded: (ie) => i(Fe)(b, "en")
+                          }, null, 40, zs)
+                        ]),
+                        L(ue, {
+                          class: ge(["play-both-btn", { playing: i(mt).has(b.audio_key) }]),
+                          label: "Play both",
+                          icon: i(nn).has(b.audio_key) ? "pi pi-spin pi-spinner" : i(mt).has(b.audio_key) ? "pi pi-pause" : "pi pi-play",
+                          disabled: !i(we)(b),
+                          title: i(we)(b) ? "Play EN and RU together, from the start" : "No RU take yet -- nothing to compare",
+                          onClick: (ie) => i(on)(b)
+                        }, null, 8, ["class", "icon", "disabled", "title", "onClick"]),
+                        $("div", Hs, [
+                          i(we)(b) ? (E(), le(Et, {
+                            key: 0,
+                            src: i(Ne)("audio_ru", b.audio_key, i(gt)[b.audio_key])
+                          }, null, 8, ["src"])) : X("", !0),
+                          i(we)(b) ? (E(), N("audio", {
+                            key: 1,
+                            class: "w100p",
+                            controls: "",
+                            preload: "none",
+                            crossorigin: "anonymous",
+                            src: i(Ne)("audio_ru", b.audio_key, i(gt)[b.audio_key]),
+                            ref_for: !0,
+                            ref: (ie) => i(tn)(b, ie),
+                            onLoadedmetadata: (ie) => i(pn)(b, ie),
+                            onPause: (ie) => i(Fe)(b, "ru"),
+                            onEnded: (ie) => i(Fe)(b, "ru")
+                          }, null, 40, qs)) : (E(), N("span", Ws, "not rendered yet"))
+                        ])
+                      ]),
+                      $("div", Gs, [
+                        a.renderApi ? (E(), le(ue, {
+                          key: 0,
+                          class: ge(["vo-dub-render-btn", { stale: b.status === "stale" }]),
+                          label: i(we)(b) ? "Re-render" : "Render",
+                          icon: i(Qe).has(b.audio_key) ? "pi pi-spin pi-spinner" : "pi pi-refresh",
+                          disabled: i(Qe).has(b.audio_key),
+                          title: i(we)(b) ? "Re-render this row" : "Render this row",
+                          onClick: (ie) => i(ln)(b)
+                        }, null, 8, ["class", "label", "icon", "disabled", "title", "onClick"])) : X("", !0),
+                        a.renderApi ? (E(), le(ue, {
+                          key: 1,
+                          icon: "pi pi-arrow-right",
+                          label: "Use EN",
+                          disabled: i(Qe).has(b.audio_key) || !b.english,
+                          title: b.english ? "Copy the EN reference track to audio_ru/" + b.audio_key + ".wav (no new render). Overwrites the current RU take." : "No EN reference for this row",
+                          onClick: (ie) => i(rn)(b)
+                        }, null, 8, ["disabled", "title", "onClick"])) : X("", !0),
+                        L(ue, {
+                          icon: "pi pi-history",
+                          label: i(_e)[b.audio_key] ? String(i(_e)[b.audio_key]) : "",
+                          title: "Line history (previous takes/versions)",
+                          onClick: (ie) => i(xe)(b)
+                        }, null, 8, ["label", "onClick"]),
+                        L(ue, {
+                          icon: "pi pi-cog",
+                          title: "Edit output settings",
+                          onClick: (ie) => i(Xt)(b)
+                        }, null, 8, ["onClick"])
+                      ])
+                    ]),
+                    L(Gn, { row: b }, {
+                      leading: K(() => [
+                        $("span", Js, V(b.speaker_tag || "—"), 1),
+                        L(ue, {
+                          icon: "pi pi-copy",
+                          class: "apply-role-btn",
+                          disabled: i(Ht)(b) === 0,
+                          title: i(qt)(b),
+                          onClick: (ie) => i(Wt)(b)
+                        }, null, 8, ["disabled", "title", "onClick"])
+                      ]),
+                      trailing: K(() => [
+                        $("label", Ks, [
+                          L(St, {
+                            "model-value": i(yn)(b),
+                            binary: "",
+                            "onUpdate:modelValue": (ie) => i(vn)(b, ie)
+                          }, null, 8, ["model-value", "onUpdate:modelValue"]),
+                          G[15] || (G[15] = ce(" 🎙️ Original ", -1))
+                        ])
+                      ]),
+                      "above-text": K(() => [
+                        $("div", Zs, V(b.english), 1)
+                      ]),
+                      _: 2
+                    }, 1032, ["row"])
+                  ], 64))
+                ];
+              }),
+              _: 2
+            }, 1032, ["class"]))), 128)),
+            i(P).length ? X("", !0) : (E(), N("div", Ys, "No rows match this filter."))
           ], 4)
         ]),
-        N(zn, {
-          visible: i(Ke),
-          "onUpdate:visible": W[6] || (W[6] = (g) => ve(Ke) ? Ke.value = g : null),
-          categories: i(Wt),
-          onSelect: i(Jt)
-        }, null, 8, ["visible", "categories", "onSelect"]),
-        N(Hn, {
-          visible: i(B),
-          "onUpdate:visible": W[7] || (W[7] = (g) => ve(B) ? B.value = g : null),
-          versions: i(K),
-          "chosen-version": i(ge),
-          original: ((St = i(ie)) == null ? void 0 : St.english) || "",
-          root: o.root,
-          "audio-key": ((kt = i(ie)) == null ? void 0 : kt.audio_key) || "",
-          onSelect: i(xe)
-        }, null, 8, ["visible", "versions", "chosen-version", "original", "root", "audio-key", "onSelect"]),
-        N(qn, {
-          visible: i(Je).visible,
-          left: i(Je).left,
-          top: i(Je).top,
-          message: i(yt).message,
-          fields: i(yt).fields
-        }, null, 8, ["visible", "left", "top", "message", "fields"]),
-        N(ro, {
+        L(Jn, {
           visible: i(Ze),
-          "onUpdate:visible": W[8] || (W[8] = (g) => ve(Ze) ? Ze.value = g : null),
-          audioKey: (Rt = i(fe)) == null ? void 0 : Rt.audio_key,
-          effect: i(fe) ? i(Kt)(i(fe)) : "",
+          "onUpdate:visible": G[6] || (G[6] = (b) => he(Ze) ? Ze.value = b : null),
+          categories: i(Gt),
+          onSelect: i(Kt)
+        }, null, 8, ["visible", "categories", "onSelect"]),
+        L(Kn, {
+          visible: i(ee),
+          "onUpdate:visible": G[7] || (G[7] = (b) => he(ee) ? ee.value = b : null),
+          versions: i(W),
+          "chosen-version": i(pe),
+          original: ((kt = i(j)) == null ? void 0 : kt.english) || "",
+          root: a.root,
+          "audio-key": ((Rt = i(j)) == null ? void 0 : Rt.audio_key) || "",
+          onSelect: i(Le)
+        }, null, 8, ["visible", "versions", "chosen-version", "original", "root", "audio-key", "onSelect"]),
+        L(Zn, {
+          visible: i(Ke).visible,
+          left: i(Ke).left,
+          top: i(Ke).top,
+          message: i(_t).message,
+          fields: i(_t).fields
+        }, null, 8, ["visible", "left", "top", "message", "fields"]),
+        L(bo, {
+          visible: i(Ye),
+          "onUpdate:visible": G[8] || (G[8] = (b) => he(Ye) ? Ye.value = b : null),
+          audioKey: (Tt = i(fe)) == null ? void 0 : Tt.audio_key,
+          effect: i(fe) ? i(Zt)(i(fe)) : "",
           "normalize-db": i(fe) ? i(O)(i(fe)).normalize_db ?? -20 : -20,
-          "speed-match": i(fe) ? i(Zt)(i(fe)) : !1,
+          "speed-match": i(fe) ? i(Yt)(i(fe)) : !1,
           enDurationS: i(fe) ? i(fe).duration_s : null,
-          ruDurationS: i(fe) ? i(dn)[i(fe).audio_key] ?? i(fe).rendered_duration_s : null,
-          onApply: i(Xt)
+          ruDurationS: i(fe) ? i(fn)[i(fe).audio_key] ?? i(fe).rendered_duration_s : null,
+          onApply: i(Qt)
         }, null, 8, ["visible", "audioKey", "effect", "normalize-db", "speed-match", "enDurationS", "ruDurationS", "onApply"])
       ], 64);
     };
   }
-}, Zs = /* @__PURE__ */ Re(Ks, [["__scopeId", "data-v-4f6f8eee"]]), Ys = {
+}, Qs = /* @__PURE__ */ Te(Xs, [["__scopeId", "data-v-f21666d3"]]), ea = {
   __name: "VoDubLineEditor",
   props: {
     root: { type: String, required: !0 },
@@ -2691,14 +2704,14 @@ const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws
     onClose: { type: Function, required: !0 }
   },
   setup(e) {
-    const o = e, t = V(!0);
-    return ye(t, (n) => {
-      n || o.onClose();
-    }), (n, s) => {
-      const a = te("Dialog");
-      return E(), de(a, {
+    const a = e, t = F(!0);
+    return ve(t, (n) => {
+      n || a.onClose();
+    }), (n, o) => {
+      const s = Q("Dialog");
+      return E(), le(s, {
         visible: t.value,
-        "onUpdate:visible": s[0] || (s[0] = (r) => t.value = r),
+        "onUpdate:visible": o[0] || (o[0] = (l) => t.value = l),
         modal: !1,
         draggable: !1,
         "close-on-escape": "",
@@ -2706,33 +2719,33 @@ const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws
         style: { width: "1600px" },
         class: "vo-dub-editor-dialog"
       }, {
-        default: Y(() => [
-          N(Zs, Pn(On(n.$props)), null, 16)
+        default: K(() => [
+          L(Qs, xn(Ln(n.$props)), null, 16)
         ]),
         _: 1
       }, 8, ["visible"]);
     };
   }
-}, Xs = { class: "row" }, Qs = { class: "role-head row" }, ea = { class: "role-name title" }, ta = {
-  class: "role-code mono muted",
+}, ta = { class: "row" }, na = { class: "role-name" }, oa = { class: "role-head row" }, sa = {
+  class: "role-code",
   title: "Role code -- read-only here, this addon doesn't own this file's identity model"
-}, na = ["title"], oa = {
+}, aa = ["title"], ia = {
   key: 1,
-  class: "role-actor muted"
-}, sa = {
+  class: "role-actor"
+}, la = {
   key: 0,
-  class: "role-description"
-}, aa = {
+  class: "role-description p-text-secondary"
+}, ra = {
   key: 1,
   class: "role-dub-direction"
-}, ia = {
+}, ua = {
   key: 2,
-  class: "role-notes muted"
-}, la = { class: "role-stats row" }, ra = { key: 0 }, ua = { key: 1 }, ca = { key: 2 }, da = { key: 3 }, fa = {
+  class: "role-notes p-text-secondary"
+}, ca = { class: "role-stats row p-text-secondary" }, da = { key: 0 }, fa = { key: 1 }, pa = { key: 2 }, ha = { key: 3 }, ya = {
   key: 3,
-  class: "role-examples mono",
+  class: "role-examples p-text-secondary",
   title: "Longest lines for this role -- a quick sample to listen to"
-}, pa = { class: "role-speaker-row row" }, va = 600, ha = 3e3, ya = 1500, _a = {
+}, va = { class: "role-speaker-row row" }, _a = 600, ma = 3e3, ga = 1500, ba = {
   __name: "DubRolesEditorApp",
   props: {
     root: { type: String, required: !0 },
@@ -2740,296 +2753,303 @@ const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws
     inline: { type: Boolean, default: !1 }
   },
   setup(e) {
-    const o = e, t = $e(o.root, "_dub_roles.json"), n = V(!0), s = V({ roles: {} }), a = V([]), r = V(""), v = V(""), k = V(!1), { cssWidth: h, setWidth: p, presets: b } = Vt({
+    const a = e, t = Pe(a.root, "_dub_roles.json"), n = F(!0), o = F({ roles: {} }), s = F([]), l = F(""), y = F(""), g = F(!1), { cssWidth: h, setWidth: p, presets: S } = Nt({
       storageKey: "FL_CosyVoice3.DubRolesEditor.widthPx",
       defaultWidth: 1200,
       presets: [900, 1200]
-    }), { fontSizePx: l, decrease: d, increase: f } = Nt({
+    }), { fontSizePx: r, decrease: d, increase: u } = Ft({
       storageKey: "FL_CosyVoice3.DubRolesEditor.fontSizePx",
       defaultSize: 13
     });
-    let _ = null, m = 0, c = null, T = null;
+    let m = null, v = 0, f = null, T = null;
     const O = /* @__PURE__ */ new Map();
-    function x(S) {
-      v.value = S;
+    function A(k) {
+      y.value = k;
     }
-    const D = ae(() => {
+    const D = ne(() => {
       var C;
-      const S = ((C = s.value) == null ? void 0 : C.roles) || {};
-      return Object.entries(S).sort((U, G) => {
-        var se, j;
-        return (((se = G[1]) == null ? void 0 : se.lines) || 0) - (((j = U[1]) == null ? void 0 : j.lines) || 0);
+      const k = ((C = o.value) == null ? void 0 : C.roles) || {};
+      return Object.entries(k).sort((U, q) => {
+        var ae, Z;
+        return (((ae = q[1]) == null ? void 0 : ae.lines) || 0) - (((Z = U[1]) == null ? void 0 : Z.lines) || 0);
       });
     });
-    function w(S, C) {
-      return S.character || C;
+    function w(k, C) {
+      return k.character || C;
     }
-    function L(S) {
-      return Array.isArray(S.notes) ? S.notes : [];
+    function x(k) {
+      return Array.isArray(k.notes) ? k.notes : [];
     }
-    function u(S) {
-      return Array.isArray(S.longest_files) ? S.longest_files : [];
+    function c(k) {
+      return Array.isArray(k.longest_files) ? k.longest_files : [];
     }
     function R() {
-      return JSON.stringify(s.value, null, 2);
+      return JSON.stringify(o.value, null, 2);
     }
     async function P() {
-      const S = R();
-      if (S !== _)
+      const k = R();
+      if (k !== m)
         try {
-          const U = await (await fetch(`${we}/write`, {
+          const U = await (await fetch(`${Ee}/write`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: t, content: S })
+            body: JSON.stringify({ path: t, content: k })
           })).json();
           if (U.error) {
-            x(`Save error: ${U.error}`);
+            A(`Save error: ${U.error}`);
             return;
           }
-          _ = S, x(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+          m = k, A(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
         } catch (C) {
-          x(`Save failed: ${C}`);
+          A(`Save failed: ${C}`);
         }
     }
-    function q() {
-      m = Date.now(), c && clearTimeout(c), c = setTimeout(P, va);
+    function H() {
+      v = Date.now(), f && clearTimeout(f), f = setTimeout(P, _a);
     }
-    function z(S, C) {
-      O.get(S) !== C.speaker && (O.set(S, C.speaker), Mn(o.root, S).then((G) => x(G.message)));
+    function B(k, C) {
+      O.get(k) !== C.speaker && (O.set(k, C.speaker), Vn(a.root, k).then((q) => A(q.message)));
     }
-    function oe(S, C) {
-      q(), z(S, C);
+    function se(k, C) {
+      H(), B(k, C);
     }
-    async function le() {
+    async function re() {
       try {
-        const C = await (await fetch(An)).json();
-        a.value = C.presets || [], r.value = C.dir || "";
+        const C = await (await fetch(Fn)).json();
+        s.value = C.presets || [], l.value = C.dir || "";
       } catch {
-        a.value = [], r.value = "";
+        s.value = [], l.value = "";
       }
     }
-    const y = V(!1), M = V(null);
-    function J(S, C) {
-      M.value = [S, C], y.value = !0;
+    const _ = F(!1), M = F(null);
+    function J(k, C) {
+      M.value = [k, C], _.value = !0;
     }
-    function H(S) {
+    function z(k) {
       const C = M.value;
       if (!C) return;
-      const [U, G] = C;
-      G.speaker = S, oe(U, G);
+      const [U, q] = C;
+      q.speaker = k, se(U, q);
     }
-    async function Z({ isPoll: S = !1 } = {}) {
+    async function Y({ isPoll: k = !1 } = {}) {
       try {
-        const U = await (await fetch(`${we}/read?path=${encodeURIComponent(t)}`)).json();
+        const U = await (await fetch(`${Ee}/read?path=${encodeURIComponent(t)}`)).json();
         if (U.error) {
-          x(`Read error: ${U.error}`);
+          A(`Read error: ${U.error}`);
           return;
         }
         if (!U.exists) {
-          S || (s.value = { roles: {} }, _ = "", x('_dub_roles.json does not exist yet -- click "Seed from dataset" below'));
+          k || (o.value = { roles: {} }, m = "", A('_dub_roles.json does not exist yet -- click "Seed from dataset" below'));
           return;
         }
-        if (S && Date.now() - m < ya || U.content === _) return;
-        let G;
+        if (k && Date.now() - v < ga || U.content === m) return;
+        let q;
         try {
-          G = JSON.parse(U.content);
-        } catch (j) {
-          x(`_dub_roles.json is not valid JSON: ${j}`);
+          q = JSON.parse(U.content);
+        } catch (Z) {
+          A(`_dub_roles.json is not valid JSON: ${Z}`);
           return;
         }
-        const se = G && typeof G.roles == "object" && G.roles || {};
-        for (const j of Object.values(se))
-          j && typeof j == "object" && j.speaker === void 0 && (j.speaker = "");
-        s.value = { ...G, roles: se };
-        for (const [j, B] of Object.entries(se))
-          O.set(j, B.speaker);
-        _ = R(), S || x(`Loaded ${D.value.length} role(s)`);
+        const ae = q && typeof q.roles == "object" && q.roles || {};
+        for (const Z of Object.values(ae))
+          Z && typeof Z == "object" && Z.speaker === void 0 && (Z.speaker = "");
+        o.value = { ...q, roles: ae };
+        for (const [Z, ee] of Object.entries(ae))
+          O.set(Z, ee.speaker);
+        m = R(), k || A(`Loaded ${D.value.length} role(s)`);
       } catch (C) {
-        x(`Read failed: ${C}`);
+        A(`Read failed: ${C}`);
       }
     }
-    async function ee() {
-      k.value = !0;
+    async function te() {
+      g.value = !0;
       try {
-        const C = await (await fetch(`${me}/seed_roles`, {
+        const C = await (await fetch(`${be}/seed_roles`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ root: o.root })
+          body: JSON.stringify({ root: a.root })
         })).json();
         if (C.error) {
-          x(`Seed error: ${C.error}`);
+          A(`Seed error: ${C.error}`);
           return;
         }
-        await Z(), x(C.added.length ? `Added ${C.added.length} role(s): ${C.added.join(", ")}` : "Nothing new to add");
-      } catch (S) {
-        x(`Seed failed: ${S}`);
+        await Y(), A(C.added.length ? `Added ${C.added.length} role(s): ${C.added.join(", ")}` : "Nothing new to add");
+      } catch (k) {
+        A(`Seed failed: ${k}`);
       } finally {
-        k.value = !1;
+        g.value = !1;
       }
     }
     function I() {
-      c && (clearTimeout(c), P());
-      for (const [S, C] of D.value) z(S, C);
-      T && clearInterval(T), o.onClose();
+      f && (clearTimeout(f), P());
+      for (const [k, C] of D.value) B(k, C);
+      T && clearInterval(T), a.onClose();
     }
-    return ye(n, (S) => {
-      S || I();
-    }), qe(async () => {
-      le(), await Z(), T = setInterval(() => Z({ isPoll: !0 }), ha);
-    }), ut(() => {
+    return ve(n, (k) => {
+      k || I();
+    }), We(async () => {
+      re(), await Y(), T = setInterval(() => Y({ isPoll: !0 }), ma);
+    }), ct(() => {
       T && clearInterval(T);
-    }), (S, C) => {
-      const U = te("Button"), G = te("Message"), se = te("InputText");
-      return E(), A(ne, null, [
-        (E(), de(Dn(e.inline ? "div" : "Dialog"), {
+    }), (k, C) => {
+      const U = Q("Button"), q = Q("Message"), ae = Q("InputText"), Z = Q("Card");
+      return E(), N(oe, null, [
+        (E(), le(Nn(e.inline ? "div" : "Dialog"), {
           visible: n.value,
-          "onUpdate:visible": C[1] || (C[1] = (j) => n.value = j),
+          "onUpdate:visible": C[1] || (C[1] = (ee) => n.value = ee),
           modal: !1,
           draggable: !1,
           "close-on-escape": "",
           header: " ",
-          style: De({ width: i(h) }),
+          style: Me({ width: i(h) }),
           class: "roles-dialog"
         }, {
-          default: Y(() => [
-            $("div", Xs, [
-              N(xn, {
+          default: K(() => [
+            $("div", ta, [
+              L(Un, {
                 title: "VO Dub Roles",
-                status: v.value,
-                "width-presets": i(b),
+                status: y.value,
+                "width-presets": i(S),
                 "set-width": i(p),
                 "font-size-decrease": i(d),
-                "font-size-increase": i(f)
+                "font-size-increase": i(u)
               }, {
-                after: Y(() => [
-                  N(U, {
+                after: K(() => [
+                  L(U, {
                     label: "Seed from dataset",
-                    icon: k.value ? "pi pi-spin pi-spinner" : "pi pi-database",
-                    disabled: k.value,
+                    icon: g.value ? "pi pi-spin pi-spinner" : "pi pi-database",
+                    disabled: g.value,
                     title: "Add every distinct speaker tag from vo_dataset.csv that isn't a role here yet",
-                    onClick: ee
+                    onClick: te
                   }, null, 8, ["icon", "disabled"])
                 ]),
                 _: 1
               }, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
             ]),
-            D.value.length ? X("", !0) : (E(), de(G, {
+            D.value.length ? X("", !0) : (E(), le(q, {
               key: 0,
               severity: "info",
               closable: !1
             }, {
-              default: Y(() => [...C[3] || (C[3] = [
+              default: K(() => [...C[3] || (C[3] = [
                 ce(' No roles yet -- click "Seed from dataset" above to create one per distinct speaker tag. ', -1)
               ])]),
               _: 1
             })),
             $("div", {
               class: "roles-list list",
-              style: De({ fontSize: `${i(l)}px` })
+              style: Me({ fontSize: `${i(r)}px` })
             }, [
-              (E(!0), A(ne, null, ue(D.value, ([j, B]) => (E(), A("div", {
-                key: j,
-                class: "role-card card"
-              }, [
-                $("div", Qs, [
-                  $("span", ea, F(w(B, j)), 1),
-                  $("span", ta, F(j), 1),
-                  B.gender ? (E(), A("span", {
-                    key: 0,
-                    class: "role-gender muted",
-                    title: B.gender_evidence || ""
-                  }, F(B.gender), 9, na)) : X("", !0),
-                  B.actor ? (E(), A("span", oa, F(B.actor), 1)) : X("", !0)
+              (E(!0), N(oe, null, de(D.value, ([ee, j]) => (E(), le(Z, {
+                key: ee,
+                class: "role-card"
+              }, {
+                title: K(() => [
+                  $("span", na, V(w(j, ee)), 1)
                 ]),
-                B.description ? (E(), A("p", sa, F(B.description), 1)) : X("", !0),
-                B.dub_direction ? (E(), A("p", aa, F(B.dub_direction), 1)) : X("", !0),
-                L(B).length ? (E(), A("ul", ia, [
-                  (E(!0), A(ne, null, ue(L(B), (ie, K) => (E(), A("li", { key: K }, F(ie), 1))), 128))
-                ])) : X("", !0),
-                $("div", la, [
-                  B.lines !== void 0 ? (E(), A("span", ra, F(B.lines) + " line(s)", 1)) : X("", !0),
-                  B.audio_minutes !== void 0 ? (E(), A("span", ua, F(B.audio_minutes) + " min", 1)) : X("", !0),
-                  B.lines_needing_translation ? (E(), A("span", ca, F(B.lines_needing_translation) + " need translation", 1)) : X("", !0),
-                  B.lines_without_any_text ? (E(), A("span", da, F(B.lines_without_any_text) + " no text", 1)) : X("", !0)
+                subtitle: K(() => [
+                  $("span", oa, [
+                    $("span", sa, V(ee), 1),
+                    j.gender ? (E(), N("span", {
+                      key: 0,
+                      class: "role-gender",
+                      title: j.gender_evidence || ""
+                    }, V(j.gender), 9, aa)) : X("", !0),
+                    j.actor ? (E(), N("span", ia, V(j.actor), 1)) : X("", !0)
+                  ])
                 ]),
-                u(B).length ? (E(), A("div", fa, " e.g. " + F(u(B).join(", ")), 1)) : X("", !0),
-                $("div", pa, [
-                  N(se, {
-                    modelValue: B.speaker,
-                    "onUpdate:modelValue": [
-                      (ie) => B.speaker = ie,
-                      C[0] || (C[0] = (ie) => q())
-                    ],
-                    placeholder: "Speaker preset",
-                    title: "Real CosyVoice preset this role resolves to",
-                    class: "role-speaker",
-                    onBlur: (ie) => z(j, B)
-                  }, null, 8, ["modelValue", "onUpdate:modelValue", "onBlur"]),
-                  N(U, {
-                    icon: "pi pi-microphone",
-                    title: "Pick a speaker from the preset gallery",
-                    onClick: (ie) => J(j, B)
-                  }, null, 8, ["onClick"])
-                ])
-              ]))), 128))
+                content: K(() => [
+                  j.description ? (E(), N("p", la, V(j.description), 1)) : X("", !0),
+                  j.dub_direction ? (E(), N("p", ra, V(j.dub_direction), 1)) : X("", !0),
+                  x(j).length ? (E(), N("ul", ua, [
+                    (E(!0), N(oe, null, de(x(j), (W, pe) => (E(), N("li", { key: pe }, V(W), 1))), 128))
+                  ])) : X("", !0),
+                  $("div", ca, [
+                    j.lines !== void 0 ? (E(), N("span", da, V(j.lines) + " line(s)", 1)) : X("", !0),
+                    j.audio_minutes !== void 0 ? (E(), N("span", fa, V(j.audio_minutes) + " min", 1)) : X("", !0),
+                    j.lines_needing_translation ? (E(), N("span", pa, V(j.lines_needing_translation) + " need translation", 1)) : X("", !0),
+                    j.lines_without_any_text ? (E(), N("span", ha, V(j.lines_without_any_text) + " no text", 1)) : X("", !0)
+                  ]),
+                  c(j).length ? (E(), N("div", ya, " e.g. " + V(c(j).join(", ")), 1)) : X("", !0),
+                  $("div", va, [
+                    L(ae, {
+                      modelValue: j.speaker,
+                      "onUpdate:modelValue": [
+                        (W) => j.speaker = W,
+                        C[0] || (C[0] = (W) => H())
+                      ],
+                      placeholder: "Speaker preset",
+                      title: "Real CosyVoice preset this role resolves to",
+                      class: "role-speaker",
+                      onBlur: (W) => B(ee, j)
+                    }, null, 8, ["modelValue", "onUpdate:modelValue", "onBlur"]),
+                    L(U, {
+                      icon: "pi pi-microphone",
+                      title: "Pick a speaker from the preset gallery",
+                      onClick: (W) => J(ee, j)
+                    }, null, 8, ["onClick"])
+                  ])
+                ]),
+                _: 2
+              }, 1024))), 128))
             ], 4)
           ]),
           _: 1
         }, 40, ["visible", "style"])),
-        N(Gn, {
-          visible: y.value,
-          "onUpdate:visible": C[2] || (C[2] = (j) => y.value = j),
-          presets: a.value,
-          "sample-dir": r.value,
-          onSelect: H
+        L(Xn, {
+          visible: _.value,
+          "onUpdate:visible": C[2] || (C[2] = (ee) => _.value = ee),
+          presets: s.value,
+          "sample-dir": l.value,
+          onSelect: z
         }, null, 8, ["visible", "presets", "sample-dir"])
       ], 64);
     };
   }
-}, ma = /* @__PURE__ */ Re(_a, [["__scopeId", "data-v-d9b84210"]]), We = Go();
-Ae(We);
-function xa({ node: e, projectRootWidget: o, openBrowseDialog: t, openVoDubLineEditor: n, openDubRolesEditor: s, queueVoDubRender: a }) {
-  dt(import.meta.url);
-  const r = document.createElement("div");
-  r.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
-  const v = ft(to, {
+}, Sa = /* @__PURE__ */ Te(ba, [["__scopeId", "data-v-702a698e"]]), Ge = ss();
+Ae(Ge);
+function Fa({ node: e, projectRootWidget: a, openBrowseDialog: t, openVoDubLineEditor: n, openDubRolesEditor: o, queueVoDubRender: s }) {
+  ft(import.meta.url);
+  const l = document.createElement("div");
+  l.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
+  const y = pt(po, {
     node: e,
-    projectRootWidget: o,
+    projectRootWidget: a,
     openBrowseDialog: t,
     openVoDubLineEditor: n,
-    openDubRolesEditor: s,
-    queueVoDubRender: a
+    openDubRolesEditor: o,
+    queueVoDubRender: s
   });
-  return v.use(We), v.use(pt, { ripple: !0 }), vt(v), v.mount(r), { element: r, unmount: () => v.unmount() };
+  return y.use(Ge), y.use(ht, { ripple: !0 }), yt(y), y.mount(l), { element: l, unmount: () => y.unmount() };
 }
-function La({ root: e, bucket: o, renderApi: t }) {
-  dt(import.meta.url);
+function Va({ root: e, bucket: a, renderApi: t }) {
+  ft(import.meta.url);
   const n = document.createElement("div");
   document.body.appendChild(n);
-  const s = ft(Ys, {
+  const o = pt(ea, {
     root: e,
-    bucket: o,
+    bucket: a,
     renderApi: t || null,
     onClose: () => {
-      s.unmount(), n.remove();
+      o.unmount(), n.remove();
     }
   });
-  s.use(We), s.use(pt, { ripple: !0 }), vt(s), s.mount(n);
+  o.use(Ge), o.use(ht, { ripple: !0 }), yt(o), o.mount(n);
 }
-function Va({ root: e }) {
-  dt(import.meta.url);
-  const o = document.createElement("div");
-  document.body.appendChild(o);
-  const t = ft(ma, {
+function Ua({ root: e }) {
+  ft(import.meta.url);
+  const a = document.createElement("div");
+  document.body.appendChild(a);
+  const t = pt(Sa, {
     root: e,
     onClose: () => {
-      t.unmount(), o.remove();
+      t.unmount(), a.remove();
     }
   });
-  t.use(We), t.use(pt, { ripple: !0 }), vt(t), t.mount(o);
+  t.use(Ge), t.use(ht, { ripple: !0 }), yt(t), t.mount(a);
 }
 export {
-  xa as mountVoDubBrowserPanel,
-  Va as openDubRolesEditor,
-  La as openVoDubLineEditor
+  Fa as mountVoDubBrowserPanel,
+  Ua as openDubRolesEditor,
+  Va as openVoDubLineEditor
 };

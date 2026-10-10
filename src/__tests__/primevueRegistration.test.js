@@ -4,12 +4,14 @@ import { registerPrimeVueComponents } from "../shared/primevue_components.js";
 
 // List of expected PrimeVue component names to be globally registered.
 const EXPECTED_COMPONENTS = [
+    "Avatar",
     "Button",
     "ButtonGroup",
     "Card",
     "Checkbox",
     "ConfirmDialog",
     "Dialog",
+    "Divider",
     "Dropdown",
     "Fieldset",
     "InlineMessage",
@@ -30,7 +32,7 @@ function getRegisteredComponentNames(app) {
 }
 
 describe("registerPrimeVueComponents", () => {
-    it("registers exactly sixteen components", () => {
+    it("registers exactly the expected number of components", () => {
         const app = createApp({});
         registerPrimeVueComponents(app);
         const names = getRegisteredComponentNames(app);

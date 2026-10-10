@@ -4,12 +4,9 @@
   "private": true,
   "main": "electron/main.js",
   "scripts": {
-    "clean:chunks": "node scripts/clean-chunks.mjs",
-    "dev": "npm run clean:chunks && vite build --watch --mode development",
     "dev:ui": "vite",
     "dev:electron-ui": "vite --config vite.electron.config.js",
     "electron:dev": "electron .",
-    "build": "npm run clean:chunks && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "nvm list": "nvm list",

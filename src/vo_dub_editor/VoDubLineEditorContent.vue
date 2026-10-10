@@ -194,7 +194,7 @@ watch(visible, (v) => { if (!v) close(); });
   <div class="fl-vo-dub-line-editor-content">
     <StickyPanel class="vo-dub-editor-controls">
           <div class="row">
-            <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search"/>
+            <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search-js"/>
             <RowFilterBar
               :statusOptions="STATUS_TOGGLE_OPTIONS"
               :selectedStatuses="filterStatuses"
@@ -206,7 +206,7 @@ watch(visible, (v) => { if (!v) close(); });
               @clear="clearFilters"
             />
             <Button icon="pi pi-refresh" title="Re-scan this bucket" @click="loadRows" />
-            <span class="vo-dub-editor-status p-text-secondary ellipsis">{{ loading ? "Loading..." : status }}</span>
+            <span class="vo-dub-editor-status-js p-text-secondary ellipsis">{{ loading ? "Loading..." : status }}</span>
           </div>
 
       <div class="actions">
@@ -217,7 +217,7 @@ watch(visible, (v) => { if (!v) close(); });
               title="Previous page"
               @click="currentPage--"
           />
-          <span class="vo-dub-pager-label p-text-secondary">
+          <span class="vo-dub-pager-label-js p-text-secondary">
             {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }})
           </span>
           <Button
@@ -253,18 +253,18 @@ watch(visible, (v) => { if (!v) close(); });
     <div class="vo-dub-rows list" :style="{ fontSize: `${fontSizePx}px` }">
       <Card
           v-for="row in pagedRows" :key="row.audio_key"
-          class="vo-dub-row"
-          :class="{ 'row-playing': sequentialPlayingKey === row.audio_key, 'row-issue': manuallyIssue(row) }"
+          class="vo-dub-row-js"
+          :class="{ 'row-playing-js': sequentialPlayingKey === row.audio_key, 'row-issue': manuallyIssue(row) }"
           :ref="(el) => setRowRef(row.audio_key, el?.$el ?? el)"
       >
       <template #title>
         <div class="row">
-          <span class="vo-dub-key">{{ row.audio_key }}</span>
+          <span class="vo-dub-key-js">{{ row.audio_key }}</span>
           <InlineMessage :severity="severityForStatus(row.status)">{{ STATUS_LABELS[row.status] }}</InlineMessage>
           <Button
               v-if="hasRuTake(row)"
-              class="vo-dub-done-btn"
-              :class="{ active: manuallyDone(row) }"
+              class="vo-dub-done-btn-js"
+              :class="{ 'active-js': manuallyDone(row) }"
               :icon="manuallyDone(row) ? 'pi pi-check-circle' : 'pi pi-circle'"
               :label="manuallyDone(row) ? 'Done' : 'Mark done'"
               title="Manually treat this row as done even if its content has drifted since the last render."
@@ -272,7 +272,7 @@ watch(visible, (v) => { if (!v) close(); });
           />
           <Button
               class="vo-dub-issue-btn"
-              :class="{ active: manuallyIssue(row) }"
+              :class="{ 'active-js': manuallyIssue(row) }"
               severity="danger"
               :icon="manuallyIssue(row) ? 'pi pi-exclamation-triangle' : 'pi pi-exclamation-circle'"
               :label="manuallyIssue(row) ? 'Issue' : 'Mark issue'"
@@ -282,7 +282,7 @@ watch(visible, (v) => { if (!v) close(); });
         </div>
       </template>
       <template #content>
-        <Message v-if="row.status === 'unsupported'" class="vo-dub-unsupported-note" severity="warn" :closable="false">
+        <Message v-if="row.status === 'unsupported'" class="vo-dub-unsupported-note-js" severity="warn" :closable="false">
           Unsupported: {{ row.channels }}-channel audio split across multiple files
           (<code>.a</code>-<code>.d</code>) -- this editor can only play or render a single mono/stereo
           file per row. Handle this one outside the tool.
@@ -327,8 +327,8 @@ watch(visible, (v) => { if (!v) close(); });
               </div>
 
               <Button
-                  class="play-both-btn"
-                  :class="{ playing: dualPlayingRows.has(row.audio_key) }"
+                  class="play-both-btn-js"
+                  :class="{ 'playing-js': dualPlayingRows.has(row.audio_key) }"
                   label="Play both"
                   :icon="dualLoadingRows.has(row.audio_key) ? 'pi pi-spin pi-spinner' : (dualPlayingRows.has(row.audio_key) ? 'pi pi-pause' : 'pi pi-play')"
                   :disabled="!hasRuTake(row)"
@@ -355,8 +355,8 @@ watch(visible, (v) => { if (!v) close(); });
             <div class="vo-dub-players-footer actions">
               <Button
                   v-if="props.renderApi"
-                  class="vo-dub-render-btn"
-                  :class="{ stale: row.status === 'stale' }"
+                  class="vo-dub-render-btn-js"
+                  :class="{ 'stale-js': row.status === 'stale' }"
                   :label="hasRuTake(row) ? 'Re-render' : 'Render'"
                   :icon="renderingKeys.has(row.audio_key) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
                   :disabled="renderingKeys.has(row.audio_key)"
@@ -390,12 +390,12 @@ watch(visible, (v) => { if (!v) close(); });
           <LineRowEditor :row="row">
             <template #leading>
               <span
-                  class="vo-dub-identifier ellipsis"
+                  class="vo-dub-identifier-js ellipsis"
                   title="Identifier extracted from the game's own resources (vo_dataset.csv's speaker column)"
               >{{ row.speaker_tag || "—" }}</span>
               <Button
                   icon="pi pi-copy"
-                  class="apply-role-btn"
+                  class="apply-role-btn-js"
                   :disabled="sameIdentifierCount(row) === 0"
                   :title="applyRoleTitle(row)"
                   @click="applyRoleToSameIdentifier(row)"
@@ -424,7 +424,7 @@ watch(visible, (v) => { if (!v) close(); });
       </template>
       </Card>
 
-      <div v-if="!visibleRows.length" class="vo-dub-empty p-text-secondary">No rows match this filter.</div>
+      <div v-if="!visibleRows.length" class="vo-dub-empty-js p-text-secondary">No rows match this filter.</div>
     </div>
   </div>
 
@@ -466,19 +466,20 @@ watch(visible, (v) => { if (!v) close(); });
  This component's own layout details -- sizes, gaps and one-off accents
  that aren't a pattern repeated across other components, so they stay
  here rather than joining the shared vocabulary in src/style/app.css.
- Combined with that vocabulary's classes in the template (e.g.
- class="vo-dub-row card"), not a replacement for it.
+ Combined with that vocabulary's classes in the template, not a
+ replacement for it. "-js" suffixed classes are read by test/app JS
+ (querySelector, classList) -- see memory/project_css_refactor.md.
 */
 .vo-dub-editor-controls {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.vo-dub-search {
+.vo-dub-search-js {
   flex: 1 1 240px;
   min-width: 0;
 }
-.vo-dub-pager-label {
+.vo-dub-pager-label-js {
   white-space: nowrap;
   padding: 0 4px;
 }
@@ -507,13 +508,13 @@ watch(visible, (v) => { if (!v) close(); });
   gap: 2px;
   min-width: 0;
 }
-.play-both-btn {
+.play-both-btn-js {
   justify-self: center;
 }
 .vo-dub-players-footer {
   padding-top: 2px;
 }
-.vo-dub-identifier {
+.vo-dub-identifier-js {
   flex: 0 0 auto;
   max-width: 220px;
   padding: 2px 6px;
@@ -529,7 +530,7 @@ watch(visible, (v) => { if (!v) close(); });
   border-left: 1px solid var(--border-subtle);
   margin-left: 4px;
 }
-.vo-dub-empty {
+.vo-dub-empty-js {
   padding: 16px;
   text-align: center;
 }
@@ -540,13 +541,13 @@ watch(visible, (v) => { if (!v) close(); });
  context only -- both genuine exceptions, not duplicated structural
  patterns.
 */
-.vo-dub-row.row-playing {
+.vo-dub-row-js.row-playing-js {
   background: #242935;
 }
-.play-both-btn.playing {
+.play-both-btn-js.playing-js {
   color: var(--color-active);
 }
-.vo-dub-render-btn.stale {
+.vo-dub-render-btn-js.stale-js {
   color: var(--color-warning);
 }
 .vo-dub-similarity-slot :deep(.compact-circle) {

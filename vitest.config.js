@@ -8,18 +8,6 @@ import vue from "@vitejs/plugin-vue";
 // into how tests transform/resolve modules.
 export default defineConfig({
     plugins: [vue()],
-    css: {
-        preprocessorOptions: {
-            sass: {
-                // Kept in sync with vite.config.js's own additionalData --
-                // `as *` re-exposes app.sass's @forward-ed variables/
-                // placeholders without an "app." namespace prefix, the
-                // closest match to the old @import-based "just works"
-                // ergonomics (see src/style/app.sass's own comment).
-                additionalData: `@use "../style/app" as *\n`,
-            },
-        },
-    },
     test: {
         environment: "happy-dom",
         globals: false,

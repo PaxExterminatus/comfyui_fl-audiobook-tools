@@ -3,7 +3,7 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";
-import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API } from "../../web/fl_common.js";
+import { markRoleStale, joinPath, SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API } from "../shared/fl_common.js";
 
 const props = defineProps({
     root: { type: String, required: true },
@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
         <div class="grid" :style="{ fontSize: `${cardFontSizePx}px` }">
             <Card v-for="role in roles" :key="role.code">
                 <template #title>
-                    <span class="role-code" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
+                    <span class="role-code-js" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
                 </template>
                 <template #subtitle>{{ role.name }}</template>
                 <template #content>
@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
                         filter
                         placeholder="Speaker preset"
                         title="Real CosyVoice preset this role resolves to"
-                        class="role-speaker w100p"
+                        class="role-speaker-js w100p"
                         @input="scheduleSave()"
                         @change="onSpeakerCommitted(role)"
                         @blur="notifyIfSpeakerChanged(role)"
@@ -211,7 +211,7 @@ onBeforeUnmount(() => {
                         auto-resize
                         rows="1"
                         placeholder="Description..."
-                        class="role-description w100p"
+                        class="role-description-js w100p"
                         :style="{ fontSize: `${cardFontSizePx}px` }"
                         @input="scheduleSave()"
                     />

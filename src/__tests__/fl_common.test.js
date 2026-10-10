@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { joinPath, stripSuffixAndExt, dirOf, markRoleStale, parsePauseField } from "../../web/fl_common.js";
+import { joinPath, stripSuffixAndExt, dirOf, markRoleStale, parsePauseField } from "../shared/fl_common.js";
 
 describe("joinPath", () => {
     it("joins with a backslash when base already uses one", () => {

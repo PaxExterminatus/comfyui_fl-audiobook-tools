@@ -26,8 +26,8 @@ describe("WaveformCanvas", () => {
         global.fetch = vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => new ArrayBuffer(200) });
 
         const wrapper = mount(WaveformCanvas, { props: { src: "http://x/audio.wav" }, attachTo: document.body });
-        expect(wrapper.find(".waveform-canvas").exists()).toBe(true);
-        await vi.waitFor(() => expect(wrapper.find(".waveform-status").exists()).toBe(false));
+        expect(wrapper.find(".waveform-canvas-js").exists()).toBe(true);
+        await vi.waitFor(() => expect(wrapper.find(".waveform-status-js").exists()).toBe(false));
         wrapper.unmount();
     });
 
@@ -37,7 +37,7 @@ describe("WaveformCanvas", () => {
         window.webkitAudioContext = undefined;
 
         const wrapper = mount(WaveformCanvas, { props: { src: "http://x/audio.wav" }, attachTo: document.body });
-        await vi.waitFor(() => expect(wrapper.find(".waveform-status").text()).toBe("⚠"));
+        await vi.waitFor(() => expect(wrapper.find(".waveform-status-js").text()).toBe("⚠"));
 
         window.webkitAudioContext = originalWebkit;
         wrapper.unmount();

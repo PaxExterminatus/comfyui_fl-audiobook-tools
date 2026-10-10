@@ -9,7 +9,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import DialogHeader from "../shared/DialogHeader.vue";
-import { joinPath, BROWSE_API as LIST_API } from "../../web/fl_common.js";
+import { joinPath, BROWSE_API as LIST_API } from "../shared/fl_common.js";
 
 const props = defineProps({
     mode: { type: String, default: "folder" }, // "folder" | "file"
@@ -150,7 +150,7 @@ onMounted(() => load(props.startPath || ""));
             <InputText
                 v-model="pathInputValue"
                 placeholder="Path -- press Enter to jump here"
-                class="browse-path-input spacer"
+                class="browse-path-input-js spacer"
                 @keydown.enter="onPathEnter"
             />
         </div>
@@ -158,18 +158,18 @@ onMounted(() => load(props.startPath || ""));
         <Message v-if="errorText" severity="error" :closable="false">{{ errorText }}</Message>
 
         <div class="browse-list" :style="{ fontSize: `${listFontSizePx}px` }">
-            <div v-if="loading" class="browse-row browse-row-note ellipsis">Loading...</div>
+            <div v-if="loading" class="browse-row-js browse-row-note ellipsis">Loading...</div>
             <template v-else>
                 <div
                     v-for="entry in entries"
                     :key="`${entry.type}:${entry.name}`"
-                    class="browse-row ellipsis"
+                    class="browse-row-js ellipsis"
                     :class="{ 'browse-row-selected': entry.type === 'file' && entry.path === selectedFilePath }"
                     @click="onRowClick(entry)"
                 >
                     {{ entry.icon }} {{ entry.name }}
                 </div>
-                <div v-if="!entries.length && !errorText" class="browse-row browse-row-note ellipsis">(empty)</div>
+                <div v-if="!entries.length && !errorText" class="browse-row-js browse-row-note ellipsis">(empty)</div>
             </template>
         </div>
 
@@ -201,12 +201,12 @@ onMounted(() => load(props.startPath || ""));
  kept minimal and local rather than promoted to a shared class since
  this exact row-list interaction isn't repeated elsewhere.
 */
-.browse-row {
+.browse-row-js {
   padding: 6px 10px;
   cursor: pointer;
   border-radius: 4px;
 }
-.browse-row:not(.browse-row-note):hover {
+.browse-row-js:not(.browse-row-note):hover {
   background: var(--overlay-soft);
 }
 .browse-row-selected {

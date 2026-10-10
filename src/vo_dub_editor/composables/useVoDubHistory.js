@@ -10,7 +10,7 @@
  */
 
 import { ref, reactive } from "vue";
-import { VO_DUB_API } from "../../../web/fl_common.js";
+import { VO_DUB_API } from "../../shared/fl_common.js";
 
 export function useVoDubHistory(ctx) {
     const { props, setStatus, entryFor, scheduleSave } = ctx;

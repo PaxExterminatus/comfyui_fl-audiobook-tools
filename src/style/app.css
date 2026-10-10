@@ -113,7 +113,13 @@
 
 /* ---- Global rules no single component's scoped style can own ---- */
 
-.role-info-popover {
+/*
+ "-js" suffix: these classes are read by application/test JS (querySelector,
+ classList, closest) -- see memory/project_css_refactor.md. Renaming one
+ without updating its JS reader breaks behavior, not just looks.
+*/
+
+.role-info-popover-js {
     position: fixed;
     z-index: 100000;
     width: 260px;
@@ -124,17 +130,17 @@
     box-shadow: 0 8px 24px #121212;
 }
 
-.role-info-btn {
+.role-info-btn-js {
     cursor: help;
     opacity: 0.7;
 }
 
-.row-checkbox {
+.row-checkbox-js {
     cursor: pointer;
 }
 
-.fl-textarea {
-    width: 100%;
+.fl-textarea-js {
+    flex: 1;
     box-sizing: border-box;
     resize: none;
     overflow: hidden;

@@ -65,10 +65,10 @@ describe("BrowseDialogApp", () => {
         const { wrapper } = mountApp();
         await vi.waitFor(() => expect(document.body.textContent).toContain("Act01"));
 
-        const row = [...document.body.querySelectorAll(".browse-row")].find((r) => r.textContent.includes("Act01"));
+        const row = [...document.body.querySelectorAll(".browse-row-js")].find((r) => r.textContent.includes("Act01"));
         row.click();
 
-        await vi.waitFor(() => expect(document.body.querySelector(".browse-path-input").value).toBe("C:\\project\\Act01"));
+        await vi.waitFor(() => expect(document.body.querySelector(".browse-path-input-js").value).toBe("C:\\project\\Act01"));
         wrapper.unmount();
     });
 
@@ -92,7 +92,7 @@ describe("BrowseDialogApp", () => {
         let selectBtn = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Select File"));
         expect(selectBtn.disabled).toBe(true);
 
-        const row = [...document.body.querySelectorAll(".browse-row")].find((r) => r.textContent.includes("notes.txt"));
+        const row = [...document.body.querySelectorAll(".browse-row-js")].find((r) => r.textContent.includes("notes.txt"));
         row.click();
         await vi.waitFor(() => {
             selectBtn = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Select File"));

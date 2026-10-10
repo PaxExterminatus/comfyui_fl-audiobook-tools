@@ -8,7 +8,7 @@ import {
     joinPath,
     SCRIPT_EDITOR_API as FILE_API,
     VO_DUB_API,
-} from "../../../web/fl_common.js";
+} from "../../shared/fl_common.js";
 
 export function useVoDubState(ctx) {
     const { props } = ctx;

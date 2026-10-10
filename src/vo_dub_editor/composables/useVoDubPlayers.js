@@ -35,7 +35,7 @@
 import { ref, reactive } from "vue";
 import { guardAgainstUnbufferedPlay, waitUntilBuffered } from "../../shared/audio_buffer_guard.js";
 import { createEffectPreview } from "../effect_preview.js";
-import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../../web/fl_common.js";
+import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../shared/fl_common.js";
 
 export function useVoDubPlayers(ctx) {
     const {

@@ -49,9 +49,9 @@ describe("VoDubBrowserPanel", () => {
 
     it("lists every bucket with its per-status counts", async () => {
         const { wrapper } = mountPanel();
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row")).toHaveLength(2));
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row-js")).toHaveLength(2));
 
-        const e1 = document.querySelectorAll(".vo-dub-bucket-row")[0];
+        const e1 = document.querySelectorAll(".vo-dub-bucket-row-js")[0];
         expect(e1.textContent).toContain("E1");
         expect(e1.textContent).toContain("320");
         expect(e1.textContent).toContain("not started 303");
@@ -60,9 +60,9 @@ describe("VoDubBrowserPanel", () => {
 
     it("opens the line editor for the clicked bucket, scoped to the current root", async () => {
         const { wrapper, openVoDubLineEditor } = mountPanel();
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row")).toHaveLength(2));
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row-js")).toHaveLength(2));
 
-        document.querySelectorAll(".vo-dub-bucket-row")[1].click();
+        document.querySelectorAll(".vo-dub-bucket-row-js")[1].click();
 
         expect(openVoDubLineEditor).toHaveBeenCalledWith({ root: ROOT, bucket: "Other", renderApi: null });
         wrapper.unmount();
@@ -85,9 +85,9 @@ describe("VoDubBrowserPanel", () => {
             global: { plugins: [PrimeVue] },
             attachTo: document.body,
         });
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row")).toHaveLength(2));
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row-js")).toHaveLength(2));
 
-        document.querySelectorAll(".vo-dub-bucket-row")[0].click();
+        document.querySelectorAll(".vo-dub-bucket-row-js")[0].click();
         const { renderApi } = openVoDubLineEditor.mock.calls[0][0];
         await renderApi.renderRow({ audioKey: "Loc_A" });
 
@@ -97,8 +97,8 @@ describe("VoDubBrowserPanel", () => {
 
     it("surfaces a server error instead of silently showing an empty list", async () => {
         const { wrapper } = mountPanel({ tree: { error: "not a folder: C:\\nope" } });
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-status").textContent).toContain("not a folder"));
-        expect(document.querySelectorAll(".vo-dub-bucket-row")).toHaveLength(0);
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-status-js").textContent).toContain("not a folder"));
+        expect(document.querySelectorAll(".vo-dub-bucket-row-js")).toHaveLength(0);
         wrapper.unmount();
     });
 
@@ -116,7 +116,7 @@ describe("VoDubBrowserPanel", () => {
             global: { plugins: [PrimeVue] },
             attachTo: document.body,
         });
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row")).toHaveLength(2));
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-bucket-row-js")).toHaveLength(2));
 
         const rolesBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Roles");
         rolesBtn.click();

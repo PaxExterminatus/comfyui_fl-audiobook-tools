@@ -10,7 +10,7 @@
  Clicking a bucket opens VoDubLineEditor.vue for it.
 */
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { VO_DUB_API } from "../../web/fl_common.js";
+import { VO_DUB_API } from "../shared/fl_common.js";
 import { severityForStatus } from "../shared/row_status.js";
 
 const props = defineProps({
@@ -26,6 +26,19 @@ const TREE_POLL_MS = 9000;
 const STORAGE_KEY = "FL_CosyVoice3.VODubLibrary.lastRoot";
 
 const root = ref(props.projectRootWidget.value || localStorage.getItem(STORAGE_KEY) || "");
+/*
+ If `root` resolved from the localStorage fallback (a fresh/re-added node
+ whose own `project_root` widget is still empty), that widget value is
+ what actually gets serialized into the prompt when rendering -- app.
+ graphToPrompt() reads the WIDGET, not this ref. Leaving it unsynced here
+ meant the tree/rows loaded fine (they use `root.value` directly for
+ their own fetches) while every render failed with the backend's own
+ "not a folder: " (empty project_root). Sync it the moment we resolve a
+ real value, not just when the user explicitly re-Browses.
+*/
+if (root.value && props.projectRootWidget.value !== root.value) {
+  props.projectRootWidget.value = root.value;
+}
 const browseLabel = computed(() => (root.value ? `📁 ${root.value}` : "📁 Click to browse for a VO dub project folder"));
 const buckets = ref([]);
 const status = ref("");
@@ -123,7 +136,7 @@ onBeforeUnmount(() => clearInterval(pollTimer));
     <div class="vo-dub-buckets panel">
       <div
           v-for="b in buckets" :key="b.bucket"
-          class="vo-dub-bucket-row row"
+          class="vo-dub-bucket-row-js row"
           :class="{ 'has-issues': b.issue > 0 }"
           @click="openBucket(b)"
       >
@@ -137,7 +150,7 @@ onBeforeUnmount(() => clearInterval(pollTimer));
       </div>
     </div>
 
-    <div class="vo-dub-status p-text-secondary">{{ loading ? "Loading..." : status }}</div>
+    <div class="vo-dub-status-js p-text-secondary">{{ loading ? "Loading..." : status }}</div>
   </div>
 </template>
 
@@ -158,15 +171,15 @@ onBeforeUnmount(() => clearInterval(pollTimer));
   flex-direction: column;
   gap: 2px;
 }
-.vo-dub-bucket-row {
+.vo-dub-bucket-row-js {
   padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
 }
-.vo-dub-status {
+.vo-dub-status-js {
   flex: 0 0 auto;
 }
-.vo-dub-bucket-row:hover {
+.vo-dub-bucket-row-js:hover {
   background: var(--overlay-soft);
 }
 </style>

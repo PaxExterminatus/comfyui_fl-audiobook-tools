@@ -8,7 +8,7 @@
  */
 
 import { ref } from "vue";
-import { VO_DUB_API } from "../../../web/fl_common.js";
+import { VO_DUB_API } from "../../shared/fl_common.js";
 
 export function useVoDubEffects(ctx) {
     const {

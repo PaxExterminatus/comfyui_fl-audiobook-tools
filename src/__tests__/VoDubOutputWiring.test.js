@@ -62,7 +62,7 @@ async function mountEditor(overrides = {}) {
         attachTo: document.body,
     });
     // Wait for rows to be rendered
-    await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row").length).toBeGreaterThan(0));
+    await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row-js").length).toBeGreaterThan(0));
     return { wrapper };
 }
 
@@ -77,7 +77,7 @@ describe("VoDub Output Wiring", () => {
 
     it("shows the output settings button and disables it on rows without a take", async () => {
         const { wrapper } = await mountEditor();
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const btnA = rows[0].querySelector(".output-settings-btn");
         const btnB = rows[1].querySelector(".output-settings-btn");
         expect(btnA).toBeTruthy();
@@ -89,7 +89,7 @@ describe("VoDub Output Wiring", () => {
 
     it("opens OutputFileDialog with the row's current effect, normalize, and speed as props", async () => {
         const { wrapper } = await mountEditor();
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const btnB = rows[1].querySelector(".output-settings-btn");
         btnB.click();
         // Wait for the dialog component to appear
@@ -107,7 +107,7 @@ describe("VoDub Output Wiring", () => {
 
     it("passes ruDurationS falling back to rendered_duration_s when no measured duration exists", async () => {
         const { wrapper } = await mountEditor();
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const btnB = rows[1].querySelector(".output-settings-btn");
         btnB.click();
         await vi.waitFor(() => {
@@ -126,7 +126,7 @@ describe("VoDub Output Wiring", () => {
         const onApplyEffect = vi.fn();
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onApplyEffect, onWrite });
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const rowB = rows[1];
         const btn = rowB.querySelector(".output-settings-btn");
         btn.click();
@@ -166,7 +166,7 @@ describe("VoDub Output Wiring", () => {
         const applyError = "no dry take yet for this row -- render it once first";
         const onApplyEffect = vi.fn();
         const { wrapper } = await mountEditor({ onApplyEffect, applyEffectError: applyError });
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const rowB = rows[1];
         const btn = rowB.querySelector(".output-settings-btn");
         btn.click();
@@ -178,7 +178,7 @@ describe("VoDub Output Wiring", () => {
         applyBtn.trigger("click");
         await vi.waitFor(() => expect(onApplyEffect).toHaveBeenCalled());
         // Status line should contain the error
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-editor-status").textContent).toContain("no dry take"));
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-editor-status-js").textContent).toContain("no dry take"));
         // Settings should still be in state (we can't inspect directly, but ensure they weren't cleared)
         // The dialog should still show the chosen effect after error
         expect(dialog.props("effect")).toBe("radio");

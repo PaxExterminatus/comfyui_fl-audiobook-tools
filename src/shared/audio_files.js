@@ -11,7 +11,7 @@
  * все компоненты видят одинаковые значения.
  */
 import { reactive } from "vue";
-import { SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
+import { SCRIPT_LIBRARY_API as SCAN_API } from "./fl_common.js";
 
 const durations = reactive({});       // url → seconds | null
 const pending = new Map();             // url → Promise, дедуп параллельных замеров

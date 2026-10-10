@@ -32,7 +32,7 @@ import DialogHeader from "../shared/DialogHeader.vue";
 import {
     markDubRoleStale, joinPath,
     SCRIPT_EDITOR_API as FILE_API, SPEAKER_PRESETS_API as PRESETS_API, VO_DUB_API,
-} from "../../web/fl_common.js";
+} from "../shared/fl_common.js";
 
 const props = defineProps({
     root: { type: String, required: true },
@@ -329,23 +329,23 @@ onBeforeUnmount(() => {
         </Message>
 
         <div class="roles-list list" :style="{ fontSize: `${cardFontSizePx}px` }">
-            <Card v-for="[code, entry] in roleEntries" :key="code" class="role-card">
-                <template #title><span class="role-name">{{ displayName(entry, code) }}</span></template>
+            <Card v-for="[code, entry] in roleEntries" :key="code" class="role-card-js">
+                <template #title><span class="role-name-js">{{ displayName(entry, code) }}</span></template>
                 <template #subtitle>
                     <span class="role-head row">
-                        <span class="role-code" title="Role code -- read-only here, this addon doesn't own this file's identity model">{{ code }}</span>
-                        <span v-if="entry.gender" class="role-gender" :title="entry.gender_evidence || ''">{{ entry.gender }}</span>
-                        <span v-if="entry.actor" class="role-actor">{{ entry.actor }}</span>
+                        <span class="role-code-js" title="Role code -- read-only here, this addon doesn't own this file's identity model">{{ code }}</span>
+                        <span v-if="entry.gender" class="role-gender-js" :title="entry.gender_evidence || ''">{{ entry.gender }}</span>
+                        <span v-if="entry.actor" class="role-actor-js">{{ entry.actor }}</span>
                     </span>
                 </template>
                 <template #content>
                     <p v-if="entry.description" class="role-description p-text-secondary">{{ entry.description }}</p>
-                    <p v-if="entry.dub_direction" class="role-dub-direction">{{ entry.dub_direction }}</p>
-                    <ul v-if="notesList(entry).length" class="role-notes p-text-secondary">
+                    <p v-if="entry.dub_direction" class="role-dub-direction-js">{{ entry.dub_direction }}</p>
+                    <ul v-if="notesList(entry).length" class="role-notes-js p-text-secondary">
                         <li v-for="(note, i) in notesList(entry)" :key="i">{{ note }}</li>
                     </ul>
 
-                    <div class="role-stats row p-text-secondary">
+                    <div class="role-stats-js row p-text-secondary">
                         <span v-if="entry.lines !== undefined">{{ entry.lines }} line(s)</span>
                         <span v-if="entry.audio_minutes !== undefined">{{ entry.audio_minutes }} min</span>
                         <span v-if="entry.lines_needing_translation">{{ entry.lines_needing_translation }} need translation</span>
@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
                             v-model="entry.speaker"
                             placeholder="Speaker preset"
                             title="Real CosyVoice preset this role resolves to"
-                            class="role-speaker"
+                            class="role-speaker-js"
                             @update:model-value="scheduleSave()"
                             @blur="notifyIfSpeakerChanged(code, entry)"
                         />
@@ -388,26 +388,26 @@ onBeforeUnmount(() => {
     max-height: 74vh;
     overflow-y: auto;
 }
-.role-gender {
+.role-gender-js {
     cursor: help;
 }
-.role-actor {
+.role-actor-js {
     margin-left: auto;
 }
-.role-description, .role-notes, .role-stats, .role-examples {
+.role-description, .role-notes-js, .role-stats-js, .role-examples {
     margin: 0;
 }
-.role-notes {
+.role-notes-js {
     padding-left: 18px;
 }
-.role-dub-direction {
+.role-dub-direction-js {
     margin: 0;
     padding: 6px 10px;
     border-left: 2px solid var(--color-accent);
     background: var(--overlay-soft);
     border-radius: 0 4px 4px 0;
 }
-.role-speaker {
+.role-speaker-js {
     width: 260px;
 }
 </style>

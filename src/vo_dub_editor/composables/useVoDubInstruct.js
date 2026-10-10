@@ -7,7 +7,7 @@ import { saveInstructPhrase } from "../../shared/instruct_library.js";
 import {
     joinPath,
     SCRIPT_EDITOR_API as FILE_API,
-} from "../../../web/fl_common.js";
+} from "../../shared/fl_common.js";
 
 export function useVoDubInstruct(ctx) {
     const {

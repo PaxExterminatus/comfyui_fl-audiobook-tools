@@ -15,7 +15,7 @@
  whether this panel is even mounted.
 */
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from "vue";
-import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
+import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../shared/fl_common.js";
 
 const props = defineProps({
     node: { type: Object, required: true },
@@ -476,7 +476,7 @@ onBeforeUnmount(() => {
             :label="browseLabel"
             :title="folderPath"
             text
-            class="browse-button ellipsis w100p"
+            class="browse-button-js ellipsis w100p"
             @click="openBrowse"
         />
 
@@ -507,13 +507,13 @@ onBeforeUnmount(() => {
             <div v-if="!treeData.length" class="tree-empty p-text-secondary">(no acts found)</div>
             <template v-for="entry in treeData" :key="entry.act">
                 <div
-                    class="act-row row"
+                    class="act-row-js row"
                     :class="{ 'act-row-active': entry.act === activeAct }"
                     @click="toggleActRow(entry.act)"
                 >
                     <input
                         type="checkbox"
-                        class="row-checkbox"
+                        class="row-checkbox-js"
                         :checked="actCheckState(entry.act, entry.scripts, readySetOf(entry)) === 'all'"
                         :ref="(el) => setActIndeterminate(el, entry)"
                         @click.stop
@@ -528,13 +528,13 @@ onBeforeUnmount(() => {
                     <div
                         v-for="filename in entry.scripts"
                         :key="filename"
-                        class="script-row row"
+                        class="script-row-js row"
                         :class="{ 'script-row-active': entry.act === activeAct && scriptFileWidget.value === filename }"
                         @click="selectRow(entry.act, filename)"
                     >
                         <input
                             type="checkbox"
-                            class="row-checkbox"
+                            class="row-checkbox-js"
                             :checked="checked.has(keyOf(entry.act, filename))"
                             :disabled="readySetOf(entry).has(filename)"
                             :title="readySetOf(entry).has(filename) ? 'Marked ready to release -- unmark it in the editor (Done) to queue it again' : ''"
@@ -542,7 +542,7 @@ onBeforeUnmount(() => {
                             @change="onScriptCheckboxChange(entry.act, filename, $event.target.checked)"
                         />
                         <button
-                            class="edit-btn"
+                            class="edit-btn-js"
                             title="Open the full-screen line-by-line editor"
                             @click.stop="editScript(entry.act, filename)"
                         >✏️</button>
@@ -566,7 +566,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   gap: 5px;
 }
-.browse-button {
+.browse-button-js {
   justify-content: flex-start;
 }
 .tree {
@@ -575,12 +575,12 @@ onBeforeUnmount(() => {
 .tree-empty {
   padding: 8px;
 }
-.act-row, .script-row {
+.act-row-js, .script-row-js {
   padding: 4px 6px;
   border-radius: 6px;
   cursor: pointer;
 }
-.script-row {
+.script-row-js {
   padding-left: 24px;
 }
 .chevron {
@@ -589,7 +589,7 @@ onBeforeUnmount(() => {
 .act-name, .script-name {
   flex: 1;
 }
-.edit-btn {
+.edit-btn-js {
   background: transparent;
   border: 1px solid var(--border-subtle-strong);
   border-radius: 4px;

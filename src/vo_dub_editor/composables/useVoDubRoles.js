@@ -30,7 +30,7 @@ import { useRoleInfoPopover } from "../../shared/role_info_popover.js";
 import {
     joinPath,
     SCRIPT_EDITOR_API as FILE_API,
-} from "../../../web/fl_common.js";
+} from "../../shared/fl_common.js";
 
 export function useVoDubRoles(ctx) {
     const { props, rows, entryFor, setStatus, scheduleSave } = ctx;

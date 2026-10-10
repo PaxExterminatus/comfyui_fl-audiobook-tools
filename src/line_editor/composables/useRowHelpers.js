@@ -3,7 +3,7 @@
  */
 
 import { computed } from "vue"
-import { parsePauseField, DEFAULT_LINE_GAP_S } from "../../../web/fl_common.js"
+import { parsePauseField, DEFAULT_LINE_GAP_S } from "../../shared/fl_common.js"
 
 export function useRowHelpers(ctx) {
     const {

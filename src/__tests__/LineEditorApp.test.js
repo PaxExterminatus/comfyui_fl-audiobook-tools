@@ -112,13 +112,13 @@ describe("LineEditorApp", () => {
     }
 
     function lineTexts() {
-        return [...document.querySelectorAll(".fl-line-row .fl-textarea")].map((el) => el.value);
+        return [...document.querySelectorAll(".fl-line-row-js .fl-textarea-js")].map((el) => el.value);
     }
 
     it("loads and renders every line from the script file", async () => {
         const { wrapper } = await mountEditor();
         expect(lineTexts()).toEqual(["First line.", "Second line."]);
-        expect(document.querySelectorAll(".fl-line-row").length).toBe(2);
+        expect(document.querySelectorAll(".fl-line-row-js").length).toBe(2);
         wrapper.unmount();
     });
 
@@ -127,7 +127,7 @@ describe("LineEditorApp", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite });
 
-        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        const textarea = [...document.querySelectorAll(".fl-textarea-js")][0];
         textarea.value = "First line, edited.";
         textarea.dispatchEvent(new Event("input"));
 
@@ -180,7 +180,7 @@ describe("LineEditorApp", () => {
             instructCategories: [{ name: "cold", title: "Cold", when: "", examples: ["Speak warmly."] }],
         });
 
-        const row = document.querySelectorAll(".fl-line-row")[0];
+        const row = document.querySelectorAll(".fl-line-row-js")[0];
         const pickerBtn = [...row.querySelectorAll("button")].find((b) => b.querySelector(".pi-th-large"));
         pickerBtn.click();
 
@@ -198,21 +198,21 @@ describe("LineEditorApp", () => {
         const { wrapper } = await mountEditor();
         const addBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Add line"));
         addBtn.click();
-        await vi.waitFor(() => expect(document.querySelectorAll(".fl-line-row").length).toBe(3));
+        await vi.waitFor(() => expect(document.querySelectorAll(".fl-line-row-js").length).toBe(3));
         wrapper.unmount();
     });
 
     it("deletes a line after confirming, and reorganizes the lines folder to close the gap", async () => {
         const onReorganize = vi.fn();
         const { wrapper } = await mountEditor({ onReorganize });
-        const deleteBtns = [...document.querySelectorAll(".fl-line-row .p-button")].filter((b) => b.title === "Delete this line");
+        const deleteBtns = [...document.querySelectorAll(".fl-line-row-js .p-button")].filter((b) => b.title === "Delete this line");
         deleteBtns[0].click();
 
         // ConfirmDialog renders into document.body via Teleport.
         await vi.waitFor(() => expect(document.querySelector(".p-confirm-dialog-accept")).toBeTruthy());
         document.querySelector(".p-confirm-dialog-accept").click();
 
-        await vi.waitFor(() => expect(document.querySelectorAll(".fl-line-row").length).toBe(1));
+        await vi.waitFor(() => expect(document.querySelectorAll(".fl-line-row-js").length).toBe(1));
         expect(lineTexts()).toEqual(["Second line."]);
         /*
          Position 0 (the deleted row) is gone; position 1 (Second line.,
@@ -234,13 +234,13 @@ describe("LineEditorApp", () => {
             ],
         });
 
-        const revoiceBtn = document.querySelector(".revoice-btn");
-        await vi.waitFor(() => expect(revoiceBtn.classList.contains("stale")).toBe(false));
+        const revoiceBtn = document.querySelector(".revoice-btn-js");
+        await vi.waitFor(() => expect(revoiceBtn.classList.contains("stale-js")).toBe(false));
 
-        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        const textarea = [...document.querySelectorAll(".fl-textarea-js")][0];
         textarea.value = "First line, changed.";
         textarea.dispatchEvent(new Event("input"));
-        await vi.waitFor(() => expect(revoiceBtn.classList.contains("stale")).toBe(true));
+        await vi.waitFor(() => expect(revoiceBtn.classList.contains("stale-js")).toBe(true));
 
         revoiceBtn.click();
         await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
@@ -271,12 +271,12 @@ describe("LineEditorApp", () => {
         nextBtn.click();
         await vi.waitFor(() => expect(lineTexts()).toContain("Third line."));
 
-        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        const textarea = [...document.querySelectorAll(".fl-textarea-js")][0];
         textarea.value = "Third line, changed.";
         textarea.dispatchEvent(new Event("input"));
 
-        const revoiceBtn = document.querySelector(".revoice-btn");
-        await vi.waitFor(() => expect(revoiceBtn.classList.contains("pending")).toBe(false));
+        const revoiceBtn = document.querySelector(".revoice-btn-js");
+        await vi.waitFor(() => expect(revoiceBtn.classList.contains("pending-js")).toBe(false));
         revoiceBtn.click();
 
         await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
@@ -298,7 +298,7 @@ describe("LineEditorApp", () => {
         const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
         const { wrapper } = await mountEditor({ revoiceApi });
 
-        document.querySelector(".revoice-btn").click();
+        document.querySelector(".revoice-btn-js").click();
 
         await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
             /*
@@ -325,7 +325,7 @@ describe("LineEditorApp", () => {
         const revoiceApi = { revoiceLine: vi.fn().mockResolvedValue(undefined) };
         const { wrapper } = await mountEditor({ revoiceApi });
 
-        document.querySelector(".revoice-btn").click();
+        document.querySelector(".revoice-btn-js").click();
 
         const expectedHash = await lineHash("narrator", "calm", "First line.");
         await vi.waitFor(() => expect(revoiceApi.revoiceLine).toHaveBeenCalledWith(
@@ -338,7 +338,7 @@ describe("LineEditorApp", () => {
         const checkedApi = { isChecked: vi.fn(() => false), setChecked: vi.fn() };
         const { wrapper } = await mountEditor({ checkedApi });
 
-        const checkbox = document.querySelector(".row-checkbox");
+        const checkbox = document.querySelector(".row-checkbox-js");
         checkbox.checked = true;
         checkbox.dispatchEvent(new Event("change"));
 
@@ -370,7 +370,7 @@ describe("LineEditorApp", () => {
 
     // ── per-line pause (the optional 4th field) ─────────────────────────
     function pauseInputs() {
-        return [...document.querySelectorAll(".fl-line-row .pause-input")];
+        return [...document.querySelectorAll(".fl-line-row-js .pause-input-js")];
     }
 
     it("reads a line's pause out of its 4th field, and leaves it alone when the line's text is edited", async () => {
@@ -383,7 +383,7 @@ describe("LineEditorApp", () => {
 
         expect(pauseInputs().map((el) => el.value)).toEqual(["1.5", ""]);
 
-        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        const textarea = [...document.querySelectorAll(".fl-textarea-js")][0];
         textarea.value = "First line, edited.";
         textarea.dispatchEvent(new Event("input"));
         vi.advanceTimersByTime(700);
@@ -417,7 +417,7 @@ describe("LineEditorApp", () => {
          The take is silence-adjacent, not re-rendered: a pause isn't part
          of the line's content hash, so nothing here may go stale.
         */
-        expect(document.querySelectorAll(".revoice-btn.stale").length).toBe(0);
+        expect(document.querySelectorAll(".revoice-btn-js.stale-js").length).toBe(0);
         wrapper.unmount();
     });
 
@@ -426,7 +426,7 @@ describe("LineEditorApp", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite });
 
-        const textarea = [...document.querySelectorAll(".fl-textarea")][0];
+        const textarea = [...document.querySelectorAll(".fl-textarea-js")][0];
         textarea.value = "Edited.";
         textarea.dispatchEvent(new Event("input"));
         vi.advanceTimersByTime(700);
@@ -465,7 +465,7 @@ describe("LineEditorApp", () => {
             extraFiles: { "Test_speakers.txt": "narrator | calm | First line.\nnarrator | calm | One. Two. | 1.5" },
         });
 
-        const textarea = [...document.querySelectorAll(".fl-textarea")][1];
+        const textarea = [...document.querySelectorAll(".fl-textarea-js")][1];
         textarea.focus();
         textarea.selectionStart = textarea.selectionEnd = "One.".length;
         const splitBtn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Split line"));
@@ -480,12 +480,12 @@ describe("LineEditorApp", () => {
 
     it("play button is present but disabled on an unvoiced line, and does nothing when clicked", async () => {
         const { wrapper } = await mountEditor();
-        const playBtn = document.querySelectorAll(".play-btn")[0];
+        const playBtn = document.querySelectorAll(".play-btn-js")[0];
         expect(playBtn).toBeTruthy();
-        expect(playBtn.classList.contains("disabled")).toBe(true);
+        expect(playBtn.classList.contains("disabled-js")).toBe(true);
         playBtn.click();
-        await vi.waitFor(() => expect(document.querySelector(".fl-line-row").classList.contains("row-playing")).toBe(false));
-        expect(playBtn.classList.contains("is-playing")).toBe(false);
+        await vi.waitFor(() => expect(document.querySelector(".fl-line-row-js").classList.contains("row-playing-js")).toBe(false));
+        expect(playBtn.classList.contains("is-playing-js")).toBe(false);
         wrapper.unmount();
     });
 
@@ -497,15 +497,15 @@ describe("LineEditorApp", () => {
             ],
         });
 
-        const playBtn = document.querySelectorAll(".play-btn")[0];
-        expect(playBtn.classList.contains("disabled")).toBe(false);
+        const playBtn = document.querySelectorAll(".play-btn-js")[0];
+        expect(playBtn.classList.contains("disabled-js")).toBe(false);
 
         playBtn.click();
-        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing")).toBe(true));
-        expect(document.querySelectorAll(".fl-line-row")[0].classList.contains("row-playing")).toBe(true);
+        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing-js")).toBe(true));
+        expect(document.querySelectorAll(".fl-line-row-js")[0].classList.contains("row-playing-js")).toBe(true);
 
         playBtn.click();
-        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing")).toBe(false));
+        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing-js")).toBe(false));
         wrapper.unmount();
     });
 
@@ -521,11 +521,11 @@ describe("LineEditorApp", () => {
             lineFiles: [await lineFileName(0, "narrator", "calm", "Some older take entirely.")],
         });
 
-        const playBtn = document.querySelectorAll(".play-btn")[0];
-        expect(playBtn.classList.contains("disabled")).toBe(false);
+        const playBtn = document.querySelectorAll(".play-btn-js")[0];
+        expect(playBtn.classList.contains("disabled-js")).toBe(false);
 
         playBtn.click();
-        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing")).toBe(true));
+        await vi.waitFor(() => expect(playBtn.classList.contains("is-playing-js")).toBe(true));
         wrapper.unmount();
     });
 

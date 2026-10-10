@@ -12,7 +12,7 @@ import { usePanelWidth } from "../shared/panel_width.js";
 import { useFontSize } from "../shared/font_size.js";
 import { speakerAccent, speakerInitials } from "../shared/speaker_accent.js";
 import DialogHeader from "../shared/DialogHeader.vue";
-import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../../web/fl_common.js";
+import { joinPath, SCRIPT_LIBRARY_API as SCAN_API } from "../shared/fl_common.js";
 
 const props = defineProps({
     visible: { type: Boolean, required: true },
@@ -119,7 +119,7 @@ function playSample(preset) {
                     plain @click from a <script setup> caller onto it, so a
                     listener on the Card tag itself is silently never
                     attached. This div is ours, no such surprise. -->
-                    <div class="speaker-card-row row" @click="pick(preset)">
+                    <div class="speaker-card-row-js row" @click="pick(preset)">
                         <Avatar
                             :label="speakerInitials(preset)"
                             shape="circle"
@@ -127,7 +127,7 @@ function playSample(preset) {
                             class="shrink-0"
                         />
                         <div class="speaker-card-text">
-                            <div class="speaker-name">{{ preset }}</div>
+                            <div class="speaker-name-js">{{ preset }}</div>
                             <div v-if="usageFor && usageFor(preset)" class="p-text-secondary">{{ usageFor(preset) }}</div>
                         </div>
                         <!-- Same story as Card above: Button also has
@@ -137,7 +137,7 @@ function playSample(preset) {
                         .speaker-card-row's own handler, which is why this
                         used to "select" instead of "play". A plain wrapper
                         owns the stop instead. -->
-                        <span class="speaker-play-wrap" @click.stop="playSample(preset)">
+                        <span class="speaker-play-wrap-js" @click.stop="playSample(preset)">
                             <Button
                                 :icon="playingPreset === preset ? 'pi pi-pause' : 'pi pi-play'"
                                 :disabled="!sampleDir"
@@ -152,14 +152,14 @@ function playSample(preset) {
 </template>
 
 <style scoped>
-.speaker-card-row {
+.speaker-card-row-js {
     cursor: pointer;
 }
 .speaker-card-text {
     flex: 1;
     min-width: 0;
 }
-.speaker-play-wrap {
+.speaker-play-wrap-js {
     flex: 0 0 auto;
     display: flex;
 }

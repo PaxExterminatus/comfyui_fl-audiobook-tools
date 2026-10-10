@@ -79,9 +79,9 @@ watch(() => props.src, load);
 
 <template>
     <div class="waveform-wrap">
-        <canvas ref="canvasEl" class="waveform-canvas" />
-        <span v-if="loading" class="waveform-status">…</span>
-        <span v-else-if="failed" class="waveform-status" title="Couldn't load a waveform for this file">⚠</span>
+        <canvas ref="canvasEl" class="waveform-canvas-js" />
+        <span v-if="loading" class="waveform-status-js">…</span>
+        <span v-else-if="failed" class="waveform-status-js" title="Couldn't load a waveform for this file">⚠</span>
     </div>
 </template>
 
@@ -91,10 +91,11 @@ watch(() => props.src, load);
  Vue's scoped-CSS attribute is only stamped onto THIS component's own
  root node when rendered from a parent, never onto elements nested
  inside its own template (the <canvas>, the status <span>s). A parent
- rule targeting `.waveform-canvas` would silently never match and this
+ rule targeting `.waveform-canvas-js` would silently never match and this
  canvas would fall back to its intrinsic default size (300x150 CSS
  pixels) with no clipping on the wrap -- exactly what overlapped every
- row below it before this was caught.
+ row below it before this was caught. "-js" suffix: read by tests via
+ wrapper.find() / querySelectorAll -- see memory/project_css_refactor.md.
 */
 .waveform-wrap {
     position: relative;
@@ -103,14 +104,14 @@ watch(() => props.src, load);
     overflow: hidden;
 }
 
-.waveform-canvas {
+.waveform-canvas-js {
     display: block;
     width: 100%;
     height: 100%;
     color: var(--color-success);
 }
 
-.waveform-status {
+.waveform-status-js {
     position: absolute;
     top: 0;
     right: 4px;

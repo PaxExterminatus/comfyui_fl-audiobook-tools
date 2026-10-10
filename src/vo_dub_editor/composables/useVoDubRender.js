@@ -3,7 +3,7 @@
  */
 import { ref, reactive } from "vue";
 import { lineHash } from "../../shared/line_hash.js";
-import { VO_DUB_API } from "../../../web/fl_common.js";
+import { VO_DUB_API } from "../../shared/fl_common.js";
 
 const DURATION_GREEN = 0.15;
 const DURATION_AMBER = 0.40;

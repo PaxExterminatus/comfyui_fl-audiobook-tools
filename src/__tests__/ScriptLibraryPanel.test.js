@@ -87,8 +87,8 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper, node } = mountPanel();
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        const row = [...document.body.querySelectorAll(".script-row")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
-        const checkbox = row.querySelector(".row-checkbox");
+        const row = [...document.body.querySelectorAll(".script-row-js")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
+        const checkbox = row.querySelector(".row-checkbox-js");
         checkbox.checked = true;
         checkbox.dispatchEvent(new Event("change"));
 
@@ -101,8 +101,8 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper, node } = mountPanel();
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene2_speakers.txt"));
 
-        const readyRow = [...document.body.querySelectorAll(".script-row")].find((r) => r.textContent.includes("Scene2_speakers.txt"));
-        expect(readyRow.querySelector(".row-checkbox").disabled).toBe(true);
+        const readyRow = [...document.body.querySelectorAll(".script-row-js")].find((r) => r.textContent.includes("Scene2_speakers.txt"));
+        expect(readyRow.querySelector(".row-checkbox-js").disabled).toBe(true);
 
         const allBtn = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("All"));
         allBtn.click();
@@ -118,17 +118,17 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper } = mountPanel();
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        const audioRow = [...document.body.querySelectorAll(".script-row")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
+        const audioRow = [...document.body.querySelectorAll(".script-row-js")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
         expect(audioRow.textContent).toContain("🔊");
 
         /*
          Act02 isn't expanded (Act01 is the auto-active/expanded one) --
          expand it to see Scene3's pending warning icon.
         */
-        const act02Row = [...document.body.querySelectorAll(".act-row")].find((r) => r.textContent.includes("Act02"));
+        const act02Row = [...document.body.querySelectorAll(".act-row-js")].find((r) => r.textContent.includes("Act02"));
         act02Row.click();
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene3_speakers.txt"));
-        const pendingRow = [...document.body.querySelectorAll(".script-row")].find((r) => r.textContent.includes("Scene3_speakers.txt"));
+        const pendingRow = [...document.body.querySelectorAll(".script-row-js")].find((r) => r.textContent.includes("Scene3_speakers.txt"));
         expect(pendingRow.textContent).toContain("⚠️");
         wrapper.unmount();
     });
@@ -139,8 +139,8 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper } = mountPanel({ node });
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        const row = [...document.body.querySelectorAll(".script-row")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
-        expect(row.querySelector(".row-checkbox").checked).toBe(true);
+        const row = [...document.body.querySelectorAll(".script-row-js")].find((r) => r.textContent.includes("Scene1_speakers.txt"));
+        expect(row.querySelector(".row-checkbox-js").checked).toBe(true);
         wrapper.unmount();
     });
 
@@ -183,7 +183,7 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper, openLineEditor } = mountPanel({ queueLineRevoice });
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        const editBtn = [...document.body.querySelectorAll(".edit-btn")][0];
+        const editBtn = [...document.body.querySelectorAll(".edit-btn-js")][0];
         editBtn.click();
         expect(openLineEditor).toHaveBeenCalled();
 
@@ -222,7 +222,7 @@ describe("ScriptLibraryPanel", () => {
         node.onConfigure({});
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        const editBtn = [...document.body.querySelectorAll(".edit-btn")][0];
+        const editBtn = [...document.body.querySelectorAll(".edit-btn-js")][0];
         editBtn.click();
 
         expect(openLineEditor).toHaveBeenCalledWith(expect.objectContaining({ suffix: "_speakers.txt" }));
@@ -270,7 +270,7 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper, openLineEditor } = mountPanel({ filterWidget: makeWidget("") });
         await vi.waitFor(() => expect(document.body.textContent).toContain("Scene1_speakers.txt"));
 
-        const editBtn = [...document.body.querySelectorAll(".edit-btn")][0];
+        const editBtn = [...document.body.querySelectorAll(".edit-btn-js")][0];
         editBtn.click();
 
         expect(openLineEditor).toHaveBeenCalledWith(expect.objectContaining({ suffix: "" }));
@@ -281,7 +281,7 @@ describe("ScriptLibraryPanel", () => {
         const { wrapper, openBrowseDialog, folderWidget } = mountPanel({ folder: "" });
         await vi.waitFor(() => expect(document.body.textContent).toContain("No project folder set"));
 
-        const browseBtn = document.body.querySelector(".browse-button");
+        const browseBtn = document.body.querySelector(".browse-button-js");
         browseBtn.click();
         expect(openBrowseDialog).toHaveBeenCalled();
 

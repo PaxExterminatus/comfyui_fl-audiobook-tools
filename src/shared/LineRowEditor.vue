@@ -72,7 +72,7 @@ function onPaste(event) {
           @update:model-value="api.setSpeaker(row, $event)"
       />
       <InputGroupAddon
-          class="role-info-btn"
+          class="role-info-btn-js"
           @mouseenter="api.showRoleInfoPopover($event.target, api.getRoleInfoCode(row))"
           @mouseleave="api.hideRoleInfoPopover"
       ><i class="pi pi-info-circle" /></InputGroupAddon>
@@ -125,7 +125,7 @@ function onPaste(event) {
         :model-value="api.getText(row)"
         auto-resize
         rows="1"
-        class="fl-textarea"
+        class="fl-textarea-js"
         :style="{ fontSize: `${api.fontSizePx.value}px` }"
         :placeholder="api.textPlaceholder"
         :ref="(el) => api.setTextareaRef(api.textKey(row), el)"

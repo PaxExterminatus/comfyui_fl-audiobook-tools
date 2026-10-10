@@ -17,7 +17,7 @@
  */
 
 import { ref } from "vue"
-import { SCRIPT_EDITOR_API as FILE_API } from "../../../web/fl_common.js"
+import { SCRIPT_EDITOR_API as FILE_API } from "../../shared/fl_common.js"
 import { parseScript, serializeRows } from "./useScriptParsing.js"
 
 export function useScriptIO(ctx) {

@@ -14,7 +14,7 @@
  */
 
 import { ref, nextTick } from "vue"
-import { SCRIPT_LIBRARY_API as SCAN_API } from "../../../web/fl_common.js"
+import { SCRIPT_LIBRARY_API as SCAN_API } from "../../shared/fl_common.js"
 import { freshRow } from "./useScriptParsing.js"
 
 export function useRowOps(ctx) {
@@ -96,17 +96,17 @@ export function useRowOps(ctx) {
             if (e.button !== 0) return
             e.preventDefault()
 
-            const rowEl = handleEl.closest(".fl-line-row")
+            const rowEl = handleEl.closest(".fl-line-row-js")
             dragFromIndex = Number(rowEl?.dataset.rowIndex)
-            rowEl?.classList.add("fl-row-dragging")
+            rowEl?.classList.add("fl-row-dragging-js")
 
             const onMove = (ev) => {
                 rowsContainerEl.value
-                    ?.querySelectorAll(".fl-row-drop-target")
-                    .forEach((el) => el.classList.remove("fl-row-drop-target"))
+                    ?.querySelectorAll(".fl-row-drop-target-js")
+                    .forEach((el) => el.classList.remove("fl-row-drop-target-js"))
                 const el = document.elementFromPoint(ev.clientX, ev.clientY)
-                const targetRow = el && el.closest ? el.closest(".fl-line-row") : null
-                if (targetRow && targetRow !== rowEl) targetRow.classList.add("fl-row-drop-target")
+                const targetRow = el && el.closest ? el.closest(".fl-line-row-js") : null
+                if (targetRow && targetRow !== rowEl) targetRow.classList.add("fl-row-drop-target-js")
             }
 
             const onUp = (ev) => {
@@ -115,14 +115,14 @@ export function useRowOps(ctx) {
                 document.removeEventListener("pointercancel", onUp)
 
                 const el = document.elementFromPoint(ev.clientX, ev.clientY)
-                const targetRow = el && el.closest ? el.closest(".fl-line-row") : null
+                const targetRow = el && el.closest ? el.closest(".fl-line-row-js") : null
                 const fromIdx = dragFromIndex
                 dragFromIndex = null
 
-                rowEl?.classList.remove("fl-row-dragging")
+                rowEl?.classList.remove("fl-row-dragging-js")
                 rowsContainerEl.value
-                    ?.querySelectorAll(".fl-row-drop-target")
-                    .forEach((c) => c.classList.remove("fl-row-drop-target"))
+                    ?.querySelectorAll(".fl-row-drop-target-js")
+                    .forEach((c) => c.classList.remove("fl-row-drop-target-js"))
 
                 if (targetRow && targetRow !== rowEl) {
                     const toIdx = Number(targetRow.dataset.rowIndex)
@@ -168,12 +168,12 @@ export function useRowOps(ctx) {
     // ── split ──────────────────────────────────────────────────────────
     function splitFocusedLine() {
         const el = document.activeElement
-        if (!el || el.tagName !== "TEXTAREA" || !el.classList.contains("fl-textarea")) {
+        if (!el || el.tagName !== "TEXTAREA" || !el.classList.contains("fl-textarea-js")) {
             setStatus("Click into a line's text first, place the cursor where it should split")
             return
         }
 
-        const rowEl = el.closest(".fl-line-row")
+        const rowEl = el.closest(".fl-line-row-js")
         const index = rowEl ? Number(rowEl.dataset.rowIndex) : -1
         const row = index >= 0 ? rows.value[index] : null
         if (!row || row.malformed) {

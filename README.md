@@ -1,9 +1,10 @@
 # FL CosyVoice3 Audiobook Tools
 
-Script/act project management for producing multi-line, multi-character
-audio dramas and audiobooks with [FL-CosyVoice3](https://github.com/filliptm/ComfyUI_FL-CosyVoice3).
-This is an **add-on**, not a fork -- it does no TTS synthesis itself, and
-requires FL-CosyVoice3 installed alongside it for the actual voice models.
+A standalone Electron app for producing multi-line, multi-character audio
+dramas and audiobooks, and for re-dubbing a game's existing voice-over, built
+on [FL-CosyVoice3](https://github.com/filliptm/ComfyUI_FL-CosyVoice3) for the
+actual TTS synthesis. ComfyUI is not involved at runtime -- `electron-server/`
+invokes FL-CosyVoice3's Python library directly (see `_tts_engine.py`).
 
 ## What's in here
 
@@ -40,7 +41,7 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   edits get pulled back in).
 - **FL CosyVoice3 Audio Post-Process** -- onset-click trim (start only --
   a tail trim existed once, removed after it cut into real trailing speech,
-  see `nodes/_audio_utils.py`'s own module docstring), fade, and
+  see `electron-server/_audio_utils.py`'s own module docstring), fade, and
   loudness normalization for any synthesis node's output, one item at a
   time (never concatenated); also the node that writes each line's
   per-line file. Building the final scene track is exclusively "✅ Done"'s
@@ -66,19 +67,19 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   reads as done even if its content hash has since drifted, a deliberate
   "I know it changed, I don't care" override, sticky until unmarked;
   doesn't touch the file or the render hash, only how the row's status
-  reads (`nodes/vo_dub_library.py`'s `compute_row_status(manually_marked_done=...)`).
+  reads (`electron-server/_vo_dub_helpers.py`'s `compute_row_status(manually_marked_done=...)`).
   A "🔁 Render pending" toolbar button renders every not-started/stale row
   in the WHOLE open bucket, one at a time, awaited in sequence with a
   running "N/total" progress status -- mirrors `ScriptLibraryPanel.vue`'s
   own "🔁 Re-voice pending" button (same sequential-not-concurrent
-  reasoning: flooding ComfyUI's queue with dozens of heavy TTS renders at
-  once helps nobody). Opening a bucket shows each
+  reasoning: flooding the TTS engine with dozens of heavy renders at once
+  helps nobody). Opening a bucket shows each
   row's English and Russian takes side by side, with a left-aligned toolbar
   strip underneath: an Effect dropdown (post-render DSP -- "radio" (gritty
   walkie-talkie), "phone" (clean landline call), and "muffled" (a natural,
   non-telephony dampening -- a much wider passband than phone's, no
   clip/distortion, no static, for a voice heard through a thin barrier
-  rather than a device) today, see `nodes/_audio_effects.py`'s `EFFECTS`
+  rather than a device) today, see `electron-server/_audio_effects.py`'s `EFFECTS`
   registry -- and [docs/creating_audio_effects.md](docs/creating_audio_effects.md)
   for how to add a new one) with its own Save
   button next to it, Render/Re-render, "▶ Play both" (starts EN+RU together
@@ -112,8 +113,8 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
   file with the newly chosen effect and overwrites `audio_ru/<audio_key>.wav`
   directly, pure DSP with no graph execution at all. A row with no take
   yet (nothing to reprocess) falls back to a normal Render. Either path is
-  what actually applies the effect for real (`nodes/audio_post_process.py`'s
-  `effect_override` input, AFTER trim/fade/normalize) -- folded into the
+  what actually applies the effect for real (`electron-server/routes/vo_dub.py`'s
+  render route, AFTER trim/fade/normalize) -- folded into the
   row's own staleness hash either way, so changing the effect without
   either committing path shows as stale. A "Use original as sample"
   checkbox sits next to each row's Role field, plus a project-wide default
@@ -198,67 +199,23 @@ requires FL-CosyVoice3 installed alongside it for the actual voice models.
 
 ## Requirements
 
-- **FL-CosyVoice3** installed and working (for the actual TTS nodes --
-  Speaker Instruct2 Dialog, Speaker Clone, Zero-Shot, etc. -- that a
-  workflow wires Script Library's output into).
-- One upstream patch, described below.
-- Script Library's `line_hashes_json` output wired into Audio Post-
-  Process's `line_hashes_json` input (both nodes are in THIS addon, no
-  upstream patch needed -- just a connection in your own workflow, the same
-  way `folder_path`/`filename` already feed Post-Process's `script_folder`/
-  `script_base_name`). The 🔁 per-line re-voice, "🔁 Re-voice all pending",
-  and the checkbox tree's "🔊 Voice Selected/Act/All" queue all stamp the
-  correct hash onto Post-Process directly already (they fetch/compute it
-  from the exact same content they're rendering, so there's nothing for a
-  missing wire to break there) -- this wire is only still needed for a
-  plain "Run" with nothing checked in the tree (whatever script is
-  currently "active"). Without it, that one path falls back to hashing
-  just the text (no voice/instruct), so a role recast alone won't be
-  detected as making one of its lines need re-voicing until it's re-voiced
-  some other way at least once.
-
-### Required patch: FL CosyVoice3 Speaker Instruct2 Dialog needs a 3rd output
-
-The per-line timing/re-voice features (playback sync, 🔁 re-voice-this-line,
-✅ Done) need FL-CosyVoice3's `nodes/speaker_instruct2_dialog.py` to expose
-a third `line_texts_json` output alongside `audio`/`message` -- a JSON
-array of each line's spoken text, same order as `audio`, wired into Audio
-Post-Process's `line_texts_json` input so it can write the per-line timing
-manifest. If your installed copy doesn't have it yet, add:
-
-```python
-class FL_CosyVoice3_SpeakerInstruct2Dialog:
-    ...
-    RETURN_TYPES = ("AUDIO", "STRING", "STRING")
-    RETURN_NAMES = ("audio", "message", "line_texts_json")
-    OUTPUT_IS_LIST = (True, False, False)
-```
-
-and build/return that third value everywhere the node currently returns
-`(audio, message)` -- e.g.:
-
-```python
-line_texts_json = json.dumps([content for (_, _, content) in turns], ensure_ascii=False)
-return (line_audios, message, line_texts_json)
-```
-
-(and `"[]"` for the third slot on the early-return/error paths). Without
-this, Script Library/the line editor still work for browsing, checkbox
-queueing, and role management -- only the per-line timing manifest and the
-re-voice-this-line/Done workflow need it.
+- A downloaded CosyVoice model (`_tts_engine.py`'s `_find_model_dir` looks
+  under `<models_dir>/cosyvoice/` for a `cosyvoice*.yaml` config).
+- FL-CosyVoice3's own Python package available for `_tts_engine.py` to
+  import (`FL_COSYVOICE3_DIR` in that file points at its install location).
+- Node.js, for the Electron app and its frontend build.
 
 ## Installation
 
-1. Install [FL-CosyVoice3](https://github.com/filliptm/ComfyUI_FL-CosyVoice3)
-   as usual and confirm it works.
-2. Apply the patch above to its `nodes/speaker_instruct2_dialog.py`.
-3. Clone/copy this repo into `ComfyUI/custom_nodes/`.
-4. Restart ComfyUI.
+```bash
+npm install
+npm run electron:dev   # launches electron-server/ + the Electron window
+```
 
 ## Project folder layout this expects
 
 ```
-MyPlay/                          <- Script Library's folder_path
+MyPlay/                          <- the project root you browse to in Script Library
     _roles.json                  <- {"roles": [{"code","name","description","speaker"}, ...]}
     _instruct_categories.json    <- {"categories": [{"name","title","when","examples"}, ...]} (optional phrase bank, by register)
     Act01/
@@ -308,100 +265,40 @@ being said, not to the row it happened to be typed on.
 
 ## Frontend development
 
-Every editor has been migrated from hand-written vanilla JS to Vue 3 +
-PrimeVue 3: Roles Editor, Browse Dialog, the Script Library node's tree
-panel, and the Line Editor. Each is built with Vite in library mode
-straight into `web/`, replacing the hand-written file of the same name --
-end users never need Node.js, only whoever's developing this addon.
-`ui_kit.js`/`styles.js` stay as plain JS (still used by
-`audio_post_process.js`'s report viewer and `script_editor.js`'s browse
-button), and `web/script_library.js` keeps one hand-written remainder:
-the `app.graphToPrompt`/`app.queuePrompt` queue-orchestration patch
-(running the checked scripts, per-line re-voice) isn't UI and stays
-untouched -- only the tree/browse-button/tools-row rendering moved to
-`src/script_library/ScriptLibraryPanel.vue`.
+The UI is Vue 3 + PrimeVue 3 throughout, living in `src/` as a shared
+component library: Roles Editor, Browse Dialog, Script Library's tree
+panel, the Line Editor, and the VO Dub editors. Two apps mount these
+components:
 
-A cross-entry gotcha worth knowing: every entry's own source file is
-named `main.js` within its own folder (`src/roles_editor/main.js`, `src/
-browse_dialog/main.js`, ...). Importing one entry's `main.js` directly
-from a DIFFERENT entry's component (rather than passing the function in
-as a prop) makes Rollup hoist the shared code into its own chunk named
-after that shared module's basename -- i.e. also `main.js`, colliding
-across entries. `ScriptLibraryPanel.vue` and `LineEditorApp.vue` both
-avoid this by receiving `openBrowseDialog`/`openRolesEditor`/
-`openLineEditor` as props from whichever hand-written `web/*.js` file
-mounts them, never importing another entry's `main.js` directly.
+- `electron-ui/` -- the real Electron app's Vue-Router frontend
+  (`npm run dev:electron-ui` / `npm run electron:dev`). Its "Host"
+  components (e.g. `ScriptLibraryHost.vue`) build the widget-shaped
+  objects these components expect via `electron-ui/apis.js`'s
+  `makeWidget()`, and talk to `electron-server/`'s aiohttp routes.
+- `dev-ui/` -- a lightweight mock-backed harness for developing/clicking
+  through the components without the real backend running (see below).
 
-```bash
-npm install
-npm run dev     # rebuilds web/*.js on save -- refresh ComfyUI's tab to see changes
-npm run build   # one-off production build
-```
+### Styling
 
-### Styling (Sass, indented syntax -- not SCSS)
+Component CSS lives in co-located `<style scoped>` blocks or plain CSS
+files (no Sass/SCSS preprocessing). `src/style/app.css`, loaded once
+globally via `src/shared/styles_link.js`, holds the shared "type
+vocabulary" classes (`.row`, `.actions`, `.list`, `.grid`, `.panel`,
+`.card`, ...) used by structural role across every editor instead of a
+bespoke class per component -- see that file's own comment for the full
+set. Any class read by JavaScript (`querySelector`, `classList`,
+`closest`, in component code or tests) carries a `-js` suffix so it
+reads as a behavioral hook, not just styling.
 
-Every component's CSS lives in its own co-located `.sass` file (e.g.
-`src/roles_editor/RolesEditorApp.sass`), wired in via
-`<style scoped lang="sass" src="./Name.sass">` -- Vue's SFC compiler
-treats a `src`-loaded style block exactly like an inline one (still
-scoped, still preprocessed), it just keeps the CSS in a real file with
-normal syntax highlighting instead of a giant string inside the `.vue`
-file.
-
-`src/sass/` holds what's shared across components:
-- `_variables.sass` -- design tokens (colors, borders, type scale),
-  named by ROLE rather than by whatever number first got typed --
-  an audit before this existed found the "same" selection-highlight
-  blue as two different RGB triples in two files, and half a dozen
-  near-identical `rgba(255,255,255, 0.08–0.16)` values with no real
-  distinction between them.
-- `_placeholders.sass` -- `%ellipsis` and a `button-row` mixin,
-  `@extend`/`@include`d wherever the exact same declarations were
-  previously retyped across 2+ components.
-- `app.sass` -- the manifest: `@forward "variables"` + `@forward
-  "placeholders"`, in the order they should be available (`@forward`,
-  not `@use` -- see the file's own comment for why: `@use` alone would
-  keep their members private to app.sass itself). This is the ONE file
-  that decides which shared modules exist and in what order --
-  `vite.config.js`/`vitest.config.js`'s
-  `css.preprocessorOptions.sass.additionalData` both auto-`@use "../sass/
-  app" as *` THIS one file into every component's own `.sass` (the
-  wildcard drops the namespace prefix `@use` would otherwise require,
-  reproducing `@import`'s old "just works" ergonomics without its
-  global-namespace-collision risk -- see [Dart Sass's own migration
-  guide](https://sass-lang.com/documentation/breaking-changes/import/)),
-  and `web/fl_shared.sass` (below) does the same, so that list is
-  written once instead of copied three times. Only declarations belong
-  here (variables, placeholders, mixins -- nothing that compiles to
-  real CSS output on its own), since `@forward`'s styles ride along
-  wherever this file is loaded -- every component's own separate
-  compilation, for the additionalData path -- so anything with actual
-  unscoped rules belongs in `global.sass` instead.
-- `global.sass` -- truly unscoped CSS (currently just Line Editor's
-  role-info hover popover), imported once via
-  `src/shared/styles_link.js` the same way the PrimeVue theme itself
-  is -- deliberately NOT part of `app.sass`'s additionalData injection,
-  since that would duplicate its actual output into every Vue entry's
-  own compiled CSS instead of loading it once.
-
-`web/fl_shared.sass` is the one exception: it styles the remaining
-hand-written vanilla widgets (`script_editor.js`'s browse button,
-`ui_kit.js`'s report viewer), which aren't part of Vite's module graph
-at all (linked at runtime via a plain `<link>` tag, not `import`ed) --
-`scripts/compile-vanilla-sass.mjs` compiles it to `web/fl_shared.css`
-as its own tiny build step (wired into `npm run build`/`dev`), and it
-`@use`s `src/sass/app` (`as *`, same reasoning as above) explicitly
-since it doesn't go through Vite's additionalData.
-
-### Developing the UI without ComfyUI running
+### Developing the UI without a running backend
 
 `npm run dev:ui` starts a real Vite dev server (HMR, no rebuild-and-
 refresh needed) serving `dev-ui/index.html` directly in a plain browser
-tab -- `dev-ui/mock-api.js` stands in for the aiohttp backend
-(`nodes/script_editor.py` / `nodes/script_library.py`'s routes), seeded
-from the JSON/text files under `fixtures/`. Edits made in the UI are kept
-in memory for that dev-server session (not written back to the fixture
-files); restart the server to reset to the fixtures' on-disk content.
+tab -- `dev-ui/mock-api.js` stands in for `electron-server/`'s aiohttp
+routes, seeded from the JSON/text files under `fixtures/`. Edits made in
+the UI are kept in memory for that dev-server session (not written back
+to the fixture files); restart the server to reset to the fixtures'
+on-disk content.
 
 ```bash
 npm run dev:ui   # http://localhost:5173 -- opens the Roles Editor immediately;
@@ -418,17 +315,12 @@ npm test         # run once
 npm run test:watch
 ```
 
-`src/__tests__/` covers the pure helpers in `web/fl_common.js`;
-`src/roles_editor/__tests__/`, `src/browse_dialog/__tests__/`,
-`src/script_library/__tests__/`, and `src/line_editor/__tests__/` each
-mount their component with a mocked `fetch` and drive it through the DOM
-(the Line Editor's suite also exercises its `ConfirmDialog` flow --
-delete-with-confirm -- via `primevue/confirmationservice`).
-
-## Test layout
-
-All test files now live in `src/__tests__/`, a single flat folder.
-Previously they were scattered in per-component `__tests__` subfolders.
+All test files live in `src/__tests__/`, a single flat folder: pure-helper
+tests (e.g. `fl_common.test.js` for `src/shared/fl_common.js`) alongside
+component tests that mount their component with a mocked `fetch` and
+drive it through the DOM (the Line Editor's suite also exercises its
+`ConfirmDialog` flow -- delete-with-confirm -- via
+`primevue/confirmationservice`).
 
 ## License
 

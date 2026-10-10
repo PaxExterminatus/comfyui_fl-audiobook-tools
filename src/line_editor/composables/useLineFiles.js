@@ -15,7 +15,7 @@
 
 import { ref, reactive, computed } from "vue"
 import { lineHash, hasExpectedFile, mostRecentAtPosition } from "../../shared/line_hash.js"
-import { BROWSE_API } from "../../../web/fl_common.js"
+import { BROWSE_API } from "../../shared/fl_common.js"
 
 export function useLineFiles(ctx) {
     const { rows, linesDirPath } = ctx

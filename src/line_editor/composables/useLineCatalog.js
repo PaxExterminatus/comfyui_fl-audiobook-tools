@@ -20,7 +20,7 @@ import {
     SCRIPT_EDITOR_API as FILE_API,
     SCRIPT_LIBRARY_API as SCAN_API,
     SPEAKER_PRESETS_API as PRESETS_API,
-} from "../../../web/fl_common.js"
+} from "../../shared/fl_common.js"
 
 export function useLineCatalog(ctx) {
     const {

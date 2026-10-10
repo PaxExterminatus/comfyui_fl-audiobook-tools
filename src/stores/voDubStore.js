@@ -7,7 +7,7 @@ import {
     joinPath,
     SCRIPT_EDITOR_API as FILE_API,
     VO_DUB_API,
-} from "../../web/fl_common.js";
+} from "../shared/fl_common.js";
 import {
     VO_DUB_STATUS_LABELS as STATUS_LABELS,
     VO_DUB_STATUS_FILTER_OPTIONS as STATUS_FILTER_OPTIONS,

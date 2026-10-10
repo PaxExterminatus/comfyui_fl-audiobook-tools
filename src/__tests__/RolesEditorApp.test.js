@@ -91,8 +91,8 @@ describe("RolesEditorApp", () => {
 
     it("shows every role's speaker/description fields at once, with no expand step", async () => {
         const { wrapper } = await mountApp();
-        expect(document.body.querySelector(".role-speaker input").value).toBe("arestovich");
-        expect(document.body.querySelector("textarea.role-description").value).toBe("Calm.");
+        expect(document.body.querySelector(".role-speaker-js input").value).toBe("arestovich");
+        expect(document.body.querySelector("textarea.role-description-js").value).toBe("Calm.");
         wrapper.unmount();
     });
 
@@ -101,7 +101,7 @@ describe("RolesEditorApp", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountApp({ onWrite });
 
-        const textarea = document.body.querySelector("textarea.role-description");
+        const textarea = document.body.querySelector("textarea.role-description-js");
         textarea.value = "Calm, updated.";
         textarea.dispatchEvent(new Event("input"));
 
@@ -117,7 +117,7 @@ describe("RolesEditorApp", () => {
         const onMarkStale = vi.fn();
         const { wrapper } = await mountApp({ onMarkStale });
 
-        const input = document.body.querySelector(".role-speaker input");
+        const input = document.body.querySelector(".role-speaker-js input");
         input.value = "monetochka";
         input.dispatchEvent(new Event("input", { bubbles: true }));
         input.dispatchEvent(new Event("blur"));
@@ -135,7 +135,7 @@ describe("RolesEditorApp", () => {
         const onMarkStale = vi.fn();
         const { wrapper } = await mountApp({ onMarkStale });
 
-        const input = document.body.querySelector(".role-speaker input");
+        const input = document.body.querySelector(".role-speaker-js input");
         input.dispatchEvent(new Event("blur"));
         await new Promise((r) => setTimeout(r, 10));
 

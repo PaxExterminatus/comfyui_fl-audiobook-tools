@@ -18,7 +18,7 @@ import {
   joinPath, stripSuffixAndExt,
   SCRIPT_EDITOR_API as FILE_API, SCRIPT_LIBRARY_API as SCAN_API, SPEAKER_PRESETS_API as PRESETS_API,
   BROWSE_API, DEFAULT_LINE_GAP_S,
-} from "../../web/fl_common.js";
+} from "../shared/fl_common.js";
 
 import { parseLine, parseScript, serializeRows, freshRow } from "./composables/useScriptParsing.js";
 import { useLineFiles } from "./composables/useLineFiles.js";
@@ -280,8 +280,8 @@ onBeforeUnmount(() => {
     <StickyPanel class="line-editor-controls">
       <div class="actions">
                 <span
-                    class="play-btn global-play-btn"
-                    :class="{ 'is-playing': isPlayingAnything, disabled: !canPlayGlobal }"
+                    class="play-btn-js global-play-btn"
+                    :class="{ 'is-playing-js': isPlayingAnything, 'disabled-js': !canPlayGlobal }"
                     :title="globalPlayTitle"
                     @click="toggleGlobalPlayback"
                 >{{ isPlayingAnything ? "⏸" : "▶" }}</span>
@@ -313,7 +313,7 @@ onBeforeUnmount(() => {
       <div class="actions">
         <input
             type="checkbox"
-            class="row-checkbox"
+            class="row-checkbox-js"
             :checked="selectChecked"
             :disabled="!checkedApi || isCurrentlyReady"
             title="Mark this script as checked for queueing (Script Library's tree)"
@@ -346,8 +346,8 @@ onBeforeUnmount(() => {
       <div
           v-for="(row, index) in rows"
           :key="row.__key"
-          class="fl-line-row"
-          :class="{ 'row-enter': justAddedKey === row.__key, 'row-playing': (isCurrentlyReady ? currentRowToTimingIdx.get(index) === activeTimingIdx : mode1PlayingIdx === index) }"
+          class="fl-line-row-js"
+          :class="{ 'row-enter': justAddedKey === row.__key, 'row-playing-js': (isCurrentlyReady ? currentRowToTimingIdx.get(index) === activeTimingIdx : mode1PlayingIdx === index) }"
           :data-row-index="index"
           :ref="(el) => setRowRef(row.__key, el)"
       >
@@ -368,7 +368,7 @@ onBeforeUnmount(() => {
             <Textarea
                 v-model="row.raw"
                 auto-resize
-                class="fl-textarea malformed-textarea"
+                class="fl-textarea-js malformed-textarea"
                 :style="{ fontSize: `${textFontSizePx}px` }"
                 rows="1"
                 :ref="(el) => setTextareaRef(row.__key, el)"
@@ -380,8 +380,8 @@ onBeforeUnmount(() => {
             <LineRowEditor :row="row" :index="index">
               <template #leading>
                             <span
-                                class="play-btn"
-                                :class="{ 'is-playing': isRowPlaying(index), disabled: !canPlayRow(index, row) }"
+                                class="play-btn-js"
+                                :class="{ 'is-playing-js': isRowPlaying(index), 'disabled-js': !canPlayRow(index, row) }"
                                 :title="canPlayRow(index, row) ? (isCurrentlyReady ? 'Jump to this line in the full render' : 'Play this line (and every voiced line after it)') : 'Not voiced yet -- nothing to play'"
                                 @click="onPlayClick(row, index)"
                             >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
@@ -390,9 +390,9 @@ onBeforeUnmount(() => {
                 <InputGroup class="speaker-file-group shrink-0">
                   <Button
                       v-if="revoiceApi && !isCurrentlyReady"
-                      class="revoice-btn"
+                      class="revoice-btn-js"
                       :icon="pendingRevoiceRows.has(row) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
-                      :class="{ pending: pendingRevoiceRows.has(row), stale: !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
+                      :class="{ 'pending-js': pendingRevoiceRows.has(row), 'stale-js': !pendingRevoiceRows.has(row) && rowHasAnyTake(index) && !rowIsFresh(row, index) }"
                       :disabled="pendingRevoiceRows.has(row)"
                       :title="revoiceTitle(row, index)"
                       @click="revoiceRow(row, index)"
@@ -419,7 +419,7 @@ onBeforeUnmount(() => {
                   </InputGroupAddon>
                   <InputText
                       v-model="row.pause"
-                      class="pause-input"
+                      class="pause-input-js"
                       :class="{ 'p-invalid': pauseUnreadable(row) }"
                       :placeholder="String(pauseDefaultFor(index))"
                       :title="pauseTitle(row, index)"
@@ -532,16 +532,16 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: #232323;
 }
-.fl-line-row.row-playing {
+.fl-line-row-js.row-playing-js {
   background: #242935;
 }
-.fl-line-row :global(.fl-row-dragging) {
+.fl-line-row-js :global(.fl-row-dragging-js) {
   opacity: 0.5;
 }
-.fl-line-row :global(.fl-row-drop-target) {
+.fl-line-row-js :global(.fl-row-drop-target-js) {
   outline: 2px dashed #4260a5;
 }
-.fl-line-row.row-enter {
+.fl-line-row-js.row-enter {
   animation: fl-row-enter 0.35s ease;
 }
 .line-rail {
@@ -572,24 +572,24 @@ onBeforeUnmount(() => {
     opacity: 1;
   }
 }
-.play-btn {
+.play-btn-js {
   cursor: pointer;
   flex: 0 0 auto;
   font-size: 13px;
   color: var(--color-success);
 }
-.play-btn.is-playing {
+.play-btn-js.is-playing-js {
   color: var(--color-active);
 }
-.play-btn.disabled {
+.play-btn-js.disabled-js {
   cursor: default;
   opacity: 0.35;
   color: inherit;
 }
-.revoice-btn {
+.revoice-btn-js {
   flex: 0 0 auto;
 }
-.revoice-btn.stale {
+.revoice-btn-js.stale-js {
   color: var(--color-warning);
 }
 </style>

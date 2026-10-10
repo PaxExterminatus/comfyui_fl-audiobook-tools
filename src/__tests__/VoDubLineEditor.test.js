@@ -113,28 +113,28 @@ describe("VoDubLineEditor", () => {
             global: { plugins: [PrimeVue] },
             attachTo: document.body,
         });
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row").length).toBeGreaterThan(0));
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row-js").length).toBeGreaterThan(0));
         return { wrapper, onClose };
     }
 
     it("renders both English and Russian players pointed at audio_en/audio_ru with the SAME filename", async () => {
         const { wrapper } = await mountEditor();
 
-        const players = document.querySelectorAll(".vo-dub-row")[0].querySelectorAll("audio");
+        const players = document.querySelectorAll(".vo-dub-row-js")[0].querySelectorAll("audio");
         const enSrc = decodeURIComponent(players[0].getAttribute("src"));
         expect(enSrc).toContain("audio_en");
         expect(enSrc).toContain("Loc_E1_S1_A.wav");
 
         // Row A has no take yet -- no RU <audio> at all, just the placeholder text.
         expect(players).toHaveLength(1);
-        expect(document.querySelectorAll(".vo-dub-row")[0].textContent).toContain("not rendered yet");
+        expect(document.querySelectorAll(".vo-dub-row-js")[0].textContent).toContain("not rendered yet");
         wrapper.unmount();
     });
 
     it("shows the RU player for a row with an existing take, pointed at audio_ru with the same filename", async () => {
         const { wrapper } = await mountEditor();
 
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
         const players = rowB.querySelectorAll("audio");
         expect(players).toHaveLength(2);
         const ruSrc = decodeURIComponent(players[1].getAttribute("src"));
@@ -146,17 +146,17 @@ describe("VoDubLineEditor", () => {
     it("shows a waveform for the EN player always, and for RU only once a take exists", async () => {
         const { wrapper } = await mountEditor();
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0]; // no RU take
-        expect(rowA.querySelectorAll(".waveform-canvas")).toHaveLength(1);
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0]; // no RU take
+        expect(rowA.querySelectorAll(".waveform-canvas-js")).toHaveLength(1);
 
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // has a take
-        expect(rowB.querySelectorAll(".waveform-canvas")).toHaveLength(2);
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // has a take
+        expect(rowB.querySelectorAll(".waveform-canvas-js")).toHaveLength(2);
         wrapper.unmount();
     });
 
     it("shows EN's own duration and RU's duration+delta on one left-aligned label line", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // duration_s = 3.0, rendered_duration_s = 3.1
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // duration_s = 3.0, rendered_duration_s = 3.1
         const labels = rowB.querySelector(".vo-dub-players-labels");
         expect(labels.textContent).toContain("3.0s");
         expect(labels.textContent).toContain("RU");
@@ -165,7 +165,7 @@ describe("VoDubLineEditor", () => {
 
     it("colors the duration badge green/amber/red by how far the measured take drifts from the original", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // duration_s = 3.0
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // duration_s = 3.0
         const ruAudio = rowB.querySelectorAll("audio")[1];
 
         Object.defineProperty(ruAudio, "duration", { value: 3.1, configurable: true }); // +3.3% -> good
@@ -187,10 +187,10 @@ describe("VoDubLineEditor", () => {
     // ── manual "Done" override (nodes/vo_dub_library.py's manually_done) ─
     it("offers a Mark-done button only for a row that already has a take", async () => {
         const { wrapper } = await mountEditor();
-        const rowA = document.querySelectorAll(".vo-dub-row")[0]; // not_started, no take
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // done, has a take
-        expect(rowA.querySelector(".vo-dub-done-btn")).toBeNull();
-        expect(rowB.querySelector(".vo-dub-done-btn")).toBeTruthy();
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0]; // not_started, no take
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // done, has a take
+        expect(rowA.querySelector(".vo-dub-done-btn-js")).toBeNull();
+        expect(rowB.querySelector(".vo-dub-done-btn-js")).toBeTruthy();
         wrapper.unmount();
     });
 
@@ -198,13 +198,13 @@ describe("VoDubLineEditor", () => {
         vi.useFakeTimers({ shouldAdvanceTime: true });
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite });
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
 
-        const doneBtn = rowB.querySelector(".vo-dub-done-btn");
-        expect(doneBtn.classList.contains("active")).toBe(false);
+        const doneBtn = rowB.querySelector(".vo-dub-done-btn-js");
+        expect(doneBtn.classList.contains("active-js")).toBe(false);
         doneBtn.click();
         await vi.waitFor(() => expect(doneBtn.querySelector(".pi-check-circle")).toBeTruthy());
-        expect(doneBtn.classList.contains("active")).toBe(true);
+        expect(doneBtn.classList.contains("active-js")).toBe(true);
 
         vi.advanceTimersByTime(700);
         await vi.waitFor(() => expect(onWrite.mock.calls.some((c) => c[0].path === STATE_PATH)).toBe(true));
@@ -214,28 +214,28 @@ describe("VoDubLineEditor", () => {
         // Click again -- unmarks it.
         doneBtn.click();
         await vi.waitFor(() => expect(doneBtn.querySelector(".pi-circle")).toBeTruthy());
-        expect(doneBtn.classList.contains("active")).toBe(false);
+        expect(doneBtn.classList.contains("active-js")).toBe(false);
         wrapper.unmount();
     });
 
     // ── play both tracks together ────────────────────────────────────────
     it("Play both is disabled until there's an RU take to compare against", async () => {
         const { wrapper } = await mountEditor();
-        const rowA = document.querySelectorAll(".vo-dub-row")[0]; // no RU take yet
-        expect(rowA.querySelector(".play-both-btn").className).toContain("disabled");
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0]; // no RU take yet
+        expect(rowA.querySelector(".play-both-btn-js").className).toContain("disabled");
         wrapper.unmount();
     });
 
     it("Play both waits for both tracks to buffer, then plays them together from the start", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // has both EN and RU
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // has both EN and RU
         const [enAudio, ruAudio] = rowB.querySelectorAll("audio");
         Object.defineProperty(enAudio, "readyState", { value: 4, configurable: true }); // already buffered
         Object.defineProperty(ruAudio, "readyState", { value: 4, configurable: true });
         const enPlay = vi.spyOn(enAudio, "play").mockResolvedValue();
         const ruPlay = vi.spyOn(ruAudio, "play").mockResolvedValue();
 
-        rowB.querySelector(".play-both-btn").click();
+        rowB.querySelector(".play-both-btn-js").click();
         await vi.waitFor(() => expect(enPlay).toHaveBeenCalled());
         expect(ruPlay).toHaveBeenCalled();
         wrapper.unmount();
@@ -243,7 +243,7 @@ describe("VoDubLineEditor", () => {
 
     it("clicking Play both again while playing pauses both tracks", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
         const [enAudio, ruAudio] = rowB.querySelectorAll("audio");
         Object.defineProperty(enAudio, "readyState", { value: 4, configurable: true });
         Object.defineProperty(ruAudio, "readyState", { value: 4, configurable: true });
@@ -252,7 +252,7 @@ describe("VoDubLineEditor", () => {
         const enPause = vi.spyOn(enAudio, "pause");
         const ruPause = vi.spyOn(ruAudio, "pause");
 
-        const btn = rowB.querySelector(".play-both-btn");
+        const btn = rowB.querySelector(".play-both-btn-js");
         btn.click();
         await vi.waitFor(() => expect(enAudio.play).toHaveBeenCalled());
         btn.click(); // toggle back off
@@ -263,14 +263,14 @@ describe("VoDubLineEditor", () => {
 
     it("pausing either track individually (e.g. via its own play/pause button) clears the Play-both playing indicator", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
         const [enAudio, ruAudio] = rowB.querySelectorAll("audio");
         Object.defineProperty(enAudio, "readyState", { value: 4, configurable: true });
         Object.defineProperty(ruAudio, "readyState", { value: 4, configurable: true });
         vi.spyOn(enAudio, "play").mockResolvedValue();
         vi.spyOn(ruAudio, "play").mockResolvedValue();
 
-        const btn = rowB.querySelector(".play-both-btn");
+        const btn = rowB.querySelector(".play-both-btn-js");
         btn.click();
         await vi.waitFor(() => expect(btn.querySelector(".pi-pause")).toBeTruthy());
 
@@ -286,17 +286,17 @@ describe("VoDubLineEditor", () => {
     */
     it("shows real native audio controls on both players, with the waveform purely as a visual overview above them", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
         for (const audio of rowB.querySelectorAll("audio")) {
             expect(audio.hasAttribute("controls")).toBe(true);
         }
-        expect(rowB.querySelectorAll(".waveform-canvas")).toHaveLength(2); // still there, just decorative
+        expect(rowB.querySelectorAll(".waveform-canvas-js")).toHaveLength(2); // still there, just decorative
         wrapper.unmount();
     });
 
     it("a native play on an unbuffered track pauses and resumes once buffered, instead of clipping its start", async () => {
         const { wrapper } = await mountEditor();
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         const enAudio = rowA.querySelector("audio");
         Object.defineProperty(enAudio, "readyState", { value: 0, configurable: true }); // nothing buffered yet
         const pauseSpy = vi.spyOn(enAudio, "pause");
@@ -314,8 +314,8 @@ describe("VoDubLineEditor", () => {
     // ── "Play in order" -- mirrors LineEditorApp.vue's own mode-1 sequential playback ──
     it("Play in order skips a row with no RU take and starts on the first that has one, highlighting it", async () => {
         const { wrapper } = await mountEditor();
-        const rowA = document.querySelectorAll(".vo-dub-row")[0]; // no RU take
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // has one
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0]; // no RU take
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // has one
         const ruAudio = rowB.querySelectorAll("audio")[1];
         Object.defineProperty(ruAudio, "readyState", { value: 4, configurable: true });
         const playSpy = vi.spyOn(ruAudio, "play").mockResolvedValue();
@@ -324,14 +324,14 @@ describe("VoDubLineEditor", () => {
         btn.click();
 
         await vi.waitFor(() => expect(playSpy).toHaveBeenCalled());
-        expect(rowA.classList.contains("row-playing")).toBe(false);
-        expect(rowB.classList.contains("row-playing")).toBe(true);
+        expect(rowA.classList.contains("row-playing-js")).toBe(false);
+        expect(rowB.classList.contains("row-playing-js")).toBe(true);
         wrapper.unmount();
     });
 
     it("Play in order auto-advances to the next row once the current one ends", async () => {
         const { wrapper } = await mountEditor({ rows: PROMPT_ROWS_WITH_TAKES });
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const ruAudios = [...rows].map((r) => r.querySelectorAll("audio")[1]);
         ruAudios.forEach((el) => {
             Object.defineProperty(el, "readyState", { value: 4, configurable: true });
@@ -341,18 +341,18 @@ describe("VoDubLineEditor", () => {
         const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Play in order"));
         btn.click();
         await vi.waitFor(() => expect(ruAudios[0].play).toHaveBeenCalled());
-        expect(rows[0].classList.contains("row-playing")).toBe(true);
+        expect(rows[0].classList.contains("row-playing-js")).toBe(true);
 
         ruAudios[0].dispatchEvent(new Event("ended"));
         await vi.waitFor(() => expect(ruAudios[1].play).toHaveBeenCalled());
-        expect(rows[0].classList.contains("row-playing")).toBe(false);
-        expect(rows[1].classList.contains("row-playing")).toBe(true);
+        expect(rows[0].classList.contains("row-playing-js")).toBe(false);
+        expect(rows[1].classList.contains("row-playing-js")).toBe(true);
         wrapper.unmount();
     });
 
     it("clicking Play in order again while running stops it instead of starting over", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
         const ruAudio = rowB.querySelectorAll("audio")[1];
         Object.defineProperty(ruAudio, "readyState", { value: 4, configurable: true });
         vi.spyOn(ruAudio, "play").mockResolvedValue();
@@ -365,13 +365,13 @@ describe("VoDubLineEditor", () => {
 
         btn().click();
         expect(pauseSpy).toHaveBeenCalled();
-        await vi.waitFor(() => expect(rowB.classList.contains("row-playing")).toBe(false));
+        await vi.waitFor(() => expect(rowB.classList.contains("row-playing-js")).toBe(false));
         wrapper.unmount();
     });
 
     it("pausing the actively-sequential row via its own native controls stops the whole run", async () => {
         const { wrapper } = await mountEditor({ rows: PROMPT_ROWS_WITH_TAKES });
-        const rows = document.querySelectorAll(".vo-dub-row");
+        const rows = document.querySelectorAll(".vo-dub-row-js");
         const ruAudios = [...rows].map((r) => r.querySelectorAll("audio")[1]);
         ruAudios.forEach((el) => {
             Object.defineProperty(el, "readyState", { value: 4, configurable: true });
@@ -384,7 +384,7 @@ describe("VoDubLineEditor", () => {
 
         Object.defineProperty(ruAudios[0], "ended", { value: false, configurable: true }); // a manual pause, not a natural end
         ruAudios[0].dispatchEvent(new Event("pause"));
-        await vi.waitFor(() => expect(rows[0].classList.contains("row-playing")).toBe(false));
+        await vi.waitFor(() => expect(rows[0].classList.contains("row-playing-js")).toBe(false));
         expect(ruAudios[1].play).not.toHaveBeenCalled(); // did NOT advance
         wrapper.unmount();
     });
@@ -411,7 +411,7 @@ describe("VoDubLineEditor", () => {
 
         const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Render pending"));
         btn.click();
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-editor-status").textContent)
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-editor-status-js").textContent)
             .toContain("Nothing needs rendering"));
         expect(renderRow).not.toHaveBeenCalled();
         wrapper.unmount();
@@ -422,7 +422,7 @@ describe("VoDubLineEditor", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite });
 
-        const textarea = document.querySelectorAll(".fl-textarea")[0];
+        const textarea = document.querySelectorAll(".fl-textarea-js")[0];
         textarea.value = "Новый перевод.";
         textarea.dispatchEvent(new Event("input"));
         vi.advanceTimersByTime(700);
@@ -438,7 +438,7 @@ describe("VoDubLineEditor", () => {
 
     it("seeds an untouched row's textarea from the csv's own russian text, not empty", async () => {
         const { wrapper } = await mountEditor();
-        const textarea = document.querySelectorAll(".fl-textarea")[0];
+        const textarea = document.querySelectorAll(".fl-textarea-js")[0];
         expect(textarea.value).toBe("Привет.");
         wrapper.unmount();
     });
@@ -447,36 +447,36 @@ describe("VoDubLineEditor", () => {
         const { wrapper } = await mountEditor({
             state: { rows: { Loc_E1_S1_A: { russian_text: "Уже отредактировано." } } },
         });
-        const textarea = document.querySelectorAll(".fl-textarea")[0];
+        const textarea = document.querySelectorAll(".fl-textarea-js")[0];
         expect(textarea.value).toBe("Уже отредактировано.");
         wrapper.unmount();
     });
 
     it("filters rows by status", async () => {
         const { wrapper } = await mountEditor();
-        expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(2);
+        expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(2);
 
         const dropdown = wrapper.findComponent({ name: "Dropdown" });
         await dropdown.vm.$emit("update:modelValue", "done");
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(1));
-        expect(document.querySelector(".vo-dub-key").textContent).toBe("Loc_E1_S1_B");
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(1));
+        expect(document.querySelector(".vo-dub-key-js").textContent).toBe("Loc_E1_S1_B");
         wrapper.unmount();
     });
 
     it("filters rows by a text search over the key/english/russian", async () => {
         const { wrapper } = await mountEditor();
-        const search = document.querySelector(".vo-dub-search");
+        const search = document.querySelector(".vo-dub-search-js");
         search.value = "wait";
         search.dispatchEvent(new Event("input"));
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(1));
-        expect(document.querySelector(".vo-dub-key").textContent).toBe("Loc_E1_S1_B");
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(1));
+        expect(document.querySelector(".vo-dub-key-js").textContent).toBe("Loc_E1_S1_B");
         wrapper.unmount();
     });
 
     // ── render button ────────────────────────────────────────────────────
     it("has no render button at all when the node-wiring offered no renderApi", async () => {
         const { wrapper } = await mountEditor(); // no renderApi passed
-        expect(document.querySelectorAll(".vo-dub-render-btn")).toHaveLength(0);
+        expect(document.querySelectorAll(".vo-dub-render-btn-js")).toHaveLength(0);
         wrapper.unmount();
     });
 
@@ -491,11 +491,11 @@ describe("VoDubLineEditor", () => {
          Edit row A's text right before rendering -- this must reach
          _dub_state.json BEFORE the render call, not just eventually.
         */
-        const textarea = document.querySelectorAll(".fl-textarea")[0];
+        const textarea = document.querySelectorAll(".fl-textarea-js")[0];
         textarea.value = "Свежий перевод.";
         textarea.dispatchEvent(new Event("input"));
 
-        const renderBtn = document.querySelectorAll(".vo-dub-row")[0].querySelector(".vo-dub-render-btn");
+        const renderBtn = document.querySelectorAll(".vo-dub-row-js")[0].querySelector(".vo-dub-render-btn-js");
         renderBtn.click();
         await vi.waitFor(() => expect(renderRow).toHaveBeenCalled());
 
@@ -532,7 +532,7 @@ describe("VoDubLineEditor", () => {
         const effectDropdown = dropdowns.find((d) => d.classes().includes("vo-dub-effect-select"));
         await effectDropdown.vm.$emit("update:modelValue", "radio");
 
-        const renderBtn = document.querySelectorAll(".vo-dub-row")[0].querySelector(".vo-dub-render-btn");
+        const renderBtn = document.querySelectorAll(".vo-dub-row-js")[0].querySelector(".vo-dub-render-btn-js");
         renderBtn.click();
         await vi.waitFor(() => expect(renderRow).toHaveBeenCalled());
         expect(renderRow).toHaveBeenCalledWith(expect.objectContaining({ effect: "radio" }));
@@ -568,7 +568,7 @@ describe("VoDubLineEditor", () => {
     // ── "use original as sample" checkboxes (project default + per-row) ──
     it("an untouched row follows the project-wide default; the row's own checkbox overrides it independently", async () => {
         const { wrapper } = await mountEditor();
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
 
         const checkboxes = () => wrapper.findAllComponents({ name: "Checkbox" });
         /*
@@ -577,7 +577,7 @@ describe("VoDubLineEditor", () => {
          rows via document.querySelectorAll instead of wrapper.find).
         */
         const projectCheckbox = () => checkboxes().find((c) => c.element.closest(".vo-dub-original-default-label"));
-        const rowACheckbox = () => checkboxes().find((c) => c.element.closest(".vo-dub-row") === rowA);
+        const rowACheckbox = () => checkboxes().find((c) => c.element.closest(".vo-dub-row-js") === rowA);
 
         expect(projectCheckbox().props("modelValue")).toBe(false);
         expect(rowACheckbox().props("modelValue")).toBe(false); // follows the (off) project default
@@ -598,13 +598,13 @@ describe("VoDubLineEditor", () => {
         const onMarkRendered = vi.fn();
         const renderRow = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = await mountEditor({ onMarkRendered, renderApi: { renderRow } });
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
 
         const rowACheckbox = wrapper.findAllComponents({ name: "Checkbox" })
-            .find((c) => c.element.closest(".vo-dub-row") === rowA);
+            .find((c) => c.element.closest(".vo-dub-row-js") === rowA);
         await rowACheckbox.vm.$emit("update:modelValue", true);
 
-        rowA.querySelector(".vo-dub-render-btn").click();
+        rowA.querySelector(".vo-dub-render-btn-js").click();
         await vi.waitFor(() => expect(renderRow).toHaveBeenCalled());
         expect(renderRow).toHaveBeenCalledWith(expect.objectContaining({
             referenceAudioPath: "C:\\vo\\Observation\\audio_en\\Loc_E1_S1_A.wav",
@@ -640,7 +640,7 @@ describe("VoDubLineEditor", () => {
         vi.advanceTimersByTime(700);
         expect(onWrite).not.toHaveBeenCalled();
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         const saveBtn = rowA.querySelector(".vo-dub-effect-save-btn");
         expect(saveBtn).toBeTruthy();
         saveBtn.click();
@@ -654,7 +654,7 @@ describe("VoDubLineEditor", () => {
 
     it("the Effect Save button only appears once the picked value differs from what's already saved", async () => {
         const { wrapper } = await mountEditor();
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         expect(rowA.querySelector(".vo-dub-effect-save-btn")).toBeFalsy();
 
         const dropdowns = wrapper.findAllComponents({ name: "Dropdown" });
@@ -673,7 +673,7 @@ describe("VoDubLineEditor", () => {
         const renderRow = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = await mountEditor({ onApplyEffect, renderApi: { renderRow } });
 
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // Loc_E1_S1_B, status "done"
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // Loc_E1_S1_B, status "done"
         const effectDropdowns = wrapper.findAllComponents({ name: "Dropdown" }).filter((d) => d.classes().includes("vo-dub-effect-select"));
         await effectDropdowns[1].vm.$emit("update:modelValue", "radio");
 
@@ -694,7 +694,7 @@ describe("VoDubLineEditor", () => {
         const effectDropdown = dropdowns.find((d) => d.classes().includes("vo-dub-effect-select"));
         await effectDropdown.vm.$emit("update:modelValue", "radio");
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         rowA.querySelector(".vo-dub-effect-save-btn").click();
 
         expect(onApplyEffect).not.toHaveBeenCalled();
@@ -704,12 +704,12 @@ describe("VoDubLineEditor", () => {
     it("a 'no dry take yet' error from the fast-apply path surfaces in the status line without crashing", async () => {
         const { wrapper } = await mountEditor({ applyEffectError: "no dry take yet for this row -- render it once first" });
 
-        const rowB = document.querySelectorAll(".vo-dub-row")[1];
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1];
         const effectDropdowns = wrapper.findAllComponents({ name: "Dropdown" }).filter((d) => d.classes().includes("vo-dub-effect-select"));
         await effectDropdowns[1].vm.$emit("update:modelValue", "radio");
         rowB.querySelector(".vo-dub-effect-save-btn").click();
 
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-editor-status").textContent).toContain("no dry take"));
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-editor-status-js").textContent).toContain("no dry take"));
         wrapper.unmount();
     });
 
@@ -723,7 +723,7 @@ describe("VoDubLineEditor", () => {
         const effectDropdown = dropdowns.find((d) => d.classes().includes("vo-dub-effect-select"));
         await effectDropdown.vm.$emit("update:modelValue", "radio"); // picked, but Save never clicked
 
-        const renderBtn = document.querySelectorAll(".vo-dub-row")[0].querySelector(".vo-dub-render-btn");
+        const renderBtn = document.querySelectorAll(".vo-dub-row-js")[0].querySelector(".vo-dub-render-btn-js");
         renderBtn.click();
         await vi.waitFor(() => expect(renderRow).toHaveBeenCalled());
         expect(renderRow).toHaveBeenCalledWith(expect.objectContaining({ effect: "radio" }));
@@ -743,10 +743,10 @@ describe("VoDubLineEditor", () => {
         const renderRow = vi.fn().mockResolvedValue(undefined);
         const { wrapper } = await mountEditor({ renderApi: { renderRow } });
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         expect(rowA.querySelectorAll("audio")).toHaveLength(1); // EN only, no take yet
 
-        rowA.querySelector(".vo-dub-render-btn").click();
+        rowA.querySelector(".vo-dub-render-btn-js").click();
         await vi.waitFor(() => expect(rowA.querySelectorAll("audio")).toHaveLength(2));
         wrapper.unmount();
     });
@@ -756,7 +756,7 @@ describe("VoDubLineEditor", () => {
         const renderRow = vi.fn(() => new Promise((r) => { resolveRender = r; }));
         const { wrapper } = await mountEditor({ renderApi: { renderRow } });
 
-        const btn = document.querySelectorAll(".vo-dub-row")[0].querySelector(".vo-dub-render-btn");
+        const btn = document.querySelectorAll(".vo-dub-row-js")[0].querySelector(".vo-dub-render-btn-js");
         btn.click();
         await vi.waitFor(() => expect(btn.disabled).toBe(true));
         expect(btn.querySelector(".pi-spinner")).toBeTruthy();
@@ -769,7 +769,7 @@ describe("VoDubLineEditor", () => {
     // ── lazy audio ───────────────────────────────────────────────────────
     it("never preloads audio for any row -- both players wait for the browser's own play button", async () => {
         const { wrapper } = await mountEditor();
-        const rowB = document.querySelectorAll(".vo-dub-row")[1]; // has both EN and RU players
+        const rowB = document.querySelectorAll(".vo-dub-row-js")[1]; // has both EN and RU players
         for (const audio of rowB.querySelectorAll("audio")) {
             expect(audio.getAttribute("preload")).toBe("none");
         }
@@ -789,8 +789,8 @@ describe("VoDubLineEditor", () => {
 
     it("shows only the first 50 rows of a large bucket, with a page indicator", async () => {
         const { wrapper } = await mountEditor({ rows: manyRows(120) });
-        expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(50);
-        expect(document.querySelector(".vo-dub-pager-label").textContent).toBe("Page 1 / 3 (120 row(s))");
+        expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(50);
+        expect(document.querySelector(".vo-dub-pager-label-js").textContent).toBe("Page 1 / 3 (120 row(s))");
         wrapper.unmount();
     });
 
@@ -800,13 +800,13 @@ describe("VoDubLineEditor", () => {
         expect(prevBtn.disabled).toBe(true);
 
         nextBtn.click();
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-key").textContent).toBe("Loc_E1_R050"));
-        expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(50);
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-key-js").textContent).toBe("Loc_E1_R050"));
+        expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(50);
         expect(prevBtn.disabled).toBe(false);
 
         nextBtn.click();
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-key").textContent).toBe("Loc_E1_R100"));
-        expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(20); // 120 - 100
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-key-js").textContent).toBe("Loc_E1_R100"));
+        expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(20); // 120 - 100
         expect(nextBtn.disabled).toBe(true);
         wrapper.unmount();
     });
@@ -814,13 +814,13 @@ describe("VoDubLineEditor", () => {
     it("jumps back to page 1 when the search filter changes", async () => {
         const { wrapper } = await mountEditor({ rows: manyRows(120) });
         document.querySelectorAll(".vo-dub-pager button")[1].click(); // Next -> page 2
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label").textContent).toContain("Page 2"));
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label-js").textContent).toContain("Page 2"));
 
-        const search = document.querySelector(".vo-dub-search");
+        const search = document.querySelector(".vo-dub-search-js");
         search.value = "R0";
         search.dispatchEvent(new Event("input"));
 
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label").textContent).toContain("Page 1"));
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label-js").textContent).toContain("Page 1"));
         wrapper.unmount();
     });
 
@@ -831,10 +831,10 @@ describe("VoDubLineEditor", () => {
 
         const dropdown = wrapper.findComponent({ name: "Dropdown" });
         await dropdown.vm.$emit("update:modelValue", "not_started"); // 96 rows -> 2 pages
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label").textContent).toContain("Page 1 / 2"));
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label-js").textContent).toContain("Page 1 / 2"));
 
         document.querySelectorAll(".vo-dub-pager button")[1].click(); // Next -> page 2 (the last 46 "not_started" rows)
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label").textContent).toContain("Page 2 / 2"));
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-pager-label-js").textContent).toContain("Page 2 / 2"));
 
         /*
          Re-render every "not_started" row this filter still has as "done"
@@ -842,7 +842,7 @@ describe("VoDubLineEditor", () => {
          shrink back to page 1 on its own, not point past the end.
         */
         rows.forEach((r) => { r.status = "done"; });
-        const renderBtn = document.querySelectorAll(".vo-dub-row")[0].querySelector(".vo-dub-render-btn");
+        const renderBtn = document.querySelectorAll(".vo-dub-row-js")[0].querySelector(".vo-dub-render-btn-js");
         renderBtn.click();
 
         /*
@@ -850,8 +850,8 @@ describe("VoDubLineEditor", () => {
          valid page (1 of 1), not stay stuck on the "page 2" that no
          longer exists.
         */
-        await vi.waitFor(() => expect(document.querySelector(".vo-dub-empty")).toBeTruthy());
-        expect(document.querySelector(".vo-dub-pager-label").textContent).toBe("Page 1 / 1 (0 row(s))");
+        await vi.waitFor(() => expect(document.querySelector(".vo-dub-empty-js")).toBeTruthy());
+        expect(document.querySelector(".vo-dub-pager-label-js").textContent).toBe("Page 1 / 1 (0 row(s))");
         wrapper.unmount();
     });
 
@@ -866,11 +866,11 @@ describe("VoDubLineEditor", () => {
             }],
         });
 
-        const row = document.querySelector(".vo-dub-row");
+        const row = document.querySelector(".vo-dub-row-js");
         expect(row.querySelectorAll("audio")).toHaveLength(0);
-        expect(row.querySelector(".vo-dub-render-btn")).toBeFalsy();
+        expect(row.querySelector(".vo-dub-render-btn-js")).toBeFalsy();
         expect(row.querySelector(".vo-dub-fields")).toBeFalsy();
-        expect(row.querySelector(".vo-dub-unsupported-note").textContent).toContain("4-channel");
+        expect(row.querySelector(".vo-dub-unsupported-note-js").textContent).toContain("4-channel");
         wrapper.unmount();
     });
 
@@ -883,7 +883,7 @@ describe("VoDubLineEditor", () => {
                 status: "unsupported", rendered_duration_s: null,
             }],
         });
-        expect(document.querySelector(".vo-dub-render-btn")).toBeFalsy();
+        expect(document.querySelector(".vo-dub-render-btn-js")).toBeFalsy();
         wrapper.unmount();
     });
 
@@ -908,17 +908,17 @@ describe("VoDubLineEditor", () => {
 
     it("searching by speaker tag finds rows the text/audio_key wouldn't match", async () => {
         const { wrapper } = await mountEditor({ rows: PROMPT_ROWS });
-        const search = document.querySelector(".vo-dub-search");
+        const search = document.querySelector(".vo-dub-search-js");
         search.value = "prompt";
         search.dispatchEvent(new Event("input"));
-        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row")).toHaveLength(2));
-        expect([...document.querySelectorAll(".vo-dub-key")].map((el) => el.textContent)).toEqual(["Loc_E1_Prompt_01", "Loc_E1_Prompt_02"]);
+        await vi.waitFor(() => expect(document.querySelectorAll(".vo-dub-row-js")).toHaveLength(2));
+        expect([...document.querySelectorAll(".vo-dub-key-js")].map((el) => el.textContent)).toEqual(["Loc_E1_Prompt_01", "Loc_E1_Prompt_02"]);
         wrapper.unmount();
     });
 
     it("shows the raw csv speaker tag in a read-only Identifier field, separate from the role", async () => {
         const { wrapper } = await mountEditor();
-        const idField = document.querySelectorAll(".vo-dub-identifier")[0];
+        const idField = document.querySelectorAll(".vo-dub-identifier-js")[0];
         expect(idField.textContent).toBe("Ellie");
         wrapper.unmount();
     });
@@ -969,11 +969,11 @@ describe("VoDubLineEditor", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ rows: PROMPT_ROWS, roles: ROLE_ENTRIES, onWrite });
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0]; // Loc_E1_Prompt_01, tag "Prompt"
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0]; // Loc_E1_Prompt_01, tag "Prompt"
         const dropdown = wrapper.findAllComponents(RoleDropdown)[0];
         await dropdown.vm.$emit("update:modelValue", "emma");
 
-        const applyRoleBtn = rowA.querySelector(".apply-role-btn");
+        const applyRoleBtn = rowA.querySelector(".apply-role-btn-js");
         await vi.waitFor(() => expect(applyRoleBtn.disabled).toBe(false));
         applyRoleBtn.click();
 
@@ -988,7 +988,7 @@ describe("VoDubLineEditor", () => {
     // ── editing conveniences reused from the audiobook Line Editor ──────
     it("offers a Stress mark button that inserts a combining accent at the focused field's cursor", async () => {
         const { wrapper } = await mountEditor();
-        const textarea = document.querySelectorAll(".fl-textarea")[0];
+        const textarea = document.querySelectorAll(".fl-textarea-js")[0];
         textarea.value = "привет";
         textarea.focus();
         textarea.selectionStart = textarea.selectionEnd = 3;
@@ -1003,7 +1003,7 @@ describe("VoDubLineEditor", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite });
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         const instructInput = rowA.querySelector("input[placeholder='Instruct']");
         expect(instructInput.value).toBe("");
 
@@ -1041,7 +1041,7 @@ describe("VoDubLineEditor", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite, instructCategories: [{ name: "cold", examples: ["Speak coldly."] }] });
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         const instructInput = rowA.querySelector("input[placeholder='Instruct']");
         instructInput.value = "Совершенно новая фраза.";
         instructInput.dispatchEvent(new Event("input"));
@@ -1060,7 +1060,7 @@ describe("VoDubLineEditor", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ onWrite, instructCategories: [{ name: "cold", examples: ["Speak coldly."] }] });
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0];
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0];
         const instructInput = rowA.querySelector("input[placeholder='Instruct']");
         instructInput.value = "Speak coldly.";
         instructInput.dispatchEvent(new Event("input"));
@@ -1076,7 +1076,7 @@ describe("VoDubLineEditor", () => {
         const onWrite = vi.fn();
         const { wrapper } = await mountEditor({ rows: PROMPT_ROWS, onWrite });
 
-        const rowA = document.querySelectorAll(".vo-dub-row")[0]; // Loc_E1_Prompt_01, tag "Prompt"
+        const rowA = document.querySelectorAll(".vo-dub-row-js")[0]; // Loc_E1_Prompt_01, tag "Prompt"
         const instructInput = rowA.querySelector("input[placeholder='Instruct']");
         instructInput.value = "Sound uneasy.";
         instructInput.dispatchEvent(new Event("input"));
@@ -1113,7 +1113,7 @@ describe("VoDubLineEditor", () => {
                 status: "unsupported", rendered_duration_s: null,
             }],
         });
-        expect(document.querySelector(".vo-dub-identifier")).toBeFalsy();
+        expect(document.querySelector(".vo-dub-identifier-js")).toBeFalsy();
         expect(wrapper.findAllComponents(RoleDropdown)).toHaveLength(0);
         wrapper.unmount();
     });

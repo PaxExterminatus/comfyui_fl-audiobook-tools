@@ -110,28 +110,28 @@ describe("DubRolesEditorApp", () => {
 
     it("renders a role's rich casting fields -- character, gender, actor, description, dub direction, notes, stats", async () => {
         const { wrapper } = await mountApp();
-        const card = document.querySelectorAll(".role-card")[0]; // emma sorts first (1230 lines > sam's 287)
-        expect(card.querySelector(".role-name").textContent).toBe("Dr. Emma Fisher");
-        expect(card.querySelector(".role-code").textContent).toBe("emma");
-        expect(card.querySelector(".role-gender").textContent).toBe("female");
-        expect(card.querySelector(".role-actor").textContent).toBe("Kezia Burrows");
-        expect(card.querySelector(".role-dub-direction").textContent).toContain("strongest actress");
-        expect(card.querySelector(".role-notes").textContent).toContain("development codename");
-        expect(card.querySelector(".role-stats").textContent).toContain("1230 line(s)");
-        expect(card.querySelector(".role-stats").textContent).toContain("40 need translation");
+        const card = document.querySelectorAll(".role-card-js")[0]; // emma sorts first (1230 lines > sam's 287)
+        expect(card.querySelector(".role-name-js").textContent).toBe("Dr. Emma Fisher");
+        expect(card.querySelector(".role-code-js").textContent).toBe("emma");
+        expect(card.querySelector(".role-gender-js").textContent).toBe("female");
+        expect(card.querySelector(".role-actor-js").textContent).toBe("Kezia Burrows");
+        expect(card.querySelector(".role-dub-direction-js").textContent).toContain("strongest actress");
+        expect(card.querySelector(".role-notes-js").textContent).toContain("development codename");
+        expect(card.querySelector(".role-stats-js").textContent).toContain("1230 line(s)");
+        expect(card.querySelector(".role-stats-js").textContent).toContain("40 need translation");
         wrapper.unmount();
     });
 
     it("sorts roles by line count descending, biggest role first", async () => {
         const { wrapper } = await mountApp();
-        const names = [...document.querySelectorAll(".role-name")].map((el) => el.textContent);
+        const names = [...document.querySelectorAll(".role-name-js")].map((el) => el.textContent);
         expect(names).toEqual(["Dr. Emma Fisher", "S.A.M."]);
         wrapper.unmount();
     });
 
     it("shows every role's assigned (or blank) speaker preset", async () => {
         const { wrapper } = await mountApp();
-        const speakerInputs = [...document.querySelectorAll(".role-speaker")];
+        const speakerInputs = [...document.querySelectorAll(".role-speaker-js")];
         expect(speakerInputs[0].value).toBe("some_preset"); // emma
         expect(speakerInputs[1].value).toBe(""); // sam, not assigned yet
         wrapper.unmount();
@@ -142,17 +142,17 @@ describe("DubRolesEditorApp", () => {
         const onMarkStale = vi.fn();
         const { wrapper } = await mountApp({ onMarkStale });
 
-        const roleCards = document.querySelectorAll(".role-card");
+        const roleCards = document.querySelectorAll(".role-card-js");
         const micBtn = [...roleCards[1].querySelectorAll("button")].find((b) => b.querySelector(".pi-microphone"));
         micBtn.click();
 
         await vi.waitFor(() => expect(document.body.textContent).toContain("Pick a speaker"));
         expect(document.body.textContent).toContain("another_preset"); // sam's picker offers every loaded preset
 
-        const card = [...document.querySelectorAll(".speaker-card-row")].find((c) => c.querySelector(".speaker-name").textContent === "another_preset");
+        const card = [...document.querySelectorAll(".speaker-card-row-js")].find((c) => c.querySelector(".speaker-name-js").textContent === "another_preset");
         card.click();
 
-        await vi.waitFor(() => expect(document.querySelectorAll(".role-speaker")[1].value).toBe("another_preset"));
+        await vi.waitFor(() => expect(document.querySelectorAll(".role-speaker-js")[1].value).toBe("another_preset"));
         vi.advanceTimersByTime(700);
         await vi.waitFor(() => expect(onMarkStale).toHaveBeenCalledWith({ root: ROOT, role_code: "sam" }));
         wrapper.unmount();
@@ -164,7 +164,7 @@ describe("DubRolesEditorApp", () => {
         const { wrapper } = await mountApp({ onWrite });
 
         // Edit ONLY sam's speaker -- nothing else should so much as move.
-        const samSpeakerInput = document.querySelectorAll(".role-speaker")[1];
+        const samSpeakerInput = document.querySelectorAll(".role-speaker-js")[1];
         samSpeakerInput.value = "another_preset";
         samSpeakerInput.dispatchEvent(new Event("input", { bubbles: true }));
         vi.advanceTimersByTime(700);
@@ -188,7 +188,7 @@ describe("DubRolesEditorApp", () => {
         const onMarkStale = vi.fn();
         const { wrapper } = await mountApp({ onMarkStale });
 
-        const emmaSpeakerInput = document.querySelectorAll(".role-speaker")[0];
+        const emmaSpeakerInput = document.querySelectorAll(".role-speaker-js")[0];
         emmaSpeakerInput.value = "another_preset";
         emmaSpeakerInput.dispatchEvent(new Event("input", { bubbles: true }));
         emmaSpeakerInput.dispatchEvent(new Event("blur"));

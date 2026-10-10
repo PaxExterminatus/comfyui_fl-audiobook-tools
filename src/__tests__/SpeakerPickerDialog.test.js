@@ -52,14 +52,14 @@ describe("SpeakerPickerDialog", () => {
      notes) -- every case here waits for the cards first.
     */
     async function cards() {
-        await vi.waitFor(() => expect(document.querySelectorAll(".speaker-card-row").length).toBe(2));
+        await vi.waitFor(() => expect(document.querySelectorAll(".speaker-card-row-js").length).toBe(2));
     }
 
     it("plays a sample when the play button is clicked, and does NOT pick that speaker", async () => {
         const wrapper = mountPicker();
         await cards();
 
-        document.querySelectorAll(".speaker-play-wrap")[0].click();
+        document.querySelectorAll(".speaker-play-wrap-js")[0].click();
 
         expect(plays).toHaveLength(1);
         expect(plays[0]).toContain("voldemort.mp3");
@@ -72,7 +72,7 @@ describe("SpeakerPickerDialog", () => {
         const wrapper = mountPicker();
         await cards();
 
-        document.querySelectorAll(".speaker-card-row")[1].click();
+        document.querySelectorAll(".speaker-card-row-js")[1].click();
 
         expect(wrapper.emitted("select")[0]).toEqual(["hermione"]);
         expect(wrapper.emitted("update:visible")[0]).toEqual([false]);
@@ -84,7 +84,7 @@ describe("SpeakerPickerDialog", () => {
         const wrapper = mountPicker({ sampleDir: "" });
         await cards();
 
-        document.querySelectorAll(".speaker-play-wrap")[0].click();
+        document.querySelectorAll(".speaker-play-wrap-js")[0].click();
 
         expect(plays).toHaveLength(0);
         expect(wrapper.emitted("select")).toBeUndefined();

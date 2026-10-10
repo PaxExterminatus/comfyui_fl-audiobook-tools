@@ -1,4 +1,4 @@
-import { SCRIPT_LIBRARY_API, VO_DUB_API } from "../web/fl_common.js";
+import { SCRIPT_LIBRARY_API, VO_DUB_API } from "../src/shared/fl_common.js";
 
 export function makeWidget(initial = "") {
     return { value: initial, callback: null };
@@ -35,20 +35,14 @@ export const revoiceApi = {
 };
 
 export const renderApi = {
-    renderRow: async ({ audioKey }) => {
+    renderRow: async ({ root, audioKey }) => {
         const resp = await fetch(`${VO_DUB_API}/render/row`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ root: getProjectRoot(), audio_key: audioKey }),
+            body: JSON.stringify({ root, audio_key: audioKey }),
         });
         const data = await resp.json();
         if (data.error) throw new Error(data.error);
         return data;
     },
 };
-
-// This will be set by the component that owns the rootStore
-let getProjectRoot = () => "";
-export function setGetProjectRoot(fn) {
-    getProjectRoot = fn;
-}

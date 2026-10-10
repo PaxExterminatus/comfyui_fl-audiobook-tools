@@ -146,7 +146,7 @@ onMounted(() => load(props.startPath || ""));
         />
 
         <div class="browse-toolbar">
-            <Button icon="pi pi-arrow-up" title="Up one level" text @click="goUp" />
+            <Button icon="pi pi-arrow-up" title="Up one level" @click="goUp" />
             <InputText
                 v-model="pathInputValue"
                 placeholder="Path -- press Enter to jump here"
@@ -174,7 +174,7 @@ onMounted(() => load(props.startPath || ""));
         </div>
 
         <div class="browse-dialog-footer">
-            <Button label="Cancel" severity="secondary" text @click="close" />
+            <Button label="Cancel" severity="secondary" @click="close" />
             <Button :label="selectLabel" :disabled="selectDisabled" @click="confirmSelect" />
         </div>
     </div>

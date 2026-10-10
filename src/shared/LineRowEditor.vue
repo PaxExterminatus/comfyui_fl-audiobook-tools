@@ -82,7 +82,6 @@ function onPaste(event) {
       <InputGroupAddon><i class="pi pi-book" /></InputGroupAddon>
       <Button
           icon="pi pi-undo"
-          size="small"
           class="instruct-undo-btn"
           :disabled="!api.canUndoInstruct(row)"
           :title="api.undoInstructTitle(row)"
@@ -96,13 +95,11 @@ function onPaste(event) {
       />
       <Button
           icon="pi pi-th-large"
-          size="small"
           title="Pick an instruct phrase from the category bank"
           @click="api.openInstructPicker(row)"
       />
       <Button
           icon="pi pi-users"
-          size="small"
           class="apply-instruct-btn"
           :disabled="!api.canApplyInstruct(row)"
           :title="api.applyInstructTitle(row)"
@@ -120,8 +117,6 @@ function onPaste(event) {
   <div class="text-row">
     <Button
         icon="pi pi-pencil"
-        text
-        size="small"
         class="text-edit-btn"
         title="Edit text with tag palette"
         @click="openTagEditor"

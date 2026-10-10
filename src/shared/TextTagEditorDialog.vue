@@ -190,13 +190,11 @@ function onTextareaClick() { rememberSelection(); }
               icon="pi pi-times"
               severity="secondary"
               outlined
-              size="small"
               @click="onCancel"
           />
           <Button
               label="Save"
               icon="pi pi-check"
-              size="small"
               @click="onSave"
           />
         </ButtonGroup>
@@ -209,7 +207,6 @@ function onTextareaClick() { rememberSelection(); }
         <span class="tte-play-label">EN</span>
         <ButtonGroup>
           <Button
-              size="small"
               :severity="playingMode === 'original' ? 'primary' : 'secondary'"
               :disabled="!canPlayOriginal"
               :icon="playingMode === 'original' ? 'pi pi-pause' : 'pi pi-volume-up'"
@@ -218,7 +215,6 @@ function onTextareaClick() { rememberSelection(); }
               @click="toggleOriginal"
           />
           <Button
-              size="small"
               :severity="playingMode === 'original-loop' ? 'primary' : 'secondary'"
               :disabled="!canPlayOriginal"
               :icon="playingMode === 'original-loop' ? 'pi pi-pause' : 'pi pi-replay'"
@@ -233,7 +229,6 @@ function onTextareaClick() { rememberSelection(); }
         <span class="tte-play-label">RU</span>
         <ButtonGroup>
           <Button
-              size="small"
               :severity="playingMode === 'current' ? 'primary' : 'secondary'"
               :disabled="!canPlayCurrent"
               :icon="playingMode === 'current' ? 'pi pi-pause' : 'pi pi-play'"
@@ -242,7 +237,6 @@ function onTextareaClick() { rememberSelection(); }
               @click="toggleCurrent"
           />
           <Button
-              size="small"
               :severity="playingMode === 'loop' ? 'primary' : 'secondary'"
               :disabled="!canPlayCurrent"
               :icon="playingMode === 'loop' ? 'pi pi-pause' : 'pi pi-replay'"
@@ -275,7 +269,6 @@ function onTextareaClick() { rememberSelection(); }
               ]"
               :key="t.tag"
               :label="t.label"
-              size="small"
               severity="secondary"
               @mousedown.prevent="insertSingle(t.tag)"
           />
@@ -293,7 +286,6 @@ function onTextareaClick() { rememberSelection(); }
               ]"
               :key="t.tag"
               :label="t.label"
-              size="small"
               severity="secondary"
               @mousedown.prevent="insertWrapper(t.tag)"
           />

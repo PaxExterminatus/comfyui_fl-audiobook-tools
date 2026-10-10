@@ -185,7 +185,6 @@ function formatCreatedAt(iso) {
                   @click="togglePlay(v)"
               />
               <Button
-                  size="small"
                   label="Сделать активной"
                   icon="pi pi-check"
                   :disabled="v.version === chosenVersion"

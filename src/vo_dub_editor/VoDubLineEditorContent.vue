@@ -203,7 +203,7 @@ watch(visible, (v) => { if (!v) close(); });
               @cycle-tristate="(key) => { if (key === 'manuallyDone') cycleManuallyDone(); else if (key === 'issues') cycleIssues(); }"
               @clear="clearFilters"
             />
-            <Button icon="pi pi-refresh" text size="small" title="Re-scan this bucket" @click="loadRows"/>
+            <Button icon="pi pi-refresh" title="Re-scan this bucket" @click="loadRows" />
             <span class="vo-dub-editor-status">{{ loading ? "Loading..." : status }}</span>
           </div>
 
@@ -211,8 +211,6 @@ watch(visible, (v) => { if (!v) close(); });
         <div class="vo-dub-pager-inline">
           <Button
               label="◀"
-              text
-              size="small"
               :disabled="currentPage === 0"
               title="Previous page"
               @click="currentPage--"
@@ -222,8 +220,6 @@ watch(visible, (v) => { if (!v) close(); });
           </span>
           <Button
               label="▶"
-              text
-              size="small"
               :disabled="currentPage >= pageCount - 1"
               title="Next page"
               @click="currentPage++"
@@ -266,7 +262,6 @@ watch(visible, (v) => { if (!v) close(); });
               v-if="hasRuTake(row)"
               class="vo-dub-done-btn"
               :class="{ active: manuallyDone(row) }"
-              text size="small"
               :icon="manuallyDone(row) ? 'pi pi-check-circle' : 'pi pi-circle'"
               :label="manuallyDone(row) ? 'Done' : 'Mark done'"
               title="Manually treat this row as done even if its content has drifted since the last render."
@@ -275,7 +270,6 @@ watch(visible, (v) => { if (!v) close(); });
           <Button
               class="vo-dub-issue-btn"
               :class="{ active: manuallyIssue(row) }"
-              text size="small"
               severity="danger"
               :icon="manuallyIssue(row) ? 'pi pi-exclamation-triangle' : 'pi pi-exclamation-circle'"
               :label="manuallyIssue(row) ? 'Issue' : 'Mark issue'"
@@ -330,7 +324,6 @@ watch(visible, (v) => { if (!v) close(); });
               <Button
                   class="play-both-btn"
                   :class="{ playing: dualPlayingRows.has(row.audio_key) }"
-                  size="small"
                   label="Play both"
                   :icon="dualLoadingRows.has(row.audio_key) ? 'pi pi-spin pi-spinner' : (dualPlayingRows.has(row.audio_key) ? 'pi pi-pause' : 'pi pi-play')"
                   :disabled="!hasRuTake(row)"
@@ -359,8 +352,6 @@ watch(visible, (v) => { if (!v) close(); });
                   v-if="props.renderApi"
                   class="vo-dub-render-btn"
                   :class="{ stale: row.status === 'stale' }"
-                  text
-                  size="small"
                   :label="hasRuTake(row) ? 'Re-render' : 'Render'"
                   :icon="renderingKeys.has(row.audio_key) ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
                   :disabled="renderingKeys.has(row.audio_key)"
@@ -370,8 +361,6 @@ watch(visible, (v) => { if (!v) close(); });
               <Button
                   v-if="props.renderApi"
                   class="vo-dub-use-en-btn"
-                  text
-                  size="small"
                   icon="pi pi-arrow-right"
                   label="Use EN"
                   :disabled="renderingKeys.has(row.audio_key) || !row.english"
@@ -382,16 +371,12 @@ watch(visible, (v) => { if (!v) close(); });
               />
               <Button
                   icon="pi pi-history"
-                  size="small"
-                  text
                   :label="historyCounts[row.audio_key] ? String(historyCounts[row.audio_key]) : ''"
                   title="Line history (previous takes/versions)"
                   @click="openLineHistory(row)"
               />
               <Button
                   icon="pi pi-cog"
-                  size="small"
-                  text
                   title="Edit output settings"
                   @click="openOutputDialog(row)"
               />
@@ -406,8 +391,6 @@ watch(visible, (v) => { if (!v) close(); });
               >{{ row.speaker_tag || "—" }}</span>
               <Button
                   icon="pi pi-copy"
-                  size="small"
-                  text
                   class="apply-role-btn"
                   :disabled="sameIdentifierCount(row) === 0"
                   :title="applyRoleTitle(row)"

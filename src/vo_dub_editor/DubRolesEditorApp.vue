@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
             >
                 <template #after>
                     <Button
-                        label="Seed from dataset" size="small" text
+                        label="Seed from dataset"
                         :icon="seeding ? 'pi pi-spin pi-spinner' : 'pi pi-database'"
                         :disabled="seeding"
                         title="Add every distinct speaker tag from vo_dataset.csv that isn't a role here yet"
@@ -364,7 +364,6 @@ onBeforeUnmount(() => {
                     />
                     <Button
                         icon="pi pi-microphone"
-                        size="small"
                         title="Pick a speaker from the preset gallery"
                         @click="openSpeakerPicker(code, entry)"
                     />

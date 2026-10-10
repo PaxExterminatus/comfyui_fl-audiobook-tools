@@ -109,9 +109,9 @@ onBeforeUnmount(() => clearInterval(pollTimer));
   <div class="vo-dub-panel">
     <div class="vo-dub-toolbar">
       <InputText v-model="root" class="vo-dub-root-input" placeholder="VO dub project root (holds vo_dataset.csv)" @change="loadTree()" />
-      <Button label="Browse..." size="small" @click="openBrowse" />
-      <Button label="Roles" size="small" :disabled="!root" title="Assign a voice preset to each character tag" @click="openRoles" />
-      <Button icon="pi pi-refresh" size="small" text title="Re-scan" @click="loadTree" />
+      <Button label="Browse..." @click="openBrowse" />
+      <Button label="Roles" :disabled="!root" title="Assign a voice preset to each character tag" @click="openRoles" />
+      <Button icon="pi pi-refresh" title="Re-scan" @click="loadTree" />
     </div>
 
     <div class="vo-dub-buckets">

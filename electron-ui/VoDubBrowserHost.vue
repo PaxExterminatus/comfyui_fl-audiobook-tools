@@ -8,10 +8,16 @@ import VoDubBrowserPanel from "../src/vo_dub_editor/VoDubBrowserPanel.vue";
 import { openBrowseDialog } from "../src/browse_dialog/main.js";
 import { useRouter } from "vue-router";
 import { renderApi, makeWidget } from "./apis.js";
-import { rootStore } from "./root_store_instance.js";
 
 const node = { properties: {}, setDirtyCanvas: () => {} };
-const projectRootWidget = makeWidget(rootStore.getCurrentModeRoot());
+/*
+ Seeded empty, not from the shell's rootStore -- VoDubBrowserPanel.vue owns
+ its own root persistence (its own localStorage key, recalled on mount) and
+ syncs it back into this widget itself. Seeding from rootStore here used to
+ shadow that recall whenever rootStore held a stale/wrong value (see
+ [[project-electron-ui-root-field]]).
+*/
+const projectRootWidget = makeWidget();
 
 const router = useRouter();
 const openLineEditorWithRender = ({ root: r, bucket }) =>

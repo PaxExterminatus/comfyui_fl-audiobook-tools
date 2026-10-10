@@ -174,6 +174,7 @@ export function useVoDubRender(ctx) {
             const dryOutputPath = ctx.dryFilePath?.(row) || "";
 
             await props.renderApi.renderRow({
+                root: props.root,
                 audioKey: row.audio_key,
                 speaker,
                 instruct,

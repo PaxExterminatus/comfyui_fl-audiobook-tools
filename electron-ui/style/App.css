@@ -55,25 +55,11 @@
     font-weight: 700;
     cursor: pointer;
     line-height: 1;
+    margin-left: auto;
 }
 #help-btn:hover {
     color: #fff;
     border-color: #666;
-}
-#project-root-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-}
-#vo-dub-root-input {
-    background: #18181b;
-    border: 1px solid #444;
-    color: #eee;
-    padding: 4px 8px;
-    border-radius: 4px;
-    width: 300px;
-    font-size: 12px;
 }
 #main-content {
     flex: 1;

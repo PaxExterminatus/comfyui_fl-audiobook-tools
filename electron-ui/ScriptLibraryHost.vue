@@ -12,10 +12,14 @@ import ScriptLibraryPanel from "../src/script_library/ScriptLibraryPanel.vue";
 import { useRouter } from "vue-router";
 import { openBrowseDialog } from "../src/browse_dialog/main.js";
 import { revoiceApi, makeWidget } from "./apis.js";
-import { rootStore } from "./root_store_instance.js";
 
 const node = { properties: {}, _flCheckedItems: [], setDirtyCanvas: () => {} };
-const folderWidget = makeWidget(rootStore.getCurrentModeRoot());
+/*
+ Seeded empty, not from the shell's rootStore -- ScriptLibraryPanel.vue owns
+ its own root persistence (its own localStorage key, recalled on mount) and
+ syncs it back into this widget itself. See [[project-electron-ui-root-field]].
+*/
+const folderWidget = makeWidget();
 const actWidget = makeWidget();
 const filterWidget = makeWidget("_speakers.txt");
 const scriptFileWidget = makeWidget();

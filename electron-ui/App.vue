@@ -27,30 +27,25 @@ const MODES = {
     voicing: {
         label: "Озвучка",
         help: "ScriptLibraryPanel",
-        placeholder: "Voicing project folder (holds act/script .txt files)",
     },
     dubbing: {
         label: "Дубляж",
         help: "VoDubBrowserPanel",
-        placeholder: "Dub project folder (holds vo_dataset.csv)",
     },
 };
 
 const currentMode = computed(() => (route.name === "dubbing" ? "dubbing" : "voicing"));
 
 /*
- The store keeps its own notion of mode because each mode has its own saved
- root and its own recent-folder list. The route is the source of truth, so
- push the change down rather than letting the two drift.
+ The store keeps its own notion of mode because each mode has its own
+ recent-folder list (not yet surfaced in this shell -- see root_store.js's
+ getRecent/rememberCurrent). The route is the source of truth, so push the
+ change down rather than letting the two drift. Each panel (Script
+ Library, VO Dub Browser) owns and persists its OWN project root itself
+ (its own localStorage key, recalled on mount) -- this shell no longer
+ tracks or displays a root of its own, see [[project-electron-ui-root-field]].
 */
 watch(currentMode, (mode) => rootStore.setCurrentMode(mode), { immediate: true });
-
-const rootValue = computed(() => rootStore.getCurrentModeRoot() || "");
-const placeholder = computed(() => MODES[currentMode.value].placeholder);
-
-function onRootInput(event) {
-    rootStore.setCurrentModeRoot(event.target.value);
-}
 
 function openHelp() {
     ensureStylesLinked(import.meta.url);
@@ -93,17 +88,6 @@ function openHelp() {
       </div>
 
       <button id="help-btn" type="button" title="Справка по текущему режиму" @click="openHelp">?</button>
-
-      <div id="project-root-container">
-        <span style="font-size: 12px; color: #999;">VO-Dub Root:</span>
-        <input
-            id="vo-dub-root-input"
-            type="text"
-            :value="rootValue"
-            :placeholder="placeholder"
-            @input="onRootInput"
-        />
-      </div>
     </div>
 
     <div id="main-content">

@@ -16,11 +16,19 @@
     --font-lg: 14px;
 }
 
+/*
+ ---- Shared type vocabulary ----
+ A small, closed set of classes used by structural/semantic ROLE across
+ every editor, instead of one bespoke class per component per element.
+ A visual difference between two call sites is a modifier combined with
+ one of these (e.g. "row space-between", a --grid-min override), never a
+ new class -- see memory/project_css_refactor.md's "max-collapse, no
+ per-context variants" rule.
+*/
+
 .w100p {
     width: 100%;
 }
-
-/* ---- Placeholders ---- */
 
 .ellipsis {
     overflow: hidden;
@@ -28,48 +36,124 @@
     white-space: nowrap;
 }
 
-.header-status {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 0 0 auto;
-    font-size: var(--font-sm);
-    opacity: 0.75;
-    max-width: 260px;
-}
-
-.dialog-header-row {
+.row {
     display: flex;
     align-items: center;
     gap: 6px;
-    width: 100%;
+    flex-wrap: wrap;
 }
 
-.dialog-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 600;
-    font-size: var(--font-lg);
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.spacer {
+    flex: 1 1 auto;
+}
+
+.shrink-0 {
+    flex: 0 0 auto;
+}
+
+.grow {
     flex: 1;
 }
 
-.catalog-option-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: var(--font-md);
+.divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--border-subtle);
+    margin: 0 4px;
+    flex: 0 0 auto;
 }
 
-.catalog-option-sublabel {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 10.5px;
-    opacity: 0.55;
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-/* ---- Global rules ---- */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--grid-min, 260px), 1fr));
+    gap: 10px;
+    max-height: 74vh;
+    overflow-y: auto;
+    align-items: start;
+}
+
+.panel {
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--bg-recessed);
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.card {
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--bg-recessed);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title {
+    font-weight: 600;
+}
+
+.muted {
+    opacity: 0.65;
+    font-size: var(--font-sm);
+}
+
+.mono {
+    font-family: monospace;
+}
+
+.pill {
+    font-size: var(--font-xs);
+    padding: 1px 8px;
+    border-radius: 100px;
+    background: var(--overlay-soft);
+}
+
+.avatar {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: #ededed;
+    text-shadow: 0 1px 2px #121212;
+}
+
+.text-warning {
+    color: var(--color-warning);
+}
+
+.text-active {
+    color: var(--color-active);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+/* ---- Global rules no single component's scoped style can own ---- */
 
 .role-info-popover {
     position: fixed;
@@ -83,26 +167,13 @@
     box-shadow: 0 8px 24px #121212;
 }
 
-.role-info-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 2px 0;
+.role-info-btn {
+    cursor: help;
+    opacity: 0.7;
 }
 
-.role-info-key {
-    opacity: 0.6;
-}
-
-.line-controls-row {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.speaker-group {
-    flex: 0 0 auto;
+.row-checkbox {
+    cursor: pointer;
 }
 
 .fl-textarea {
@@ -116,26 +187,6 @@
     color: inherit;
     font-family: inherit;
     padding: 6px 8px;
-}
-
-.instruct-group {
-    flex: 1 1 160px;
-    min-width: 140px;
-}
-
-.instruct-undo-btn {
-    flex: 0 0 auto;
-}
-
-.role-info-btn {
-    cursor: help;
-    opacity: 0.7;
-}
-
-.instruct-desc {
-    font-size: var(--font-sm);
-    opacity: 0.7;
-    padding-left: 22px;
 }
 
 /* ---- PrimeVue overrides ---- */

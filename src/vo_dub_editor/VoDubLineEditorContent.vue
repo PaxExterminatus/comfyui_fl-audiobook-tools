@@ -28,6 +28,8 @@ import { useVoDubEffects } from "./composables/useVoDubEffects.js";
 import { useVoDubPlayers } from "./composables/useVoDubPlayers.js";
 import { useVoDubRender } from "./composables/useVoDubRender.js";
 import { useVoDubRowApi } from "./composables/useVoDubRowApi.js";
+import { statusColorClass } from "../shared/row_status.js";
+import { levelColorClass } from "../shared/level_color.js";
 
 const props = defineProps({
   root: { type: String, required: true },
@@ -191,7 +193,7 @@ watch(visible, (v) => { if (!v) close(); });
 <template>
   <div class="fl-vo-dub-line-editor-content">
     <StickyPanel class="vo-dub-editor-controls">
-          <div class="vo-dub-filters">
+          <div class="row">
             <InputText v-model="searchText" placeholder="Search text or audio_key..." class="vo-dub-search"/>
             <RowFilterBar
               :statusOptions="STATUS_TOGGLE_OPTIONS"
@@ -204,18 +206,18 @@ watch(visible, (v) => { if (!v) close(); });
               @clear="clearFilters"
             />
             <Button icon="pi pi-refresh" title="Re-scan this bucket" @click="loadRows" />
-            <span class="vo-dub-editor-status">{{ loading ? "Loading..." : status }}</span>
+            <span class="vo-dub-editor-status muted ellipsis">{{ loading ? "Loading..." : status }}</span>
           </div>
 
-      <div class="actions-row">
-        <div class="vo-dub-pager-inline">
+      <div class="actions">
+        <div class="row">
           <Button
               label="◀"
               :disabled="currentPage === 0"
               title="Previous page"
               @click="currentPage--"
           />
-          <span class="vo-dub-pager-label">
+          <span class="vo-dub-pager-label muted">
             {{ currentPage + 1 }} / {{ pageCount }} ({{ visibleRows.length }})
           </span>
           <Button
@@ -226,7 +228,7 @@ watch(visible, (v) => { if (!v) close(); });
           />
         </div>
 
-        <span class="actions-divider" />
+        <span class="divider" />
 
         <Button label="´ Stress mark" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark(setStatus)"/>
 
@@ -248,16 +250,16 @@ watch(visible, (v) => { if (!v) close(); });
       </div>
     </StickyPanel>
 
-    <div class="vo-dub-rows" :style="{ fontSize: `${fontSizePx}px` }">
+    <div class="vo-dub-rows list" :style="{ fontSize: `${fontSizePx}px` }">
       <div
           v-for="row in pagedRows" :key="row.audio_key"
-          class="vo-dub-row"
+          class="vo-dub-row card"
           :class="{ 'row-playing': sequentialPlayingKey === row.audio_key, 'row-issue': manuallyIssue(row) }"
           :ref="(el) => setRowRef(row.audio_key, el)"
       >
-        <div class="vo-dub-row-head">
-          <span class="vo-dub-key">{{ row.audio_key }}</span>
-          <span :class="['vo-dub-status-pill', `status-${row.status}`]">{{ STATUS_LABELS[row.status] }}</span>
+        <div class="row">
+          <span class="vo-dub-key mono title">{{ row.audio_key }}</span>
+          <span class="pill" :class="statusColorClass(row.status)">{{ STATUS_LABELS[row.status] }}</span>
           <Button
               v-if="hasRuTake(row)"
               class="vo-dub-done-btn"
@@ -285,8 +287,8 @@ watch(visible, (v) => { if (!v) close(); });
         </div>
 
         <template v-else>
-          <div class="vo-dub-players">
-            <div class="vo-dub-duration-line">
+          <div class="vo-dub-players list">
+            <div class="vo-dub-duration-line row">
               <span class="vo-dub-duration-en">{{ enDurationText(row) }}</span>
               <span class="vo-dub-duration-arrow">→</span>
               <span class="vo-dub-duration-ru">
@@ -294,7 +296,8 @@ watch(visible, (v) => { if (!v) close(); });
               </span>
               <span
                   v-if="durationBadge(row)"
-                  :class="['vo-dub-duration-delta', `badge-${durationBadge(row).level}`]"
+                  class="vo-dub-duration-delta"
+                  :class="levelColorClass(durationBadge(row).level)"
               >{{ durationBadge(row).pctText }}</span>
 
               <span
@@ -309,8 +312,8 @@ watch(visible, (v) => { if (!v) close(); });
             </div>
 
             <div class="vo-dub-players-row">
-              <div class="vo-dub-player">
-                <WaveformCanvas :src="audioUrl('audio_en', row.audio_key)" class="vo-dub-waveform" />
+              <div class="vo-dub-player list">
+                <WaveformCanvas :src="audioUrl('audio_en', row.audio_key)" />
                 <audio
                     class="w100p"
                     controls preload="none"
@@ -331,8 +334,8 @@ watch(visible, (v) => { if (!v) close(); });
                   @click="playBoth(row)"
               />
 
-              <div class="vo-dub-player">
-                <WaveformCanvas v-if="hasRuTake(row)" :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])" class="vo-dub-waveform" />
+              <div class="vo-dub-player list">
+                <WaveformCanvas v-if="hasRuTake(row)" :src="audioUrl('audio_ru', row.audio_key, cacheBust[row.audio_key])" />
                 <audio
                     class="w100p"
                     v-if="hasRuTake(row)"
@@ -343,11 +346,11 @@ watch(visible, (v) => { if (!v) close(); });
                     @pause="onTrackPaused(row, 'ru')"
                     @ended="onTrackPaused(row, 'ru')"
                 />
-                <span v-else class="vo-dub-no-take">not rendered yet</span>
+                <span v-else class="vo-dub-no-take muted">not rendered yet</span>
               </div>
             </div>
 
-            <div class="vo-dub-players-footer">
+            <div class="vo-dub-players-footer actions">
               <Button
                   v-if="props.renderApi"
                   class="vo-dub-render-btn"
@@ -360,7 +363,6 @@ watch(visible, (v) => { if (!v) close(); });
               />
               <Button
                   v-if="props.renderApi"
-                  class="vo-dub-use-en-btn"
                   icon="pi pi-arrow-right"
                   label="Use EN"
                   :disabled="renderingKeys.has(row.audio_key) || !row.english"
@@ -386,7 +388,7 @@ watch(visible, (v) => { if (!v) close(); });
           <LineRowEditor :row="row">
             <template #leading>
               <span
-                  class="vo-dub-identifier"
+                  class="vo-dub-identifier ellipsis mono"
                   title="Identifier extracted from the game's own resources (vo_dataset.csv's speaker column)"
               >{{ row.speaker_tag || "—" }}</span>
               <Button
@@ -400,7 +402,7 @@ watch(visible, (v) => { if (!v) close(); });
 
             <template #trailing>
               <label
-                  class="vo-dub-use-original-label"
+                  class="vo-dub-use-original-label row"
                   title="Use this row's own EN take as the voice-cloning sample for its next render."
               >
                 <Checkbox
@@ -413,13 +415,13 @@ watch(visible, (v) => { if (!v) close(); });
             </template>
 
             <template #above-text>
-              <div class="vo-dub-english">{{ row.english }}</div>
+              <div class="vo-dub-english muted">{{ row.english }}</div>
             </template>
           </LineRowEditor>
         </template>
       </div>
 
-      <div v-if="!visibleRows.length" class="vo-dub-empty">No rows match this filter.</div>
+      <div v-if="!visibleRows.length" class="vo-dub-empty muted">No rows match this filter.</div>
     </div>
   </div>
 
@@ -456,15 +458,138 @@ watch(visible, (v) => { if (!v) close(); });
   />
 </template>
 
-<style scoped src="../style/VoDubLineEditor.css"></style>
-
 <style scoped>
+/*
+ This component's own layout details -- sizes, gaps and one-off accents
+ that aren't a pattern repeated across other components, so they stay
+ here rather than joining the shared vocabulary in src/style/app.css.
+ Combined with that vocabulary's classes in the template (e.g.
+ class="vo-dub-row card"), not a replacement for it.
+*/
+.vo-dub-editor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vo-dub-search {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.vo-dub-pager-label {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+.vo-dub-rows {
+  gap: 10px;
+  padding: 4px 2px 20px;
+}
+.vo-dub-key {
+  font-size: var(--font-sm);
+}
+.vo-dub-unsupported-note {
+  font-size: var(--font-sm);
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--overlay-soft);
+  border-left: 2px solid var(--color-warning);
+}
+.vo-dub-players {
+  gap: 4px;
+}
+.vo-dub-duration-line {
+  font-size: var(--font-xs);
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+.vo-dub-duration-en {
+  color: var(--text-muted, #94a3b8);
+  font-variant-numeric: tabular-nums;
+}
+.vo-dub-duration-arrow {
+  opacity: 0.5;
+}
+.vo-dub-duration-ru {
+  color: var(--text, #e2e8f0);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.vo-dub-duration-delta {
+  font-weight: 600;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
 .vo-dub-similarity-slot {
   margin-left: auto;
   display: flex;
   align-items: center;
 }
+.vo-dub-players-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.vo-dub-player {
+  gap: 2px;
+  min-width: 0;
+}
+.play-both-btn {
+  justify-self: center;
+}
+.vo-dub-no-take {
+  font-style: italic;
+}
+.vo-dub-players-footer {
+  padding-top: 2px;
+}
+.vo-dub-identifier {
+  flex: 0 0 auto;
+  max-width: 220px;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  opacity: 0.9;
+  padding: 2px 6px;
+  background: var(--overlay-soft);
+  border-radius: 4px;
+}
+.vo-dub-use-original-label {
+  flex: 0 0 auto;
+  font-size: var(--font-xs);
+  opacity: 0.75;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-subtle);
+  margin-left: 4px;
+}
+.vo-dub-use-original-label:hover {
+  opacity: 1;
+}
+.vo-dub-english {
+  font-style: italic;
+}
+.vo-dub-empty {
+  padding: 16px;
+  text-align: center;
+}
 
+/*
+ Interaction-state styling with no equivalent in the shared vocabulary,
+ plus a one-off override of a shared component's internals for this
+ context only -- both genuine exceptions, not duplicated structural
+ patterns.
+*/
+.vo-dub-row.row-playing {
+  background: #242935;
+}
+.play-both-btn.playing {
+  color: var(--color-active);
+}
+.vo-dub-render-btn.stale {
+  color: var(--color-warning);
+}
 .vo-dub-similarity-slot :deep(.compact-circle) {
   width: 32px;
   height: 32px;

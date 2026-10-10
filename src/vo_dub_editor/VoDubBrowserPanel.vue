@@ -106,16 +106,21 @@ onBeforeUnmount(() => clearInterval(pollTimer));
 </script>
 
 <template>
-  <div class="vo-dub-panel">
-    <div class="vo-dub-toolbar">
+  <div class="vo-dub-panel list">
+    <div class="vo-dub-toolbar actions">
       <InputText v-model="root" class="vo-dub-root-input" placeholder="VO dub project root (holds vo_dataset.csv)" @change="loadTree()" />
       <Button label="Browse..." @click="openBrowse" />
       <Button label="Roles" :disabled="!root" title="Assign a voice preset to each character tag" @click="openRoles" />
       <Button icon="pi pi-refresh" title="Re-scan" @click="loadTree" />
     </div>
 
-    <div class="vo-dub-buckets">
-      <div v-for="b in buckets" :key="b.bucket" class="vo-dub-bucket-row" :class="{ 'has-issues': b.issue > 0 }" @click="openBucket(b)">
+    <div class="vo-dub-buckets panel">
+      <div
+          v-for="b in buckets" :key="b.bucket"
+          class="vo-dub-bucket-row row"
+          :class="{ 'has-issues': b.issue > 0 }"
+          @click="openBucket(b)"
+      >
         <InlineMessage severity="secondary">{{ b.bucket }} {{ b.count }}</InlineMessage>
 
         <template v-for="p in STATUS_PILLS" :key="p.key">
@@ -126,8 +131,39 @@ onBeforeUnmount(() => clearInterval(pollTimer));
       </div>
     </div>
 
-    <div class="vo-dub-status">{{ loading ? "Loading..." : status }}</div>
+    <div class="vo-dub-status muted">{{ loading ? "Loading..." : status }}</div>
   </div>
 </template>
 
-<style scoped src="../style/VoDubBrowserPanel.css"></style>
+<style scoped>
+.vo-dub-panel {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  gap: 5px;
+}
+.vo-dub-root-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.vo-dub-buckets {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vo-dub-bucket-row {
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-md);
+}
+.vo-dub-status {
+  flex: 0 0 auto;
+}
+.vo-dub-bucket-row:hover {
+  background: var(--overlay-soft);
+}
+</style>
+

@@ -145,12 +145,12 @@ onMounted(() => load(props.startPath || ""));
             :font-size-decrease="decreaseListFontSize" :font-size-increase="increaseListFontSize"
         />
 
-        <div class="browse-toolbar">
+        <div class="browse-toolbar row">
             <Button icon="pi pi-arrow-up" title="Up one level" @click="goUp" />
             <InputText
                 v-model="pathInputValue"
                 placeholder="Path -- press Enter to jump here"
-                class="browse-path-input"
+                class="browse-path-input spacer"
                 @keydown.enter="onPathEnter"
             />
         </div>
@@ -158,26 +158,63 @@ onMounted(() => load(props.startPath || ""));
         <Message v-if="errorText" severity="error" :closable="false">{{ errorText }}</Message>
 
         <div class="browse-list" :style="{ fontSize: `${listFontSizePx}px` }">
-            <div v-if="loading" class="browse-row browse-row-note">Loading...</div>
+            <div v-if="loading" class="browse-row browse-row-note ellipsis">Loading...</div>
             <template v-else>
                 <div
                     v-for="entry in entries"
                     :key="`${entry.type}:${entry.name}`"
-                    class="browse-row"
+                    class="browse-row ellipsis"
                     :class="{ 'browse-row-selected': entry.type === 'file' && entry.path === selectedFilePath }"
                     @click="onRowClick(entry)"
                 >
                     {{ entry.icon }} {{ entry.name }}
                 </div>
-                <div v-if="!entries.length && !errorText" class="browse-row browse-row-note">(empty)</div>
+                <div v-if="!entries.length && !errorText" class="browse-row browse-row-note ellipsis">(empty)</div>
             </template>
         </div>
 
-        <div class="browse-dialog-footer">
+        <div class="browse-dialog-footer actions">
             <Button label="Cancel" severity="secondary" @click="close" />
             <Button :label="selectLabel" :disabled="selectDisabled" @click="confirmSelect" />
         </div>
     </div>
 </template>
 
-<style scoped src="../style/BrowseDialogApp.css"></style>
+<style scoped>
+.browse-toolbar {
+  margin-bottom: 8px;
+}
+.browse-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 280px;
+  max-height: 50vh;
+}
+.browse-dialog-footer {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/*
+ Interaction states on the file/folder rows -- genuinely needs real CSS
+ (hover/selected are pseudo-class-driven, no inline-style equivalent),
+ kept minimal and local rather than promoted to a shared class since
+ this exact row-list interaction isn't repeated elsewhere.
+*/
+.browse-row {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.browse-row:not(.browse-row-note):hover {
+  background: var(--overlay-soft);
+}
+.browse-row-selected {
+  background: #2d3a56;
+}
+.browse-row-note {
+  opacity: 0.6;
+  cursor: default;
+}
+</style>
+

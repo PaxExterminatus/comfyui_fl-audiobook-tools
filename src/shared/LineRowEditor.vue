@@ -58,10 +58,10 @@ function onPaste(event) {
 </script>
 
 <template>
-  <div class="line-controls-row">
+  <div class="row">
     <slot name="leading" />
 
-    <InputGroup class="speaker-group">
+    <InputGroup class="speaker-group shrink-0">
       <InputGroupAddon><i class="pi pi-address-book" /></InputGroupAddon>
       <RoleDropdown
           :model-value="api.getSpeaker(row)"
@@ -82,7 +82,7 @@ function onPaste(event) {
       <InputGroupAddon><i class="pi pi-book" /></InputGroupAddon>
       <Button
           icon="pi pi-undo"
-          class="instruct-undo-btn"
+          class="instruct-undo-btn shrink-0"
           :disabled="!api.canUndoInstruct(row)"
           :title="api.undoInstructTitle(row)"
           @click="api.undoInstruct(row)"
@@ -110,11 +110,11 @@ function onPaste(event) {
     <slot name="trailing" />
   </div>
 
-  <div v-if="api.instructNoteFor(row)" class="instruct-desc">↳ {{ api.instructNoteFor(row) }}</div>
+  <div v-if="api.instructNoteFor(row)" class="instruct-desc muted">↳ {{ api.instructNoteFor(row) }}</div>
 
   <slot name="above-text" />
 
-  <div class="text-row">
+  <div class="text-row row">
     <Button
         icon="pi pi-pencil"
         class="text-edit-btn"
@@ -145,13 +145,17 @@ function onPaste(event) {
 </template>
 
 <style scoped>
+.instruct-group {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+.instruct-desc {
+  padding-left: 22px;
+}
 .text-row {
-  display: flex;
   align-items: flex-start;
-  gap: 6px;
   width: 100%;
 }
-
 .text-edit-btn {
   flex: 0 0 auto;
   margin-top: 4px;

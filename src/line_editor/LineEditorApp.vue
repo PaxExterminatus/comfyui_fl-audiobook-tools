@@ -32,4 +32,17 @@ watch(visible, (v) => {
     </Dialog>
 </template>
 
-<style scoped src="../style/LineEditorApp.css"></style>
+<style scoped>
+.line-editor-dialog {
+  height: 92vh;
+}
+.line-editor-dialog :deep(.p-dialog-header) {
+  padding: 8px 12px;
+}
+.line-editor-dialog :deep(.p-dialog-content) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+</style>

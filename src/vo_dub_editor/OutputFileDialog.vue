@@ -95,8 +95,8 @@ function onApply() {
           </label>
         </div>
       </InputGroup>
-      <div v-if="localNormalize" class="ofd-target-row">
-        <span class="ofd-target-label">Target level:</span>
+      <div v-if="localNormalize" class="ofd-target-row row">
+        <span class="muted">Target level:</span>
         <InputNumber
             v-model="localNormalizeDb"
             :min="-30"
@@ -140,18 +140,9 @@ function onApply() {
 
 <style scoped>
 .ofd-target-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-top: 8px;
   padding-left: 4px;
 }
-
-.ofd-target-label {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-
 .ofd-target-number {
   width: 8rem;
 }

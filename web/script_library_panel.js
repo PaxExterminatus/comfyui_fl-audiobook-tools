@@ -1,20 +1,18 @@
-import { _ as ne, k as E, o as ae, T as le, c as h, b as m, u as C, d as p, i as R, F as I, r as z, j as ue, t as x, S as B, l as de, J as D, a as v, s as w, n as A, U as j, m as pe, v as fe, x as he, P as ve } from "./styles_link.js";
-const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = { class: "tools-row" }, be = {
+import { _ as re, l as S, o as ce, L as ne, c as h, b as C, d as p, i as $, F as L, j as B, t as E, S as N, m as ae, r as le, A as T, a as g, n as W, M as A, p as de, v as ue, x as pe, P as fe, y as ve } from "./styles_link.js";
+const he = { class: "script-library-panel list" }, ge = { class: "actions" }, ke = { class: "actions" }, _e = { class: "tree panel" }, me = {
   key: 0,
-  class: "tree-empty"
-}, me = ["onClick"], Ce = ["checked", "onChange"], we = { class: "chevron" }, ye = { class: "act-name" }, Se = { class: "act-count" }, $e = ["onClick"], Ee = ["checked", "disabled", "title", "onChange"], Re = ["onClick"], xe = {
+  class: "tree-empty muted"
+}, be = ["onClick"], Ce = ["checked", "onChange"], we = { class: "chevron muted" }, ye = { class: "act-name title ellipsis" }, Se = { class: "act-count muted" }, $e = ["onClick"], Ee = ["checked", "disabled", "title", "onChange"], Re = ["onClick"], xe = {
   key: 0,
-  class: "row-icon",
   title: "Marked done / ready to release"
 }, Fe = ["title"], Le = {
   key: 1,
-  class: "row-icon",
   title: "Has line(s) marked as needing re-voice (edited, or a role's speaker was recast)"
 }, We = {
   key: 2,
-  class: "row-icon row-icon-dim",
+  class: "row-icon-dim",
   title: "Rendered audio already exists for this script"
-}, Ie = { class: "status-line" }, U = "FL_CosyVoice3.ScriptLibrary.lastFolder", Ae = 90, je = 3e3, Pe = "::", Oe = {
+}, Ae = { class: "status-line muted" }, D = "FL_CosyVoice3.ScriptLibrary.lastFolder", Ie = 3e3, Pe = "::", je = {
   __name: "ScriptLibraryPanel",
   props: {
     node: { type: Object, required: !0 },
@@ -41,128 +39,128 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
     openLineEditor: { type: Function, required: !0 },
     queueLineRevoice: { type: Function, required: !0 }
   },
-  setup(y) {
-    var T;
-    const i = y;
-    function l(e, s) {
-      return `${e}${Pe}${s}`;
+  setup(w) {
+    var q;
+    const r = w;
+    function l(e, o) {
+      return `${e}${Pe}${o}`;
     }
-    function F(e) {
+    function R(e) {
       try {
-        e && localStorage.setItem(U, e);
+        e && localStorage.setItem(D, e);
       } catch {
       }
     }
-    function L() {
+    function x() {
       try {
-        return localStorage.getItem(U) || "";
+        return localStorage.getItem(D) || "";
       } catch {
         return "";
       }
     }
-    const n = E(i.folderWidget.value || ""), u = E(i.actWidget.value || ""), a = E([]), r = D(/* @__PURE__ */ new Set()), f = D(/* @__PURE__ */ new Set()), k = E(""), _ = E(((T = i.filterWidget) == null ? void 0 : T.value) ?? "");
-    function P() {
-      i.filterWidget && (_.value = i.filterWidget.value ?? "");
+    const n = S(r.folderWidget.value || ""), d = S(r.actWidget.value || ""), a = S([]), c = T(/* @__PURE__ */ new Set()), f = T(/* @__PURE__ */ new Set()), _ = S(""), m = S(((q = r.filterWidget) == null ? void 0 : q.value) ?? "");
+    function I() {
+      r.filterWidget && (m.value = r.filterWidget.value ?? "");
     }
-    const M = de(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
-    function d(e) {
-      k.value = e, i.node.setDirtyCanvas(!0, !0);
+    const V = ae(() => n.value ? `📁 ${n.value}` : "📁 Click to browse for a project folder");
+    function u(e) {
+      _.value = e, r.node.setDirtyCanvas(!0, !0);
     }
-    function V() {
+    function M() {
       const e = [];
-      return a.value.forEach((s) => s.scripts.forEach((t) => {
-        r.has(l(s.act, t)) && e.push({ act: s.act, file: t });
+      return a.value.forEach((o) => o.scripts.forEach((s) => {
+        c.has(l(o.act, s)) && e.push({ act: o.act, file: s });
       })), e;
     }
-    function H() {
-      i.node.properties = i.node.properties || {}, i.node.properties.checkedScripts = Array.from(r);
+    function U() {
+      r.node.properties = r.node.properties || {}, r.node.properties.checkedScripts = Array.from(c);
     }
-    function Y() {
-      var s;
-      const e = (s = i.node.properties) == null ? void 0 : s.checkedScripts;
-      Array.isArray(e) && (r.clear(), e.forEach((t) => {
-        typeof t == "string" && r.add(t);
+    function z() {
+      var o;
+      const e = (o = r.node.properties) == null ? void 0 : o.checkedScripts;
+      Array.isArray(e) && (c.clear(), e.forEach((s) => {
+        typeof s == "string" && c.add(s);
       }));
     }
-    function g() {
-      H(), i.node._flCheckedItems = V();
-      const e = a.value.reduce((t, o) => t + o.scripts.length, 0), s = a.value.length && !a.value.every((t) => t.filter_applied !== !1) ? ` (some acts have no "${_.value}" files -- showing all .txt there)` : "";
-      d(`${a.value.length} act(s), ${e} script(s)${s} | ${r.size} checked`);
+    function k() {
+      U(), r.node._flCheckedItems = M();
+      const e = a.value.reduce((s, t) => s + t.scripts.length, 0), o = a.value.length && !a.value.every((s) => s.filter_applied !== !1) ? ` (some acts have no "${m.value}" files -- showing all .txt there)` : "";
+      u(`${a.value.length} act(s), ${e} script(s)${o} | ${c.size} checked`);
     }
-    function G() {
+    function H() {
       let e = !1;
-      return a.value.forEach(({ act: s, ready_scripts: t }) => {
-        (t || []).forEach((o) => {
-          const c = l(s, o);
-          r.has(c) && (r.delete(c), e = !0);
+      return a.value.forEach(({ act: o, ready_scripts: s }) => {
+        (s || []).forEach((t) => {
+          const i = l(o, t);
+          c.has(i) && (c.delete(i), e = !0);
         });
       }), e;
     }
-    function O(e, s, t) {
-      const o = s.filter(($) => !t.has($));
-      if (!o.length) return "none";
-      const c = o.filter(($) => r.has(l(e, $))).length;
-      return c === 0 ? "none" : c === o.length ? "all" : "some";
+    function P(e, o, s) {
+      const t = o.filter((v) => !s.has(v));
+      if (!t.length) return "none";
+      const i = t.filter((v) => c.has(l(e, v))).length;
+      return i === 0 ? "none" : i === t.length ? "all" : "some";
     }
     function b(e) {
       return new Set(e.ready_scripts || []);
     }
-    function q(e) {
-      return e.scripts.filter((s) => r.has(l(e.act, s))).length;
+    function j(e) {
+      return e.scripts.filter((o) => c.has(l(e.act, o))).length;
     }
-    function J(e, s) {
-      e && (e.indeterminate = O(s.act, s.scripts, b(s)) === "some");
+    function Y(e, o) {
+      e && (e.indeterminate = P(o.act, o.scripts, b(o)) === "some");
     }
     function K(e) {
-      u.value = e, i.actWidget.value = e, f.has(e) ? f.delete(e) : f.add(e);
+      d.value = e, r.actWidget.value = e, f.has(e) ? f.delete(e) : f.add(e);
     }
-    function Q(e, s) {
-      const t = b(e);
-      s ? e.scripts.forEach((o) => {
-        t.has(o) || r.add(l(e.act, o));
-      }) : e.scripts.forEach((o) => r.delete(l(e.act, o))), g();
+    function G(e, o) {
+      const s = b(e);
+      o ? e.scripts.forEach((t) => {
+        s.has(t) || c.add(l(e.act, t));
+      }) : e.scripts.forEach((t) => c.delete(l(e.act, t))), k();
     }
-    function X(e, s, t) {
-      t ? r.add(l(e, s)) : r.delete(l(e, s)), g();
+    function J(e, o, s) {
+      s ? c.add(l(e, o)) : c.delete(l(e, o)), k();
     }
-    function Z(e, s) {
-      u.value = e, i.actWidget.value = e, i.scriptFileWidget.value = s;
+    function Q(e, o) {
+      d.value = e, r.actWidget.value = e, r.scriptFileWidget.value = o;
+    }
+    function X() {
+      a.value.forEach((e) => e.scripts.forEach((o) => {
+        (e.ready_scripts || []).includes(o) || c.add(l(e.act, o));
+      })), k();
+    }
+    function Z() {
+      c.clear(), k();
     }
     function ee() {
-      a.value.forEach((e) => e.scripts.forEach((s) => {
-        (e.ready_scripts || []).includes(s) || r.add(l(e.act, s));
-      })), g();
+      a.value.forEach((e) => e.scripts.forEach((o) => {
+        const s = l(e.act, o), t = (e.ready_scripts || []).includes(o);
+        c.has(s) ? c.delete(s) : t || c.add(s);
+      })), k();
     }
     function te() {
-      r.clear(), g();
-    }
-    function oe() {
-      a.value.forEach((e) => e.scripts.forEach((s) => {
-        const t = l(e.act, s), o = (e.ready_scripts || []).includes(s);
-        r.has(t) ? r.delete(t) : o || r.add(t);
-      })), g();
-    }
-    function se() {
-      i.openBrowseDialog({
+      r.openBrowseDialog({
         mode: "folder",
         startPath: n.value,
         onSelect: (e) => {
-          n.value = e, i.folderWidget.value = e, S();
+          n.value = e, r.folderWidget.value = e, y();
         }
       });
     }
-    function ie() {
+    function oe() {
       if (!n.value) {
-        d("Set a project folder first");
+        u("Set a project folder first");
         return;
       }
-      i.openRolesEditor({ root: n.value, suffix: _.value });
+      r.openRolesEditor({ root: n.value, suffix: m.value });
     }
-    function re(e, s) {
-      i.openLineEditor({
-        folder: pe(n.value, e),
-        filename: s,
-        suffix: _.value,
+    function se(e, o) {
+      r.openLineEditor({
+        folder: de(n.value, e),
+        filename: o,
+        suffix: m.value,
         /*
          Lets the editor's own header checkbox reflect/toggle this
          script's checked-for-queueing state without closing the editor.
@@ -170,9 +168,9 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
          crosses into another act.
         */
         checkedApi: {
-          isChecked: (t) => r.has(l(e, t)),
-          setChecked: (t, o) => {
-            o ? r.add(l(e, t)) : r.delete(l(e, t)), g();
+          isChecked: (s) => c.has(l(e, s)),
+          setChecked: (s, t) => {
+            t ? c.add(l(e, s)) : c.delete(l(e, s)), k();
           }
         },
         /*
@@ -188,65 +186,65 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
          script's _audio\lines\ folder (see LineEditorApp.vue's revoiceRow).
         */
         revoiceApi: {
-          revoiceLine: (t) => i.queueLineRevoice(i.node, { act: e, file: s, ...t })
+          revoiceLine: (s) => r.queueLineRevoice(r.node, { act: e, file: o, ...s })
         }
       });
     }
-    async function S() {
-      if (P(), !n.value) {
-        a.value = [], d("No project folder set -- click below to browse for one");
+    async function y() {
+      if (I(), !n.value) {
+        a.value = [], u("No project folder set -- click below to browse for one");
         return;
       }
       try {
-        const s = await (await fetch(`${B}/tree?path=${encodeURIComponent(n.value)}&suffix=${encodeURIComponent(_.value)}`)).json();
-        if (s.error) {
-          d(`Error: ${s.error}`);
+        const o = await (await fetch(`${N}/tree?path=${encodeURIComponent(n.value)}&suffix=${encodeURIComponent(m.value)}`)).json();
+        if (o.error) {
+          u(`Error: ${o.error}`);
           return;
         }
-        if (F(n.value), a.value = s.tree, (!u.value || !a.value.some((o) => o.act === u.value)) && (u.value = a.value.length ? a.value[0].act : "", i.actWidget.value = u.value), u.value && f.add(u.value), !i.scriptFileWidget.value && u.value) {
-          const o = a.value.find((c) => c.act === u.value);
-          o != null && o.scripts.length && (i.scriptFileWidget.value = o.scripts[0]);
+        if (R(n.value), a.value = o.tree, (!d.value || !a.value.some((t) => t.act === d.value)) && (d.value = a.value.length ? a.value[0].act : "", r.actWidget.value = d.value), d.value && f.add(d.value), !r.scriptFileWidget.value && d.value) {
+          const t = a.value.find((i) => i.act === d.value);
+          t != null && t.scripts.length && (r.scriptFileWidget.value = t.scripts[0]);
         }
-        const t = G();
-        g(), t && g();
+        const s = H();
+        k(), s && k();
       } catch (e) {
-        d(`Error: ${e}`);
+        u(`Error: ${e}`);
       }
     }
-    async function ce() {
+    async function ie() {
       if (!n.value) {
-        d("Set a project folder first");
+        u("Set a project folder first");
         return;
       }
       let e;
       try {
-        const c = await (await fetch(`${B}/pending_revoice?path=${encodeURIComponent(n.value)}&suffix=${encodeURIComponent(_.value)}`)).json();
-        if (c.error) {
-          d(`Error: ${c.error}`);
+        const i = await (await fetch(`${N}/pending_revoice?path=${encodeURIComponent(n.value)}&suffix=${encodeURIComponent(m.value)}`)).json();
+        if (i.error) {
+          u(`Error: ${i.error}`);
           return;
         }
-        e = c.scripts || [];
-      } catch (o) {
-        d(`Error: ${o}`);
+        e = i.scripts || [];
+      } catch (t) {
+        u(`Error: ${t}`);
         return;
       }
-      const s = e.reduce((o, c) => o + c.pending.length, 0);
-      if (!s) {
-        d("Nothing needs re-voicing");
+      const o = e.reduce((t, i) => t + i.pending.length, 0);
+      if (!o) {
+        u("Nothing needs re-voicing");
         return;
       }
-      let t = 0;
-      d(`Re-voicing 0/${s}...`);
-      for (const o of e)
-        for (const c of o.pending) {
+      let s = 0;
+      u(`Re-voicing 0/${o}...`);
+      for (const t of e)
+        for (const i of t.pending) {
           try {
-            await i.queueLineRevoice(i.node, {
-              act: o.act,
-              file: o.file,
-              linePosition: c.position,
-              speaker: c.speaker,
-              instruct: c.instruct,
-              text: c.text,
+            await r.queueLineRevoice(r.node, {
+              act: t.act,
+              file: t.file,
+              linePosition: i.position,
+              speaker: i.speaker,
+              instruct: i.instruct,
+              text: i.text,
               /*
                Same output-location pinning the line editor does (see
                LineEditorApp's revoiceRow): folder/base_name here come
@@ -260,169 +258,164 @@ const ge = { class: "script-library-panel" }, ke = { class: "tools-row" }, _e = 
                line_hashes_json so the re-voice doesn't depend on the
                graph having that output/input wired.
               */
-              folder: o.folder,
-              baseName: o.base_name,
-              contentHash: c.hash
+              folder: t.folder,
+              baseName: t.base_name,
+              contentHash: i.hash
             });
-          } catch ($) {
-            console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${o.act}/${o.file} position ${c.position}`, $);
+          } catch (v) {
+            console.error(`FL_CosyVoice3.ScriptLibrary: re-voice-all failed for ${t.act}/${t.file} position ${i.position}`, v);
           }
-          t++, d(`Re-voicing ${t}/${s}...`);
+          s++, u(`Re-voicing ${s}/${o}...`);
         }
-      d(`Re-voiced ${t}/${s} line(s)`), S();
+      u(`Re-voiced ${s}/${o} line(s)`), y();
     }
-    function N() {
-      if (Y(), P(), !n.value) {
-        const e = L();
-        e && (n.value = e, i.folderWidget.value = e);
+    function O() {
+      if (z(), I(), !n.value) {
+        const e = x();
+        e && (n.value = e, r.folderWidget.value = e);
       }
-      n.value ? S() : d("No project folder set -- click below to browse for one");
+      n.value ? y() : u("No project folder set -- click below to browse for one");
     }
-    let W = null;
-    return ae(() => {
-      const e = i.node.onConfigure;
-      i.node.onConfigure = function(t) {
-        const o = e ? e.apply(this, arguments) : void 0;
-        return N(), o;
+    let F = null;
+    return ce(() => {
+      const e = r.node.onConfigure;
+      r.node.onConfigure = function(s) {
+        const t = e ? e.apply(this, arguments) : void 0;
+        return O(), t;
       };
-      const s = i.folderWidget.callback;
-      i.folderWidget.callback = function(t) {
-        const o = s ? s.apply(this, arguments) : void 0;
-        return n.value = t, S(), o;
-      }, N(), W = setInterval(() => {
-        n.value && S();
-      }, je);
-    }), le(() => {
-      W && clearInterval(W);
-    }), (e, s) => (v(), h("div", ge, [
-      m(C(w), {
-        label: M.value,
-        title: n.value,
-        text: "",
-        class: "browse-button",
-        onClick: se
-      }, null, 8, ["label", "title"]),
-      p("div", ke, [
-        m(C(w), {
-          label: "🎭 Roles",
-          title: "Assign a real speaker preset to each role code (edits _roles.json)",
-          size: "small",
-          outlined: "",
-          class: "tool-btn",
-          onClick: ie
-        }),
-        m(C(w), {
-          label: "🔁 Re-voice pending",
-          title: "Re-voice every line across the whole project marked as needing it (stale or never voiced)",
-          size: "small",
-          outlined: "",
-          class: "tool-btn",
-          onClick: ce
-        })
-      ]),
-      p("div", _e, [
-        m(C(w), {
-          label: "☑ All",
-          title: "Check every script in every act (skips scripts marked ready)",
-          size: "small",
-          outlined: "",
-          class: "tool-btn",
-          onClick: ee
-        }),
-        m(C(w), {
-          label: "☐ None",
-          title: "Uncheck every script",
-          size: "small",
-          outlined: "",
-          class: "tool-btn",
+      const o = r.folderWidget.callback;
+      r.folderWidget.callback = function(s) {
+        const t = o ? o.apply(this, arguments) : void 0;
+        return n.value = s, y(), t;
+      }, O(), F = setInterval(() => {
+        n.value && y();
+      }, Ie);
+    }), ne(() => {
+      F && clearInterval(F);
+    }), (e, o) => {
+      const s = le("Button");
+      return g(), h("div", he, [
+        C(s, {
+          label: V.value,
+          title: n.value,
+          text: "",
+          class: "browse-button ellipsis w100p",
           onClick: te
-        }),
-        m(C(w), {
-          label: "⇄ Invert",
-          title: "Flip every script's checked state (skips scripts marked ready)",
-          size: "small",
-          outlined: "",
-          class: "tool-btn",
-          onClick: oe
-        })
-      ]),
-      p("div", {
-        class: "tree",
-        style: ue({ minHeight: `${Ae}px` })
-      }, [
-        a.value.length ? R("", !0) : (v(), h("div", be, "(no acts found)")),
-        (v(!0), h(I, null, z(a.value, (t) => (v(), h(I, {
-          key: t.act
-        }, [
-          p("div", {
-            class: A(["act-row", { "act-row-active": t.act === u.value }]),
-            onClick: (o) => K(t.act)
+        }, null, 8, ["label", "title"]),
+        p("div", ge, [
+          C(s, {
+            label: "🎭 Roles",
+            title: "Assign a real speaker preset to each role code (edits _roles.json)",
+            outlined: "",
+            class: "grow",
+            onClick: oe
+          }),
+          C(s, {
+            label: "🔁 Re-voice pending",
+            title: "Re-voice every line across the whole project marked as needing it (stale or never voiced)",
+            outlined: "",
+            class: "grow",
+            onClick: ie
+          })
+        ]),
+        p("div", ke, [
+          C(s, {
+            label: "☑ All",
+            title: "Check every script in every act (skips scripts marked ready)",
+            outlined: "",
+            class: "grow",
+            onClick: X
+          }),
+          C(s, {
+            label: "☐ None",
+            title: "Uncheck every script",
+            outlined: "",
+            class: "grow",
+            onClick: Z
+          }),
+          C(s, {
+            label: "⇄ Invert",
+            title: "Flip every script's checked state (skips scripts marked ready)",
+            outlined: "",
+            class: "grow",
+            onClick: ee
+          })
+        ]),
+        p("div", _e, [
+          a.value.length ? $("", !0) : (g(), h("div", me, "(no acts found)")),
+          (g(!0), h(L, null, B(a.value, (t) => (g(), h(L, {
+            key: t.act
           }, [
-            p("input", {
-              type: "checkbox",
-              class: "row-checkbox",
-              checked: O(t.act, t.scripts, b(t)) === "all",
-              ref_for: !0,
-              ref: (o) => J(o, t),
-              onClick: s[0] || (s[0] = j(() => {
-              }, ["stop"])),
-              onChange: (o) => Q(t, o.target.checked)
-            }, null, 40, Ce),
-            p("span", we, x(f.has(t.act) ? "▾" : "▸"), 1),
-            p("span", ye, x(t.act), 1),
-            p("span", Se, x(q(t) ? `${q(t)}/${t.scripts.length}` : t.scripts.length), 1)
-          ], 10, me),
-          f.has(t.act) ? (v(!0), h(I, { key: 0 }, z(t.scripts, (o) => (v(), h("div", {
-            key: o,
-            class: A(["script-row", { "script-row-active": t.act === u.value && y.scriptFileWidget.value === o }]),
-            onClick: (c) => Z(t.act, o)
-          }, [
-            p("input", {
-              type: "checkbox",
-              class: "row-checkbox",
-              checked: r.has(l(t.act, o)),
-              disabled: b(t).has(o),
-              title: b(t).has(o) ? "Marked ready to release -- unmark it in the editor (Done) to queue it again" : "",
-              onClick: s[1] || (s[1] = j(() => {
-              }, ["stop"])),
-              onChange: (c) => X(t.act, o, c.target.checked)
-            }, null, 40, Ee),
-            p("button", {
-              class: "edit-btn",
-              title: "Open the full-screen line-by-line editor",
-              onClick: j((c) => re(t.act, o), ["stop"])
-            }, "✏️", 8, Re),
-            b(t).has(o) ? (v(), h("span", xe, "✅")) : R("", !0),
-            p("span", {
-              class: A(["script-name", { "script-name-active": t.act === u.value && y.scriptFileWidget.value === o }]),
-              title: o
-            }, x(o), 11, Fe),
-            (t.pending_scripts || []).includes(o) ? (v(), h("span", Le, "⚠️")) : R("", !0),
-            (t.audio_scripts || []).includes(o) ? (v(), h("span", We, "🔊")) : R("", !0)
-          ], 10, $e))), 128)) : R("", !0)
-        ], 64))), 128))
-      ], 4),
-      p("div", Ie, x(k.value), 1)
-    ]));
+            p("div", {
+              class: W(["act-row row", { "act-row-active": t.act === d.value }]),
+              onClick: (i) => K(t.act)
+            }, [
+              p("input", {
+                type: "checkbox",
+                class: "row-checkbox",
+                checked: P(t.act, t.scripts, b(t)) === "all",
+                ref_for: !0,
+                ref: (i) => Y(i, t),
+                onClick: o[0] || (o[0] = A(() => {
+                }, ["stop"])),
+                onChange: (i) => G(t, i.target.checked)
+              }, null, 40, Ce),
+              p("span", we, E(f.has(t.act) ? "▾" : "▸"), 1),
+              p("span", ye, E(t.act), 1),
+              p("span", Se, E(j(t) ? `${j(t)}/${t.scripts.length}` : t.scripts.length), 1)
+            ], 10, be),
+            f.has(t.act) ? (g(!0), h(L, { key: 0 }, B(t.scripts, (i) => (g(), h("div", {
+              key: i,
+              class: W(["script-row row", { "script-row-active": t.act === d.value && w.scriptFileWidget.value === i }]),
+              onClick: (v) => Q(t.act, i)
+            }, [
+              p("input", {
+                type: "checkbox",
+                class: "row-checkbox",
+                checked: c.has(l(t.act, i)),
+                disabled: b(t).has(i),
+                title: b(t).has(i) ? "Marked ready to release -- unmark it in the editor (Done) to queue it again" : "",
+                onClick: o[1] || (o[1] = A(() => {
+                }, ["stop"])),
+                onChange: (v) => J(t.act, i, v.target.checked)
+              }, null, 40, Ee),
+              p("button", {
+                class: "edit-btn",
+                title: "Open the full-screen line-by-line editor",
+                onClick: A((v) => se(t.act, i), ["stop"])
+              }, "✏️", 8, Re),
+              b(t).has(i) ? (g(), h("span", xe, "✅")) : $("", !0),
+              p("span", {
+                class: W(["script-name ellipsis", { "script-name-active title": t.act === d.value && w.scriptFileWidget.value === i }]),
+                title: i
+              }, E(i), 11, Fe),
+              (t.pending_scripts || []).includes(i) ? (g(), h("span", Le, "⚠️")) : $("", !0),
+              (t.audio_scripts || []).includes(i) ? (g(), h("span", We, "🔊")) : $("", !0)
+            ], 10, $e))), 128)) : $("", !0)
+          ], 64))), 128))
+        ]),
+        p("div", Ae, E(_.value), 1)
+      ]);
+    };
   }
-}, qe = /* @__PURE__ */ ne(Oe, [["__scopeId", "data-v-cf1ee19b"]]);
-function Te({ node: y, folderWidget: i, actWidget: l, filterWidget: F, scriptFileWidget: L, openBrowseDialog: n, openRolesEditor: u, openLineEditor: a, queueLineRevoice: r }) {
-  fe(import.meta.url);
+}, Oe = /* @__PURE__ */ re(je, [["__scopeId", "data-v-47d07ce9"]]);
+function Be({ node: w, folderWidget: r, actWidget: l, filterWidget: R, scriptFileWidget: x, openBrowseDialog: n, openRolesEditor: d, openLineEditor: a, queueLineRevoice: c }) {
+  ue(import.meta.url);
   const f = document.createElement("div");
   f.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
-  const k = he(qe, {
-    node: y,
-    folderWidget: i,
+  const _ = pe(Oe, {
+    node: w,
+    folderWidget: r,
     actWidget: l,
-    filterWidget: F,
-    scriptFileWidget: L,
+    filterWidget: R,
+    scriptFileWidget: x,
     openBrowseDialog: n,
-    openRolesEditor: u,
+    openRolesEditor: d,
     openLineEditor: a,
-    queueLineRevoice: r
+    queueLineRevoice: c
   });
-  return k.use(ve, { ripple: !0 }), k.mount(f), { element: f, unmount: () => k.unmount() };
+  return _.use(fe, { ripple: !0 }), ve(_), _.mount(f), { element: f, unmount: () => _.unmount() };
 }
 export {
-  Te as mountScriptLibraryPanel
+  Be as mountScriptLibraryPanel
 };

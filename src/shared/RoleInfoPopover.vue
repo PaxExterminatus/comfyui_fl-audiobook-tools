@@ -5,9 +5,10 @@
  (LineEditorApp.vue's _roles.json entries and VoDubLineEditor.vue's
  _dub_roles.json entries don't share a shape), so it just renders
  whatever [key, value] pairs the caller's own field-extractor produced.
- `.role-info-popover`/`.role-info-row`/`.role-info-key`/`.role-info-value`
- live in src/style/app.css (forwarded into every entry already), not
- here -- this component has no scoped style of its own.
+ `.role-info-popover` (the fixed-position shell) lives in src/style/app.css
+ (forwarded into every entry already); the rows/key inside it use the
+ shared `.row`/`.space-between`/`.muted` type classes -- this component
+ has no scoped style of its own.
 */
 defineProps({
     visible: { type: Boolean, default: false },
@@ -21,9 +22,9 @@ defineProps({
 <template>
     <div v-if="visible" class="role-info-popover" :style="{ left: `${left}px`, top: `${top}px` }">
         <div v-if="message">{{ message }}</div>
-        <div v-for="([k, v]) in fields" :key="k" class="role-info-row">
-            <span class="role-info-key">{{ k }}</span>
-            <span class="role-info-value">{{ v }}</span>
+        <div v-for="([k, v]) in fields" :key="k" class="row space-between">
+            <span class="muted">{{ k }}</span>
+            <span>{{ v }}</span>
         </div>
     </div>
 </template>

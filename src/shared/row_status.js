@@ -48,6 +48,25 @@ export const VO_DUB_STATUS_FILTER_OPTIONS = buildStatusFilterOptions(
     VO_DUB_EXTRA_FILTERS,
 );
 
+/*
+ Color class for each status, using the 3 shared semantic text-color
+ classes from src/style/app.css (.text-warning/.text-active/.text-success)
+ instead of VoDubBrowserPanel's own pill-* set and VoDubLineEditor's own
+ status-* set -- two independently-invented class names for this exact
+ same dictionary before this. A status with no entry here (not_started,
+ unsupported) just gets the default ".muted" treatment at the call site.
+*/
+export const VO_DUB_STATUS_COLOR_CLASS = {
+    no_text: "text-warning",
+    needs_translation: "text-active",
+    stale: "text-warning",
+    done: "text-success",
+};
+
+export function statusColorClass(status) {
+    return VO_DUB_STATUS_COLOR_CLASS[status] || "muted";
+}
+
 export const VO_DUB_STATUS_TOGGLE_OPTIONS = [
     { value: "no_text",           label: "No text" },
     { value: "needs_translation", label: "Needs translation" },

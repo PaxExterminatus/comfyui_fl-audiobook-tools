@@ -110,11 +110,8 @@ function playSample(preset) {
         <Message v-if="!presets.length" severity="info" :closable="false">
             No saved speaker presets found.
         </Message>
-        <div class="speaker-grid" :style="{ fontSize: `${cardFontSizePx}px` }">
-            <Card
-                v-for="preset in presets" :key="preset"
-                class="speaker-card"
-            >
+        <div class="grid" style="--grid-min: 220px;" :style="{ fontSize: `${cardFontSizePx}px` }">
+            <Card v-for="preset in presets" :key="preset">
                 <template #content>
                     <!-- @click lives here, not on <Card> itself -- Card's
                     root is `inheritAttrs: false` and its ptmi() re-merge
@@ -122,11 +119,11 @@ function playSample(preset) {
                     plain @click from a <script setup> caller onto it, so a
                     listener on the Card tag itself is silently never
                     attached. This div is ours, no such surprise. -->
-                    <div class="speaker-card-row" @click="pick(preset)">
-                        <div class="speaker-avatar" :style="{ backgroundColor: speakerAccent(preset) }">{{ speakerInitials(preset) }}</div>
+                    <div class="speaker-card-row row" @click="pick(preset)">
+                        <div class="avatar" :style="{ backgroundColor: speakerAccent(preset) }">{{ speakerInitials(preset) }}</div>
                         <div class="speaker-card-text">
-                            <div class="speaker-name">{{ preset }}</div>
-                            <div v-if="usageFor && usageFor(preset)" class="speaker-usage">{{ usageFor(preset) }}</div>
+                            <div class="speaker-name mono">{{ preset }}</div>
+                            <div v-if="usageFor && usageFor(preset)" class="muted">{{ usageFor(preset) }}</div>
                         </div>
                         <!-- Same story as Card above: Button also has
                         `inheritAttrs: false`, so a bare @click.stop placed
@@ -149,4 +146,17 @@ function playSample(preset) {
     </Dialog>
 </template>
 
-<style scoped src="../style/SpeakerPickerDialog.css"></style>
+<style scoped>
+.speaker-card-row {
+    cursor: pointer;
+}
+.speaker-card-text {
+    flex: 1;
+    min-width: 0;
+}
+.speaker-play-wrap {
+    flex: 0 0 auto;
+    display: flex;
+}
+</style>
+

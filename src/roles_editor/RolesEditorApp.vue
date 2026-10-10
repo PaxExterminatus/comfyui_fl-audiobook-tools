@@ -28,5 +28,3 @@ watch(visible, (v) => {
         <RolesEditorContent v-bind="$props" />
     </Dialog>
 </template>
-
-<style scoped src="../style/RolesEditorApp.css"></style>

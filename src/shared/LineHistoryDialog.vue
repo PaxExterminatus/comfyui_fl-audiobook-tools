@@ -9,6 +9,7 @@ import { usePanelWidth } from "./panel_width.js";
 import { useFontSize } from "./font_size.js";
 import DialogHeader from "./DialogHeader.vue";
 import { useAudioFiles } from "./audio_files.js";
+import { levelColorClass } from "./level_color.js";
 
 const props = defineProps({
   visible: { type: Boolean, required: true },
@@ -126,7 +127,7 @@ function formatCreatedAt(iso) {
           @update:visible="stopPlayback(); $emit('update:visible', $event)"
   >
     <!-- Play Original (EN) -->
-    <div v-if="originalUrl" class="history-original-row">
+    <div v-if="originalUrl" class="history-original-row row panel">
       <ButtonGroup>
         <Button
             :severity="playingVersion === 'original' ? 'primary' : 'secondary'"
@@ -136,46 +137,47 @@ function formatCreatedAt(iso) {
             @click="toggleOriginal"
         />
       </ButtonGroup>
-      <span v-if="originalDuration" class="history-original-dur">{{ formatSeconds(originalDuration) }}</span>
-      <span v-if="original" class="history-original-text" :title="original">{{ original }}</span>
+      <span v-if="originalDuration" class="muted">{{ formatSeconds(originalDuration) }}</span>
+      <span v-if="original" :title="original">{{ original }}</span>
     </div>
 
     <Message v-if="!versions.length" severity="info" :closable="false">
       Для этой строки ещё нет истории озвучки.
     </Message>
 
-    <div v-else class="history-grid" :style="{ fontSize: `${cardFontSizePx}px` }">
-      <Card v-for="v in sortedVersions" :key="v.version" class="history-card">
+    <div v-else class="grid" style="--grid-min: 320px;" :style="{ fontSize: `${cardFontSizePx}px` }">
+      <Card v-for="v in sortedVersions" :key="v.version">
         <template #content>
-          <div class="history-card-head">
-            <span class="history-version">Версия {{ v.version }}</span>
-            <span v-if="v.version === chosenVersion" class="history-active-badge">✓ Активна</span>
+          <div class="row">
+            <span class="title">Версия {{ v.version }}</span>
+            <span v-if="v.version === chosenVersion" class="pill text-success">✓ Активна</span>
           </div>
 
-          <div class="history-meta">
+          <div class="muted">
             сид {{ v.seed }} · {{ formatCreatedAt(v.created_at) }}
           </div>
 
           <!-- Длительность + VS Original -->
-          <div class="history-duration-line">
-                        <span class="history-duration-value">
+          <div class="row">
+                        <span class="mono muted">
                             {{ formatSeconds(getCached(versionFileUrl(v))) }}
                         </span>
             <span
                 v-if="deltaFor(v)"
-                :class="['history-duration-delta', `badge-${deltaFor(v).level}`]"
+                class="history-duration-delta"
+                :class="levelColorClass(deltaFor(v).level)"
             >
                             {{ deltaFor(v).pctText }} vs EN
                         </span>
           </div>
 
-          <div class="history-snapshot">
-            <div class="history-snapshot-speaker">{{ v.speaker }}</div>
-            <div class="history-snapshot-instruct">{{ v.instruct }}</div>
+          <div class="history-snapshot card">
+            <div class="mono muted">{{ v.speaker }}</div>
+            <div class="muted">{{ v.instruct }}</div>
             <div class="history-snapshot-text">{{ v.text }}</div>
           </div>
 
-          <div class="history-card-actions">
+          <div class="history-card-actions actions">
             <ButtonGroup>
               <Button
                   :severity="isPlayingVersion(v) ? 'primary' : 'secondary'"
@@ -198,4 +200,23 @@ function formatCreatedAt(iso) {
   </Dialog>
 </template>
 
-<style scoped src="../style/LineHistoryDialog.css"></style>
+<style scoped>
+.history-original-row {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+.history-duration-delta {
+  font-weight: 700;
+  font-size: 11px;
+}
+.history-snapshot {
+  margin-top: 8px;
+}
+.history-snapshot-text {
+  margin-top: 4px;
+  word-break: break-word;
+}
+.history-card-actions {
+  margin-top: 10px;
+}
+</style>

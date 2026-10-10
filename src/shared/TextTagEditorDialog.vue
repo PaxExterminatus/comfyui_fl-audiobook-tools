@@ -182,8 +182,8 @@ function onTextareaClick() { rememberSelection(); }
       @update:visible="$emit('update:visible', $event)"
   >
     <template #header>
-      <div class="tte-header">
-        <span class="tte-title">{{ title }}</span>
+      <div class="tte-header row space-between">
+        <span class="title">{{ title }}</span>
         <ButtonGroup>
           <Button
               label="Cancel"
@@ -201,10 +201,10 @@ function onTextareaClick() { rememberSelection(); }
       </div>
     </template>
 
-    <div class="tte-body">
+    <div class="tte-body list">
       <!-- Прослушивание -->
-      <div class="tte-play-row">
-        <span class="tte-play-label">EN</span>
+      <div class="tte-play-row row">
+        <span class="tte-play-label muted">EN</span>
         <ButtonGroup>
           <Button
               :severity="playingMode === 'original' ? 'primary' : 'secondary'"
@@ -224,9 +224,9 @@ function onTextareaClick() { rememberSelection(); }
           />
         </ButtonGroup>
 
-        <span class="tte-play-divider" />
+        <span class="divider" />
 
-        <span class="tte-play-label">RU</span>
+        <span class="tte-play-label muted">RU</span>
         <ButtonGroup>
           <Button
               :severity="playingMode === 'current' ? 'primary' : 'secondary'"
@@ -248,9 +248,9 @@ function onTextareaClick() { rememberSelection(); }
       </div>
 
       <!-- Одиночные тэги -->
-      <div class="tte-section">
-        <div class="tte-section-title">Insert tag</div>
-        <div class="tte-tag-grid">
+      <div class="tte-section list">
+        <div class="tte-section-title muted">Insert tag</div>
+        <div class="tte-tag-grid actions">
           <Button
               v-for="t in [
                 { tag: 'breath', label: 'Breath' },
@@ -276,9 +276,9 @@ function onTextareaClick() { rememberSelection(); }
       </div>
 
       <!-- Wrapper-тэги -->
-      <div class="tte-section">
-        <div class="tte-section-title">Wrapper tags</div>
-        <div class="tte-tag-grid">
+      <div class="tte-section list">
+        <div class="tte-section-title muted">Wrapper tags</div>
+        <div class="tte-tag-grid actions">
           <Button
               v-for="t in [
                 { tag: 'laughing', label: 'Laughing' },
@@ -293,14 +293,14 @@ function onTextareaClick() { rememberSelection(); }
       </div>
 
       <!-- Текст -->
-      <div class="tte-section">
-        <div class="tte-section-title">Text</div>
+      <div class="tte-section list">
+        <div class="tte-section-title muted">Text</div>
         <Textarea
             ref="textareaRef"
             v-model="localText"
             auto-resize
             rows="6"
-            class="tte-textarea"
+            class="tte-textarea w100p"
             @input="onTextareaInput"
             @keyup="onTextareaKeyup"
             @click="onTextareaClick"
@@ -312,69 +312,27 @@ function onTextareaClick() { rememberSelection(); }
 
 <style scoped>
 .tte-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   width: 100%;
   gap: 12px;
 }
-
-.tte-title {
-  font-weight: 600;
-}
-
 .tte-body {
-  display: flex;
-  flex-direction: column;
   gap: 18px;
 }
-
 .tte-play-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   padding: 8px 10px;
   background: var(--surface-100, rgba(127, 127, 127, 0.08));
   border-radius: 6px;
 }
-
 .tte-play-label {
-  font-size: 0.75rem;
-  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  opacity: 0.6;
   min-width: 24px;
 }
-
-.tte-play-divider {
-  width: 1px;
-  height: 22px;
-  background: var(--surface-300, rgba(127, 127, 127, 0.3));
-  margin: 0 4px;
-}
-
-.tte-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .tte-section-title {
-  font-size: 0.8rem;
-  opacity: 0.65;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
-.tte-tag-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
 .tte-textarea {
-  width: 100%;
   font-family: inherit;
 }
 </style>

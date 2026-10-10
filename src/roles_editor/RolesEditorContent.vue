@@ -186,11 +186,11 @@ onBeforeUnmount(() => {
 
         <Message v-if="!roles.length" severity="info" :closable="false">No roles found</Message>
 
-        <div class="roles-list" :style="{ fontSize: `${cardFontSizePx}px` }">
-            <Card v-for="role in roles" :key="role.code" class="role-card">
+        <div class="grid" :style="{ fontSize: `${cardFontSizePx}px` }">
+            <Card v-for="role in roles" :key="role.code">
                 <template #title>
-                    <span class="role-code" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
-                    <span class="role-name">{{ role.name }}</span>
+                    <span class="role-code mono" title="Role code (read-only here -- renaming would orphan script lines that already use it)">{{ role.code }}</span>
+                    <span class="role-name muted">{{ role.name }}</span>
                 </template>
                 <template #content>
                     <Dropdown
@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
                         filter
                         placeholder="Speaker preset"
                         title="Real CosyVoice preset this role resolves to"
-                        class="role-speaker"
+                        class="role-speaker w100p"
                         @input="scheduleSave()"
                         @change="onSpeakerCommitted(role)"
                         @blur="notifyIfSpeakerChanged(role)"
@@ -211,7 +211,7 @@ onBeforeUnmount(() => {
                         auto-resize
                         rows="1"
                         placeholder="Description..."
-                        class="role-description"
+                        class="role-description w100p"
                         :style="{ fontSize: `${cardFontSizePx}px` }"
                         @input="scheduleSave()"
                     />
@@ -221,4 +221,15 @@ onBeforeUnmount(() => {
     </div>
 </template>
 
-<style scoped src="../style/RolesEditorApp.css"></style>
+<style scoped>
+.role-code {
+    margin-right: 8px;
+}
+.role-name {
+    font-size: 0.85em;
+    font-weight: 400;
+}
+.role-speaker {
+    margin-bottom: 8px;
+}
+</style>

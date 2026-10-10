@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
     />
 
     <StickyPanel class="line-editor-controls">
-      <div class="audio-content-row">
+      <div class="actions">
                 <span
                     class="play-btn global-play-btn"
                     :class="{ 'is-playing': isPlayingAnything, disabled: !canPlayGlobal }"
@@ -308,9 +308,9 @@ onBeforeUnmount(() => {
 
         <Button icon="pi pi-refresh" title="Re-check _audio\ for this script's rendered audio" @click="loadAudio()" />
       </div>
-      <div v-if="timingWarningVisible" class="timing-warning">⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер</div>
+      <div v-if="timingWarningVisible" class="timing-warning text-warning">⚠ Тайминг устарел -- изменилось число строк, нужен полный рендер</div>
 
-      <div class="actions-row">
+      <div class="actions">
         <input
             type="checkbox"
             class="row-checkbox"
@@ -326,7 +326,7 @@ onBeforeUnmount(() => {
             :title="doneTitle"
             @click="toggleDone"
         />
-        <div class="actions-divider" />
+        <div class="divider" />
         <Button label="´ Stress mark" title="Insert a stress mark at the cursor" @mousedown.prevent="insertStressMark" />
         <Button label="✂ Split line" title="Split this line into two at the cursor" @mousedown.prevent="splitFocusedLine" />
         <Button label="+ Add line" title="Add a new empty line at the end of the script" @click="addLine" />
@@ -336,13 +336,13 @@ onBeforeUnmount(() => {
             :title="revoiceStaleTitle"
             @click="revoiceStaleRows"
         />
-        <div class="actions-divider" />
+        <div class="divider" />
         <Button label="Prev" :disabled="prevDisabled" title="Open the previous script in this act" @click="goPrev" />
         <Button label="Next" :disabled="nextDisabled" title="Open the next script in this act" @click="goNext" />
       </div>
     </StickyPanel>
 
-    <div ref="rowsContainerEl" class="rows-container">
+    <div ref="rowsContainerEl" class="rows-container list">
       <div
           v-for="(row, index) in rows"
           :key="row.__key"
@@ -359,10 +359,10 @@ onBeforeUnmount(() => {
           <span class="line-number">{{ index + 1 }}</span>
           <i class="pi pi-arrows-v"></i>
         </div>
-        <div class="line-body">
+        <div class="line-body list">
           <template v-if="row.malformed">
-            <div class="malformed-warn-line">
-              <div class="malformed-warn">⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:</div>
+            <div class="row">
+              <div class="malformed-warn text-warning">⚠ unparsed line (needs exactly two '|' separators) -- edit as raw text:</div>
               <Button icon="pi pi-trash" title="Delete this line" @click="confirmDeleteRow(index, row.raw)" />
             </div>
             <Textarea
@@ -387,7 +387,7 @@ onBeforeUnmount(() => {
                             >{{ isRowPlaying(index) ? "⏸" : "▶" }}</span>
               </template>
               <template #trailing>
-                <InputGroup class="speaker-file-group">
+                <InputGroup class="speaker-file-group shrink-0">
                   <Button
                       v-if="revoiceApi && !isCurrentlyReady"
                       class="revoice-btn"
@@ -413,9 +413,9 @@ onBeforeUnmount(() => {
                   />
                 </InputGroup>
 
-                <InputGroup class="pause-group">
+                <InputGroup class="pause-group shrink-0">
                   <InputGroupAddon>
-                    <i :class="pauseUnreadable(row) ? 'pi pi-exclamation-triangle pause-warn' : 'pi pi-stopwatch'" />
+                    <i :class="pauseUnreadable(row) ? 'pi pi-exclamation-triangle text-warning' : 'pi pi-stopwatch'" />
                   </InputGroupAddon>
                   <InputText
                       v-model="row.pause"
@@ -473,4 +473,125 @@ onBeforeUnmount(() => {
   />
 </template>
 
-<style scoped src="../style/LineEditorApp.css"></style>
+<style scoped>
+.line-editor-controls {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--overlay-soft);
+}
+.actions {
+  padding: 6px 16px;
+}
+.global-play-btn {
+  font-size: 16px;
+}
+.audio-el {
+  flex: 1;
+  height: 32px;
+}
+.timing-warning {
+  width: 100%;
+  font-size: var(--font-sm);
+  padding: 2px 16px 6px;
+}
+.rows-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  gap: 3px;
+}
+.line-body {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px 6px 6px;
+  gap: 4px;
+}
+.malformed-warn {
+  flex: 1;
+  font-size: var(--font-xs);
+}
+.malformed-textarea {
+  border-color: #7f5f27;
+}
+.speaker-file-input {
+  max-width: 150px;
+}
+.pause-input {
+  width: 56px;
+  text-align: center;
+}
+
+/*
+ Genuine one-off interaction/animation styling with no equivalent in the
+ shared type vocabulary (src/style/app.css) -- a row's drag handle, its
+ entrance animation, and its drag/drop-target state. See the project's
+ CSS refactor notes for why these stay local instead of joining it.
+*/
+.fl-line-row {
+  display: flex;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #232323;
+}
+.fl-line-row.row-playing {
+  background: #242935;
+}
+.fl-line-row :global(.fl-row-dragging) {
+  opacity: 0.5;
+}
+.fl-line-row :global(.fl-row-drop-target) {
+  outline: 2px dashed #4260a5;
+}
+.fl-line-row.row-enter {
+  animation: fl-row-enter 0.35s ease;
+}
+.line-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: 4px;
+  flex: 0 0 auto;
+  width: 28px;
+  padding: 6px 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.line-number {
+  font-size: 10px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes fl-row-enter {
+  from {
+    transform: scaleY(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.play-btn {
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--color-success);
+}
+.play-btn.is-playing {
+  color: var(--color-active);
+}
+.play-btn.disabled {
+  cursor: default;
+  opacity: 0.35;
+  color: inherit;
+}
+.revoice-btn {
+  flex: 0 0 auto;
+}
+.revoice-btn.stale {
+  color: var(--color-warning);
+}
+</style>

@@ -30,4 +30,3 @@ watch(visible, (v) => {
     </Dialog>
 </template>
 
-<style scoped src="../style/VoDubLineEditor.css"></style>

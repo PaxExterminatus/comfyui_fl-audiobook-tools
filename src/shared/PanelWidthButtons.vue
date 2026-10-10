@@ -13,7 +13,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="width-row">
+    <div class="actions">
         <Button
             v-for="px in presets"
             :key="px"
@@ -25,4 +25,3 @@ defineProps({
     </div>
 </template>
 
-<style scoped src="../style/PanelWidthButtons.css"></style>

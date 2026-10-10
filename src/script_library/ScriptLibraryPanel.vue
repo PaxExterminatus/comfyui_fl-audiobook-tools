@@ -44,7 +44,6 @@ const props = defineProps({
 });
 
 const LAST_FOLDER_KEY = "FL_CosyVoice3.ScriptLibrary.lastFolder";
-const MIN_TREE_HEIGHT = 90;
 const TREE_POLL_MS = 3000;
 const ACT_FILE_SEP = "::";
 
@@ -472,43 +471,43 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="script-library-panel">
+    <div class="script-library-panel list">
         <Button
             :label="browseLabel"
             :title="folderPath"
             text
-            class="browse-button"
+            class="browse-button ellipsis w100p"
             @click="openBrowse"
         />
 
-        <div class="tools-row">
+        <div class="actions">
             <Button
                 label="🎭 Roles"
                 title="Assign a real speaker preset to each role code (edits _roles.json)"
                 outlined
-                class="tool-btn"
+                class="grow"
                 @click="openRoles"
             />
             <Button
                 label="🔁 Re-voice pending"
                 title="Re-voice every line across the whole project marked as needing it (stale or never voiced)"
                 outlined
-                class="tool-btn"
+                class="grow"
                 @click="revoiceAllPending"
             />
         </div>
 
-        <div class="tools-row">
-            <Button label="☑ All" title="Check every script in every act (skips scripts marked ready)" outlined class="tool-btn" @click="selectAll" />
-            <Button label="☐ None" title="Uncheck every script" outlined class="tool-btn" @click="selectNone" />
-            <Button label="⇄ Invert" title="Flip every script's checked state (skips scripts marked ready)" outlined class="tool-btn" @click="invertSelection" />
+        <div class="actions">
+            <Button label="☑ All" title="Check every script in every act (skips scripts marked ready)" outlined class="grow" @click="selectAll" />
+            <Button label="☐ None" title="Uncheck every script" outlined class="grow" @click="selectNone" />
+            <Button label="⇄ Invert" title="Flip every script's checked state (skips scripts marked ready)" outlined class="grow" @click="invertSelection" />
         </div>
 
-        <div class="tree" :style="{ minHeight: `${MIN_TREE_HEIGHT}px` }">
-            <div v-if="!treeData.length" class="tree-empty">(no acts found)</div>
+        <div class="tree panel">
+            <div v-if="!treeData.length" class="tree-empty muted">(no acts found)</div>
             <template v-for="entry in treeData" :key="entry.act">
                 <div
-                    class="act-row"
+                    class="act-row row"
                     :class="{ 'act-row-active': entry.act === activeAct }"
                     @click="toggleActRow(entry.act)"
                 >
@@ -520,16 +519,16 @@ onBeforeUnmount(() => {
                         @click.stop
                         @change="onActCheckboxChange(entry, $event.target.checked)"
                     />
-                    <span class="chevron">{{ expanded.has(entry.act) ? "▾" : "▸" }}</span>
-                    <span class="act-name">{{ entry.act }}</span>
-                    <span class="act-count">{{ checkedCountOf(entry) ? `${checkedCountOf(entry)}/${entry.scripts.length}` : entry.scripts.length }}</span>
+                    <span class="chevron muted">{{ expanded.has(entry.act) ? "▾" : "▸" }}</span>
+                    <span class="act-name title ellipsis">{{ entry.act }}</span>
+                    <span class="act-count muted">{{ checkedCountOf(entry) ? `${checkedCountOf(entry)}/${entry.scripts.length}` : entry.scripts.length }}</span>
                 </div>
 
                 <template v-if="expanded.has(entry.act)">
                     <div
                         v-for="filename in entry.scripts"
                         :key="filename"
-                        class="script-row"
+                        class="script-row row"
                         :class="{ 'script-row-active': entry.act === activeAct && scriptFileWidget.value === filename }"
                         @click="selectRow(entry.act, filename)"
                     >
@@ -547,17 +546,79 @@ onBeforeUnmount(() => {
                             title="Open the full-screen line-by-line editor"
                             @click.stop="editScript(entry.act, filename)"
                         >✏️</button>
-                        <span v-if="readySetOf(entry).has(filename)" class="row-icon" title="Marked done / ready to release">✅</span>
-                        <span class="script-name" :class="{ 'script-name-active': entry.act === activeAct && scriptFileWidget.value === filename }" :title="filename">{{ filename }}</span>
-                        <span v-if="(entry.pending_scripts || []).includes(filename)" class="row-icon" title="Has line(s) marked as needing re-voice (edited, or a role's speaker was recast)">⚠️</span>
-                        <span v-if="(entry.audio_scripts || []).includes(filename)" class="row-icon row-icon-dim" title="Rendered audio already exists for this script">🔊</span>
+                        <span v-if="readySetOf(entry).has(filename)" title="Marked done / ready to release">✅</span>
+                        <span class="script-name ellipsis" :class="{ 'script-name-active title': entry.act === activeAct && scriptFileWidget.value === filename }" :title="filename">{{ filename }}</span>
+                        <span v-if="(entry.pending_scripts || []).includes(filename)" title="Has line(s) marked as needing re-voice (edited, or a role's speaker was recast)">⚠️</span>
+                        <span v-if="(entry.audio_scripts || []).includes(filename)" class="row-icon-dim" title="Rendered audio already exists for this script">🔊</span>
                     </div>
                 </template>
             </template>
         </div>
 
-        <div class="status-line">{{ status }}</div>
+        <div class="status-line muted">{{ status }}</div>
     </div>
 </template>
 
-<style scoped src="../style/ScriptLibraryPanel.css"></style>
+<style scoped>
+.script-library-panel {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  gap: 5px;
+}
+.browse-button {
+  justify-content: flex-start;
+}
+.tree {
+  min-height: 90px;
+}
+.tree-empty {
+  padding: 8px;
+}
+.act-row, .script-row {
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.script-row {
+  padding-left: 24px;
+  font-size: var(--font-sm);
+}
+.chevron {
+  width: 10px;
+}
+.act-name, .script-name {
+  flex: 1;
+}
+.edit-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 1px 4px;
+  font-size: var(--font-xs);
+}
+.row-icon-dim {
+  opacity: 0.85;
+}
+/*
+ Active-row highlight -- interaction STATE on these two row types, not a
+ structural/text pattern repeated across components, so it stays local
+ rather than joining the shared vocabulary in src/style/app.css.
+*/
+.act-row-active {
+  background: #252b39;
+}
+.script-row-active {
+  background: #293247;
+}
+.status-line {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2px;
+  white-space: normal;
+  min-height: 14px;
+}
+</style>
+

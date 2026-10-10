@@ -23,13 +23,22 @@ defineProps({
 </script>
 
 <template>
-    <div class="header-row">
-        <div class="dialog-title">{{ title }}</div>
-        <div class="status-el">{{ status }}</div>
+    <div class="row">
+        <div class="dialog-title title ellipsis">{{ title }}</div>
+        <div class="dialog-status muted ellipsis">{{ status }}</div>
         <PanelWidthButtons :presets="widthPresets" :set-width="setWidth" />
         <FontSizeButtons v-if="fontSizeDecrease && fontSizeIncrease" :decrease="fontSizeDecrease" :increase="fontSizeIncrease" />
         <slot name="after" />
     </div>
 </template>
 
-<style scoped src="../style/DialogHeader.css"></style>
+<style scoped>
+.dialog-title {
+    flex: 1;
+    font-size: var(--font-lg);
+}
+.dialog-status {
+    flex: 0 0 auto;
+    max-width: 260px;
+}
+</style>

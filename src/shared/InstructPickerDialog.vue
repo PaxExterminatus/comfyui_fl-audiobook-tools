@@ -56,14 +56,17 @@ function pick(example) {
         <Message v-if="!categories.length" severity="info" :closable="false">
             No _instruct_categories.json found for this project -- you can still type any instruct text directly.
         </Message>
-        <div class="instruct-categories-grid" :style="{ fontSize: `${cardFontSizePx}px` }">
-            <Card v-for="category in categories" :key="category.name" class="instruct-category-card">
+        <div class="grid" style="--grid-min: 280px;" :style="{ fontSize: `${cardFontSizePx}px` }">
+            <Card v-for="category in categories" :key="category.name">
                 <template #title>{{ category.title }}</template>
                 <template #subtitle>{{ category.when }}</template>
                 <template #content>
-                    <ul class="instruct-example-list">
+                    <ul class="instruct-example-list list">
                         <li v-for="example in category.examples" :key="example">
-                            <button type="button" class="instruct-example-btn" @click="pick(example)">{{ example }}</button>
+                            <Button
+                                :label="example" text class="instruct-example-btn w100p"
+                                @click="pick(example)"
+                            />
                         </li>
                     </ul>
                 </template>
@@ -72,4 +75,16 @@ function pick(example) {
     </Dialog>
 </template>
 
-<style scoped src="../style/InstructPickerDialog.css"></style>
+<style scoped>
+.instruct-example-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.instruct-example-btn {
+    justify-content: flex-start;
+    text-align: left;
+    font-size: var(--font-sm);
+}
+</style>
+

@@ -1,28 +1,7 @@
-import { _ as $e, k as O, o as Le, T as Xe, c as z, d as g, b as A, u as t, F as ie, r as Se, t as L, Y as le, a as I, s as J, i as W, A as Vt, C as At, Z as Ke, D as Qe, H as ke, G as Ot, f as ue, n as ae, w as ce, g as oe, l as de, m as ye, M as pe, J as ne, S as Dt, X as Lt, V as fe, U as Ft, h as he, j as Oe, p as jt, q as zt, N as xt, $ as Ut, v as Fe, x as je, P as ze } from "./styles_link.js";
-import { s as xe } from "./inputtext.esm.js";
-import { c as Nt, b as Ue, u as et, a as tt, D as nt, s as Bt } from "./DialogHeader.js";
-import { a as ot } from "./dropdown.esm.js";
-import { g as Mt, s as qt, l as Ht, i as Wt, S as Gt, _ as Jt, I as Kt, L as Yt, f as Zt, u as Xt, e as Qt } from "./instruct_library.js";
-const en = { class: "vo-dub-panel" }, tn = { class: "vo-dub-toolbar" }, nn = { class: "vo-dub-buckets" }, on = ["onClick"], sn = { class: "vo-dub-bucket-name" }, an = { class: "vo-dub-bucket-count" }, ln = { class: "vo-dub-bucket-pills" }, rn = {
-  key: 0,
-  class: "vo-dub-pill pill-no-text"
-}, un = {
-  key: 1,
-  class: "vo-dub-pill pill-needs-translation"
-}, dn = {
-  key: 2,
-  class: "vo-dub-pill pill-not-started"
-}, cn = {
-  key: 3,
-  class: "vo-dub-pill pill-stale"
-}, pn = {
-  key: 4,
-  class: "vo-dub-pill pill-done"
-}, fn = {
-  key: 5,
-  class: "vo-dub-pill pill-unsupported",
-  title: "Multi-channel rows this addon can't render or play"
-}, vn = { class: "vo-dub-status" }, hn = 3e3, Ye = "FL_CosyVoice3.VODubLibrary.lastRoot", yn = {
+import { _ as Re, l as V, o as qe, L as ut, c as A, d as $, b as N, F as ne, j as ue, t as F, V as me, r as te, a as E, n as pe, g as Y, h as ce, f as de, i as X, w as ye, m as ae, k as De, T as gn, R as xt, U as Lt, N as ve, W as ct, X as bn, Y as He, z as Sn, Z as kn, $ as Rn, a0 as Tn, A as he, E as wn, a1 as En, p as $e, G as we, S as Cn, Q as In, u as i, M as $n, q as Pn, s as On, a2 as Dn, H as An, a3 as Mn, v as dt, x as ft, P as pt, y as vt } from "./styles_link.js";
+import { u as Vt, a as Nt, D as xn } from "./DialogHeader.js";
+import { e as Ln, s as Vn, l as Nn, i as Fn, S as Un, f as Bn, L as jn, I as zn, d as Hn, _ as qn, u as Wn, c as Gn } from "./instruct_library.js";
+const Jn = { class: "vo-dub-panel list" }, Kn = { class: "vo-dub-toolbar actions" }, Zn = { class: "vo-dub-buckets panel" }, Yn = ["onClick"], Xn = { class: "vo-dub-status muted" }, Qn = 9e3, wt = "FL_CosyVoice3.VODubLibrary.lastRoot", eo = {
   __name: "VoDubBrowserPanel",
   props: {
     node: { type: Object, required: !0 },
@@ -34,40 +13,40 @@ const en = { class: "vo-dub-panel" }, tn = { class: "vo-dub-toolbar" }, nn = { c
     // (node, opts) => Promise -- from web/vo_dub_library.js
   },
   setup(e) {
-    const o = e, n = O(o.projectRootWidget.value || localStorage.getItem(Ye) || ""), s = O([]), r = O(""), i = O(!1);
-    let y = null;
-    async function h() {
-      if (!n.value) {
-        s.value = [];
+    const o = e, t = V(o.projectRootWidget.value || localStorage.getItem(wt) || ""), n = V([]), s = V(""), a = V(!1);
+    let r = null;
+    async function v() {
+      if (!t.value) {
+        n.value = [];
         return;
       }
-      i.value = !0;
+      a.value = !0;
       try {
-        const _ = await (await fetch(`${le}/tree?path=${encodeURIComponent(n.value)}`)).json();
-        if (_.error) {
-          r.value = _.error, s.value = [];
+        const d = await (await fetch(`${me}/tree?path=${encodeURIComponent(t.value)}`)).json();
+        if (d.error) {
+          s.value = d.error, n.value = [];
           return;
         }
-        s.value = _.buckets || [], r.value = `${s.value.length} bucket(s), ${s.value.reduce((u, S) => u + S.count, 0)} row(s)`;
-      } catch (k) {
-        r.value = `Couldn't load: ${k}`;
+        n.value = d.buckets || [], s.value = `${n.value.length} bucket(s), ${n.value.reduce((f, _) => f + _.count, 0)} row(s)`;
+      } catch (l) {
+        s.value = `Couldn't load: ${l}`;
       } finally {
-        i.value = !1;
+        a.value = !1;
       }
     }
-    function m() {
+    function k() {
       o.openBrowseDialog({
         mode: "folder",
-        startPath: n.value,
-        onSelect: (k) => {
-          n.value = k, o.projectRootWidget.value = k, localStorage.setItem(Ye, k), h();
+        startPath: t.value,
+        onSelect: (l) => {
+          t.value = l, o.projectRootWidget.value = l, localStorage.setItem(wt, l), v();
         }
       });
     }
-    function R(k) {
+    function h(l) {
       o.openVoDubLineEditor({
-        root: n.value,
-        bucket: k.bucket,
+        root: t.value,
+        bucket: l.bucket,
         /*
          Only offered when this panel's node-wiring actually has a render
          mechanism (it always does in practice -- null only ever shows up
@@ -75,286 +54,109 @@ const en = { class: "vo-dub-panel" }, tn = { class: "vo-dub-toolbar" }, nn = { c
          docstring in web/vo_dub_library.js for what it does.
         */
         renderApi: o.queueVoDubRender ? {
-          renderRow: (_) => o.queueVoDubRender(o.node, _)
+          renderRow: (d) => o.queueVoDubRender(o.node, d)
         } : null
       });
     }
-    function D() {
-      n.value && o.openDubRolesEditor({ root: n.value });
+    function p() {
+      t.value && o.openDubRolesEditor({ root: t.value });
     }
-    return Le(() => {
-      h(), y = setInterval(h, hn);
-    }), Xe(() => clearInterval(y)), (k, _) => (I(), z("div", en, [
-      g("div", tn, [
-        A(t(xe), {
-          modelValue: n.value,
-          "onUpdate:modelValue": _[0] || (_[0] = (u) => n.value = u),
-          class: "vo-dub-root-input",
-          placeholder: "VO dub project root (holds vo_dataset.csv)",
-          onChange: _[1] || (_[1] = (u) => h())
-        }, null, 8, ["modelValue"]),
-        A(t(J), {
-          label: "Browse...",
-          size: "small",
-          onClick: m
-        }),
-        A(t(J), {
-          label: "Roles",
-          size: "small",
-          disabled: !n.value,
-          title: "Assign a voice preset to each character tag",
-          onClick: D
-        }, null, 8, ["disabled"]),
-        A(t(J), {
-          icon: "pi pi-refresh",
-          size: "small",
-          text: "",
-          title: "Re-scan",
-          onClick: h
-        })
-      ]),
-      g("div", nn, [
-        (I(!0), z(ie, null, Se(s.value, (u) => (I(), z("div", {
-          key: u.bucket,
-          class: "vo-dub-bucket-row",
-          onClick: (S) => R(u)
-        }, [
-          g("span", sn, L(u.bucket), 1),
-          g("span", an, L(u.count), 1),
-          g("span", ln, [
-            u.no_text ? (I(), z("span", rn, "no text " + L(u.no_text), 1)) : W("", !0),
-            u.needs_translation ? (I(), z("span", un, "needs RU " + L(u.needs_translation), 1)) : W("", !0),
-            u.not_started ? (I(), z("span", dn, "not started " + L(u.not_started), 1)) : W("", !0),
-            u.stale ? (I(), z("span", cn, "stale " + L(u.stale), 1)) : W("", !0),
-            u.done ? (I(), z("span", pn, "done " + L(u.done), 1)) : W("", !0),
-            u.unsupported ? (I(), z("span", fn, "unsupported " + L(u.unsupported), 1)) : W("", !0)
-          ])
-        ], 8, on))), 128))
-      ]),
-      g("div", vn, L(i.value ? "Loading..." : r.value), 1)
-    ]));
-  }
-}, bn = /* @__PURE__ */ $e(yn, [["__scopeId", "data-v-ee8c5a8a"]]);
-var mn = {
-  root: function(o) {
-    var n = o.instance, s = o.props;
-    return ["p-checkbox p-component", {
-      "p-highlight": n.checked,
-      "p-disabled": s.disabled,
-      "p-invalid": s.invalid,
-      "p-variant-filled": s.variant ? s.variant === "filled" : n.$primevue.config.inputStyle === "filled"
-    }];
-  },
-  box: "p-checkbox-box",
-  input: "p-checkbox-input",
-  icon: "p-checkbox-icon"
-}, _n = Vt.extend({
-  name: "checkbox",
-  classes: mn
-}), gn = {
-  name: "BaseCheckbox",
-  extends: At,
-  props: {
-    value: null,
-    modelValue: null,
-    binary: Boolean,
-    name: {
-      type: String,
-      default: null
-    },
-    trueValue: {
-      type: null,
-      default: !0
-    },
-    falseValue: {
-      type: null,
-      default: !1
-    },
-    variant: {
-      type: String,
-      default: null
-    },
-    invalid: {
-      type: Boolean,
-      default: !1
-    },
-    disabled: {
-      type: Boolean,
-      default: !1
-    },
-    readonly: {
-      type: Boolean,
-      default: !1
-    },
-    required: {
-      type: Boolean,
-      default: !1
-    },
-    tabindex: {
-      type: Number,
-      default: null
-    },
-    inputId: {
-      type: String,
-      default: null
-    },
-    inputClass: {
-      type: [String, Object],
-      default: null
-    },
-    inputStyle: {
-      type: Object,
-      default: null
-    },
-    ariaLabelledby: {
-      type: String,
-      default: null
-    },
-    ariaLabel: {
-      type: String,
-      default: null
-    }
-  },
-  style: _n,
-  provide: function() {
-    return {
-      $parentInstance: this
+    const b = [
+      { key: "no_text", label: "no text", severity: "warn" },
+      { key: "needs_translation", label: "needs RU", severity: "info" },
+      { key: "not_started", label: "not started", severity: "secondary" },
+      { key: "stale", label: "stale", severity: "warn" },
+      { key: "done", label: "done", severity: "success" },
+      { key: "unsupported", label: "unsupported", severity: "contrast" }
+    ];
+    return qe(() => {
+      v(), r = setInterval(v, Qn);
+    }), ut(() => clearInterval(r)), (l, d) => {
+      const f = te("InputText"), _ = te("Button"), m = te("InlineMessage");
+      return E(), A("div", Jn, [
+        $("div", Kn, [
+          N(f, {
+            modelValue: t.value,
+            "onUpdate:modelValue": d[0] || (d[0] = (c) => t.value = c),
+            class: "vo-dub-root-input",
+            placeholder: "VO dub project root (holds vo_dataset.csv)",
+            onChange: d[1] || (d[1] = (c) => v())
+          }, null, 8, ["modelValue"]),
+          N(_, {
+            label: "Browse...",
+            onClick: k
+          }),
+          N(_, {
+            label: "Roles",
+            disabled: !t.value,
+            title: "Assign a voice preset to each character tag",
+            onClick: p
+          }, null, 8, ["disabled"]),
+          N(_, {
+            icon: "pi pi-refresh",
+            title: "Re-scan",
+            onClick: v
+          })
+        ]),
+        $("div", Zn, [
+          (E(!0), A(ne, null, ue(n.value, (c) => (E(), A("div", {
+            key: c.bucket,
+            class: pe(["vo-dub-bucket-row row", { "has-issues": c.issue > 0 }]),
+            onClick: (T) => h(c)
+          }, [
+            N(m, { severity: "secondary" }, {
+              default: Y(() => [
+                ce(F(c.bucket) + " " + F(c.count), 1)
+              ]),
+              _: 2
+            }, 1024),
+            (E(), A(ne, null, ue(b, (T) => (E(), A(ne, {
+              key: T.key
+            }, [
+              c[T.key] ? (E(), de(m, {
+                key: 0,
+                severity: T.severity
+              }, {
+                default: Y(() => [
+                  ce(F(T.label) + " " + F(c[T.key]), 1)
+                ]),
+                _: 2
+              }, 1032, ["severity"])) : X("", !0)
+            ], 64))), 64)),
+            c.issue > 0 ? (E(), de(m, {
+              key: 0,
+              severity: "error",
+              title: `${c.issue} row(s) marked as issue`
+            }, {
+              default: Y(() => [
+                ce("issue " + F(c.issue), 1)
+              ]),
+              _: 2
+            }, 1032, ["title"])) : X("", !0)
+          ], 10, Yn))), 128))
+        ]),
+        $("div", Xn, F(a.value ? "Loading..." : s.value), 1)
+      ]);
     };
   }
-};
-function kn(e) {
-  return Cn(e) || $n(e) || Rn(e) || Sn();
-}
-function Sn() {
-  throw new TypeError(`Invalid attempt to spread non-iterable instance.
-In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
-}
-function Rn(e, o) {
-  if (e) {
-    if (typeof e == "string") return De(e, o);
-    var n = Object.prototype.toString.call(e).slice(8, -1);
-    if (n === "Object" && e.constructor && (n = e.constructor.name), n === "Map" || n === "Set") return Array.from(e);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return De(e, o);
-  }
-}
-function $n(e) {
-  if (typeof Symbol < "u" && e[Symbol.iterator] != null || e["@@iterator"] != null) return Array.from(e);
-}
-function Cn(e) {
-  if (Array.isArray(e)) return De(e);
-}
-function De(e, o) {
-  (o == null || o > e.length) && (o = e.length);
-  for (var n = 0, s = new Array(o); n < o; n++) s[n] = e[n];
-  return s;
-}
-var Re = {
-  name: "Checkbox",
-  extends: gn,
-  inheritAttrs: !1,
-  emits: ["update:modelValue", "change", "focus", "blur"],
-  methods: {
-    getPTOptions: function(o) {
-      var n = o === "root" ? this.ptmi : this.ptm;
-      return n(o, {
-        context: {
-          checked: this.checked,
-          disabled: this.disabled
-        }
-      });
-    },
-    onChange: function(o) {
-      var n = this;
-      if (!this.disabled && !this.readonly) {
-        var s;
-        this.binary ? s = this.checked ? this.falseValue : this.trueValue : this.checked ? s = this.modelValue.filter(function(r) {
-          return !Ke.equals(r, n.value);
-        }) : s = this.modelValue ? [].concat(kn(this.modelValue), [this.value]) : [this.value], this.$emit("update:modelValue", s), this.$emit("change", o);
-      }
-    },
-    onFocus: function(o) {
-      this.$emit("focus", o);
-    },
-    onBlur: function(o) {
-      this.$emit("blur", o);
-    }
-  },
-  computed: {
-    checked: function() {
-      return this.binary ? this.modelValue === this.trueValue : Ke.contains(this.value, this.modelValue);
-    }
-  },
-  components: {
-    CheckIcon: Nt
-  }
-}, Pn = ["data-p-highlight", "data-p-disabled"], Tn = ["id", "value", "name", "checked", "tabindex", "disabled", "readonly", "required", "aria-labelledby", "aria-label", "aria-invalid"];
-function En(e, o, n, s, r, i) {
-  var y = Qe("CheckIcon");
-  return I(), z("div", ke({
-    class: e.cx("root")
-  }, i.getPTOptions("root"), {
-    "data-p-highlight": i.checked,
-    "data-p-disabled": e.disabled
-  }), [g("input", ke({
-    id: e.inputId,
-    type: "checkbox",
-    class: [e.cx("input"), e.inputClass],
-    style: e.inputStyle,
-    value: e.value,
-    name: e.name,
-    checked: i.checked,
-    tabindex: e.tabindex,
-    disabled: e.disabled,
-    readonly: e.readonly,
-    required: e.required,
-    "aria-labelledby": e.ariaLabelledby,
-    "aria-label": e.ariaLabel,
-    "aria-invalid": e.invalid || void 0,
-    onFocus: o[0] || (o[0] = function() {
-      return i.onFocus && i.onFocus.apply(i, arguments);
-    }),
-    onBlur: o[1] || (o[1] = function() {
-      return i.onBlur && i.onBlur.apply(i, arguments);
-    }),
-    onChange: o[2] || (o[2] = function() {
-      return i.onChange && i.onChange.apply(i, arguments);
-    })
-  }, i.getPTOptions("input")), null, 16, Tn), g("div", ke({
-    class: e.cx("box")
-  }, i.getPTOptions("box")), [Ot(e.$slots, "icon", {
-    checked: i.checked,
-    class: ae(e.cx("icon"))
-  }, function() {
-    return [i.checked ? (I(), ue(y, ke({
-      key: 0,
-      class: e.cx("icon")
-    }, i.getPTOptions("icon")), null, 16, ["class"])) : W("", !0)];
-  })], 16)], 16, Pn);
-}
-Re.render = En;
-function In(e, o) {
-  if (e == null || o == null || e <= 0 || o <= 0 || typeof e != "number" || typeof o != "number")
-    return { ratio: 1, percent: 0, label: "" };
-  let n = o / e;
-  n < 0.5 ? n = 0.5 : n > 2 && (n = 2);
-  const s = Math.round((n - 1) * 100);
-  let r = "";
-  return s !== 0 && (r = `${s > 0 ? "+" : ""}${s}%`), { ratio: n, percent: s, label: r };
-}
-const wn = { class: "output-file-dialog-content" }, Vn = { class: "field-row" }, An = { class: "field-row" }, On = { class: "field-row speed-row" }, Dn = { class: "dialog-actions" }, Ln = {
+}, to = /* @__PURE__ */ Re(eo, [["__scopeId", "data-v-052b866f"]]), no = { class: "p-inputgroup-addon" }, oo = { style: { "margin-left": "0.5rem" } }, so = {
+  key: 0,
+  class: "ofd-target-row row"
+}, ao = { class: "p-inputgroup-addon" }, io = { style: { "margin-left": "0.5rem" } }, lo = {
   __name: "OutputFileDialog",
   props: {
     visible: { type: Boolean, required: !0 },
     audioKey: { type: String, default: "" },
     effect: { type: String, default: "" },
     normalize: { type: Boolean, default: !1 },
-    speed: { type: Number, default: 1 },
+    speedMatch: { type: Boolean, default: !1 },
+    normalizeDb: { type: Number, default: -20 },
     enDurationS: { type: Number, default: null },
     ruDurationS: { type: Number, default: null }
   },
   emits: ["update:visible", "apply"],
   setup(e, { emit: o }) {
-    const n = e, s = o, r = [
+    const t = e, n = o, s = [
       { value: "", label: "No effect" },
       { value: "radio", label: "📻 Radio" },
       { value: "phone", label: "📞 Phone" },
@@ -362,1015 +164,2058 @@ const wn = { class: "output-file-dialog-content" }, Vn = { class: "field-row" },
       { value: "radio_dry", label: "📻 Radio (no static)" },
       { value: "intercom", label: "🔊 Intercom" },
       { value: "suit", label: "🧑‍🚀 Suit" }
-    ], i = O(n.effect), y = O(n.normalize), h = O(n.speed);
-    ce(() => n.visible, (u) => {
-      u && (i.value = n.effect, y.value = n.normalize, h.value = n.speed);
+    ], a = V(t.effect), r = V(t.normalize), v = V(t.speedMatch), k = V(t.normalizeDb);
+    ye(() => t.visible, (b) => {
+      b && (a.value = t.effect, r.value = t.normalize, v.value = t.speedMatch, k.value = t.normalizeDb);
     });
-    const m = de(() => In(n.enDurationS, n.ruDurationS)), R = de(() => m.value.label), D = de(() => !R.value);
-    function k() {
-      D.value || (h.value = m.value.ratio);
+    const h = ae(() => {
+      if (t.enDurationS == null || t.ruDurationS == null)
+        return "Одна из длительностей неизвестна — сопоставление недоступно.";
+      const b = t.ruDurationS / t.enDurationS, l = Math.round((b - 1) * 100);
+      return Math.abs(l) < 1 ? "Длительности уже совпадают." : `RU ${l > 0 ? "длиннее" : "короче"} на ${Math.abs(l)}% — при включении RU подстроится под EN (тон сохранится).`;
+    });
+    function p() {
+      n("apply", {
+        effect: a.value,
+        normalize: r.value,
+        speedMatch: v.value,
+        normalizeDb: k.value
+      }), n("update:visible", !1);
     }
-    function _() {
-      s("apply", {
-        effect: i.value,
-        normalize: y.value,
-        speed: h.value
-      }), s("update:visible", !1);
+    return (b, l) => {
+      const d = te("InputGroupAddon"), f = te("Dropdown"), _ = te("InputGroup"), m = te("Fieldset"), c = te("InputSwitch"), T = te("InputNumber"), O = te("Button"), x = te("Dialog");
+      return E(), de(x, {
+        visible: e.visible,
+        modal: "",
+        header: "Output File Settings",
+        "onUpdate:visible": l[4] || (l[4] = (D) => b.$emit("update:visible", D))
+      }, {
+        footer: Y(() => [
+          N(O, {
+            label: "Apply",
+            onClick: p
+          })
+        ]),
+        default: Y(() => [
+          N(m, { legend: "Effect" }, {
+            default: Y(() => [
+              N(_, null, {
+                default: Y(() => [
+                  N(d, null, {
+                    default: Y(() => [...l[5] || (l[5] = [
+                      $("i", { class: "pi pi-sliders-h" }, null, -1)
+                    ])]),
+                    _: 1
+                  }),
+                  N(f, {
+                    inputId: "ofd-effect",
+                    modelValue: a.value,
+                    "onUpdate:modelValue": l[0] || (l[0] = (D) => a.value = D),
+                    options: s,
+                    optionLabel: "label",
+                    optionValue: "value",
+                    placeholder: "No effect"
+                  }, null, 8, ["modelValue"])
+                ]),
+                _: 1
+              }),
+              l[6] || (l[6] = $("small", null, " Аудио-эффект. Применяется после нормализации, перед сохранением файла. ", -1))
+            ]),
+            _: 1
+          }),
+          N(m, { legend: "Normalize" }, {
+            default: Y(() => [
+              N(_, null, {
+                default: Y(() => [
+                  N(d, null, {
+                    default: Y(() => [...l[7] || (l[7] = [
+                      $("i", { class: "pi pi-volume-up" }, null, -1)
+                    ])]),
+                    _: 1
+                  }),
+                  $("div", no, [
+                    N(c, {
+                      modelValue: r.value,
+                      "onUpdate:modelValue": l[1] || (l[1] = (D) => r.value = D)
+                    }, null, 8, ["modelValue"]),
+                    $("label", oo, F(r.value ? "On" : "Off"), 1)
+                  ])
+                ]),
+                _: 1
+              }),
+              r.value ? (E(), A("div", so, [
+                l[8] || (l[8] = $("span", { class: "muted" }, "Target level:", -1)),
+                N(T, {
+                  modelValue: k.value,
+                  "onUpdate:modelValue": l[2] || (l[2] = (D) => k.value = D),
+                  min: -30,
+                  max: -6,
+                  step: 0.5,
+                  "min-fraction-digits": 1,
+                  "max-fraction-digits": 1,
+                  suffix: " dB",
+                  "show-buttons": "",
+                  "button-layout": "horizontal",
+                  class: "ofd-target-number"
+                }, null, 8, ["modelValue"])
+              ])) : X("", !0),
+              l[9] || (l[9] = $("small", null, " Приводит RMS-громкость к целевому уровню. −20 dB — комфортный дефолт для диалогов; тише (−26…−24) — для шёпота и фоновых реплик, громче (−16…−14) — для криков. ", -1))
+            ]),
+            _: 1
+          }),
+          N(m, { legend: "Match duration" }, {
+            default: Y(() => [
+              N(_, null, {
+                default: Y(() => [
+                  N(d, null, {
+                    default: Y(() => [
+                      ce(" EN " + F(t.enDurationS != null ? t.enDurationS.toFixed(2) + "s" : "—") + " RU " + F(t.ruDurationS != null ? t.ruDurationS.toFixed(2) + "s" : "—"), 1)
+                    ]),
+                    _: 1
+                  }),
+                  $("div", ao, [
+                    N(c, {
+                      modelValue: v.value,
+                      "onUpdate:modelValue": l[3] || (l[3] = (D) => v.value = D)
+                    }, null, 8, ["modelValue"]),
+                    $("label", io, F(v.value ? "On" : "Off"), 1)
+                  ])
+                ]),
+                _: 1
+              }),
+              $("small", null, F(h.value), 1)
+            ]),
+            _: 1
+          })
+        ]),
+        _: 1
+      }, 8, ["visible"]);
+    };
+  }
+}, ro = /* @__PURE__ */ Re(lo, [["__scopeId", "data-v-0b1ebea7"]]);
+let tt = null;
+function uo() {
+  const e = typeof window < "u" && (window.AudioContext || window.webkitAudioContext);
+  return e ? (tt || (tt = new e()), tt) : null;
+}
+async function co(e, o = 100) {
+  const t = uo();
+  if (!t) throw new Error("Web Audio not supported -- can't decode a waveform");
+  const n = await fetch(e);
+  if (!n.ok) throw new Error(`couldn't fetch ${e}: ${n.status}`);
+  const s = await n.arrayBuffer(), r = (await t.decodeAudioData(s)).getChannelData(0), v = Math.max(1, Math.floor(r.length / o)), k = new Float32Array(o);
+  for (let h = 0; h < o; h++) {
+    const p = h * v, b = Math.min(r.length, p + v);
+    let l = 0;
+    for (let d = p; d < b; d++) {
+      const f = Math.abs(r[d]);
+      f > l && (l = f);
     }
-    return (u, S) => (I(), ue(t(Ue), {
-      visible: e.visible,
-      modal: "",
-      header: "Output File Settings",
-      style: { width: "500px" },
-      "onUpdate:visible": S[2] || (S[2] = (x) => u.$emit("update:visible", x))
-    }, {
-      default: oe(() => [
-        g("div", wn, [
-          g("div", Vn, [
-            S[3] || (S[3] = g("label", null, "Effect:", -1)),
-            A(t(ot), {
-              modelValue: i.value,
-              "onUpdate:modelValue": S[0] || (S[0] = (x) => i.value = x),
-              options: r,
-              optionLabel: "label",
-              optionValue: "value"
-            }, null, 8, ["modelValue"])
-          ]),
-          g("div", An, [
-            S[4] || (S[4] = g("label", null, "Normalize:", -1)),
-            A(t(Re), {
-              modelValue: y.value,
-              "onUpdate:modelValue": S[1] || (S[1] = (x) => y.value = x),
-              binary: !0
-            }, null, 8, ["modelValue"])
-          ]),
-          g("div", On, [
-            g("span", null, "EN " + L(n.enDurationS != null ? n.enDurationS.toFixed(1) : "-") + "s", 1),
-            g("span", null, "RU " + L(n.ruDurationS != null ? n.ruDurationS.toFixed(1) : "-") + "s", 1),
-            A(t(J), {
-              class: "speed-match-btn",
-              label: R.value || "Match speed",
-              disabled: D.value,
-              onClick: k
-            }, null, 8, ["label", "disabled"]),
-            g("span", null, "Speed: " + L(h.value.toFixed(2)), 1)
-          ]),
-          g("div", Dn, [
-            A(t(J), {
-              label: "Apply",
-              class: "apply-btn",
-              onClick: _
-            })
-          ])
-        ])
-      ]),
-      _: 1
-    }, 8, ["visible"]));
+    k[h] = l;
   }
-};
-function Fn(e) {
-  const { props: o } = e, n = 600, s = O([]), r = ne({}), i = O(""), y = O(""), h = O(""), m = O(!1), R = {
-    "": "All statuses",
-    no_text: "No source text",
-    needs_translation: "Needs translation",
-    not_started: "Not started",
-    stale: "Stale",
-    done: "Done",
-    unsupported: "Unsupported (multi-channel)"
-  }, D = Object.entries(R).map(([c, w]) => ({ value: c, label: w }));
-  function k() {
-    return ye(o.root, "_dub_state.json");
+  return k;
+}
+const fo = { class: "waveform-wrap" }, po = {
+  key: 0,
+  class: "waveform-status"
+}, vo = {
+  key: 1,
+  class: "waveform-status",
+  title: "Couldn't load a waveform for this file"
+}, ho = {
+  __name: "WaveformCanvas",
+  props: {
+    src: { type: String, default: "" }
+  },
+  setup(e) {
+    const o = e, t = V(null), n = V(!1), s = V(!1);
+    function a(v, k) {
+      if (typeof v.getContext != "function") return;
+      const h = window.devicePixelRatio || 1, p = v.clientWidth || 200, b = v.clientHeight || 28;
+      v.width = Math.max(1, Math.round(p * h)), v.height = Math.max(1, Math.round(b * h));
+      const l = v.getContext("2d");
+      if (!l) return;
+      l.setTransform(h, 0, 0, h, 0, 0), l.clearRect(0, 0, p, b);
+      const d = p / k.length, f = b / 2;
+      l.fillStyle = getComputedStyle(v).color || "#4caf50";
+      for (let _ = 0; _ < k.length; _++) {
+        const m = Math.max(1, k[_] * b);
+        l.fillRect(_ * d, f - m / 2, Math.max(1, d - 1), m);
+      }
+    }
+    async function r() {
+      if (!(!o.src || !t.value)) {
+        n.value = !0, s.value = !1;
+        try {
+          const v = t.value.clientWidth || 200, k = await co(o.src, Math.max(20, Math.round(v / 3)));
+          t.value && a(t.value, k);
+        } catch {
+          s.value = !0;
+        } finally {
+          n.value = !1;
+        }
+      }
+    }
+    return qe(r), ye(() => o.src, r), (v, k) => (E(), A("div", fo, [
+      $("canvas", {
+        ref_key: "canvasEl",
+        ref: t,
+        class: "waveform-canvas"
+      }, null, 512),
+      n.value ? (E(), A("span", po, "…")) : s.value ? (E(), A("span", vo, "⚠")) : X("", !0)
+    ]));
   }
-  const _ = O(!1);
-  async function u() {
-    const w = await (await fetch(`${pe}/read?path=${encodeURIComponent(k())}`)).json();
-    let F = { rows: {} };
-    if (w.exists)
+}, Et = /* @__PURE__ */ Re(ho, [["__scopeId", "data-v-413ffbd4"]]), yo = /* @__PURE__ */ new Set([
+  "a",
+  "an",
+  "the",
+  "and",
+  "or",
+  "but",
+  "if",
+  "then",
+  "else",
+  "when",
+  "at",
+  "by",
+  "for",
+  "with",
+  "about",
+  "against",
+  "between",
+  "into",
+  "through",
+  "during",
+  "before",
+  "after",
+  "above",
+  "below",
+  "to",
+  "from",
+  "up",
+  "down",
+  "in",
+  "out",
+  "on",
+  "off",
+  "over",
+  "under",
+  "again",
+  "further",
+  "is",
+  "are",
+  "was",
+  "were",
+  "be",
+  "been",
+  "being",
+  "have",
+  "has",
+  "had",
+  "do",
+  "does",
+  "did",
+  "can",
+  "could",
+  "should",
+  "would",
+  "may",
+  "might",
+  "must",
+  "shall",
+  "will",
+  "i",
+  "you",
+  "he",
+  "she",
+  "it",
+  "we",
+  "they",
+  "me",
+  "him",
+  "her",
+  "us",
+  "them",
+  "my",
+  "your",
+  "his",
+  "their",
+  "this",
+  "that",
+  "these",
+  "those",
+  "though",
+  "please"
+]), _o = /* @__PURE__ */ new Set([
+  "и",
+  "да",
+  "но",
+  "а",
+  "или",
+  "ли",
+  "бы",
+  "же",
+  "что",
+  "чтобы",
+  "как",
+  "будто",
+  "словно",
+  "в",
+  "во",
+  "на",
+  "с",
+  "со",
+  "к",
+  "ко",
+  "из",
+  "изо",
+  "по",
+  "за",
+  "от",
+  "ото",
+  "до",
+  "без",
+  "под",
+  "над",
+  "при",
+  "про",
+  "о",
+  "об",
+  "обо",
+  "у",
+  "для",
+  "из-за",
+  "из-под",
+  "я",
+  "ты",
+  "он",
+  "она",
+  "оно",
+  "мы",
+  "вы",
+  "они",
+  "меня",
+  "тебя",
+  "его",
+  "ее",
+  "нас",
+  "вас",
+  "их",
+  "мой",
+  "твой",
+  "свой",
+  "наш",
+  "ваш",
+  "это",
+  "этот",
+  "эта",
+  "эти",
+  "то",
+  "тот",
+  "та",
+  "те",
+  "все-таки",
+  "всё-таки",
+  "уж",
+  "вот"
+]);
+function Pe(e) {
+  return Math.round(e * 10) / 10;
+}
+function Ue(e) {
+  return String(e).split(/\s+/).filter(Boolean);
+}
+function Ct(e, o) {
+  return (e.match(/[,;]/g) || []).length + (e.match(o) || []).length;
+}
+function mo(e) {
+  return (e.match(/[aeiouyAEIOUY]+/g) || []).length;
+}
+function go(e) {
+  return (e.match(/[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g) || []).length;
+}
+function It(e, o) {
+  const n = String(e).toLowerCase().replace(/[^a-zа-яё\s]/gi, "").split(/\s+/).filter(Boolean).filter((s) => !o.has(s));
+  return Math.max(1, n.length);
+}
+function it(e, o) {
+  const t = String(e), n = String(o), s = It(t, yo), a = It(n, _o), v = Math.min(s, a) / Math.max(s, a) * 100, k = mo(t), h = go(n);
+  let p = 100;
+  if (k > 0) {
+    const K = h / k, ge = 1.35, _e = 0.9;
+    if (K > ge) {
+      const be = K - ge;
+      p = Math.max(0, 100 - be * 100);
+    } else if (K < _e) {
+      const be = _e - K;
+      p = Math.max(0, 100 - be * 100);
+    }
+  }
+  const b = v * 0.6 + p * 0.4, l = /\b(oh|ah|hm|ha|hey|ugh|wow|oops|tsk)\b/gi, d = /\b(ох|ах|хм|ха|эй|уф|ого|ой|упс|мда)\b/gi, f = (t.match(l) || []).length / Math.max(1, Ue(t).length) * 100, _ = (n.match(d) || []).length / Math.max(1, Ue(n).length) * 100, c = 100 * ((Math.min(f, _) + 0.01) / (Math.max(f, _) + 0.01)), T = /[aeiouyAEIOUY]/g, O = /[sxzSXZ]/g, x = /[аеёиоуыэюяАЕЁИОУЫЭЮЯ]/g, D = /[шжщчсзШЖЩЧСЗ]/g, w = (t.match(/[a-zA-Z]/g) || []).length || 1, L = (n.match(/[а-яёА-ЯЁ]/g) || []).length || 1, u = (t.match(T) || []).length / w, R = (n.match(x) || []).length / L, P = (t.match(O) || []).length / w, q = (n.match(D) || []).length / L, z = Math.abs(u - R), oe = Math.abs(P - q), le = 100 * (1 - Math.min(1, (z + oe) / 2)), y = (c + le) / 2, M = (K) => [
+    K.includes("?"),
+    K.includes("!"),
+    K.includes("...") || K.includes("…"),
+    /["«»]/.test(K),
+    /^\s*[—-]/.test(K)
+  ], J = M(t), H = M(n);
+  let Z = 0;
+  for (let K = 0; K < 5; K++)
+    J[K] === H[K] && (Z += 1);
+  const ee = Z / 5 * 100, I = Ue(t);
+  let S = 100;
+  if (I.length >= 7) {
+    const K = /* @__PURE__ */ new Set([
+      "the",
+      "a",
+      "an",
+      "is",
+      "are",
+      "was",
+      "were",
+      "and",
+      "or",
+      "but",
+      "of",
+      "to",
+      "in",
+      "on",
+      "at",
+      "it"
+    ]), ge = /* @__PURE__ */ new Set([
+      "и",
+      "а",
+      "но",
+      "в",
+      "на",
+      "с",
+      "к",
+      "о",
+      "у",
+      "что",
+      "это",
+      "я",
+      "ты",
+      "он",
+      "она"
+    ]), _e = (Ee) => String(Ee).toLowerCase().replace(/[^a-zа-яё\s]/gi, "").split(/\s+/).filter(Boolean), be = _e(t).filter((Ee) => !K.has(Ee)), Me = _e(n).filter((Ee) => !ge.has(Ee)), xe = new Set(be).size / Math.max(1, be.length), Ge = new Set(Me).size / Math.max(1, Me.length);
+    S = Math.min(xe, Ge) / Math.max(xe, Ge, 1e-4) * 100;
+  }
+  const C = /\b(and|but|or|so|because|although)\b/gi, U = /\b(и|а|но|или|потому|хотя)\b/gi, G = Ue(n), se = Ct(t, C) / (I.length || 1) * 10, j = Ct(n, U) / (G.length || 1) * 10, ie = 100 * ((Math.min(se, j) + 0.01) / (Math.max(se, j) + 0.01));
+  return [
+    { key: "syllableRatio", label: "Акцентно-ритмическое соответствие (CosyVoice 3)", score: Pe(b) },
+    { key: "acousticTexture", label: "Звуковая/фонетическая согласованность", score: Pe(y) },
+    { key: "edgeParity", label: "Интонационно-краевые маркеры", score: Pe(ee) },
+    { key: "lexicalDiversity", label: "Лексическое разнообразие (TTR)", score: Pe(S) },
+    { key: "pauseDensity", label: "Плотность микропауз", score: Pe(ie) }
+  ];
+}
+const bo = { class: "translation-similarity-radar" }, So = { class: "radar-chart-container" }, ko = ["viewBox"], Ro = ["points"], To = ["x2", "y2"], wo = ["d"], Eo = ["y"], Co = ["cx", "cy", "onMouseenter"], Io = ["x", "y"], $o = ["x", "y", "text-anchor", "dy"], Po = { class: "radar-metrics-list" }, Oo = { class: "metric-info" }, Do = { class: "metric-label" }, Ao = { class: "metric-score-val" }, Mo = { class: "metric-bar-bg" }, Oe = 300, Se = 95, $t = 3, Be = 30, xo = {
+  __name: "TranslationSimilarityRadar",
+  props: {
+    original: { type: String, default: "" },
+    translation: { type: String, default: "" }
+  },
+  setup(e) {
+    const o = V(null), t = {
+      syllableRatio: "Слоги",
+      acousticTexture: "Фонетика",
+      edgeParity: "Маркеры",
+      lexicalDiversity: "TTR",
+      pauseDensity: "Паузы"
+    }, n = e, s = ae(() => {
       try {
-        const M = JSON.parse(w.content);
-        M && typeof M.rows == "object" && (F = M);
-      } catch (M) {
-        console.warn("[FL CosyVoice3 VODubEditor] _dub_state.json is not valid JSON:", M);
+        if (typeof it == "function") {
+          const T = it(n.original, n.translation);
+          if (Array.isArray(T) && T.length > 0)
+            return T;
+        }
+      } catch {
       }
-    Object.keys(r).forEach((M) => delete r[M]), Object.assign(r, F.rows), _.value = !!F.use_original_default;
+      const f = n.original || "", _ = n.translation || "", m = Math.abs(_.length - f.length), c = Math.max(0, Math.min(100, Math.round(100 - m / Math.max(f.length, 1) * 50)));
+      return [
+        { key: "semantic", label: "Semantic Match", score: _.length > 0 ? 85 : 0 },
+        { key: "length", label: "Length Ratio", score: c },
+        { key: "completeness", label: "Completeness", score: _.length > 0 ? 90 : 0 },
+        { key: "fluency", label: "Fluency", score: _.length > 0 ? 80 : 0 },
+        { key: "vocabulary", label: "Vocabulary", score: _.length > 0 ? 78 : 0 }
+      ];
+    }), a = Oe / 2, r = ae(() => {
+      const f = s.value.reduce((_, m) => _ + m.score, 0);
+      return Math.round(f / s.value.length);
+    }), v = ae(() => s.value.length || 5), k = ae(() => {
+      const f = v.value, _ = [];
+      for (let m = 0; m < f; m++) {
+        const c = m * 2 * Math.PI / f - Math.PI / 2;
+        _.push({
+          x: a + Se * Math.cos(c),
+          y: a + Se * Math.sin(c),
+          angle: c
+        });
+      }
+      return _;
+    }), h = ae(() => {
+      const f = v.value, _ = [];
+      for (let m = 1; m <= $t; m++) {
+        const c = Se * m / $t, T = [];
+        for (let O = 0; O < f; O++) {
+          const x = O * 2 * Math.PI / f - Math.PI / 2, D = a + c * Math.cos(x), w = a + c * Math.sin(x);
+          T.push(`${D},${w}`);
+        }
+        _.push({ level: m, points: T.join(" ") });
+      }
+      return _;
+    }), p = ae(() => {
+      const f = v.value, _ = [];
+      return s.value.forEach((m, c) => {
+        const T = c * 2 * Math.PI / f - Math.PI / 2, O = Math.max(0, Math.min(100, m.score ?? 0)), x = Se * O / 100, D = Math.max(x, Be), w = a + D * Math.cos(T), L = a + D * Math.sin(T);
+        _.push({ x: w, y: L, score: O, label: m.label, key: m.key, clamped: x <= Be });
+      }), _;
+    }), b = ae(() => {
+      const f = p.value, _ = f.length;
+      if (_ === 0) return "";
+      let m = `M ${f[0].x} ${f[0].y}`;
+      for (let c = 1; c <= _; c++) {
+        const T = f[c - 1], O = f[c % _];
+        T.clamped && O.clamped ? m += ` A ${Be} ${Be} 0 0 1 ${O.x} ${O.y}` : m += ` L ${O.x} ${O.y}`;
+      }
+      return `${m} Z`;
+    });
+    function l(f) {
+      const _ = Math.cos(f);
+      return Math.abs(_) < 0.25 ? "middle" : _ > 0 ? "start" : "end";
+    }
+    function d(f) {
+      const _ = Math.sin(f);
+      return _ < -0.5 ? "-6" : _ > 0.5 ? "14" : "4";
+    }
+    return (f, _) => (E(), A("div", bo, [
+      $("div", So, [
+        (E(), A("svg", {
+          width: Oe,
+          height: Oe,
+          viewBox: `0 0 ${Oe} ${Oe}`,
+          class: "radar-svg"
+        }, [
+          (E(!0), A(ne, null, ue(h.value, (m) => (E(), A("polygon", {
+            key: m.level,
+            points: m.points,
+            class: "radar-grid-polygon"
+          }, null, 8, Ro))), 128)),
+          (E(!0), A(ne, null, ue(k.value, (m, c) => (E(), A("line", {
+            key: "axis-" + c,
+            x1: a,
+            y1: a,
+            x2: m.x,
+            y2: m.y,
+            class: "radar-axis-line"
+          }, null, 8, To))), 128)),
+          p.value.length > 0 ? (E(), A("path", {
+            key: 0,
+            d: b.value,
+            class: "radar-data-polygon"
+          }, null, 8, wo)) : X("", !0),
+          $("circle", {
+            cx: a,
+            cy: a,
+            r: "30",
+            fill: "#1e1e22"
+          }),
+          $("text", {
+            x: a,
+            y: a + 5,
+            "text-anchor": "middle",
+            class: "radar-center-text-main"
+          }, F(r.value) + "%", 9, Eo),
+          (E(!0), A(ne, null, ue(p.value, (m, c) => (E(), A("circle", {
+            key: "pt-" + c,
+            cx: m.x,
+            cy: m.y,
+            r: "4",
+            class: pe(["radar-data-node", { "radar-data-node-active": c === o.value }]),
+            onMouseenter: (T) => o.value = c,
+            onMouseleave: _[0] || (_[0] = (T) => o.value = null)
+          }, null, 42, Co))), 128)),
+          (E(!0), A(ne, null, ue(p.value, (m, c) => (E(), A("text", {
+            key: "pct-" + c,
+            x: a + Math.max(Se * m.score / 100 + 14, 40) * Math.cos(c * 2 * Math.PI / v.value - Math.PI / 2),
+            y: a + Math.max(Se * m.score / 100 + 14, 40) * Math.sin(c * 2 * Math.PI / v.value - Math.PI / 2),
+            "text-anchor": "middle",
+            class: "radar-node-percent"
+          }, F(Math.round(m.score)) + "% ", 9, Io))), 128)),
+          (E(!0), A(ne, null, ue(k.value, (m, c) => {
+            var T, O, x;
+            return E(), A("text", {
+              key: "label-" + c,
+              x: a + (Se + 22) * Math.cos(m.angle),
+              y: a + (Se + 22) * Math.sin(m.angle),
+              "text-anchor": l(m.angle),
+              dy: d(m.angle),
+              class: "radar-axis-label"
+            }, [
+              $("title", null, F((T = s.value[c]) == null ? void 0 : T.label), 1),
+              ce(" " + F(t[(O = s.value[c]) == null ? void 0 : O.key] || ((x = s.value[c]) == null ? void 0 : x.label) || `Metric ${c + 1}`), 1)
+            ], 8, $o);
+          }), 128))
+        ], 8, ko))
+      ]),
+      $("div", Po, [
+        (E(!0), A(ne, null, ue(s.value, (m, c) => (E(), A("div", {
+          key: m.key,
+          class: pe(["radar-metric-item", { "radar-metric-item-active": c === o.value }])
+        }, [
+          $("div", Oo, [
+            $("span", Do, F(m.label), 1),
+            $("span", Ao, F(Math.round(m.score)) + "%", 1)
+          ]),
+          $("div", Mo, [
+            $("div", {
+              class: "metric-bar-fill",
+              style: De({ width: Math.max(0, Math.min(100, m.score)) + "%" })
+            }, null, 4)
+          ])
+        ], 2))), 128))
+      ])
+    ]));
   }
-  async function S() {
-    m.value = !0;
+}, Lo = /* @__PURE__ */ Re(xo, [["__scopeId", "data-v-2f7dabc6"]]), Vo = { class: "compact-circle" }, No = 400, nt = 8, Fo = {
+  __name: "TranslationSimilarityCompact",
+  props: {
+    original: { type: String, default: "" },
+    translation: { type: String, default: "" }
+  },
+  setup(e) {
+    const o = e, t = ae(() => {
+      try {
+        const l = it(o.original, o.translation);
+        if (!Array.isArray(l) || l.length === 0) return 0;
+        const d = l.reduce((f, _) => f + (_.score || 0), 0);
+        return Math.round(d / l.length);
+      } catch {
+        return 0;
+      }
+    }), n = V(null), s = V({ top: 0, left: 0, placement: "below" }), a = V(!1);
+    let r = null;
+    function v() {
+      const l = n.value;
+      if (!l) return;
+      const d = l.getBoundingClientRect(), f = window.innerWidth, _ = window.innerHeight, m = No, c = 540;
+      let T = "below", O = d.bottom + nt;
+      O + c > _ && d.top - c - nt > 0 && (T = "above", O = d.top - c - nt);
+      let x = d.left + d.width / 2 - m / 2;
+      x + m > f - 8 && (x = f - m - 8), x < 8 && (x = 8), s.value = { top: O, left: x, placement: T };
+    }
+    function k() {
+      clearTimeout(r), v(), a.value = !0;
+    }
+    function h() {
+      clearTimeout(r), r = setTimeout(() => {
+        a.value = !1;
+      }, 120);
+    }
+    function p() {
+      clearTimeout(r);
+    }
+    function b() {
+      a.value && v();
+    }
+    return window.addEventListener("scroll", b, !0), window.addEventListener("resize", b), ut(() => {
+      window.removeEventListener("scroll", b, !0), window.removeEventListener("resize", b), clearTimeout(r);
+    }), (l, d) => (E(), A(ne, null, [
+      $("div", {
+        ref_key: "circleRef",
+        ref: n,
+        class: "similarity-compact-wrapper",
+        onMouseenter: k,
+        onMouseleave: h
+      }, [
+        $("div", Vo, F(t.value) + "% ", 1)
+      ], 544),
+      (E(), de(gn, { to: "body" }, [
+        a.value ? (E(), A("div", {
+          key: 0,
+          class: "similarity-popover",
+          style: De({ top: s.value.top + "px", left: s.value.left + "px" }),
+          onMouseenter: p,
+          onMouseleave: h
+        }, [
+          N(Lo, {
+            original: e.original,
+            translation: e.translation
+          }, null, 8, ["original", "translation"])
+        ], 36)) : X("", !0)
+      ]))
+    ], 64));
+  }
+}, Uo = /* @__PURE__ */ Re(Fo, [["__scopeId", "data-v-9f2bc65b"]]), Bo = { class: "row" }, jo = { class: "row" }, zo = { class: "row" }, Ho = { class: "filter-clear-wrapper row" }, qo = {
+  __name: "RowFilterBar",
+  props: {
+    statusOptions: {
+      type: Array,
+      required: !0
+    },
+    selectedStatuses: {
+      type: Set,
+      required: !0
+    },
+    tristates: {
+      type: Array,
+      required: !0
+    },
+    tristateValues: {
+      type: Object,
+      required: !0
+    },
+    hasActive: {
+      type: Boolean,
+      required: !0
+    }
+  },
+  emits: ["toggle-status", "cycle-tristate", "clear"],
+  setup(e, { emit: o }) {
+    const t = e, n = o;
+    function s(p) {
+      n("toggle-status", p);
+    }
+    function a(p) {
+      n("cycle-tristate", p);
+    }
+    function r() {
+      n("clear");
+    }
+    function v(p) {
+      const b = t.tristateValues[p.key], l = p.stateLabels && p.stateLabels[b];
+      return l || (b === "only" ? `${p.label} ✓` : b === "without" ? `${p.label} ✗` : p.label);
+    }
+    function k(p) {
+      const b = t.tristateValues[p.key];
+      return b === "only" ? "success" : b === "without" ? "danger" : null;
+    }
+    function h(p) {
+      return t.selectedStatuses.has(p);
+    }
+    return (p, b) => {
+      const l = te("Button");
+      return E(), A("div", Bo, [
+        $("div", jo, [
+          (E(!0), A(ne, null, ue(e.statusOptions, (d) => (E(), de(l, {
+            key: d.value,
+            "data-status": d.value,
+            "aria-pressed": h(d.value),
+            outlined: !h(d.value),
+            onClick: (f) => s(d.value)
+          }, {
+            default: Y(() => [
+              ce(F(d.label), 1)
+            ]),
+            _: 2
+          }, 1032, ["data-status", "aria-pressed", "outlined", "onClick"]))), 128))
+        ]),
+        $("div", zo, [
+          (E(!0), A(ne, null, ue(e.tristates, (d) => (E(), de(l, {
+            key: d.key,
+            "data-tristate": d.key,
+            "data-state": e.tristateValues[d.key],
+            severity: k(d),
+            outlined: e.tristateValues[d.key] === "any",
+            onClick: (f) => a(d.key)
+          }, {
+            default: Y(() => [
+              ce(F(v(d)), 1)
+            ]),
+            _: 2
+          }, 1032, ["data-tristate", "data-state", "severity", "outlined", "onClick"]))), 128))
+        ]),
+        $("div", Ho, [
+          N(l, {
+            "data-testid": "filter-clear",
+            label: "Clear",
+            disabled: !e.hasActive,
+            onClick: r
+          }, null, 8, ["disabled"])
+        ])
+      ]);
+    };
+  }
+}, Wo = /* @__PURE__ */ Re(qo, [["__scopeId", "data-v-227b9cf0"]]);
+/*!
+ * pinia v4.0.3
+ * (c) 2026 Eduardo San Martin Morote
+ * @license MIT
+ */
+let Ft;
+const Ae = (e) => Ft = e, Ut = (
+  /* istanbul ignore next */
+  Symbol()
+);
+function Pt(e) {
+  return e && typeof e == "object" && Object.prototype.toString.call(e) === "[object Object]" && typeof e.toJSON != "function";
+}
+function Go() {
+  const e = Lt(!0), o = e.run(() => V({}));
+  let t = [], n = [];
+  const s = xt({
+    install(a) {
+      Ae(s), s._a = a, a.provide(Ut, s), a.config.globalProperties.$pinia = s, n.forEach((r) => t.push(r)), n = [];
+    },
+    use(a) {
+      return this._a ? t.push(a) : n.push(a), this;
+    },
+    _p: t,
+    _a: null,
+    _e: e,
+    _s: /* @__PURE__ */ new Map(),
+    state: o
+  });
+  return s;
+}
+const lt = () => {
+};
+function Ot(e, o, t, n = lt) {
+  e.add(o);
+  const s = () => {
+    e.delete(o) && n();
+  };
+  return !t && Rn() && Tn(s), s;
+}
+function Ce(e, ...o) {
+  e.forEach((t) => {
+    t(...o);
+  });
+}
+const Jo = (e) => e(), Dt = Symbol(), ot = Symbol();
+function rt(e, o) {
+  e instanceof Map && o instanceof Map ? o.forEach((t, n) => e.set(n, t)) : e instanceof Set && o instanceof Set && o.forEach(e.add, e);
+  for (const t in o) {
+    if (!Object.hasOwn(o, t)) continue;
+    const n = o[t], s = e[t];
+    Pt(s) && Pt(n) && Object.hasOwn(e, t) && !ve(n) && !ct(n) ? e[t] = rt(s, n) : e[t] = n;
+  }
+  return e;
+}
+const Ko = (
+  /* istanbul ignore next */
+  Symbol()
+);
+function Zo(e) {
+  return !e || typeof e != "object" || !Object.hasOwn(e, Ko);
+}
+const { assign: ke } = Object;
+function Yo(e) {
+  return !!(ve(e) && e.effect);
+}
+function Xo(e, o, t, n) {
+  const { state: s, actions: a, getters: r } = o, v = t.state.value[e];
+  let k;
+  function h() {
+    v || (t.state.value[e] = s ? s() : {});
+    const p = En(t.state.value[e]);
+    return ke(p, a, Object.keys(r || {}).reduce((b, l) => (b[l] = xt(ae(() => {
+      Ae(t);
+      const d = t._s.get(e);
+      return r[l].call(d, d);
+    })), b), {}));
+  }
+  return k = Bt(e, h, o, t, n, !0), k;
+}
+function Bt(e, o, t = {}, n, s, a) {
+  let r;
+  const v = ke({ actions: {} }, t), k = { deep: !0 };
+  let h, p, b = /* @__PURE__ */ new Set(), l = /* @__PURE__ */ new Set(), d;
+  const f = n.state.value[e];
+  !a && !f && (n.state.value[e] = {});
+  let _;
+  function m(L) {
+    let u;
+    h = p = !1, typeof L == "function" ? (L(n.state.value[e]), u = {
+      type: "patch function",
+      storeId: e,
+      events: d
+    }) : (rt(n.state.value[e], L), u = {
+      type: "patch object",
+      payload: L,
+      storeId: e,
+      events: d
+    });
+    const R = _ = Symbol();
+    wn().then(() => {
+      _ === R && (h = !0);
+    }), p = !0, Ce(b, u, n.state.value[e]);
+  }
+  const c = a ? function() {
+    const { state: u } = t, R = u ? u() : {};
+    this.$patch((P) => {
+      ke(P, R);
+    });
+  } : lt;
+  function T() {
+    r.stop(), b.clear(), l.clear(), n._s.delete(e);
+  }
+  const O = (L, u = "") => {
+    if (Dt in L)
+      return L[ot] = u, L;
+    const R = function() {
+      Ae(n);
+      const P = Array.from(arguments), q = /* @__PURE__ */ new Set(), z = /* @__PURE__ */ new Set();
+      function oe(M) {
+        q.add(M);
+      }
+      function le(M) {
+        z.add(M);
+      }
+      Ce(l, {
+        args: P,
+        name: R[ot],
+        store: D,
+        after: oe,
+        onError: le
+      });
+      let y;
+      try {
+        y = L.apply(this && this.$id === e ? this : D, P);
+      } catch (M) {
+        throw Ce(z, M), M;
+      }
+      return y instanceof Promise ? y.then((M) => (Ce(q, M), M)).catch((M) => (Ce(z, M), Promise.reject(M))) : (Ce(q, y), y);
+    };
+    return R[Dt] = !0, R[ot] = u, R;
+  }, x = {
+    _p: n,
+    $id: e,
+    $onAction: Ot.bind(null, l),
+    $patch: m,
+    $reset: c,
+    $subscribe(L, u = {}) {
+      if (b.has(L))
+        return lt;
+      const R = Ot(b, L, u.detached, () => P()), P = r.run(() => ye(() => n.state.value[e], (q) => {
+        (u.flush === "sync" ? p : h) && L({
+          storeId: e,
+          type: "direct",
+          events: d
+        }, q);
+      }, ke({}, k, u)));
+      return R;
+    },
+    $dispose: T
+  }, D = he(x);
+  n._s.set(e, D);
+  const w = (n._a && n._a.runWithContext || Jo)(() => n._e.run(() => (r = Lt()).run(() => o({ action: O }))));
+  for (const L in w) {
+    const u = w[L];
+    ve(u) && !Yo(u) || ct(u) ? a || (f && Zo(u) && (ve(u) ? u.value = f[L] : ((u instanceof Set || u instanceof Map) && u.clear(), rt(u, f[L]))), n.state.value[e][L] = u) : typeof u == "function" && (w[L] = O(u, L), v.actions[L] = u);
+  }
+  return ke(D, w), ke(He(D), w), Object.defineProperty(D, "$state", {
+    get: () => n.state.value[e],
+    set: (L) => {
+      m((u) => {
+        ke(u, L);
+      });
+    }
+  }), n._p.forEach((L) => {
+    const u = r.run(() => L({
+      store: D,
+      app: n._a,
+      pinia: n,
+      options: v
+    }));
+    ke(D, u);
+  }), f && a && t.hydrate && t.hydrate(D.$state, f), h = !0, p = !0, D;
+}
+/*! #__NO_SIDE_EFFECTS__ */
+// @__NO_SIDE_EFFECTS__
+function Qo(e, o, t) {
+  let n;
+  const s = typeof o == "function";
+  n = s ? t : o;
+  function a(r, v) {
+    const k = kn();
+    return r = r || (k ? Sn(Ut, null) : null), r && Ae(r), r = Ft, r._s.has(e) || (s ? Bt(e, o, n, r) : Xo(e, n, r)), r._s.get(e);
+  }
+  return a.$id = e, a;
+}
+function es(e) {
+  const o = He(e), t = {};
+  for (const n in o) {
+    const s = o[n];
+    s != null && s.effect ? t[n] = ae({
+      get: () => e[n],
+      set(a) {
+        e[n] = a;
+      }
+    }) : (ve(s) || ct(s)) && (t[n] = bn(e, n));
+  }
+  return t;
+}
+const ze = {
+  "": "All statuses",
+  no_text: "No source text",
+  needs_translation: "Needs translation",
+  not_started: "Not started",
+  stale: "Stale",
+  done: "Ready",
+  unsupported: "Unsupported (multi-channel)"
+}, ts = [
+  { value: "not_done", label: "Not done" },
+  { value: "manually_done", label: "Done (manual)" },
+  { value: "issues", label: "⚠ Issues only" }
+];
+function ns(e, o) {
+  return [...Object.entries(e || {}).map(([n, s]) => ({ value: n, label: s })), ...o || []];
+}
+const os = ns(
+  ze,
+  ts
+), ss = {
+  no_text: "text-warning",
+  needs_translation: "text-active",
+  stale: "text-warning",
+  done: "text-success"
+};
+function as(e) {
+  return ss[e] || "muted";
+}
+const is = [
+  { value: "no_text", label: "No text" },
+  { value: "needs_translation", label: "Needs translation" },
+  { value: "not_started", label: "Not started" },
+  { value: "stale", label: "Stale" },
+  { value: "done", label: "Ready" },
+  { value: "unsupported", label: "Unsupported" }
+], ls = [
+  {
+    key: "manuallyDone",
+    label: "Done (manual)",
+    stateLabels: { without: "Not done" }
+  },
+  { key: "issues", label: "⚠ Issues" }
+], At = 600, je = 50, rs = /* @__PURE__ */ Qo("voDub", () => {
+  const e = V(""), o = V(""), t = V([]), n = he({}), s = V(/* @__PURE__ */ new Set()), a = V("any"), r = V("any"), v = V(""), k = V(""), h = ae({
+    get() {
+      return s.value.size === 1 ? Array.from(s.value)[0] : a.value === "only" ? "manually_done" : a.value === "without" ? "not_done" : r.value === "only" ? "issues" : "";
+    },
+    set(I) {
+      I ? I === "manually_done" ? (s.value = /* @__PURE__ */ new Set(), a.value = "only", r.value = "any") : I === "not_done" ? (s.value = /* @__PURE__ */ new Set(), a.value = "without", r.value = "any") : I === "issues" ? (s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "only") : (s.value = /* @__PURE__ */ new Set([I]), a.value = "any", r.value = "any") : (s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "any"), O();
+    }
+  }), p = V(!1), b = V(!1), l = V({}), d = V(null), f = V(0);
+  function _() {
+    return $e(e.value, "_dub_state.json");
+  }
+  const m = "FL_VoDub.filterState";
+  function c() {
     try {
-      const w = await (await fetch(
-        `${le}/rows?path=${encodeURIComponent(o.root)}&bucket=${encodeURIComponent(o.bucket)}`
-      )).json();
-      if (w.error) {
-        h.value = w.error, s.value = [];
-        return;
+      const I = localStorage.getItem(m);
+      if (!I) return;
+      const S = JSON.parse(I);
+      if (S && typeof S == "object") {
+        if (Array.isArray(S.statuses)) {
+          const C = Object.keys(ze), U = S.statuses.filter((G) => C.includes(G));
+          s.value = new Set(U);
+        }
+        ["any", "only", "without"].includes(S.manuallyDone) && (a.value = S.manuallyDone), ["any", "only", "without"].includes(S.issues) && (r.value = S.issues);
       }
-      s.value = w.rows || [];
-      for (const F of s.value) {
-        const M = r[F.audio_key] || (r[F.audio_key] = {});
-        M.russian_text || (M.russian_text = F.russian || ""), M.instruct === void 0 && (M.instruct = F.instruct || ""), M.speaker_override === void 0 && (M.speaker_override = ""), M.effect === void 0 && (M.effect = "");
-      }
-      h.value = `${s.value.length} row(s) in ${o.bucket}`;
-    } catch (c) {
-      h.value = `Couldn't load: ${c}`;
-    } finally {
-      m.value = !1;
+    } catch {
     }
   }
-  function x(c) {
-    return r[c.audio_key] || (r[c.audio_key] = {});
-  }
-  const U = O(null);
-  function b() {
-    U.value && clearTimeout(U.value), U.value = setTimeout(E, n);
-  }
-  async function E() {
+  function T() {
     try {
-      await fetch(`${pe}/write`, {
+      const I = {
+        statuses: Array.from(s.value),
+        manuallyDone: a.value,
+        issues: r.value
+      };
+      localStorage.setItem(m, JSON.stringify(I));
+    } catch {
+    }
+  }
+  function O() {
+    T();
+  }
+  function x(I) {
+    if (!I || !ze.hasOwnProperty(I))
+      return;
+    const S = new Set(s.value);
+    S.has(I) ? S.delete(I) : S.add(I), s.value = S;
+  }
+  function D() {
+    a.value === "any" ? a.value = "only" : a.value === "only" ? a.value = "without" : a.value = "any";
+  }
+  function w() {
+    r.value === "any" ? r.value = "only" : r.value === "only" ? r.value = "without" : r.value = "any";
+  }
+  function L() {
+    s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "any";
+  }
+  const u = ae(
+    () => s.value.size > 0 || a.value !== "any" || r.value !== "any"
+  );
+  function R({ root: I, bucket: S }) {
+    e.value = I, o.value = S, s.value = /* @__PURE__ */ new Set(), a.value = "any", r.value = "any", c(), v.value = "", f.value = 0;
+  }
+  async function P() {
+    const S = await (await fetch(`${we}/read?path=${encodeURIComponent(_())}`)).json();
+    let C = { rows: {} };
+    if (S.exists)
+      try {
+        const U = JSON.parse(S.content);
+        U && typeof U.rows == "object" && (C = U);
+      } catch (U) {
+        console.warn("[VODubStore] _dub_state.json is not valid JSON:", U);
+      }
+    Object.keys(n).forEach((U) => delete n[U]), Object.assign(n, C.rows), b.value = !!C.use_original_default;
+  }
+  function q() {
+    const I = He(n), S = {};
+    for (const C of t.value) {
+      const U = I[C.audio_key];
+      S[C.audio_key] = U && U.russian_text || C.russian || "";
+    }
+    l.value = S;
+  }
+  async function z() {
+    if (e.value) {
+      p.value = !0;
+      try {
+        const I = new URLSearchParams({
+          path: e.value,
+          bucket: o.value
+        });
+        h.value && I.set("status", h.value);
+        const C = await (await fetch(`${me}/rows?${I.toString()}`)).json();
+        if (C.error) {
+          k.value = C.error, t.value = [];
+          return;
+        }
+        t.value = C.rows || [];
+        for (const U of t.value) {
+          const G = n[U.audio_key] || (n[U.audio_key] = {});
+          G.russian_text || (G.russian_text = U.russian || ""), G.instruct === void 0 && (G.instruct = U.instruct || ""), G.speaker_override === void 0 && (G.speaker_override = ""), G.effect === void 0 && (G.effect = "");
+        }
+        k.value = `${t.value.length} row(s) in ${o.value}`, q();
+      } catch (I) {
+        k.value = `Couldn't load: ${I}`;
+      } finally {
+        p.value = !1;
+      }
+    }
+  }
+  function oe(I) {
+    return n[I.audio_key] || (n[I.audio_key] = {});
+  }
+  function le() {
+    d.value && clearTimeout(d.value), d.value = setTimeout(y, At);
+  }
+  async function y() {
+    try {
+      await fetch(`${we}/write`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          path: k(),
+          path: _(),
           content: JSON.stringify(
-            { rows: r, use_original_default: _.value },
+            { rows: n, use_original_default: b.value },
             null,
             2
           )
         })
-      }), h.value = "Saved", S();
-    } catch (c) {
-      h.value = `Save failed: ${c}`;
+      }), k.value = "Saved", z();
+    } catch (I) {
+      k.value = `Save failed: ${I}`;
     }
   }
-  function v(c) {
-    x(c), b();
+  function M(I) {
+    oe(I), le();
   }
-  function a(c) {
-    h.value = c;
+  function J(I) {
+    k.value = I;
   }
-  const C = de(() => {
-    const c = y.value.trim().toLowerCase();
-    return s.value.filter((w) => {
-      if (i.value && w.status !== i.value) return !1;
-      if (!c) return !0;
-      const F = r[w.audio_key];
-      return `${w.audio_key} ${w.speaker_tag} ${w.english} ${F && F.russian_text || w.russian}`.toLowerCase().includes(c);
+  const H = ae(() => {
+    const I = v.value.trim().toLowerCase(), S = s.value, C = a.value, U = r.value, G = l.value, se = He(n);
+    return t.value.filter((j) => {
+      const B = se[j.audio_key] || null, ie = !!(B && B.manually_done), K = !!j.manually_issue;
+      if (S.size > 0 && !S.has(j.status))
+        return !1;
+      if (C === "only") {
+        if (!ie) return !1;
+      } else if (C === "without" && (ie || j.status === "unsupported" && !S.has("unsupported")))
+        return !1;
+      if (U === "only") {
+        if (!K) return !1;
+      } else if (U === "without" && K)
+        return !1;
+      if (!I) return !0;
+      const ge = G[j.audio_key] || j.russian;
+      return `${j.audio_key} ${j.speaker_tag} ${j.english} ${ge}`.toLowerCase().includes(I);
     });
-  }), B = 50, Z = O(0), l = de(
-    () => Math.max(1, Math.ceil(C.value.length / B))
-  ), f = de(() => {
-    const c = Z.value * B;
-    return C.value.slice(c, c + B);
+  }), Z = ae(
+    () => Math.max(1, Math.ceil(H.value.length / je))
+  ), ee = ae(() => {
+    const I = f.value * je;
+    return H.value.slice(I, I + je);
   });
-  return ce([i, y], () => {
-    Z.value = 0;
-  }), ce(C, () => {
-    Z.value > l.value - 1 && (Z.value = Math.max(0, l.value - 1));
+  return ye([s, a, r], () => {
+    f.value = 0, z(), T();
+  }), ye(v, () => {
+    q(), f.value = 0;
+  }), ye(H, () => {
+    f.value > Z.value - 1 && (f.value = Math.max(0, Z.value - 1));
   }), {
-    // состояние
-    rows: s,
-    stateRows: r,
-    statusFilter: i,
-    searchText: y,
-    status: h,
-    loading: m,
-    useOriginalDefault: _,
-    // доступ
-    entryFor: x,
-    // загрузка/сохранение
-    loadState: u,
-    loadRows: S,
-    scheduleSave: b,
-    flushSave: E,
-    onTextEdit: v,
-    setStatus: a,
-    saveTimer: U,
-    // ← экспортируется для main.close() и Render
-    // фильтр/пагинация
-    visibleRows: C,
-    PAGE_SIZE: B,
-    currentPage: Z,
-    pageCount: l,
-    pagedRows: f,
-    // константы и утилиты
-    SAVE_DEBOUNCE_MS: n,
-    statePath: k,
-    STATUS_LABELS: R,
-    STATUS_FILTER_OPTIONS: D
+    root: e,
+    bucket: o,
+    init: R,
+    rows: t,
+    stateRows: n,
+    statusFilter: h,
+    filterStatuses: s,
+    filterManuallyDone: a,
+    filterIssues: r,
+    searchText: v,
+    status: k,
+    loading: p,
+    useOriginalDefault: b,
+    entryFor: oe,
+    loadState: P,
+    loadRows: z,
+    scheduleSave: le,
+    flushSave: y,
+    onTextEdit: M,
+    setStatus: J,
+    saveTimer: d,
+    visibleRows: H,
+    PAGE_SIZE: je,
+    currentPage: f,
+    pageCount: Z,
+    pagedRows: ee,
+    SAVE_DEBOUNCE_MS: At,
+    statePath: _,
+    STATUS_LABELS: ze,
+    STATUS_FILTER_OPTIONS: os,
+    STATUS_TOGGLE_OPTIONS: is,
+    TRISTATE_FILTERS: ls,
+    toggleStatus: x,
+    cycleManuallyDone: D,
+    cycleIssues: w,
+    clearFilters: L,
+    hasActiveFilters: u
   };
-}
-function jn(e) {
-  const { props: o, setStatus: n } = e, s = O(!1), r = O(null), i = O([]), y = O(null), h = ne({});
-  async function m() {
+});
+function us(e) {
+  const { props: o, setStatus: t, entryFor: n, scheduleSave: s } = e, a = V(!1), r = V(null), v = V([]), k = V(null), h = he({});
+  async function p() {
+    try {
+      const f = await (await fetch(
+        `${me}/line_history/counts?root=${encodeURIComponent(o.root)}`
+      )).json();
+      f && !f.error && Object.assign(h, f);
+    } catch (d) {
+      console.error("[FL history] couldn't load version counts", d);
+    }
+  }
+  async function b(d) {
+    r.value = d;
     try {
       const _ = await (await fetch(
-        `${le}/line_history/counts?root=${encodeURIComponent(o.root)}`
+        `${me}/line_history?root=${encodeURIComponent(o.root)}&audio_key=${encodeURIComponent(d.audio_key)}`
       )).json();
-      _ && !_.error && Object.assign(h, _);
-    } catch (k) {
-      console.error("[FL history] couldn't load version counts", k);
+      v.value = _.versions || [], k.value = _.chosen_version ?? null;
+    } catch (f) {
+      console.error("[FL history] couldn't load line history", f), v.value = [], k.value = null;
     }
+    a.value = !0;
   }
-  async function R(k) {
-    r.value = k;
-    try {
-      const u = await (await fetch(
-        `${le}/line_history?root=${encodeURIComponent(o.root)}&audio_key=${encodeURIComponent(k.audio_key)}`
-      )).json();
-      i.value = u.versions || [], y.value = u.chosen_version ?? null;
-    } catch (_) {
-      console.error("[FL history] couldn't load line history", _), i.value = [], y.value = null;
-    }
-    s.value = !0;
-  }
-  async function D(k) {
-    const _ = r.value;
-    if (_)
+  async function l(d) {
+    const f = r.value;
+    if (f)
       try {
-        await fetch(`${le}/line_history/choose`, {
+        const m = await (await fetch(`${me}/line_history/choose`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             root: o.root,
-            audio_key: _.audio_key,
-            version: k
+            audio_key: f.audio_key,
+            version: d
           })
-        }), n(`Switched ${_.audio_key} to version ${k}`);
-      } catch (u) {
-        n(`Couldn't switch version: ${u.message || u}`);
+        })).json();
+        if (m && m.error) {
+          t(`Couldn't switch version: ${m.error}`);
+          return;
+        }
+        k.value = d, t(`Switched ${f.audio_key} to version ${d}`), n(f).active_version = d, s(), e.cacheBust && (e.cacheBust[f.audio_key] = Date.now()), e.loadRows && await e.loadRows(), p();
+      } catch (_) {
+        t(`Couldn't switch version: ${_.message || _}`);
       }
   }
   return {
-    historyVisible: s,
+    historyVisible: a,
     historyRow: r,
-    historyVersions: i,
-    historyChosenVersion: y,
+    historyVersions: v,
+    historyChosenVersion: k,
     historyCounts: h,
-    refreshHistoryCounts: m,
-    openLineHistory: R,
-    onHistoryVersionChosen: D
+    refreshHistoryCounts: p,
+    openLineHistory: b,
+    onHistoryVersionChosen: l
   };
 }
-function zn(e) {
-  const { props: o, rows: n, entryFor: s, setStatus: r, scheduleSave: i } = e, y = O([]);
-  async function h() {
+function cs(e) {
+  const { props: o, rows: t, entryFor: n, setStatus: s, scheduleSave: a } = e, r = V([]);
+  async function v() {
     try {
-      const E = await (await fetch(
-        `${pe}/read?path=${encodeURIComponent(ye(o.root, "_dub_roles.json"))}`
+      const T = await (await fetch(
+        `${we}/read?path=${encodeURIComponent($e(o.root, "_dub_roles.json"))}`
       )).json();
-      if (!E.exists) {
-        y.value = [];
+      if (!T.exists) {
+        r.value = [];
         return;
       }
-      const v = JSON.parse(E.content), a = v && typeof v.roles == "object" && v.roles || {};
-      y.value = Object.entries(a).map(([C, B]) => ({ code: C, ...B }));
+      const O = JSON.parse(T.content), x = O && typeof O.roles == "object" && O.roles || {};
+      r.value = Object.entries(x).map(([D, w]) => ({ code: D, ...w }));
     } catch {
-      y.value = [];
+      r.value = [];
     }
   }
-  function m(b) {
-    return [b.character, b.speaker].filter(Boolean).join(" -- ");
+  function k(c) {
+    return [c.character, c.speaker].filter(Boolean).join(" -- ");
   }
-  function R(b) {
-    return (s(b).speaker_override || b.speaker_tag || "").trim();
+  function h(c) {
+    return (n(c).speaker_override || c.speaker_tag || "").trim();
   }
   const {
-    popover: D,
-    show: k,
-    hide: _,
-    info: u
-  } = Mt(
-    y,
-    (b) => [
-      ["character", b.character],
-      ["gender", b.gender],
-      ["actor", b.actor],
-      ["description", b.description],
-      ["dub direction", b.dub_direction],
-      ["notes", Array.isArray(b.notes) ? b.notes.join(" ") : b.notes],
-      ["voice", b.speaker]
-    ].filter(([, E]) => E != null && E !== "")
+    popover: p,
+    show: b,
+    hide: l,
+    info: d
+  } = Ln(
+    r,
+    (c) => [
+      ["character", c.character],
+      ["gender", c.gender],
+      ["actor", c.actor],
+      ["description", c.description],
+      ["dub direction", c.dub_direction],
+      ["notes", Array.isArray(c.notes) ? c.notes.join(" ") : c.notes],
+      ["voice", c.speaker]
+    ].filter(([, T]) => T != null && T !== "")
   );
-  function S(b) {
-    const E = (b.speaker_tag || "").trim();
-    return E ? n.value.filter(
-      (v) => v !== b && v.status !== "unsupported" && (v.speaker_tag || "").trim() === E
+  function f(c) {
+    const T = (c.speaker_tag || "").trim();
+    return T ? t.value.filter(
+      (O) => O !== c && O.status !== "unsupported" && (O.speaker_tag || "").trim() === T
     ).length : 0;
   }
-  function x(b) {
-    const E = S(b);
-    return E > 0 ? `Apply this Role to every other "${b.speaker_tag}" row in this bucket (${E})` : "No other rows in this bucket share this Identifier";
+  function _(c) {
+    const T = f(c);
+    return T > 0 ? `Apply this Role to every other "${c.speaker_tag}" row in this bucket (${T})` : "No other rows in this bucket share this Identifier";
   }
-  function U(b) {
-    const E = S(b);
-    if (!E) return;
-    const v = (b.speaker_tag || "").trim(), a = s(b).speaker_override || b.speaker_tag;
-    n.value.forEach((C) => {
-      C !== b && C.status !== "unsupported" && (C.speaker_tag || "").trim() === v && (s(C).speaker_override = a);
-    }), i(), r(`Applied Role to ${E} other "${v}" row(s) in this bucket`);
+  function m(c) {
+    const T = f(c);
+    if (!T) return;
+    const O = (c.speaker_tag || "").trim(), x = n(c).speaker_override || c.speaker_tag;
+    t.value.forEach((D) => {
+      D !== c && D.status !== "unsupported" && (D.speaker_tag || "").trim() === O && (n(D).speaker_override = x);
+    }), a(), s(`Applied Role to ${T} other "${O}" row(s) in this bucket`);
   }
   return {
-    roleEntries: y,
-    loadRoleEntries: h,
-    roleCodeFor: R,
-    roleOptionSubLabel: m,
-    sameIdentifierCount: S,
-    applyRoleTitle: x,
-    applyRoleToSameIdentifier: U,
-    roleInfoPopover: D,
-    showRoleInfoPopover: k,
-    hideRoleInfoPopover: _,
-    roleInfoFields: u
+    roleEntries: r,
+    loadRoleEntries: v,
+    roleCodeFor: h,
+    roleOptionSubLabel: k,
+    sameIdentifierCount: f,
+    applyRoleTitle: _,
+    applyRoleToSameIdentifier: m,
+    roleInfoPopover: p,
+    showRoleInfoPopover: b,
+    hideRoleInfoPopover: l,
+    roleInfoFields: d
   };
 }
-function xn(e) {
+function ds(e) {
   const {
     props: o,
-    rows: n,
-    entryFor: s,
-    onTextEdit: r,
-    setStatus: i,
-    scheduleSave: y,
-    roleCodeFor: h
-  } = e, m = O([]);
-  function R() {
-    return ye(o.root, "_instruct_categories.json");
+    rows: t,
+    entryFor: n,
+    onTextEdit: s,
+    setStatus: a,
+    scheduleSave: r,
+    roleCodeFor: v
+  } = e, k = V([]);
+  function h() {
+    return $e(o.root, "_instruct_categories.json");
   }
-  async function D() {
+  async function p() {
     try {
-      const f = await (await fetch(
-        `${pe}/read?path=${encodeURIComponent(R())}`
+      const R = await (await fetch(
+        `${we}/read?path=${encodeURIComponent(h())}`
       )).json();
-      if (!f.exists) {
-        m.value = [];
+      if (!R.exists) {
+        k.value = [];
         return;
       }
-      const c = JSON.parse(f.content);
-      m.value = c && c.categories || [];
+      const P = JSON.parse(R.content);
+      k.value = P && P.categories || [];
     } catch {
-      m.value = [];
+      k.value = [];
     }
   }
-  const k = /* @__PURE__ */ new Map();
-  function _(l) {
-    clearTimeout(k.get(l.audio_key)), k.set(
-      l.audio_key,
+  const b = /* @__PURE__ */ new Map();
+  function l(u) {
+    clearTimeout(b.get(u.audio_key)), b.set(
+      u.audio_key,
       setTimeout(async () => {
-        const f = s(l).instruct, c = await qt(
-          pe,
-          R(),
-          f
+        const R = n(u).instruct, P = await Vn(
+          we,
+          h(),
+          R
         );
-        c && (m.value = c);
+        P && (k.value = P);
       }, 600)
       // синхронно с SAVE_DEBOUNCE_MS из state
     );
   }
-  const u = O(!1), S = O(null);
-  function x(l) {
-    S.value = l, u.value = !0;
+  const d = V(!1), f = V(null);
+  function _(u) {
+    f.value = u, d.value = !0;
   }
-  const U = ne({});
-  function b(l) {
-    const f = S.value;
-    f && (U[f.audio_key] = s(f).instruct, s(f).instruct = l, r(f), _(f));
+  const m = he({});
+  function c(u) {
+    const R = f.value;
+    R && (m[R.audio_key] = n(R).instruct, n(R).instruct = u, s(R), l(R));
   }
-  function E(l) {
-    return U[l.audio_key] !== void 0 ? `Restore previous instruct: "${U[l.audio_key]}"` : "No previous instruct to restore";
+  function T(u) {
+    return m[u.audio_key] !== void 0 ? `Restore previous instruct: "${m[u.audio_key]}"` : "No previous instruct to restore";
   }
-  function v(l) {
-    if (U[l.audio_key] === void 0) return;
-    const f = s(l).instruct;
-    s(l).instruct = U[l.audio_key], U[l.audio_key] = f, r(l);
+  function O(u) {
+    if (m[u.audio_key] === void 0) return;
+    const R = n(u).instruct;
+    n(u).instruct = m[u.audio_key], m[u.audio_key] = R, s(u);
   }
-  function a(l) {
-    const f = (s(l).instruct || "").trim(), c = m.value.find(
-      (w) => (w.examples || []).some((F) => F.trim() === f)
+  function x(u) {
+    const R = (n(u).instruct || "").trim(), P = k.value.find(
+      (q) => (q.examples || []).some((z) => z.trim() === R)
     );
-    return c ? c.title : null;
+    return P ? P.title : null;
   }
-  function C(l) {
-    const f = h(l);
-    return f ? n.value.filter(
-      (c) => c !== l && c.status !== "unsupported" && h(c) === f
+  function D(u) {
+    const R = v(u);
+    return R ? t.value.filter(
+      (P) => P !== u && P.status !== "unsupported" && v(P) === R
     ).length : 0;
   }
-  function B(l) {
-    const f = C(l);
-    return f > 0 ? `Apply this instruct to every other "${h(l)}" row in this bucket (${f})` : "No other rows in this bucket use this role";
+  function w(u) {
+    const R = D(u);
+    return R > 0 ? `Apply this instruct to every other "${v(u)}" row in this bucket (${R})` : "No other rows in this bucket use this role";
   }
-  function Z(l) {
-    const f = C(l);
-    if (!f) return;
-    const c = h(l), w = s(l).instruct;
-    n.value.forEach((F) => {
-      F !== l && F.status !== "unsupported" && h(F) === c && (s(F).instruct = w);
-    }), y(), i(`Applied instruct to ${f} other "${c}" row(s) in this bucket`);
+  function L(u) {
+    const R = D(u);
+    if (!R) return;
+    const P = v(u), q = n(u).instruct;
+    t.value.forEach((z) => {
+      z !== u && z.status !== "unsupported" && v(z) === P && (n(z).instruct = q);
+    }), r(), a(`Applied instruct to ${R} other "${P}" row(s) in this bucket`);
   }
   return {
-    instructCategories: m,
-    loadInstructCategories: D,
-    instructPickerVisible: u,
-    instructPickerRow: S,
-    openInstructPicker: x,
-    onInstructPicked: b,
-    prevInstruct: U,
-    undoInstructTitle: E,
-    undoInstruct: v,
-    instructNoteFor: a,
-    sameRoleCount: C,
-    applyInstructTitle: B,
-    applyInstructToSameRole: Z
+    instructCategories: k,
+    loadInstructCategories: p,
+    scheduleInstructLibrarySave: l,
+    instructPickerVisible: d,
+    instructPickerRow: f,
+    openInstructPicker: _,
+    onInstructPicked: c,
+    prevInstruct: m,
+    undoInstructTitle: T,
+    undoInstruct: O,
+    instructNoteFor: x,
+    sameRoleCount: D,
+    applyInstructTitle: w,
+    applyInstructToSameRole: L
   };
 }
-function Un(e) {
+function fs(e) {
   const {
     props: o,
-    entryFor: n,
-    onTextEdit: s,
-    setStatus: r,
-    loadRows: i,
-    effectPreviews: y
-    // shared Map из main
-    // hasRuTake — через ctx.hasRuTake?.(row) в момент вызова (Render позже)
-  } = e, h = [
-    { value: "", label: "No effect" },
-    { value: "radio", label: "📻 Radio" },
-    { value: "phone", label: "📞 Phone" },
-    { value: "muffled", label: "🤫 Muffled" },
-    { value: "radio_dry", label: "📻 Radio (no static)" },
-    { value: "intercom", label: "🔊 Intercom" },
-    { value: "suit", label: "🧑‍🚀 Suit" }
-  ], m = ne({});
-  function R(v) {
-    const a = m[v.audio_key];
-    return a !== void 0 ? a : n(v).effect || "";
+    entryFor: t,
+    onTextEdit: n,
+    setStatus: s,
+    loadRows: a
+  } = e, r = V(!1), v = V(null);
+  function k(l) {
+    v.value = l, r.value = !0;
   }
-  function D(v) {
-    const a = m[v.audio_key];
-    return a !== void 0 && a !== (n(v).effect || "");
+  function h(l) {
+    return t(l).effect || "";
   }
-  function k(v, a) {
-    var C;
-    m[v.audio_key] = a, (C = y.get(v.audio_key)) == null || C.setEffect(a);
-  }
-  function _(v) {
-    m[v.audio_key] !== void 0 && (n(v).effect = m[v.audio_key], delete m[v.audio_key]);
-  }
-  function u(v) {
-    var a;
-    _(v), s(v), (a = e.hasRuTake) != null && a.call(e, v) && S(v);
-  }
-  async function S(v) {
-    r(`Applying effect to ${v.audio_key}...`);
+  async function p(l) {
+    var d;
+    s(`Applying settings to ${l.audio_key}...`);
     try {
-      const C = await (await fetch(`${le}/apply_effect`, {
+      const _ = await (await fetch(`${me}/apply_effect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           root: o.root,
-          audio_key: v.audio_key,
-          effect: n(v).effect || ""
+          audio_key: l.audio_key,
+          effect: t(l).effect || "",
+          normalize: !!t(l).normalize,
+          normalize_db: Number(t(l).normalize_db ?? -20),
+          speed_match: !!t(l).speed_match,
+          version: t(l).active_version ?? null
         })
       })).json();
-      if (C.error) {
-        r(`Couldn't apply effect to ${v.audio_key}: ${C.error}`);
+      if (_.error) {
+        s(`Couldn't apply settings to ${l.audio_key}: ${_.error}`);
         return;
       }
-      const B = await e.currentContentHash(v);
-      n(v).hash = B, await e.finalizeRuTake(v, B), r(`Applied effect to ${v.audio_key}`), await i();
-    } catch (a) {
-      r(`Couldn't apply effect to ${v.audio_key}: ${a}`);
+      const m = await e.currentContentHash(l);
+      t(l).hash = m, e.cacheBust && (e.cacheBust[l.audio_key] = Date.now()), await a(), (d = e.refreshHistoryCounts) == null || d.call(e), s(`Applied settings to ${l.audio_key}`);
+    } catch (f) {
+      s(`Couldn't apply settings to ${l.audio_key}: ${f}`);
     }
   }
-  const x = O(!1), U = O(null);
-  function b(v) {
-    U.value = v, x.value = !0;
-  }
-  function E(v) {
-    var B;
-    const a = U.value;
-    if (!a) return;
-    const C = n(a);
-    C.effect = v.effect, C.normalize = v.normalize, C.speed = v.speed, s(a), (B = e.hasRuTake) != null && B.call(e, a) && S(a);
+  function b(l) {
+    var _;
+    const d = v.value;
+    if (!d) return;
+    const f = t(d);
+    f.effect = l.effect, f.normalize = l.normalize, f.speed_match = l.speedMatch, f.normalize_db = l.normalizeDb, n(d), (_ = e.hasRuTake) != null && _.call(e, d) && p(d);
   }
   return {
-    EFFECT_OPTIONS: h,
-    previewEffect: m,
-    effectValue: R,
-    effectIsDirty: D,
-    onEffectPicked: k,
-    commitEffect: _,
-    saveEffect: u,
-    applyEffectToFile: S,
-    outputDialogVisible: x,
-    dialogRow: U,
-    openOutputDialog: b,
-    onDialogApply: E
+    outputDialogVisible: r,
+    dialogRow: v,
+    openOutputDialog: k,
+    onDialogApply: b,
+    effectValue: h,
+    applyEffectToFile: p,
+    speedMatchValue: (l) => !!t(l).speed_match
   };
 }
-const st = 3;
-function Ze(e) {
+const jt = 3;
+function Mt(e) {
   let o = !1;
   e.addEventListener("play", () => {
-    if (o || e.readyState >= st) return;
+    if (o || e.readyState >= jt) return;
     o = !0, e.pause();
-    const n = () => {
-      e.removeEventListener("canplaythrough", n), o = !1, e.play().catch(() => {
+    const t = () => {
+      e.removeEventListener("canplaythrough", t), o = !1, e.play().catch(() => {
       });
     };
-    e.addEventListener("canplaythrough", n);
+    e.addEventListener("canplaythrough", t);
   });
 }
-function Ve(e) {
+function st(e) {
   return new Promise((o) => {
-    if (e.readyState >= st) {
+    if (e.readyState >= jt) {
       o();
       return;
     }
-    const n = () => {
-      e.removeEventListener("canplaythrough", n), o();
+    const t = () => {
+      e.removeEventListener("canplaythrough", t), o();
     };
-    e.addEventListener("canplaythrough", n), e.load();
+    e.addEventListener("canplaythrough", t), e.load();
   });
 }
-let Ae = null;
-function Nn() {
+let at = null;
+function ps() {
   const e = typeof window < "u" && (window.AudioContext || window.webkitAudioContext);
-  return e ? (Ae || (Ae = new e()), Ae) : null;
+  return e ? (at || (at = new e()), at) : null;
 }
-function Bn(e, o = 1024) {
-  const n = new Float32Array(o), s = Math.tanh(e) || 1;
-  for (let r = 0; r < o; r++) {
-    const i = r / (o - 1) * 2 - 1;
-    n[r] = Math.tanh(i * e) / s;
+function vs(e, o = 1024) {
+  const t = new Float32Array(o), n = Math.tanh(e) || 1;
+  for (let s = 0; s < o; s++) {
+    const a = s / (o - 1) * 2 - 1;
+    t[s] = Math.tanh(a * e) / n;
   }
-  return n;
+  return t;
 }
-function Mn(e, o, n) {
-  const r = e.createBuffer(1, Math.max(1, Math.floor(e.sampleRate * 2)), e.sampleRate), i = r.getChannelData(0);
-  for (let R = 0; R < i.length; R++) i[R] = Math.random() * 2 - 1;
-  const y = e.createBufferSource();
-  y.buffer = r, y.loop = !0;
-  const h = e.createBiquadFilter();
-  h.type = "highpass", h.frequency.value = o;
-  const m = e.createBiquadFilter();
-  return m.type = "lowpass", m.frequency.value = n, y.connect(h), h.connect(m), y.start(), m;
+function hs(e, o, t) {
+  const s = e.createBuffer(1, Math.max(1, Math.floor(e.sampleRate * 2)), e.sampleRate), a = s.getChannelData(0);
+  for (let h = 0; h < a.length; h++) a[h] = Math.random() * 2 - 1;
+  const r = e.createBufferSource();
+  r.buffer = s, r.loop = !0;
+  const v = e.createBiquadFilter();
+  v.type = "highpass", v.frequency.value = o;
+  const k = e.createBiquadFilter();
+  return k.type = "lowpass", k.frequency.value = t, r.connect(v), v.connect(k), r.start(), k;
 }
-function ve(e, { lowHz: o, highHz: n, drive: s, noiseLevel: r }) {
-  const i = e.createBiquadFilter();
-  i.type = "highpass", i.frequency.value = o;
-  const y = e.createBiquadFilter();
-  y.type = "lowpass", y.frequency.value = n, i.connect(y);
-  let h = y;
-  if (s > 0) {
-    const D = e.createWaveShaper();
-    D.curve = Bn(s), D.oversample = "2x", y.connect(D), h = D;
+function Ie(e, { lowHz: o, highHz: t, drive: n, noiseLevel: s }) {
+  const a = e.createBiquadFilter();
+  a.type = "highpass", a.frequency.value = o;
+  const r = e.createBiquadFilter();
+  r.type = "lowpass", r.frequency.value = t, a.connect(r);
+  let v = r;
+  if (n > 0) {
+    const p = e.createWaveShaper();
+    p.curve = vs(n), p.oversample = "2x", r.connect(p), v = p;
   }
-  if (r <= 0) return { input: i, output: h };
-  const m = e.createGain();
-  m.gain.value = r, Mn(e, o, n).connect(m);
-  const R = e.createGain();
-  return h.connect(R), m.connect(R), { input: i, output: R };
+  if (s <= 0) return { input: a, output: v };
+  const k = e.createGain();
+  k.gain.value = s, hs(e, o, t).connect(k);
+  const h = e.createGain();
+  return v.connect(h), k.connect(h), { input: a, output: h };
 }
-const qn = {
-  radio: (e) => ve(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0.05 }),
-  phone: (e) => ve(e, { lowHz: 300, highHz: 3400, drive: 1.05, noiseLevel: 0 }),
+const ys = {
+  radio: (e) => Ie(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0.05 }),
+  phone: (e) => Ie(e, { lowHz: 300, highHz: 3400, drive: 1.05, noiseLevel: 0 }),
   /*
    Wide passband, no clip, no noise -- a natural muffled quality, not a
    telephony one. See nodes/_audio_effects.py's muffled_effect for the
    same params and the reasoning/reference behind them.
   */
-  muffled: (e) => ve(e, { lowHz: 120, highHz: 6e3, drive: 0, noiseLevel: 0 }),
+  muffled: (e) => Ie(e, { lowHz: 120, highHz: 6e3, drive: 0, noiseLevel: 0 }),
   /*
    radio's band and grit with NO static of its own -- for dubbing a game
    that already layers its own channel noise over the line as a separate
    sound, where baking in a second layer would stack the two. See
    nodes/_audio_effects.py's radio_dry_effect for the case behind it.
   */
-  radio_dry: (e) => ve(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0 }),
+  radio_dry: (e) => Ie(e, { lowHz: 400, highHz: 2800, drive: 1.6, noiseLevel: 0 }),
   /*
    Hard-wired intercom/PA panel -- between phone and radio at both ends,
    more grit than phone, no static.
   */
-  intercom: (e) => ve(e, { lowHz: 250, highHz: 4e3, drive: 1.2, noiseLevel: 0 }),
+  intercom: (e) => Ie(e, { lowHz: 250, highHz: 4e3, drive: 1.2, noiseLevel: 0 }),
   /*
    Inside a sealed helmet -- low end largely kept, only the top rolled
    off, drive below 1.0 so the clip stays in its near-identity region.
   */
-  suit: (e) => ve(e, { lowHz: 150, highHz: 5e3, drive: 0.6, noiseLevel: 0 })
+  suit: (e) => Ie(e, { lowHz: 150, highHz: 5e3, drive: 0.6, noiseLevel: 0 })
 };
-function Hn(e) {
+function _s(e) {
   const o = { setEffect() {
-  } }, n = Nn();
-  if (!n) return o;
-  let s;
+  } }, t = ps();
+  if (!t) return o;
+  let n;
   try {
-    s = n.createMediaElementSource(e);
+    n = t.createMediaElementSource(e);
   } catch {
     return o;
   }
-  const r = n.createGain();
-  r.gain.value = e.paused ? 0 : 1, r.connect(n.destination);
-  function i() {
-    r.gain.value = e.paused ? 0 : 1;
+  const s = t.createGain();
+  s.gain.value = e.paused ? 0 : 1, s.connect(t.destination);
+  function a() {
+    s.gain.value = e.paused ? 0 : 1;
   }
-  e.addEventListener("play", i), e.addEventListener("pause", i), e.addEventListener("ended", i);
-  const y = n.createGain();
-  s.connect(y), y.connect(r);
-  const h = {};
-  function m(k) {
-    if (h[k]) return h[k];
-    const _ = qn[k];
-    if (!_) return null;
-    const u = _(n);
-    s.connect(u.input);
-    const S = n.createGain();
-    return S.gain.value = 0, u.output.connect(S), S.connect(r), h[k] = S, S;
+  e.addEventListener("play", a), e.addEventListener("pause", a), e.addEventListener("ended", a);
+  const r = t.createGain();
+  n.connect(r), r.connect(s);
+  const v = {};
+  function k(b) {
+    if (v[b]) return v[b];
+    const l = ys[b];
+    if (!l) return null;
+    const d = l(t);
+    n.connect(d.input);
+    const f = t.createGain();
+    return f.gain.value = 0, d.output.connect(f), f.connect(s), v[b] = f, f;
   }
-  let R = "";
-  function D(k) {
-    const _ = k || "";
-    if (_ === R) return;
-    if (R && h[R] && (h[R].gain.value = 0), R = "", !_) {
-      y.gain.value = 1;
+  let h = "";
+  function p(b) {
+    const l = b || "";
+    if (l === h) return;
+    if (h && v[h] && (v[h].gain.value = 0), h = "", !l) {
+      r.gain.value = 1;
       return;
     }
-    const u = m(_);
-    if (!u) {
-      y.gain.value = 1;
+    const d = k(l);
+    if (!d) {
+      r.gain.value = 1;
       return;
     }
-    R = _, y.gain.value = 0, u.gain.value = 1, n.state === "suspended" && n.resume().catch(() => {
+    h = l, r.gain.value = 0, d.gain.value = 1, t.state === "suspended" && t.resume().catch(() => {
     });
   }
-  return { setEffect: D };
+  return { setEffect: p };
 }
-function Wn(e) {
+function ms(e) {
   const {
     props: o,
-    pagedRows: n,
-    effectValue: s,
-    effectPreviews: r
+    pagedRows: t,
+    effectValue: n,
+    effectPreviews: s
     // hasRuTake — через ctx.hasRuTake?.() в момент вызова (Render позже)
   } = e;
-  function i(l, f) {
-    return ye(ye(o.root, l), `${f}.wav`);
+  function a(u, R) {
+    return $e($e(o.root, u), `${R}.wav`);
   }
-  function y(l, f, c) {
-    const w = `${Dt}/audio?path=${encodeURIComponent(i(l, f))}`;
-    return c ? `${w}&v=${c}` : w;
+  function r(u, R, P) {
+    const q = `${Cn}/audio?path=${encodeURIComponent(a(u, R))}`;
+    return P ? `${q}&v=${P}` : q;
   }
-  function h(l) {
-    return i("audio_ru", l.audio_key);
+  function v(u) {
+    return a("audio_ru", u.audio_key);
   }
-  function m(l) {
-    return i("_dub_dry", l.audio_key);
+  function k(u) {
+    return a("_dub_dry", u.audio_key);
   }
-  const R = /* @__PURE__ */ new Map(), D = /* @__PURE__ */ new Map();
-  function k(l, f) {
-    if (!f) {
-      R.delete(l);
+  const h = /* @__PURE__ */ new Map(), p = /* @__PURE__ */ new Map();
+  function b(u, R) {
+    if (!R) {
+      h.delete(u);
       return;
     }
-    R.set(l, f), Ze(f);
+    h.set(u, R), Mt(R);
   }
-  function _(l, f) {
-    const c = l.audio_key;
-    if (!f) {
-      D.delete(c), r.delete(c);
+  function l(u, R) {
+    const P = u.audio_key;
+    if (!R) {
+      p.delete(P), s.delete(P);
       return;
     }
-    D.set(c, f), Ze(f);
-    const w = Hn(f);
-    r.set(c, w), w.setEffect(s(l));
+    p.set(P, R), Mt(R);
+    const q = _s(R);
+    s.set(P, q), q.setEffect(n(u));
   }
-  const u = ne(/* @__PURE__ */ new Set()), S = ne(/* @__PURE__ */ new Set());
-  function x(l, f) {
-    if (u.delete(l.audio_key), f === "ru" && b.value === l.audio_key) {
-      const c = D.get(l.audio_key);
-      c && !c.ended && v();
+  const d = he(/* @__PURE__ */ new Set()), f = he(/* @__PURE__ */ new Set());
+  function _(u, R) {
+    if (d.delete(u.audio_key), R === "ru" && c.value === u.audio_key) {
+      const P = p.get(u.audio_key);
+      P && !P.ended && O();
     }
   }
-  async function U(l) {
-    const f = R.get(l.audio_key), c = D.get(l.audio_key);
-    if (!(!f || !c)) {
-      if (u.has(l.audio_key) || S.has(l.audio_key)) {
-        S.delete(l.audio_key), u.delete(l.audio_key), f.pause(), c.pause();
+  async function m(u) {
+    const R = h.get(u.audio_key), P = p.get(u.audio_key);
+    if (!(!R || !P)) {
+      if (d.has(u.audio_key) || f.has(u.audio_key)) {
+        f.delete(u.audio_key), d.delete(u.audio_key), R.pause(), P.pause();
         return;
       }
-      f.pause(), c.pause(), f.currentTime = 0, c.currentTime = 0, S.add(l.audio_key), await Promise.all([Ve(f), Ve(c)]), S.delete(l.audio_key), R.has(l.audio_key) && (f.currentTime = 0, c.currentTime = 0, u.add(l.audio_key), f.play().catch(() => {
-      }), c.play().catch(() => {
+      R.pause(), P.pause(), R.currentTime = 0, P.currentTime = 0, f.add(u.audio_key), await Promise.all([st(R), st(P)]), f.delete(u.audio_key), h.has(u.audio_key) && (R.currentTime = 0, P.currentTime = 0, d.add(u.audio_key), R.play().catch(() => {
+      }), P.play().catch(() => {
       }));
     }
   }
-  const b = O(null);
-  let E = null;
-  function v() {
-    var f;
-    E && (E.el.removeEventListener("ended", E.fn), E = null);
-    const l = b.value;
-    b.value = null, l && ((f = D.get(l)) == null || f.pause());
+  const c = V(null);
+  let T = null;
+  function O() {
+    var R;
+    T && (T.el.removeEventListener("ended", T.fn), T = null);
+    const u = c.value;
+    c.value = null, u && ((R = p.get(u)) == null || R.pause());
   }
-  async function a(l) {
-    var p, j;
-    v();
-    const f = n.value;
-    let c = l;
-    for (; c < f.length && !((p = e.hasRuTake) != null && p.call(e, f[c])); ) c++;
-    if (c >= f.length) return;
-    const w = f[c], F = D.get(w.audio_key);
-    if (!F || (b.value = w.audio_key, (j = B.get(w.audio_key)) == null || j.scrollIntoView({ behavior: "smooth", block: "nearest" }), await Ve(F), b.value !== w.audio_key)) return;
-    const M = () => {
-      F.removeEventListener("ended", M), E = null, a(c + 1);
+  async function x(u) {
+    var le, y;
+    O();
+    const R = t.value;
+    let P = u;
+    for (; P < R.length && !((le = e.hasRuTake) != null && le.call(e, R[P])); ) P++;
+    if (P >= R.length) return;
+    const q = R[P], z = p.get(q.audio_key);
+    if (!z || (c.value = q.audio_key, (y = w.get(q.audio_key)) == null || y.scrollIntoView({ behavior: "smooth", block: "nearest" }), await st(z), c.value !== q.audio_key)) return;
+    const oe = () => {
+      z.removeEventListener("ended", oe), T = null, x(P + 1);
     };
-    E = { el: F, fn: M }, F.addEventListener("ended", M), F.currentTime = 0, F.play().catch(() => {
+    T = { el: z, fn: oe }, z.addEventListener("ended", oe), z.currentTime = 0, z.play().catch(() => {
     });
   }
-  function C() {
-    b.value ? v() : a(0);
+  function D() {
+    c.value ? O() : x(0);
   }
-  const B = /* @__PURE__ */ new Map();
-  function Z(l, f) {
-    if (!f) {
-      B.delete(l);
+  const w = /* @__PURE__ */ new Map();
+  function L(u, R) {
+    if (!R) {
+      w.delete(u);
       return;
     }
-    B.set(l, f);
+    w.set(u, R);
   }
   return {
-    rawAudioPath: i,
-    audioUrl: y,
-    ruFilePath: h,
-    dryFilePath: m,
-    setEnAudioRef: k,
-    setRuAudioRef: _,
-    dualPlayingRows: u,
-    dualLoadingRows: S,
-    playBoth: U,
-    onTrackPaused: x,
-    sequentialPlayingKey: b,
-    stopSequentialPlayback: v,
-    playSequentialFrom: a,
-    toggleSequentialPlayback: C,
-    rowEls: B,
-    setRowRef: Z
+    rawAudioPath: a,
+    audioUrl: r,
+    ruFilePath: v,
+    dryFilePath: k,
+    setEnAudioRef: b,
+    setRuAudioRef: l,
+    dualPlayingRows: d,
+    dualLoadingRows: f,
+    playBoth: m,
+    onTrackPaused: _,
+    sequentialPlayingKey: c,
+    stopSequentialPlayback: O,
+    playSequentialFrom: x,
+    toggleSequentialPlayback: D,
+    rowEls: w,
+    setRowRef: L
   };
 }
-function Gn(e) {
+const gs = 0.15, bs = 0.4;
+function Ss(e) {
   const {
     props: o,
-    rows: n,
-    entryFor: s,
-    onTextEdit: r,
-    setStatus: i,
-    loadRows: y,
-    scheduleSave: h,
-    useOriginalDefault: m
+    rows: t,
+    entryFor: n,
+    onTextEdit: s,
+    setStatus: a,
+    loadRows: r,
+    scheduleSave: v,
+    useOriginalDefault: k
   } = e;
-  function R(p) {
-    const j = s(p).use_original_sample;
-    return j === void 0 ? m.value : !!j;
+  function h(y) {
+    const M = n(y).use_original_sample;
+    return M === void 0 ? k.value : !!M;
   }
-  function D(p, j) {
-    s(p).use_original_sample = j, r(p);
+  function p(y, M) {
+    n(y).use_original_sample = M, s(y);
   }
-  function k() {
-    h();
+  function b() {
+    v();
   }
-  const _ = ne(/* @__PURE__ */ new Set()), u = ne({}), S = ne(/* @__PURE__ */ new Set()), x = ne({});
-  function U(p, j) {
-    x[p.audio_key] = j.target.duration;
+  const l = he(/* @__PURE__ */ new Set()), d = he(/* @__PURE__ */ new Set()), f = he({}), _ = he({});
+  function m(y, M) {
+    f[y.audio_key] = M.target.duration;
   }
-  function b(p, j = 8e3) {
-    return new Promise((H) => {
-      const q = new Audio();
-      let Q = !1;
-      const K = ($) => {
-        Q || (Q = !0, q.removeEventListener("loadedmetadata", G), q.removeEventListener("error", se), H($));
-      }, G = () => K(q.duration || null), se = () => K(null);
-      q.addEventListener("loadedmetadata", G), q.addEventListener("error", se), setTimeout(() => K(null), j), q.preload = "metadata", q.src = p;
+  function c(y, M = 8e3) {
+    return new Promise((J) => {
+      const H = new Audio();
+      let Z = !1;
+      const ee = (C) => {
+        Z || (Z = !0, H.removeEventListener("loadedmetadata", I), H.removeEventListener("error", S), J(C));
+      }, I = () => ee(H.duration || null), S = () => ee(null);
+      H.addEventListener("loadedmetadata", I), H.addEventListener("error", S), setTimeout(() => ee(null), M), H.preload = "metadata", H.src = y;
     });
   }
-  function E(p) {
-    return p.status === "done" || p.status === "stale" || _.has(p.audio_key);
+  function T(y) {
+    return y.status === "done" || y.status === "stale" || l.has(y.audio_key);
   }
-  function v(p) {
-    return !!s(p).manually_done;
+  function O(y) {
+    return !!n(y).manually_done;
   }
-  function a(p) {
-    s(p).manually_done = !v(p), r(p);
+  function x(y) {
+    n(y).manually_done = !O(y), s(y);
   }
-  async function C(p) {
-    const j = s(p), H = p.speaker, q = j.instruct || "", Q = j.russian_text || "", K = j.effect || "";
-    let G = q;
-    return K && (G += `\0effect=${K}`), R(p) && (G += "\0sample=original"), Ht(H, G, Q);
+  function D(y) {
+    return !!n(y).manually_issue;
   }
-  async function B(p, j) {
-    var Q;
-    const H = Date.now(), q = await b(
-      ((Q = e.audioUrl) == null ? void 0 : Q.call(e, "audio_ru", p.audio_key, H)) || ""
+  function w(y) {
+    n(y).manually_issue = !D(y), s(y);
+  }
+  async function L(y) {
+    const M = n(y), J = y.speaker, H = M.instruct || "", Z = M.russian_text || "", ee = M.effect || "";
+    let I = H;
+    if (ee && (I += `\0effect=${ee}`), M.normalize) {
+      const S = Number(M.normalize_db ?? -20);
+      I += `\0normalize=${S.toFixed(1)}`;
+    }
+    return M.speed_match && (I += "\0speed=match"), h(y) && (I += "\0sample=original"), Nn(J, I, Z);
+  }
+  async function u(y, M) {
+    var Z;
+    const J = Date.now(), H = await c(
+      ((Z = e.audioUrl) == null ? void 0 : Z.call(e, "audio_ru", y.audio_key, J)) || ""
     );
-    await fetch(`${le}/mark_rendered`, {
+    await fetch(`${me}/mark_rendered`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         root: o.root,
-        audio_key: p.audio_key,
-        hash: j,
-        duration_s: q
+        audio_key: y.audio_key,
+        hash: M,
+        duration_s: H
       })
-    }), q !== null && (x[p.audio_key] = q), _.add(p.audio_key), u[p.audio_key] = H;
+    }), H !== null && (f[y.audio_key] = H), l.add(y.audio_key), _[y.audio_key] = J;
   }
-  async function Z(p) {
-    var j, H, q, Q, K;
-    if (!(!o.renderApi || S.has(p.audio_key))) {
+  async function R(y) {
+    var M, J, H, Z, ee, I;
+    if (!(!o.renderApi || d.has(y.audio_key))) {
       if (!o.root) {
-        i("Project root is not set. Please set it in the project root input above.");
+        a("Project root is not set.");
         return;
       }
-      S.add(p.audio_key), i(`Rendering ${p.audio_key}...`);
+      d.add(y.audio_key), a(`Rendering ${y.audio_key}...`);
       try {
-        (j = e.commitEffect) == null || j.call(e, p), clearTimeout(e.saveTimer), await ((H = e.flushSave) == null ? void 0 : H.call(e));
-        const G = s(p), se = p.speaker, $ = G.instruct || "", P = G.russian_text || "", N = G.effect || "", T = R(p) && ((q = e.rawAudioPath) == null ? void 0 : q.call(e, "audio_en", p.audio_key)) || "", X = await C(p), ee = ((Q = e.ruFilePath) == null ? void 0 : Q.call(e, p)) || "", me = ((K = e.dryFilePath) == null ? void 0 : K.call(e, p)) || "";
+        (M = e.saveTimer) != null && M.value && clearTimeout(e.saveTimer.value), await ((J = e.flushSave) == null ? void 0 : J.call(e));
+        const S = n(y), C = y.speaker, U = S.instruct || "", G = S.russian_text || "", se = S.effect || "", j = h(y) && ((H = e.rawAudioPath) == null ? void 0 : H.call(e, "audio_en", y.audio_key)) || "", B = await L(y), ie = ((Z = e.ruFilePath) == null ? void 0 : Z.call(e, y)) || "", K = ((ee = e.dryFilePath) == null ? void 0 : ee.call(e, y)) || "";
         await o.renderApi.renderRow({
-          audioKey: p.audio_key,
-          speaker: se,
-          instruct: $,
-          russianText: P,
-          effect: N,
-          outputPath: ee,
-          dryOutputPath: me,
-          referenceAudioPath: T
-        }), G.hash = X, await B(p, X), i(`Rendered ${p.audio_key}`), await y();
-      } catch (G) {
-        i(`Render failed for ${p.audio_key}: ${G}`);
+          audioKey: y.audio_key,
+          speaker: C,
+          instruct: U,
+          russianText: G,
+          effect: se,
+          outputPath: ie,
+          dryOutputPath: K,
+          referenceAudioPath: j,
+          normalize: !!S.normalize,
+          normalize_db: Number(S.normalize_db ?? -20),
+          speed_match: !!S.speed_match
+        }), S.hash = B, await u(y, B), a(`Rendered ${y.audio_key}`), await r(), (I = e.refreshHistoryCounts) == null || I.call(e);
+      } catch (S) {
+        a(`Render failed for ${y.audio_key}: ${S}`);
       } finally {
-        S.delete(p.audio_key);
+        d.delete(y.audio_key);
       }
     }
   }
-  const l = O(!1);
-  async function f() {
-    if (!o.renderApi || l.value) return;
-    const p = n.value.filter(
-      (H) => H.status === "not_started" || H.status === "stale"
+  async function P(y) {
+    var M;
+    if (!d.has(y.audio_key)) {
+      if (!o.root) {
+        a("Project root is not set.");
+        return;
+      }
+      if (!y.english) {
+        a(`No EN reference for ${y.audio_key} — nothing to copy`);
+        return;
+      }
+      d.add(y.audio_key), a(`Copying EN → RU for ${y.audio_key}...`);
+      try {
+        const H = await (await fetch(`${me}/use_original`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ root: o.root, audio_key: y.audio_key })
+        })).json();
+        if (H.error) {
+          a(`Copy failed: ${H.error}`);
+          return;
+        }
+        _[y.audio_key] = Date.now(), l.add(y.audio_key), await r(), (M = e.refreshHistoryCounts) == null || M.call(e), a(`Used original EN for ${y.audio_key}`);
+      } catch (J) {
+        a(`Copy failed: ${J}`);
+      } finally {
+        d.delete(y.audio_key);
+      }
+    }
+  }
+  const q = V(!1);
+  async function z() {
+    if (!o.renderApi || q.value) return;
+    const y = t.value.filter(
+      (J) => J.status === "not_started" || J.status === "stale"
     );
-    if (!p.length) {
-      i("Nothing needs rendering in this bucket");
+    if (!y.length) {
+      a("Nothing needs rendering in this bucket");
       return;
     }
-    l.value = !0;
-    let j = 0;
-    i(`Rendering 0/${p.length}...`);
+    q.value = !0;
+    let M = 0;
+    a(`Rendering 0/${y.length}...`);
     try {
-      for (const H of p) {
+      for (const J of y) {
         try {
-          await Z(H);
-        } catch (q) {
-          console.error(
-            `[FL CosyVoice3 VODubEditor] render-all-pending failed for ${H.audio_key}`,
-            q
-          );
+          await R(J);
+        } catch (H) {
+          console.error(`[FL VODubEditor] render-all-pending failed for ${J.audio_key}`, H);
         }
-        j++, i(`Rendering ${j}/${p.length}...`);
+        M++, a(`Rendering ${M}/${y.length}...`);
       }
     } finally {
-      l.value = !1;
+      q.value = !1;
     }
   }
-  const c = 0.15, w = 0.4;
-  function F(p) {
-    return p.duration_s ? `EN ${p.duration_s.toFixed(1)}s` : "EN";
+  function oe(y) {
+    return y.duration_s ? `EN ${y.duration_s.toFixed(1)}s` : "EN";
   }
-  function M(p) {
-    const j = x[p.audio_key] ?? p.rendered_duration_s, H = p.duration_s;
-    if (!E(p) || j === void 0 || j === null || !H)
-      return null;
-    const q = (j - H) / H, Q = Math.round(q * 100), K = Math.abs(q);
+  function le(y) {
+    const M = f[y.audio_key] ?? y.rendered_duration_s, J = y.duration_s;
+    if (!T(y) || M == null || !J) return null;
+    const H = (M - J) / J, Z = Math.round(H * 100), ee = Math.abs(H);
     return {
-      level: K <= c ? "good" : K <= w ? "warn" : "bad",
-      ruSeconds: `${j.toFixed(1)}s`,
-      pctText: `${Q >= 0 ? "+" : ""}${Q}%`
+      level: ee <= gs ? "good" : ee <= bs ? "warn" : "bad",
+      ruSeconds: `${M.toFixed(1)}s`,
+      pctText: `${Z >= 0 ? "+" : ""}${Z}%`
     };
   }
   return {
-    // служебное
-    renderedOnce: _,
-    cacheBust: u,
-    renderingKeys: S,
-    isRenderingAllPending: l,
-    DURATION_GREEN: c,
-    DURATION_AMBER: w,
-    // hash / финализация
-    currentContentHash: C,
-    finalizeRuTake: B,
-    // рендер
-    renderRow: Z,
-    renderAllPending: f,
-    // состояние строки
-    hasRuTake: E,
-    manuallyDone: v,
-    toggleManuallyDone: a,
-    // длительность
-    measuredDuration: x,
-    onRuMetadata: U,
-    durationBadge: M,
-    enDurationText: F,
-    // «use original as sample»
-    resolvedUseOriginal: R,
-    onToggleRowUseOriginal: D,
-    onToggleUseOriginalDefault: k
+    renderedOnce: l,
+    renderingKeys: d,
+    cacheBust: _,
+    isRenderingAllPending: q,
+    currentContentHash: L,
+    finalizeRuTake: u,
+    renderRow: R,
+    useOriginalForRow: P,
+    renderAllPending: z,
+    hasRuTake: T,
+    manuallyDone: O,
+    toggleManuallyDone: x,
+    manuallyIssue: D,
+    toggleManuallyIssue: w,
+    measuredDuration: f,
+    onRuMetadata: m,
+    durationBadge: le,
+    enDurationText: oe,
+    resolvedUseOriginal: h,
+    onToggleRowUseOriginal: p,
+    onToggleUseOriginalDefault: b
   };
 }
-function Jn(e) {
+function ks(e) {
   const {
-    // каталог и UI
     roleEntries: o,
-    roleOptionSubLabel: n,
-    showRoleInfoPopover: s,
-    hideRoleInfoPopover: r,
-    fontSizePx: i,
-    autoGrow: y,
-    setTextareaRef: h,
-    // state
-    entryFor: m,
-    onTextEdit: R,
-    scheduleInstructLibrarySave: D,
-    // roles
-    roleCodeFor: k,
-    // instruct
-    prevInstruct: _,
-    undoInstructTitle: u,
-    undoInstruct: S,
-    sameRoleCount: x,
-    applyInstructTitle: U,
-    applyInstructToSameRole: b,
-    instructNoteFor: E,
-    openInstructPicker: v
+    roleOptionSubLabel: t,
+    showRoleInfoPopover: n,
+    hideRoleInfoPopover: s,
+    fontSizePx: a,
+    autoGrow: r,
+    setTextareaRef: v,
+    audioUrl: k,
+    cacheBust: h,
+    entryFor: p,
+    onTextEdit: b,
+    scheduleInstructLibrarySave: l,
+    roleCodeFor: d,
+    prevInstruct: f,
+    undoInstructTitle: _,
+    undoInstruct: m,
+    sameRoleCount: c,
+    applyInstructTitle: T,
+    applyInstructToSameRole: O,
+    instructNoteFor: x,
+    openInstructPicker: D
   } = e;
-  Lt("lineRowApi", {
-    // ── общий каталог и UI ─────────────────────────────────────────────
+  In("lineRowApi", {
     roleEntries: o,
-    roleOptionSubLabel: n,
-    fontSizePx: i,
-    autoGrow: y,
-    setTextareaRef: h,
-    showRoleInfoPopover: s,
-    hideRoleInfoPopover: r,
-    // ── подписи, специфичные для VO Dub ────────────────────────────────
+    roleOptionSubLabel: t,
+    fontSizePx: a,
+    autoGrow: r,
+    setTextareaRef: v,
+    showRoleInfoPopover: n,
+    hideRoleInfoPopover: s,
     speakerPlaceholder: "Role",
     speakerTitle: "Role code (resolves to that role's assigned voice), or a literal preset/preset#tag",
     instructPlaceholder: "Instruct",
     instructTitle: "Instruct text -- type freely, or pick from the phrase bank",
     textPlaceholder: "Russian text for this line",
-    // ── доступ к полям row (специфично для VO Dub) ─────────────────────
-    // speaker override — отдельное поле; fallback на сырой csv-тег.
-    getSpeaker: (a) => m(a).speaker_override || a.speaker_tag,
-    setSpeaker: (a, C) => {
-      m(a).speaker_override = C, R(a);
+    getSpeaker: (w) => p(w).speaker_override || w.speaker_tag,
+    setSpeaker: (w, L) => {
+      p(w).speaker_override = L, b(w);
     },
-    getInstruct: (a) => m(a).instruct,
-    setInstruct: (a, C) => {
-      m(a).instruct = C, R(a), D(a);
+    getInstruct: (w) => p(w).instruct,
+    setInstruct: (w, L) => {
+      p(w).instruct = L, b(w), l(w);
     },
-    getText: (a) => m(a).russian_text,
-    setText: (a, C) => {
-      m(a).russian_text = C, R(a);
+    getText: (w) => p(w).russian_text,
+    setText: (w, L) => {
+      p(w).russian_text = L, b(w);
     },
-    // идентификатор для ховер-инфо — итоговый код роли, не сам override.
-    getRoleInfoCode: (a) => k(a),
-    // ключ для textarea-ref: у VO Dub — audio_key.
-    textKey: (a) => a.audio_key,
-    // ── instruct-действия ──────────────────────────────────────────────
-    canUndoInstruct: (a) => _[a.audio_key] !== void 0,
-    undoInstructTitle: (a) => u(a),
-    undoInstruct: (a) => S(a),
-    canApplyInstruct: (a) => x(a) > 0,
-    applyInstructTitle: (a) => U(a),
-    applyInstructToSameRole: (a) => b(a),
-    instructNoteFor: (a) => E(a),
-    openInstructPicker: (a) => v(a)
+    getRoleInfoCode: (w) => d(w),
+    textKey: (w) => w.audio_key,
+    canUndoInstruct: (w) => f[w.audio_key] !== void 0,
+    undoInstructTitle: (w) => _(w),
+    undoInstruct: (w) => m(w),
+    canApplyInstruct: (w) => c(w) > 0,
+    applyInstructTitle: (w) => T(w),
+    applyInstructToSameRole: (w) => O(w),
+    instructNoteFor: (w) => x(w),
+    openInstructPicker: (w) => D(w),
+    getOriginalAudioUrl: (w) => k ? k("audio_en", w.audio_key) : "",
+    getCurrentAudioUrl: (w) => k ? k("audio_ru", w.audio_key, h == null ? void 0 : h[w.audio_key]) : ""
   });
 }
-const Kn = { class: "fl-vo-dub-line-editor-content" }, Yn = { class: "vo-dub-filters" }, Zn = { class: "vo-dub-editor-status" }, Xn = { class: "actions-row" }, Qn = {
-  class: "vo-dub-original-default-label",
-  title: "Project-wide default for the per-row 'Use original as sample' checkbox below each line -- a row that has ticked/unticked its OWN checkbox always keeps that explicit choice regardless of this default."
-}, eo = { class: "vo-dub-pager" }, to = { class: "vo-dub-pager-label" }, no = { class: "vo-dub-row-head" }, oo = { class: "vo-dub-key" }, so = {
+const Rs = { class: "fl-vo-dub-line-editor-content" }, Ts = { class: "row" }, ws = { class: "vo-dub-editor-status muted ellipsis" }, Es = { class: "actions" }, Cs = { class: "row" }, Is = { class: "vo-dub-pager-label muted" }, $s = { title: "Project-wide default for the per-row 'Use original as sample' checkbox." }, Ps = { class: "row" }, Os = { class: "vo-dub-key mono title" }, Ds = {
   key: 0,
   class: "vo-dub-unsupported-note"
-}, ao = { class: "vo-dub-players" }, io = { class: "vo-dub-players-labels" }, lo = { class: "vo-dub-duration-en-tag" }, ro = { class: "vo-dub-players-row" }, uo = { class: "vo-dub-player" }, co = ["src", "onPause", "onEnded"], po = { class: "vo-dub-player" }, fo = ["src", "onLoadedmetadata", "onPause", "onEnded"], vo = {
+}, As = { class: "vo-dub-players list" }, Ms = { class: "vo-dub-duration-line row" }, xs = { class: "vo-dub-duration-en" }, Ls = { class: "vo-dub-duration-ru" }, Vs = {
+  key: 1,
+  class: "vo-dub-similarity-slot"
+}, Ns = { class: "vo-dub-players-row" }, Fs = { class: "vo-dub-player list" }, Us = ["src", "onPause", "onEnded"], Bs = { class: "vo-dub-player list" }, js = ["src", "onLoadedmetadata", "onPause", "onEnded"], zs = {
   key: 2,
-  class: "vo-dub-no-take"
-}, ho = { class: "vo-dub-players-footer" }, yo = {
-  class: "vo-dub-identifier",
-  title: "Identifier extracted from the game's own resources (vo_dataset.csv's speaker column) -- not necessarily a real role, just the raw signal this row's audio_key carried"
-}, bo = {
-  class: "vo-dub-use-original-label",
-  title: "Use this row's own EN reference take (audio_en\\) as the TTS voice-cloning sample for its NEXT render, instead of the Role above -- unticked follows the project-wide default checkbox in the toolbar unless this row's own box has been explicitly touched. Whether an instruct style can still apply together with this depends on your ComfyUI graph/model -- this addon just passes the resolved reference_audio_path through, it doesn't wire it to a specific node."
-}, mo = { class: "vo-dub-english" }, _o = {
+  class: "vo-dub-no-take muted"
+}, Hs = { class: "vo-dub-players-footer actions" }, qs = {
+  class: "vo-dub-identifier ellipsis mono",
+  title: "Identifier extracted from the game's own resources (vo_dataset.csv's speaker column)"
+}, Ws = {
+  class: "vo-dub-use-original-label row",
+  title: "Use this row's own EN take as the voice-cloning sample for its next render."
+}, Gs = { class: "vo-dub-english muted" }, Js = {
   key: 0,
-  class: "vo-dub-empty"
-}, go = {
+  class: "vo-dub-empty muted"
+}, Ks = {
   __name: "VoDubLineEditorContent",
   props: {
     root: { type: String, required: !0 },
@@ -1379,416 +2224,465 @@ const Kn = { class: "fl-vo-dub-line-editor-content" }, Yn = { class: "vo-dub-fil
     onClose: { type: Function, required: !0 }
   },
   setup(e) {
-    const o = e, { setWidth: n, presets: s } = et({
+    const o = e;
+    Vt({
       storageKey: "FL_CosyVoice3.VODubLineEditor.widthPx",
       defaultWidth: 1100,
       presets: [800, 1100, 1500]
-    }), { fontSizePx: r, decrease: i, increase: y } = tt({
+    });
+    const { fontSizePx: t } = Nt({
       storageKey: "FL_CosyVoice3.VODubLineEditor.fontSizePx",
       defaultSize: 13
-    }), { autoGrow: h, setTextareaRef: m, regrowAll: R } = Xt();
-    ce(r, R);
-    const D = /* @__PURE__ */ new Map(), k = O(!0);
-    let _ = !1;
-    const u = {
+    }), { autoGrow: n, setTextareaRef: s, regrowAll: a } = Wn();
+    ye(t, a);
+    const r = /* @__PURE__ */ new Map(), v = V(!0);
+    let k = !1;
+    const h = rs();
+    h.init({ root: o.root, bucket: o.bucket });
+    const p = {
       props: o,
-      effectPreviews: D,
-      autoGrow: h,
-      setTextareaRef: m,
-      fontSizePx: r
-    };
-    Object.assign(u, Fn(u)), Object.assign(u, jn(u)), Object.assign(u, zn(u)), Object.assign(u, xn(u)), Object.assign(u, Un(u)), Object.assign(u, Wn(u)), Object.assign(u, Gn(u)), Jn(u);
+      effectPreviews: r,
+      autoGrow: n,
+      setTextareaRef: s,
+      fontSizePx: t
+    }, b = es(h);
+    Object.assign(p, {
+      // refs
+      rows: b.rows,
+      statusFilter: b.statusFilter,
+      searchText: b.searchText,
+      status: b.status,
+      loading: b.loading,
+      useOriginalDefault: b.useOriginalDefault,
+      saveTimer: b.saveTimer,
+      currentPage: b.currentPage,
+      visibleRows: b.visibleRows,
+      pageCount: b.pageCount,
+      pagedRows: b.pagedRows,
+      filterStatuses: b.filterStatuses,
+      filterManuallyDone: b.filterManuallyDone,
+      filterIssues: b.filterIssues,
+      hasActiveFilters: b.hasActiveFilters,
+      // reactive — напрямую
+      stateRows: h.stateRows,
+      // функции
+      entryFor: h.entryFor,
+      loadState: h.loadState,
+      loadRows: h.loadRows,
+      scheduleSave: h.scheduleSave,
+      flushSave: h.flushSave,
+      onTextEdit: h.onTextEdit,
+      setStatus: h.setStatus,
+      statePath: h.statePath,
+      toggleStatus: h.toggleStatus,
+      cycleManuallyDone: h.cycleManuallyDone,
+      cycleIssues: h.cycleIssues,
+      clearFilters: h.clearFilters,
+      // константы
+      SAVE_DEBOUNCE_MS: h.SAVE_DEBOUNCE_MS,
+      PAGE_SIZE: h.PAGE_SIZE,
+      STATUS_LABELS: h.STATUS_LABELS,
+      STATUS_FILTER_OPTIONS: h.STATUS_FILTER_OPTIONS,
+      STATUS_TOGGLE_OPTIONS: h.STATUS_TOGGLE_OPTIONS,
+      TRISTATE_FILTERS: h.TRISTATE_FILTERS
+    }), Object.assign(p, us(p)), Object.assign(p, cs(p)), Object.assign(p, ds(p)), Object.assign(p, fs(p)), Object.assign(p, ms(p)), Object.assign(p, Ss(p)), ks(p);
     const {
       // state
-      rows: S,
-      stateRows: x,
-      statusFilter: U,
-      searchText: b,
-      status: E,
-      loading: v,
-      useOriginalDefault: a,
-      entryFor: C,
-      loadState: B,
-      loadRows: Z,
-      scheduleSave: l,
-      flushSave: f,
-      onTextEdit: c,
-      setStatus: w,
-      visibleRows: F,
-      PAGE_SIZE: M,
-      currentPage: p,
-      pageCount: j,
-      pagedRows: H,
-      STATUS_LABELS: q,
-      STATUS_FILTER_OPTIONS: Q,
-      saveTimer: K,
+      rows: l,
+      stateRows: d,
+      statusFilter: f,
+      searchText: _,
+      status: m,
+      loading: c,
+      useOriginalDefault: T,
+      entryFor: O,
+      loadState: x,
+      loadRows: D,
+      scheduleSave: w,
+      flushSave: L,
+      onTextEdit: u,
+      setStatus: R,
+      visibleRows: P,
+      PAGE_SIZE: q,
+      currentPage: z,
+      pageCount: oe,
+      pagedRows: le,
+      STATUS_LABELS: y,
+      STATUS_FILTER_OPTIONS: M,
+      saveTimer: J,
+      filterStatuses: H,
+      filterManuallyDone: Z,
+      filterIssues: ee,
+      hasActiveFilters: I,
+      toggleStatus: S,
+      cycleManuallyDone: C,
+      cycleIssues: U,
+      clearFilters: G,
+      STATUS_TOGGLE_OPTIONS: se,
+      TRISTATE_FILTERS: j,
       // history
-      historyVisible: G,
-      historyRow: se,
-      historyVersions: $,
-      historyChosenVersion: P,
-      historyCounts: N,
-      refreshHistoryCounts: T,
-      openLineHistory: X,
-      onHistoryVersionChosen: ee,
+      historyVisible: B,
+      historyRow: ie,
+      historyVersions: K,
+      historyChosenVersion: ge,
+      historyCounts: _e,
+      refreshHistoryCounts: be,
+      openLineHistory: Me,
+      onHistoryVersionChosen: xe,
       // roles
-      roleEntries: me,
-      loadRoleEntries: at,
-      roleCodeFor: qo,
-      roleOptionSubLabel: Ho,
-      sameIdentifierCount: it,
-      applyRoleTitle: lt,
-      applyRoleToSameIdentifier: rt,
-      roleInfoPopover: Ce,
-      showRoleInfoPopover: Wo,
-      hideRoleInfoPopover: Go,
-      roleInfoFields: Ne,
+      roleEntries: Ge,
+      loadRoleEntries: ht,
+      roleCodeFor: Ee,
+      roleOptionSubLabel: ga,
+      sameIdentifierCount: zt,
+      applyRoleTitle: Ht,
+      applyRoleToSameIdentifier: qt,
+      roleInfoPopover: Je,
+      showRoleInfoPopover: ba,
+      hideRoleInfoPopover: Sa,
+      roleInfoFields: yt,
       // instruct
-      instructCategories: ut,
-      loadInstructCategories: dt,
-      instructPickerVisible: Pe,
-      instructPickerRow: Jo,
-      openInstructPicker: Ko,
-      onInstructPicked: ct,
-      prevInstruct: Yo,
-      undoInstructTitle: Zo,
-      undoInstruct: Xo,
-      instructNoteFor: Qo,
-      sameRoleCount: es,
-      applyInstructTitle: ts,
-      applyInstructToSameRole: ns,
+      instructCategories: Wt,
+      loadInstructCategories: Gt,
+      instructPickerVisible: Ke,
+      instructPickerRow: ka,
+      openInstructPicker: Ra,
+      onInstructPicked: Jt,
+      prevInstruct: Ta,
+      undoInstructTitle: wa,
+      undoInstruct: Ea,
+      instructNoteFor: Ca,
+      sameRoleCount: Ia,
+      applyInstructToSameRole: $a,
       // effects
-      effectValue: pt,
-      commitEffect: os,
-      applyEffectToFile: ss,
-      outputDialogVisible: Te,
-      dialogRow: te,
-      openOutputDialog: ft,
-      onDialogApply: vt,
+      effectValue: Kt,
+      speedMatchValue: Zt,
+      commitEffect: Pa,
+      applyEffectToFile: Oa,
+      outputDialogVisible: Ze,
+      dialogRow: fe,
+      openOutputDialog: Yt,
+      onDialogApply: Xt,
       // players
-      audioUrl: _e,
-      setEnAudioRef: ht,
-      setRuAudioRef: yt,
-      dualPlayingRows: Be,
-      dualLoadingRows: bt,
-      playBoth: mt,
-      onTrackPaused: ge,
-      sequentialPlayingKey: Ee,
-      toggleSequentialPlayback: _t,
-      setRowRef: gt,
+      audioUrl: Le,
+      setEnAudioRef: Qt,
+      setRuAudioRef: en,
+      dualPlayingRows: _t,
+      dualLoadingRows: tn,
+      playBoth: nn,
+      onTrackPaused: Ve,
+      sequentialPlayingKey: Ye,
+      toggleSequentialPlayback: on,
+      setRowRef: sn,
       // render
-      cacheBust: Me,
-      renderingKeys: qe,
-      isRenderingAllPending: Ie,
-      renderRow: kt,
-      renderAllPending: St,
-      hasRuTake: re,
-      manuallyDone: we,
-      toggleManuallyDone: Rt,
-      measuredDuration: $t,
-      onRuMetadata: Ct,
-      durationBadge: be,
-      enDurationText: Pt,
-      resolvedUseOriginal: Tt,
-      onToggleRowUseOriginal: Et,
-      onToggleUseOriginalDefault: It
-    } = u;
-    function wt() {
-      _ || (_ = !0, K.value && (clearTimeout(K.value), f()), o.onClose());
+      cacheBust: mt,
+      renderingKeys: Xe,
+      isRenderingAllPending: Qe,
+      renderRow: an,
+      useOriginalForRow: ln,
+      renderAllPending: rn,
+      hasRuTake: Te,
+      manuallyDone: et,
+      toggleManuallyDone: un,
+      manuallyIssue: Ne,
+      toggleManuallyIssue: cn,
+      measuredDuration: dn,
+      onRuMetadata: fn,
+      durationBadge: Fe,
+      enDurationText: pn,
+      resolvedUseOriginal: vn,
+      onToggleRowUseOriginal: hn,
+      onToggleUseOriginalDefault: yn
+    } = p;
+    qe(async () => {
+      ht(), Gt(), be(), await x(), await D();
+    });
+    function _n() {
+      k || (k = !0, J.value && (clearTimeout(J.value), L()), o.onClose());
     }
-    return ce(k, (He) => {
-      He || wt();
-    }), Le(async () => {
-      at(), dt(), T(), await B(), await Z();
-    }), (He, V) => {
-      var Ge, Je;
-      const We = Qe("WaveformCanvas");
-      return I(), z(ie, null, [
-        g("div", Kn, [
-          A(nt, {
-            title: `VO Dub — ${e.bucket}`,
-            "width-presets": t(s),
-            "set-width": t(n),
-            "font-size-decrease": t(i),
-            "font-size-increase": t(y)
-          }, null, 8, ["title", "width-presets", "set-width", "font-size-decrease", "font-size-increase"]),
-          A(Gt, { class: "vo-dub-editor-controls" }, {
-            default: oe(() => [
-              g("div", Yn, [
-                A(t(xe), {
-                  modelValue: t(b),
-                  "onUpdate:modelValue": V[0] || (V[0] = (d) => fe(b) ? b.value = d : null),
+    return ye(v, (gt) => {
+      gt || _n();
+    }), (gt, W) => {
+      var St, kt, Rt;
+      const mn = te("InputText"), re = te("Button"), bt = te("Checkbox");
+      return E(), A(ne, null, [
+        $("div", Rs, [
+          N(Un, { class: "vo-dub-editor-controls" }, {
+            default: Y(() => [
+              $("div", Ts, [
+                N(mn, {
+                  modelValue: i(_),
+                  "onUpdate:modelValue": W[0] || (W[0] = (g) => ve(_) ? _.value = g : null),
                   placeholder: "Search text or audio_key...",
                   class: "vo-dub-search"
                 }, null, 8, ["modelValue"]),
-                A(t(ot), {
-                  modelValue: t(U),
-                  "onUpdate:modelValue": V[1] || (V[1] = (d) => fe(U) ? U.value = d : null),
-                  options: t(Q),
-                  "option-label": "label",
-                  "option-value": "value",
-                  class: "vo-dub-status-filter"
-                }, null, 8, ["modelValue", "options"]),
-                A(t(J), {
+                N(Wo, {
+                  statusOptions: i(se),
+                  selectedStatuses: i(H),
+                  tristates: i(j),
+                  tristateValues: { manuallyDone: i(Z), issues: i(ee) },
+                  hasActive: i(I),
+                  onToggleStatus: i(S),
+                  onCycleTristate: W[1] || (W[1] = (g) => {
+                    g === "manuallyDone" ? i(C)() : g === "issues" && i(U)();
+                  }),
+                  onClear: i(G)
+                }, null, 8, ["statusOptions", "selectedStatuses", "tristates", "tristateValues", "hasActive", "onToggleStatus", "onClear"]),
+                N(re, {
                   icon: "pi pi-refresh",
-                  text: "",
-                  size: "small",
                   title: "Re-scan this bucket",
-                  onClick: t(Z)
+                  onClick: i(D)
                 }, null, 8, ["onClick"]),
-                g("span", Zn, L(t(v) ? "Loading..." : t(E)), 1),
-                A(t(J), {
-                  icon: "pi pi-times",
-                  text: "",
-                  size: "small",
-                  title: "Close",
-                  onClick: V[2] || (V[2] = (d) => k.value = !1)
-                })
+                $("span", ws, F(i(c) ? "Loading..." : i(m)), 1)
               ]),
-              g("div", Xn, [
-                A(t(J), {
+              $("div", Es, [
+                $("div", Cs, [
+                  N(re, {
+                    label: "◀",
+                    disabled: i(z) === 0,
+                    title: "Previous page",
+                    onClick: W[2] || (W[2] = (g) => z.value--)
+                  }, null, 8, ["disabled"]),
+                  $("span", Is, F(i(z) + 1) + " / " + F(i(oe)) + " (" + F(i(P).length) + ") ", 1),
+                  N(re, {
+                    label: "▶",
+                    disabled: i(z) >= i(oe) - 1,
+                    title: "Next page",
+                    onClick: W[3] || (W[3] = (g) => z.value++)
+                  }, null, 8, ["disabled"])
+                ]),
+                W[10] || (W[10] = $("span", { class: "divider" }, null, -1)),
+                N(re, {
                   label: "´ Stress mark",
-                  text: "",
-                  size: "small",
-                  title: "Insert a stress mark at the cursor: click into a row's text, place the cursor right after the vowel to stress (факел|ов), then click this",
-                  onMousedown: V[3] || (V[3] = Ft((d) => t(Wt)(t(w)), ["prevent"]))
+                  title: "Insert a stress mark at the cursor",
+                  onMousedown: W[4] || (W[4] = $n((g) => i(Fn)(i(R)), ["prevent"]))
                 }),
-                V[11] || (V[11] = g("span", { class: "actions-divider" }, null, -1)),
-                A(t(J), {
-                  label: t(Ee) ? "Stop" : "▶ Play in order",
-                  text: "",
-                  size: "small",
-                  icon: t(Ee) ? "pi pi-stop-circle" : "pi pi-play",
-                  title: "Play through this page's RU takes in order, auto-advancing to the next row with a take when each one ends -- mirrors LineEditorApp.vue's own sequential playback. Pausing a row via its own native controls stops the run instead of continuing past it.",
-                  onClick: t(_t)
+                N(re, {
+                  label: i(Ye) ? "Stop" : "Play in order",
+                  icon: i(Ye) ? "pi pi-stop-circle" : "pi pi-play",
+                  onClick: i(on)
                 }, null, 8, ["label", "icon", "onClick"]),
-                A(t(J), {
-                  label: t(Ie) ? "Rendering..." : "🔁 Render pending",
-                  text: "",
-                  size: "small",
-                  icon: t(Ie) ? "pi pi-spin pi-spinner" : "pi pi-play",
-                  disabled: !o.renderApi || t(Ie),
-                  title: "Render every not-started or stale row in this WHOLE bucket (not just this page), one at a time -- mirrors ScriptLibraryPanel.vue's own '🔁 Re-voice pending' button.",
-                  onClick: t(St)
+                N(re, {
+                  label: i(Qe) ? "Rendering..." : "Render pending",
+                  icon: i(Qe) ? "pi pi-spin pi-spinner" : "pi pi-play",
+                  disabled: !o.renderApi || i(Qe),
+                  onClick: i(rn)
                 }, null, 8, ["label", "icon", "disabled", "onClick"]),
-                V[12] || (V[12] = g("span", { class: "actions-divider" }, null, -1)),
-                g("label", Qn, [
-                  A(t(Re), {
-                    modelValue: t(a),
-                    "onUpdate:modelValue": V[4] || (V[4] = (d) => fe(a) ? a.value = d : null),
+                $("label", $s, [
+                  N(bt, {
+                    modelValue: i(T),
+                    "onUpdate:modelValue": W[5] || (W[5] = (g) => ve(T) ? T.value = g : null),
                     binary: "",
-                    onChange: t(It)
+                    onChange: i(yn)
                   }, null, 8, ["modelValue", "onChange"]),
-                  V[10] || (V[10] = he(" Use original as sample by default ", -1))
+                  W[9] || (W[9] = ce(" Original as sample ", -1))
                 ])
-              ]),
-              g("div", eo, [
-                A(t(J), {
-                  label: "◀ Prev",
-                  text: "",
-                  size: "small",
-                  disabled: t(p) === 0,
-                  title: "Previous page",
-                  onClick: V[5] || (V[5] = (d) => p.value--)
-                }, null, 8, ["disabled"]),
-                g("span", to, "Page " + L(t(p) + 1) + " / " + L(t(j)) + " (" + L(t(F).length) + " row(s))", 1),
-                A(t(J), {
-                  label: "Next ▶",
-                  text: "",
-                  size: "small",
-                  disabled: t(p) >= t(j) - 1,
-                  title: "Next page",
-                  onClick: V[6] || (V[6] = (d) => p.value++)
-                }, null, 8, ["disabled"])
               ])
             ]),
             _: 1
           }),
-          g("div", {
-            class: "vo-dub-rows",
-            style: Oe({ fontSize: `${t(r)}px` })
+          $("div", {
+            class: "vo-dub-rows list",
+            style: De({ fontSize: `${i(t)}px` })
           }, [
-            (I(!0), z(ie, null, Se(t(H), (d) => (I(), z("div", {
-              key: d.audio_key,
-              class: ae(["vo-dub-row", { "row-playing": t(Ee) === d.audio_key }]),
-              ref_for: !0,
-              ref: (Y) => t(gt)(d.audio_key, Y)
-            }, [
-              g("div", no, [
-                g("span", oo, L(d.audio_key), 1),
-                g("span", {
-                  class: ae(["vo-dub-status-pill", `status-${d.status}`])
-                }, L(t(q)[d.status]), 3),
-                t(re)(d) ? (I(), ue(t(J), {
-                  key: 0,
-                  class: ae(["vo-dub-done-btn", { active: t(we)(d) }]),
-                  text: "",
-                  size: "small",
-                  icon: t(we)(d) ? "pi pi-check-circle" : "pi pi-circle",
-                  label: t(we)(d) ? "Done" : "Mark done",
-                  title: "Manually treat this row as done even if its content has drifted since the last render -- sticky until you click it again to unmark it. Doesn't touch the file or the render hash, only how this row's status reads.",
-                  onClick: (Y) => t(Rt)(d)
-                }, null, 8, ["class", "icon", "label", "onClick"])) : W("", !0)
-              ]),
-              d.status === "unsupported" ? (I(), z("div", so, [
-                he(" Unsupported: " + L(d.channels) + "-channel audio split across multiple files (", 1),
-                V[13] || (V[13] = g("code", null, ".a", -1)),
-                V[14] || (V[14] = he("-", -1)),
-                V[15] || (V[15] = g("code", null, ".d", -1)),
-                V[16] || (V[16] = he(") -- this editor can only play or render a single mono/stereo file per row. Handle this one outside the tool. ", -1))
-              ])) : (I(), z(ie, { key: 1 }, [
-                g("div", ao, [
-                  g("div", io, [
-                    g("span", lo, L(t(Pt)(d)), 1),
-                    t(be)(d) ? (I(), z(ie, { key: 0 }, [
-                      V[17] || (V[17] = g("span", { class: "vo-dub-duration-vs" }, "vs", -1)),
-                      g("span", {
-                        class: ae(["vo-dub-duration-tag", `badge-${t(be)(d).level}`])
-                      }, L(t(be)(d).ruSeconds) + " RU", 3),
-                      g("span", {
-                        class: ae(["vo-dub-duration-delta", `badge-${t(be)(d).level}`])
-                      }, L(t(be)(d).pctText), 3)
-                    ], 64)) : W("", !0)
-                  ]),
-                  g("div", ro, [
-                    g("div", uo, [
-                      A(We, {
-                        src: t(_e)("audio_en", d.audio_key),
-                        class: "vo-dub-waveform"
-                      }, null, 8, ["src"]),
-                      g("audio", {
-                        controls: "",
-                        preload: "none",
-                        src: t(_e)("audio_en", d.audio_key),
-                        ref_for: !0,
-                        ref: (Y) => t(ht)(d.audio_key, Y),
-                        onPause: (Y) => t(ge)(d, "en"),
-                        onEnded: (Y) => t(ge)(d, "en")
-                      }, null, 40, co)
-                    ]),
-                    A(t(J), {
-                      class: ae(["play-both-btn", { playing: t(Be).has(d.audio_key) }]),
-                      size: "small",
-                      label: "Play both",
-                      icon: t(bt).has(d.audio_key) ? "pi pi-spin pi-spinner" : t(Be).has(d.audio_key) ? "pi pi-pause" : "pi pi-play",
-                      disabled: !t(re)(d),
-                      title: t(re)(d) ? "Play EN and RU together, from the start" : "No RU take yet -- nothing to compare",
-                      onClick: (Y) => t(mt)(d)
-                    }, null, 8, ["class", "icon", "disabled", "title", "onClick"]),
-                    g("div", po, [
-                      t(re)(d) ? (I(), ue(We, {
-                        key: 0,
-                        src: t(_e)("audio_ru", d.audio_key, t(Me)[d.audio_key]),
-                        class: "vo-dub-waveform"
-                      }, null, 8, ["src"])) : W("", !0),
-                      t(re)(d) ? (I(), z("audio", {
-                        key: 1,
-                        controls: "",
-                        preload: "none",
-                        crossorigin: "anonymous",
-                        src: t(_e)("audio_ru", d.audio_key, t(Me)[d.audio_key]),
-                        ref_for: !0,
-                        ref: (Y) => t(yt)(d, Y),
-                        onLoadedmetadata: (Y) => t(Ct)(d, Y),
-                        onPause: (Y) => t(ge)(d, "ru"),
-                        onEnded: (Y) => t(ge)(d, "ru")
-                      }, null, 40, fo)) : (I(), z("span", vo, "not rendered yet"))
-                    ])
-                  ]),
-                  g("div", ho, [
-                    o.renderApi ? (I(), ue(t(J), {
-                      key: 0,
-                      class: ae(["vo-dub-render-btn", { stale: d.status === "stale" }]),
-                      size: "small",
-                      label: t(re)(d) ? "Re-render" : "Render",
-                      icon: t(qe).has(d.audio_key) ? "pi pi-spin pi-spinner" : "pi pi-refresh",
-                      disabled: t(qe).has(d.audio_key),
-                      title: t(re)(d) ? "Re-render this row and write it to audio_ru\\" : "Render this row and write it to audio_ru\\",
-                      onClick: (Y) => t(kt)(d)
-                    }, null, 8, ["class", "label", "icon", "disabled", "title", "onClick"])) : W("", !0),
-                    A(t(J), {
-                      icon: "pi pi-history",
-                      size: "small",
-                      text: "",
-                      label: t(N)[d.audio_key] ? String(t(N)[d.audio_key]) : "",
-                      title: "Line history (previous takes/versions)",
-                      onClick: (Y) => t(X)(d)
-                    }, null, 8, ["label", "onClick"]),
-                    A(t(J), {
-                      icon: "pi pi-cog",
-                      size: "small",
-                      title: "Edit output settings",
-                      onClick: (Y) => t(ft)(d),
-                      class: "output-settings-btn"
-                    }, null, 8, ["onClick"])
-                  ])
+            (E(!0), A(ne, null, ue(i(le), (g) => {
+              var Tt;
+              return E(), A("div", {
+                key: g.audio_key,
+                class: pe(["vo-dub-row card", { "row-playing": i(Ye) === g.audio_key, "row-issue": i(Ne)(g) }]),
+                ref_for: !0,
+                ref: (Q) => i(sn)(g.audio_key, Q)
+              }, [
+                $("div", Ps, [
+                  $("span", Os, F(g.audio_key), 1),
+                  $("span", {
+                    class: pe(["pill", i(as)(g.status)])
+                  }, F(i(y)[g.status]), 3),
+                  i(Te)(g) ? (E(), de(re, {
+                    key: 0,
+                    class: pe(["vo-dub-done-btn", { active: i(et)(g) }]),
+                    icon: i(et)(g) ? "pi pi-check-circle" : "pi pi-circle",
+                    label: i(et)(g) ? "Done" : "Mark done",
+                    title: "Manually treat this row as done even if its content has drifted since the last render.",
+                    onClick: (Q) => i(un)(g)
+                  }, null, 8, ["class", "icon", "label", "onClick"])) : X("", !0),
+                  N(re, {
+                    class: pe(["vo-dub-issue-btn", { active: i(Ne)(g) }]),
+                    severity: "danger",
+                    icon: i(Ne)(g) ? "pi pi-exclamation-triangle" : "pi pi-exclamation-circle",
+                    label: i(Ne)(g) ? "Issue" : "Mark issue",
+                    title: "Flag this row as needing attention. Independent from Done — both can be set at once.",
+                    onClick: (Q) => i(cn)(g)
+                  }, null, 8, ["class", "icon", "label", "onClick"])
                 ]),
-                A(Jt, { row: d }, {
-                  leading: oe(() => [
-                    g("span", yo, L(d.speaker_tag || "—"), 1),
-                    A(t(J), {
-                      icon: "pi pi-copy",
-                      size: "small",
-                      class: "apply-role-btn",
-                      disabled: t(it)(d) === 0,
-                      title: t(lt)(d),
-                      onClick: (Y) => t(rt)(d)
-                    }, null, 8, ["disabled", "title", "onClick"]),
-                    g("label", bo, [
-                      A(t(Re), {
-                        "model-value": t(Tt)(d),
-                        binary: "",
-                        "onUpdate:modelValue": (Y) => t(Et)(d, Y)
-                      }, null, 8, ["model-value", "onUpdate:modelValue"]),
-                      V[18] || (V[18] = he(" 🎙️ Original as sample ", -1))
+                g.status === "unsupported" ? (E(), A("div", Ds, [
+                  ce(" Unsupported: " + F(g.channels) + "-channel audio split across multiple files (", 1),
+                  W[11] || (W[11] = $("code", null, ".a", -1)),
+                  W[12] || (W[12] = ce("-", -1)),
+                  W[13] || (W[13] = $("code", null, ".d", -1)),
+                  W[14] || (W[14] = ce(") -- this editor can only play or render a single mono/stereo file per row. Handle this one outside the tool. ", -1))
+                ])) : (E(), A(ne, { key: 1 }, [
+                  $("div", As, [
+                    $("div", Ms, [
+                      $("span", xs, F(i(pn)(g)), 1),
+                      W[15] || (W[15] = $("span", { class: "vo-dub-duration-arrow" }, "→", -1)),
+                      $("span", Ls, " RU " + F(((Tt = i(Fe)(g)) == null ? void 0 : Tt.ruSeconds) || "—"), 1),
+                      i(Fe)(g) ? (E(), A("span", {
+                        key: 0,
+                        class: pe(["vo-dub-duration-delta", i(Bn)(i(Fe)(g).level)])
+                      }, F(i(Fe)(g).pctText), 3)) : X("", !0),
+                      g.english && i(O)(g).russian_text ? (E(), A("span", Vs, [
+                        N(Uo, {
+                          original: g.english,
+                          translation: i(O)(g).russian_text
+                        }, null, 8, ["original", "translation"])
+                      ])) : X("", !0)
+                    ]),
+                    $("div", Ns, [
+                      $("div", Fs, [
+                        N(Et, {
+                          src: i(Le)("audio_en", g.audio_key)
+                        }, null, 8, ["src"]),
+                        $("audio", {
+                          class: "w100p",
+                          controls: "",
+                          preload: "none",
+                          src: i(Le)("audio_en", g.audio_key),
+                          ref_for: !0,
+                          ref: (Q) => i(Qt)(g.audio_key, Q),
+                          onPause: (Q) => i(Ve)(g, "en"),
+                          onEnded: (Q) => i(Ve)(g, "en")
+                        }, null, 40, Us)
+                      ]),
+                      N(re, {
+                        class: pe(["play-both-btn", { playing: i(_t).has(g.audio_key) }]),
+                        label: "Play both",
+                        icon: i(tn).has(g.audio_key) ? "pi pi-spin pi-spinner" : i(_t).has(g.audio_key) ? "pi pi-pause" : "pi pi-play",
+                        disabled: !i(Te)(g),
+                        title: i(Te)(g) ? "Play EN and RU together, from the start" : "No RU take yet -- nothing to compare",
+                        onClick: (Q) => i(nn)(g)
+                      }, null, 8, ["class", "icon", "disabled", "title", "onClick"]),
+                      $("div", Bs, [
+                        i(Te)(g) ? (E(), de(Et, {
+                          key: 0,
+                          src: i(Le)("audio_ru", g.audio_key, i(mt)[g.audio_key])
+                        }, null, 8, ["src"])) : X("", !0),
+                        i(Te)(g) ? (E(), A("audio", {
+                          key: 1,
+                          class: "w100p",
+                          controls: "",
+                          preload: "none",
+                          crossorigin: "anonymous",
+                          src: i(Le)("audio_ru", g.audio_key, i(mt)[g.audio_key]),
+                          ref_for: !0,
+                          ref: (Q) => i(en)(g, Q),
+                          onLoadedmetadata: (Q) => i(fn)(g, Q),
+                          onPause: (Q) => i(Ve)(g, "ru"),
+                          onEnded: (Q) => i(Ve)(g, "ru")
+                        }, null, 40, js)) : (E(), A("span", zs, "not rendered yet"))
+                      ])
+                    ]),
+                    $("div", Hs, [
+                      o.renderApi ? (E(), de(re, {
+                        key: 0,
+                        class: pe(["vo-dub-render-btn", { stale: g.status === "stale" }]),
+                        label: i(Te)(g) ? "Re-render" : "Render",
+                        icon: i(Xe).has(g.audio_key) ? "pi pi-spin pi-spinner" : "pi pi-refresh",
+                        disabled: i(Xe).has(g.audio_key),
+                        title: i(Te)(g) ? "Re-render this row" : "Render this row",
+                        onClick: (Q) => i(an)(g)
+                      }, null, 8, ["class", "label", "icon", "disabled", "title", "onClick"])) : X("", !0),
+                      o.renderApi ? (E(), de(re, {
+                        key: 1,
+                        icon: "pi pi-arrow-right",
+                        label: "Use EN",
+                        disabled: i(Xe).has(g.audio_key) || !g.english,
+                        title: g.english ? "Copy the EN reference track to audio_ru/" + g.audio_key + ".wav (no new render). Overwrites the current RU take." : "No EN reference for this row",
+                        onClick: (Q) => i(ln)(g)
+                      }, null, 8, ["disabled", "title", "onClick"])) : X("", !0),
+                      N(re, {
+                        icon: "pi pi-history",
+                        label: i(_e)[g.audio_key] ? String(i(_e)[g.audio_key]) : "",
+                        title: "Line history (previous takes/versions)",
+                        onClick: (Q) => i(Me)(g)
+                      }, null, 8, ["label", "onClick"]),
+                      N(re, {
+                        icon: "pi pi-cog",
+                        title: "Edit output settings",
+                        onClick: (Q) => i(Yt)(g)
+                      }, null, 8, ["onClick"])
                     ])
                   ]),
-                  "above-text": oe(() => [
-                    g("div", mo, L(d.english), 1)
-                  ]),
-                  _: 2
-                }, 1032, ["row"])
-              ], 64))
-            ], 2))), 128)),
-            t(F).length ? W("", !0) : (I(), z("div", _o, "No rows match this filter."))
+                  N(jn, { row: g }, {
+                    leading: Y(() => [
+                      $("span", qs, F(g.speaker_tag || "—"), 1),
+                      N(re, {
+                        icon: "pi pi-copy",
+                        class: "apply-role-btn",
+                        disabled: i(zt)(g) === 0,
+                        title: i(Ht)(g),
+                        onClick: (Q) => i(qt)(g)
+                      }, null, 8, ["disabled", "title", "onClick"])
+                    ]),
+                    trailing: Y(() => [
+                      $("label", Ws, [
+                        N(bt, {
+                          "model-value": i(vn)(g),
+                          binary: "",
+                          "onUpdate:modelValue": (Q) => i(hn)(g, Q)
+                        }, null, 8, ["model-value", "onUpdate:modelValue"]),
+                        W[16] || (W[16] = ce(" 🎙️ Original ", -1))
+                      ])
+                    ]),
+                    "above-text": Y(() => [
+                      $("div", Gs, F(g.english), 1)
+                    ]),
+                    _: 2
+                  }, 1032, ["row"])
+                ], 64))
+              ], 2);
+            }), 128)),
+            i(P).length ? X("", !0) : (E(), A("div", Js, "No rows match this filter."))
           ], 4)
         ]),
-        A(Kt, {
-          visible: t(Pe),
-          "onUpdate:visible": V[7] || (V[7] = (d) => fe(Pe) ? Pe.value = d : null),
-          categories: t(ut),
-          onSelect: t(ct)
+        N(zn, {
+          visible: i(Ke),
+          "onUpdate:visible": W[6] || (W[6] = (g) => ve(Ke) ? Ke.value = g : null),
+          categories: i(Wt),
+          onSelect: i(Jt)
         }, null, 8, ["visible", "categories", "onSelect"]),
-        A(Yt, {
-          visible: t(G),
-          "onUpdate:visible": V[8] || (V[8] = (d) => fe(G) ? G.value = d : null),
-          versions: t($),
-          "chosen-version": t(P),
-          original: ((Ge = t(se)) == null ? void 0 : Ge.english) || "",
-          onSelect: t(ee)
-        }, null, 8, ["visible", "versions", "chosen-version", "original", "onSelect"]),
-        A(Zt, {
-          visible: t(Ce).visible,
-          left: t(Ce).left,
-          top: t(Ce).top,
-          message: t(Ne).message,
-          fields: t(Ne).fields
+        N(Hn, {
+          visible: i(B),
+          "onUpdate:visible": W[7] || (W[7] = (g) => ve(B) ? B.value = g : null),
+          versions: i(K),
+          "chosen-version": i(ge),
+          original: ((St = i(ie)) == null ? void 0 : St.english) || "",
+          root: o.root,
+          "audio-key": ((kt = i(ie)) == null ? void 0 : kt.audio_key) || "",
+          onSelect: i(xe)
+        }, null, 8, ["visible", "versions", "chosen-version", "original", "root", "audio-key", "onSelect"]),
+        N(qn, {
+          visible: i(Je).visible,
+          left: i(Je).left,
+          top: i(Je).top,
+          message: i(yt).message,
+          fields: i(yt).fields
         }, null, 8, ["visible", "left", "top", "message", "fields"]),
-        A(Ln, {
-          visible: t(Te),
-          "onUpdate:visible": V[9] || (V[9] = (d) => fe(Te) ? Te.value = d : null),
-          audioKey: (Je = t(te)) == null ? void 0 : Je.audio_key,
-          effect: t(te) ? t(pt)(t(te)) : "",
-          normalize: t(te) ? t(C)(t(te)).normalize : !1,
-          speed: t(te) ? t(C)(t(te)).speed : 1,
-          enDurationS: t(te) ? t(te).duration_s : null,
-          ruDurationS: t(te) ? t($t)[t(te).audio_key] ?? t(te).rendered_duration_s : null,
-          onApply: t(vt)
-        }, null, 8, ["visible", "audioKey", "effect", "normalize", "speed", "enDurationS", "ruDurationS", "onApply"])
+        N(ro, {
+          visible: i(Ze),
+          "onUpdate:visible": W[8] || (W[8] = (g) => ve(Ze) ? Ze.value = g : null),
+          audioKey: (Rt = i(fe)) == null ? void 0 : Rt.audio_key,
+          effect: i(fe) ? i(Kt)(i(fe)) : "",
+          "normalize-db": i(fe) ? i(O)(i(fe)).normalize_db ?? -20 : -20,
+          "speed-match": i(fe) ? i(Zt)(i(fe)) : !1,
+          enDurationS: i(fe) ? i(fe).duration_s : null,
+          ruDurationS: i(fe) ? i(dn)[i(fe).audio_key] ?? i(fe).rendered_duration_s : null,
+          onApply: i(Xt)
+        }, null, 8, ["visible", "audioKey", "effect", "normalize-db", "speed-match", "enDurationS", "ruDurationS", "onApply"])
       ], 64);
     };
   }
-}, ko = /* @__PURE__ */ $e(go, [["__scopeId", "data-v-50ec3154"]]), So = {
+}, Zs = /* @__PURE__ */ Re(Ks, [["__scopeId", "data-v-4f6f8eee"]]), Ys = {
   __name: "VoDubLineEditor",
   props: {
     root: { type: String, required: !0 },
@@ -1797,340 +2691,345 @@ const Kn = { class: "fl-vo-dub-line-editor-content" }, Yn = { class: "vo-dub-fil
     onClose: { type: Function, required: !0 }
   },
   setup(e) {
-    const o = e, n = O(!0);
-    return ce(n, (s) => {
-      s || o.onClose();
-    }), (s, r) => (I(), ue(t(Ue), {
-      visible: n.value,
-      "onUpdate:visible": r[0] || (r[0] = (i) => n.value = i),
-      modal: !1,
-      draggable: !1,
-      "close-on-escape": "",
-      header: " ",
-      style: { width: "1600px" },
-      class: "vo-dub-editor-dialog"
-    }, {
-      default: oe(() => [
-        A(ko, jt(zt(s.$props)), null, 16)
-      ]),
-      _: 1
-    }, 8, ["visible"]));
-  }
-}, Ro = /* @__PURE__ */ $e(So, [["__scopeId", "data-v-47ef3de4"]]), $o = { class: "role-head" }, Co = { class: "role-name" }, Po = {
-  class: "role-code",
-  title: "Role code -- read-only here, this addon doesn't own this file's identity model"
-}, To = ["title"], Eo = {
-  key: 1,
-  class: "role-actor"
-}, Io = {
-  key: 0,
-  class: "role-description"
-}, wo = {
-  key: 1,
-  class: "role-dub-direction"
-}, Vo = {
-  key: 2,
-  class: "role-notes"
-}, Ao = { class: "role-stats" }, Oo = { key: 0 }, Do = { key: 1 }, Lo = { key: 2 }, Fo = { key: 3 }, jo = {
-  key: 3,
-  class: "role-examples",
-  title: "Longest lines for this role -- a quick sample to listen to"
-}, zo = { class: "role-speaker-row" }, xo = 600, Uo = 3e3, No = 1500, Bo = {
-  __name: "DubRolesEditorApp",
-  props: {
-    root: { type: String, required: !0 },
-    onClose: { type: Function, required: !0 }
-  },
-  setup(e) {
-    const o = e, n = ye(o.root, "_dub_roles.json"), s = O(!0), r = O({ roles: {} }), i = O([]), y = O(""), h = O(""), m = O(!1), { cssWidth: R, setWidth: D, presets: k } = et({
-      storageKey: "FL_CosyVoice3.DubRolesEditor.widthPx",
-      defaultWidth: 1200,
-      presets: [900, 1200]
-    }), { fontSizePx: _, decrease: u, increase: S } = tt({
-      storageKey: "FL_CosyVoice3.DubRolesEditor.fontSizePx",
-      defaultSize: 13
-    });
-    let x = null, U = 0, b = null, E = null;
-    const v = /* @__PURE__ */ new Map();
-    function a($) {
-      h.value = $;
-    }
-    const C = de(() => {
-      var P;
-      const $ = ((P = r.value) == null ? void 0 : P.roles) || {};
-      return Object.entries($).sort((N, T) => {
-        var X, ee;
-        return (((X = T[1]) == null ? void 0 : X.lines) || 0) - (((ee = N[1]) == null ? void 0 : ee.lines) || 0);
-      });
-    });
-    function B($, P) {
-      return $.character || P;
-    }
-    function Z($) {
-      return Array.isArray($.notes) ? $.notes : [];
-    }
-    function l($) {
-      return Array.isArray($.longest_files) ? $.longest_files : [];
-    }
-    function f() {
-      return JSON.stringify(r.value, null, 2);
-    }
-    async function c() {
-      const $ = f();
-      if ($ !== x)
-        try {
-          const N = await (await fetch(`${pe}/write`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path: n, content: $ })
-          })).json();
-          if (N.error) {
-            a(`Save error: ${N.error}`);
-            return;
-          }
-          x = $, a(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
-        } catch (P) {
-          a(`Save failed: ${P}`);
-        }
-    }
-    function w() {
-      U = Date.now(), b && clearTimeout(b), b = setTimeout(c, xo);
-    }
-    function F($, P) {
-      v.get($) !== P.speaker && (v.set($, P.speaker), Ut(o.root, $).then((T) => a(T.message)));
-    }
-    function M($, P) {
-      w(), F($, P);
-    }
-    async function p() {
-      try {
-        const P = await (await fetch(xt)).json();
-        i.value = P.presets || [], y.value = P.dir || "";
-      } catch {
-        i.value = [], y.value = "";
-      }
-    }
-    const j = O(!1), H = O(null);
-    function q($, P) {
-      H.value = [$, P], j.value = !0;
-    }
-    function Q($) {
-      const P = H.value;
-      if (!P) return;
-      const [N, T] = P;
-      T.speaker = $, M(N, T);
-    }
-    async function K({ isPoll: $ = !1 } = {}) {
-      try {
-        const N = await (await fetch(`${pe}/read?path=${encodeURIComponent(n)}`)).json();
-        if (N.error) {
-          a(`Read error: ${N.error}`);
-          return;
-        }
-        if (!N.exists) {
-          $ || (r.value = { roles: {} }, x = "", a('_dub_roles.json does not exist yet -- click "Seed from dataset" below'));
-          return;
-        }
-        if ($ && Date.now() - U < No || N.content === x) return;
-        let T;
-        try {
-          T = JSON.parse(N.content);
-        } catch (ee) {
-          a(`_dub_roles.json is not valid JSON: ${ee}`);
-          return;
-        }
-        const X = T && typeof T.roles == "object" && T.roles || {};
-        for (const ee of Object.values(X))
-          ee && typeof ee == "object" && ee.speaker === void 0 && (ee.speaker = "");
-        r.value = { ...T, roles: X };
-        for (const [ee, me] of Object.entries(X))
-          v.set(ee, me.speaker);
-        x = f(), $ || a(`Loaded ${C.value.length} role(s)`);
-      } catch (P) {
-        a(`Read failed: ${P}`);
-      }
-    }
-    async function G() {
-      m.value = !0;
-      try {
-        const P = await (await fetch(`${le}/seed_roles`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ root: o.root })
-        })).json();
-        if (P.error) {
-          a(`Seed error: ${P.error}`);
-          return;
-        }
-        await K(), a(P.added.length ? `Added ${P.added.length} role(s): ${P.added.join(", ")}` : "Nothing new to add");
-      } catch ($) {
-        a(`Seed failed: ${$}`);
-      } finally {
-        m.value = !1;
-      }
-    }
-    function se() {
-      b && (clearTimeout(b), c());
-      for (const [$, P] of C.value) F($, P);
-      E && clearInterval(E), o.onClose();
-    }
-    return ce(s, ($) => {
-      $ || se();
-    }), Le(async () => {
-      p(), await K(), E = setInterval(() => K({ isPoll: !0 }), Uo);
-    }), Xe(() => {
-      E && clearInterval(E);
-    }), ($, P) => (I(), z(ie, null, [
-      A(t(Ue), {
-        visible: s.value,
-        "onUpdate:visible": P[1] || (P[1] = (N) => s.value = N),
+    const o = e, t = V(!0);
+    return ye(t, (n) => {
+      n || o.onClose();
+    }), (n, s) => {
+      const a = te("Dialog");
+      return E(), de(a, {
+        visible: t.value,
+        "onUpdate:visible": s[0] || (s[0] = (r) => t.value = r),
         modal: !1,
         draggable: !1,
         "close-on-escape": "",
         header: " ",
-        style: Oe({ width: t(R) }),
-        class: "roles-dialog"
+        style: { width: "1600px" },
+        class: "vo-dub-editor-dialog"
       }, {
-        header: oe(() => [
-          A(nt, {
-            title: "VO Dub Roles",
-            status: h.value,
-            "width-presets": t(k),
-            "set-width": t(D),
-            "font-size-decrease": t(u),
-            "font-size-increase": t(S)
-          }, {
-            after: oe(() => [
-              A(t(J), {
-                label: "Seed from dataset",
-                size: "small",
-                text: "",
-                icon: m.value ? "pi pi-spin pi-spinner" : "pi pi-database",
-                disabled: m.value,
-                title: "Add every distinct speaker tag from vo_dataset.csv that isn't a role here yet",
-                onClick: G
-              }, null, 8, ["icon", "disabled"])
-            ]),
-            _: 1
-          }, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
-        ]),
-        default: oe(() => [
-          C.value.length ? W("", !0) : (I(), ue(t(Bt), {
-            key: 0,
-            severity: "info",
-            closable: !1
-          }, {
-            default: oe(() => [...P[3] || (P[3] = [
-              he(' No roles yet -- click "Seed from dataset" above to create one per distinct speaker tag. ', -1)
-            ])]),
-            _: 1
-          })),
-          g("div", {
-            class: "roles-list",
-            style: Oe({ fontSize: `${t(_)}px` })
-          }, [
-            (I(!0), z(ie, null, Se(C.value, ([N, T]) => (I(), z("div", {
-              key: N,
-              class: "role-card"
-            }, [
-              g("div", $o, [
-                g("span", Co, L(B(T, N)), 1),
-                g("span", Po, L(N), 1),
-                T.gender ? (I(), z("span", {
-                  key: 0,
-                  class: "role-gender",
-                  title: T.gender_evidence || ""
-                }, L(T.gender), 9, To)) : W("", !0),
-                T.actor ? (I(), z("span", Eo, L(T.actor), 1)) : W("", !0)
-              ]),
-              T.description ? (I(), z("p", Io, L(T.description), 1)) : W("", !0),
-              T.dub_direction ? (I(), z("p", wo, L(T.dub_direction), 1)) : W("", !0),
-              Z(T).length ? (I(), z("ul", Vo, [
-                (I(!0), z(ie, null, Se(Z(T), (X, ee) => (I(), z("li", { key: ee }, L(X), 1))), 128))
-              ])) : W("", !0),
-              g("div", Ao, [
-                T.lines !== void 0 ? (I(), z("span", Oo, L(T.lines) + " line(s)", 1)) : W("", !0),
-                T.audio_minutes !== void 0 ? (I(), z("span", Do, L(T.audio_minutes) + " min", 1)) : W("", !0),
-                T.lines_needing_translation ? (I(), z("span", Lo, L(T.lines_needing_translation) + " need translation", 1)) : W("", !0),
-                T.lines_without_any_text ? (I(), z("span", Fo, L(T.lines_without_any_text) + " no text", 1)) : W("", !0)
-              ]),
-              l(T).length ? (I(), z("div", jo, " e.g. " + L(l(T).join(", ")), 1)) : W("", !0),
-              g("div", zo, [
-                A(t(xe), {
-                  modelValue: T.speaker,
-                  "onUpdate:modelValue": [
-                    (X) => T.speaker = X,
-                    P[0] || (P[0] = (X) => w())
-                  ],
-                  placeholder: "Speaker preset",
-                  title: "Real CosyVoice preset this role resolves to",
-                  class: "role-speaker",
-                  onBlur: (X) => F(N, T)
-                }, null, 8, ["modelValue", "onUpdate:modelValue", "onBlur"]),
-                A(t(J), {
-                  icon: "pi pi-microphone",
-                  size: "small",
-                  title: "Pick a speaker from the preset gallery",
-                  onClick: (X) => q(N, T)
-                }, null, 8, ["onClick"])
-              ])
-            ]))), 128))
-          ], 4)
+        default: Y(() => [
+          N(Zs, Pn(On(n.$props)), null, 16)
         ]),
         _: 1
-      }, 8, ["visible", "style"]),
-      A(Qt, {
-        visible: j.value,
-        "onUpdate:visible": P[2] || (P[2] = (N) => j.value = N),
-        presets: i.value,
-        "sample-dir": y.value,
-        onSelect: Q
-      }, null, 8, ["visible", "presets", "sample-dir"])
-    ], 64));
+      }, 8, ["visible"]);
+    };
   }
-}, Mo = /* @__PURE__ */ $e(Bo, [["__scopeId", "data-v-df1a18b9"]]);
-function ds({ node: e, projectRootWidget: o, openBrowseDialog: n, openVoDubLineEditor: s, openDubRolesEditor: r, queueVoDubRender: i }) {
-  Fe(import.meta.url);
-  const y = document.createElement("div");
-  y.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
-  const h = je(bn, {
+}, Xs = { class: "row" }, Qs = { class: "role-head row" }, ea = { class: "role-name title" }, ta = {
+  class: "role-code mono muted",
+  title: "Role code -- read-only here, this addon doesn't own this file's identity model"
+}, na = ["title"], oa = {
+  key: 1,
+  class: "role-actor muted"
+}, sa = {
+  key: 0,
+  class: "role-description"
+}, aa = {
+  key: 1,
+  class: "role-dub-direction"
+}, ia = {
+  key: 2,
+  class: "role-notes muted"
+}, la = { class: "role-stats row" }, ra = { key: 0 }, ua = { key: 1 }, ca = { key: 2 }, da = { key: 3 }, fa = {
+  key: 3,
+  class: "role-examples mono",
+  title: "Longest lines for this role -- a quick sample to listen to"
+}, pa = { class: "role-speaker-row row" }, va = 600, ha = 3e3, ya = 1500, _a = {
+  __name: "DubRolesEditorApp",
+  props: {
+    root: { type: String, required: !0 },
+    onClose: { type: Function, required: !0 },
+    inline: { type: Boolean, default: !1 }
+  },
+  setup(e) {
+    const o = e, t = $e(o.root, "_dub_roles.json"), n = V(!0), s = V({ roles: {} }), a = V([]), r = V(""), v = V(""), k = V(!1), { cssWidth: h, setWidth: p, presets: b } = Vt({
+      storageKey: "FL_CosyVoice3.DubRolesEditor.widthPx",
+      defaultWidth: 1200,
+      presets: [900, 1200]
+    }), { fontSizePx: l, decrease: d, increase: f } = Nt({
+      storageKey: "FL_CosyVoice3.DubRolesEditor.fontSizePx",
+      defaultSize: 13
+    });
+    let _ = null, m = 0, c = null, T = null;
+    const O = /* @__PURE__ */ new Map();
+    function x(S) {
+      v.value = S;
+    }
+    const D = ae(() => {
+      var C;
+      const S = ((C = s.value) == null ? void 0 : C.roles) || {};
+      return Object.entries(S).sort((U, G) => {
+        var se, j;
+        return (((se = G[1]) == null ? void 0 : se.lines) || 0) - (((j = U[1]) == null ? void 0 : j.lines) || 0);
+      });
+    });
+    function w(S, C) {
+      return S.character || C;
+    }
+    function L(S) {
+      return Array.isArray(S.notes) ? S.notes : [];
+    }
+    function u(S) {
+      return Array.isArray(S.longest_files) ? S.longest_files : [];
+    }
+    function R() {
+      return JSON.stringify(s.value, null, 2);
+    }
+    async function P() {
+      const S = R();
+      if (S !== _)
+        try {
+          const U = await (await fetch(`${we}/write`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: t, content: S })
+          })).json();
+          if (U.error) {
+            x(`Save error: ${U.error}`);
+            return;
+          }
+          _ = S, x(`Saved ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
+        } catch (C) {
+          x(`Save failed: ${C}`);
+        }
+    }
+    function q() {
+      m = Date.now(), c && clearTimeout(c), c = setTimeout(P, va);
+    }
+    function z(S, C) {
+      O.get(S) !== C.speaker && (O.set(S, C.speaker), Mn(o.root, S).then((G) => x(G.message)));
+    }
+    function oe(S, C) {
+      q(), z(S, C);
+    }
+    async function le() {
+      try {
+        const C = await (await fetch(An)).json();
+        a.value = C.presets || [], r.value = C.dir || "";
+      } catch {
+        a.value = [], r.value = "";
+      }
+    }
+    const y = V(!1), M = V(null);
+    function J(S, C) {
+      M.value = [S, C], y.value = !0;
+    }
+    function H(S) {
+      const C = M.value;
+      if (!C) return;
+      const [U, G] = C;
+      G.speaker = S, oe(U, G);
+    }
+    async function Z({ isPoll: S = !1 } = {}) {
+      try {
+        const U = await (await fetch(`${we}/read?path=${encodeURIComponent(t)}`)).json();
+        if (U.error) {
+          x(`Read error: ${U.error}`);
+          return;
+        }
+        if (!U.exists) {
+          S || (s.value = { roles: {} }, _ = "", x('_dub_roles.json does not exist yet -- click "Seed from dataset" below'));
+          return;
+        }
+        if (S && Date.now() - m < ya || U.content === _) return;
+        let G;
+        try {
+          G = JSON.parse(U.content);
+        } catch (j) {
+          x(`_dub_roles.json is not valid JSON: ${j}`);
+          return;
+        }
+        const se = G && typeof G.roles == "object" && G.roles || {};
+        for (const j of Object.values(se))
+          j && typeof j == "object" && j.speaker === void 0 && (j.speaker = "");
+        s.value = { ...G, roles: se };
+        for (const [j, B] of Object.entries(se))
+          O.set(j, B.speaker);
+        _ = R(), S || x(`Loaded ${D.value.length} role(s)`);
+      } catch (C) {
+        x(`Read failed: ${C}`);
+      }
+    }
+    async function ee() {
+      k.value = !0;
+      try {
+        const C = await (await fetch(`${me}/seed_roles`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ root: o.root })
+        })).json();
+        if (C.error) {
+          x(`Seed error: ${C.error}`);
+          return;
+        }
+        await Z(), x(C.added.length ? `Added ${C.added.length} role(s): ${C.added.join(", ")}` : "Nothing new to add");
+      } catch (S) {
+        x(`Seed failed: ${S}`);
+      } finally {
+        k.value = !1;
+      }
+    }
+    function I() {
+      c && (clearTimeout(c), P());
+      for (const [S, C] of D.value) z(S, C);
+      T && clearInterval(T), o.onClose();
+    }
+    return ye(n, (S) => {
+      S || I();
+    }), qe(async () => {
+      le(), await Z(), T = setInterval(() => Z({ isPoll: !0 }), ha);
+    }), ut(() => {
+      T && clearInterval(T);
+    }), (S, C) => {
+      const U = te("Button"), G = te("Message"), se = te("InputText");
+      return E(), A(ne, null, [
+        (E(), de(Dn(e.inline ? "div" : "Dialog"), {
+          visible: n.value,
+          "onUpdate:visible": C[1] || (C[1] = (j) => n.value = j),
+          modal: !1,
+          draggable: !1,
+          "close-on-escape": "",
+          header: " ",
+          style: De({ width: i(h) }),
+          class: "roles-dialog"
+        }, {
+          default: Y(() => [
+            $("div", Xs, [
+              N(xn, {
+                title: "VO Dub Roles",
+                status: v.value,
+                "width-presets": i(b),
+                "set-width": i(p),
+                "font-size-decrease": i(d),
+                "font-size-increase": i(f)
+              }, {
+                after: Y(() => [
+                  N(U, {
+                    label: "Seed from dataset",
+                    icon: k.value ? "pi pi-spin pi-spinner" : "pi pi-database",
+                    disabled: k.value,
+                    title: "Add every distinct speaker tag from vo_dataset.csv that isn't a role here yet",
+                    onClick: ee
+                  }, null, 8, ["icon", "disabled"])
+                ]),
+                _: 1
+              }, 8, ["status", "width-presets", "set-width", "font-size-decrease", "font-size-increase"])
+            ]),
+            D.value.length ? X("", !0) : (E(), de(G, {
+              key: 0,
+              severity: "info",
+              closable: !1
+            }, {
+              default: Y(() => [...C[3] || (C[3] = [
+                ce(' No roles yet -- click "Seed from dataset" above to create one per distinct speaker tag. ', -1)
+              ])]),
+              _: 1
+            })),
+            $("div", {
+              class: "roles-list list",
+              style: De({ fontSize: `${i(l)}px` })
+            }, [
+              (E(!0), A(ne, null, ue(D.value, ([j, B]) => (E(), A("div", {
+                key: j,
+                class: "role-card card"
+              }, [
+                $("div", Qs, [
+                  $("span", ea, F(w(B, j)), 1),
+                  $("span", ta, F(j), 1),
+                  B.gender ? (E(), A("span", {
+                    key: 0,
+                    class: "role-gender muted",
+                    title: B.gender_evidence || ""
+                  }, F(B.gender), 9, na)) : X("", !0),
+                  B.actor ? (E(), A("span", oa, F(B.actor), 1)) : X("", !0)
+                ]),
+                B.description ? (E(), A("p", sa, F(B.description), 1)) : X("", !0),
+                B.dub_direction ? (E(), A("p", aa, F(B.dub_direction), 1)) : X("", !0),
+                L(B).length ? (E(), A("ul", ia, [
+                  (E(!0), A(ne, null, ue(L(B), (ie, K) => (E(), A("li", { key: K }, F(ie), 1))), 128))
+                ])) : X("", !0),
+                $("div", la, [
+                  B.lines !== void 0 ? (E(), A("span", ra, F(B.lines) + " line(s)", 1)) : X("", !0),
+                  B.audio_minutes !== void 0 ? (E(), A("span", ua, F(B.audio_minutes) + " min", 1)) : X("", !0),
+                  B.lines_needing_translation ? (E(), A("span", ca, F(B.lines_needing_translation) + " need translation", 1)) : X("", !0),
+                  B.lines_without_any_text ? (E(), A("span", da, F(B.lines_without_any_text) + " no text", 1)) : X("", !0)
+                ]),
+                u(B).length ? (E(), A("div", fa, " e.g. " + F(u(B).join(", ")), 1)) : X("", !0),
+                $("div", pa, [
+                  N(se, {
+                    modelValue: B.speaker,
+                    "onUpdate:modelValue": [
+                      (ie) => B.speaker = ie,
+                      C[0] || (C[0] = (ie) => q())
+                    ],
+                    placeholder: "Speaker preset",
+                    title: "Real CosyVoice preset this role resolves to",
+                    class: "role-speaker",
+                    onBlur: (ie) => z(j, B)
+                  }, null, 8, ["modelValue", "onUpdate:modelValue", "onBlur"]),
+                  N(U, {
+                    icon: "pi pi-microphone",
+                    title: "Pick a speaker from the preset gallery",
+                    onClick: (ie) => J(j, B)
+                  }, null, 8, ["onClick"])
+                ])
+              ]))), 128))
+            ], 4)
+          ]),
+          _: 1
+        }, 40, ["visible", "style"])),
+        N(Gn, {
+          visible: y.value,
+          "onUpdate:visible": C[2] || (C[2] = (j) => y.value = j),
+          presets: a.value,
+          "sample-dir": r.value,
+          onSelect: H
+        }, null, 8, ["visible", "presets", "sample-dir"])
+      ], 64);
+    };
+  }
+}, ma = /* @__PURE__ */ Re(_a, [["__scopeId", "data-v-d9b84210"]]), We = Go();
+Ae(We);
+function xa({ node: e, projectRootWidget: o, openBrowseDialog: t, openVoDubLineEditor: n, openDubRolesEditor: s, queueVoDubRender: a }) {
+  dt(import.meta.url);
+  const r = document.createElement("div");
+  r.style.cssText = "width:100%;height:100%;box-sizing:border-box;";
+  const v = ft(to, {
     node: e,
     projectRootWidget: o,
-    openBrowseDialog: n,
-    openVoDubLineEditor: s,
-    openDubRolesEditor: r,
-    queueVoDubRender: i
+    openBrowseDialog: t,
+    openVoDubLineEditor: n,
+    openDubRolesEditor: s,
+    queueVoDubRender: a
   });
-  return h.use(ze, { ripple: !0 }), h.mount(y), { element: y, unmount: () => h.unmount() };
+  return v.use(We), v.use(pt, { ripple: !0 }), vt(v), v.mount(r), { element: r, unmount: () => v.unmount() };
 }
-function cs({ root: e, bucket: o, renderApi: n }) {
-  Fe(import.meta.url);
-  const s = document.createElement("div");
-  document.body.appendChild(s);
-  const r = je(Ro, {
+function La({ root: e, bucket: o, renderApi: t }) {
+  dt(import.meta.url);
+  const n = document.createElement("div");
+  document.body.appendChild(n);
+  const s = ft(Ys, {
     root: e,
     bucket: o,
-    renderApi: n || null,
+    renderApi: t || null,
     onClose: () => {
-      r.unmount(), s.remove();
+      s.unmount(), n.remove();
     }
   });
-  r.use(ze, { ripple: !0 }), r.mount(s);
+  s.use(We), s.use(pt, { ripple: !0 }), vt(s), s.mount(n);
 }
-function ps({ root: e }) {
-  Fe(import.meta.url);
+function Va({ root: e }) {
+  dt(import.meta.url);
   const o = document.createElement("div");
   document.body.appendChild(o);
-  const n = je(Mo, {
+  const t = ft(ma, {
     root: e,
     onClose: () => {
-      n.unmount(), o.remove();
+      t.unmount(), o.remove();
     }
   });
-  n.use(ze, { ripple: !0 }), n.mount(o);
+  t.use(We), t.use(pt, { ripple: !0 }), vt(t), t.mount(o);
 }
 export {
-  ds as mountVoDubBrowserPanel,
-  ps as openDubRolesEditor,
-  cs as openVoDubLineEditor
+  xa as mountVoDubBrowserPanel,
+  Va as openDubRolesEditor,
+  La as openVoDubLineEditor
 };

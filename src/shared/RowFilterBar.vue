@@ -60,9 +60,9 @@ function isStatusActive(value) {
 </script>
 
 <template>
-  <div class="row-filter-bar">
+  <div class="row">
     <!-- Status toggle buttons -->
-    <div class="filter-group filter-statuses">
+    <div class="row">
       <Button
         v-for="opt in statusOptions"
         :key="opt.value"
@@ -76,7 +76,7 @@ function isStatusActive(value) {
     </div>
 
     <!-- Tri-state filter buttons -->
-    <div class="filter-group filter-tristates">
+    <div class="row">
       <Button
         v-for="ts in tristates"
         :key="ts.key"
@@ -91,7 +91,7 @@ function isStatusActive(value) {
     </div>
 
     <!-- Clear button -->
-    <div class="filter-group filter-clear-wrapper">
+    <div class="filter-clear-wrapper row">
       <Button
         data-testid="filter-clear"
         label="Clear"
@@ -103,19 +103,6 @@ function isStatusActive(value) {
 </template>
 
 <style scoped>
-.row-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.filter-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
 .filter-clear-wrapper {
   margin-left: auto;
   flex-shrink: 0;
